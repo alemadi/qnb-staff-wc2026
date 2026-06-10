@@ -400,6 +400,7 @@
         <input type="file" id="restore-file" accept="application/json" style="display:none" onchange="restoreBackup(this)" />
         <div class="field" style="margin-top:14px"><input class="input" id="org-del" placeholder="Remove a player — enter handle" /><button class="btn btn-danger btn-sm" onclick="orgDelete()">Remove</button></div>
         <button class="btn btn-danger" style="margin-top:14px" onclick="resetAll()">Reset all data (clear players &amp; results)</button>
+        <button class="btn btn-ghost" style="margin-top:10px" onclick="lockOrg()">🔒 Lock organizer panel</button>
       </div>
     </div>
   </section>
@@ -419,7 +420,8 @@
 
 <script>
 /* ===== Matchday — World Cup 2026 staff pool · full 104-match build ===== */
-const PASS = "DOHA2026"; // organizer access code — share with admins only
+const PASS_HASH = "b2f167a0d3a56ad1e62e2fbcff2258f3fd5b2548f6c69e8756c169b5893db920"; // organizer code, hashed — the code itself is never in this file
+const ORG_TTL = 60*60*1000; // organizer unlock auto-expires after 60 minutes
 const CHAMP_PTS=25;                       // champion bonus
 const CHAMP_LOCK="2026-06-18T16:00:00Z";  // champion picks lock: Thu 18 Jun, 7:00 PM Doha (first Matchday 2 kickoff)
 const LOCK_HRS=0;                         // predictions lock at kickoff (raise to lock hours earlier)
@@ -957,9 +959,10 @@ async function renderMe(){
 
 async function unlockOrg(){
   const v=document.getElementById("org-pass").value;
-  if(v===PASS){state.org=true;await setJSON("wc:org",true,false);showOrg();toast("Organizer unlocked 🔓");}
+  if(await pinHash(v)===PASS_HASH){state.org=true;await setJSON("wc:org",Date.now(),false);showOrg();toast("Organizer unlocked 🔓 (auto-locks in 60 min)");}
   else toast("Incorrect access code");
 }
+function lockOrg(){state.org=false;lsDel("wc:org");showOrg();toast("Organizer panel locked 🔒");}
 function showOrg(){
   document.getElementById("org-locked").style.display=state.org?"none":"block";
   document.getElementById("org-panel").style.display=state.org?"block":"none";
@@ -1079,6 +1082,7 @@ async function orgDelete(){
 }
 async function resetAll(){
   if(!confirm("This permanently deletes ALL players and results from the shared leaderboard. Continue?"))return;
+  if(prompt('Final check — type RESET (capitals) to confirm wiping everything:')!=="RESET"){toast("Reset cancelled");return;}
   const keys=await slist("wc:player:",true);
   for(const k of keys)await sdel(k,true);
   await sdel("wc:results",true);await sdel("wc:me",false);
@@ -1107,7 +1111,8 @@ function tickCountdown(){
 
 (async function init(){
   state.results=await getJSON("wc:results",true)||{};
-  state.org=await getJSON("wc:org",false)||false;
+  const orgTs=await getJSON("wc:org",false);
+  state.org=(typeof orgTs==="number"&&Date.now()-orgTs<ORG_TTL)||false;
   const me=await getJSON("wc:me",false);
   if(me){const p=await getJSON("wc:player:"+me,true);if(p){state.player=p;state.meSlug=me;}}
   state.filter=defaultRound();
