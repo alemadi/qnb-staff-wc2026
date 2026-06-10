@@ -312,13 +312,13 @@
     <div class="join-card">
       <h2>Join the pool</h2>
       <p class="sub">Predict all 104 matches of World Cup 2026, earn points, and climb the office leaderboard.</p>
-      <div class="sso-note">📸&nbsp;<div><b>No passwords, no work email.</b> Your Instagram handle is your identity — use the same handle on any device to pick up where you left off. A pool for QNB colleagues — no money, just bragging rights.</div></div>
+      <div class="sso-note">📸&nbsp;<div><b>No passwords, no work email.</b> Your Instagram handle is your identity — use the same handle on any device to pick up where you left off. A pool for QNB colleagues — free to enter, with a grand prize for the overall winner.</div></div>
       <div id="cfg-warn" style="display:none;background:rgba(255,107,107,.12);border:1px solid rgba(255,107,107,.4);color:#ff9b9b;border-radius:12px;padding:10px 13px;font-size:11.5px;font-weight:600;margin-bottom:15px">⚠️ Setup needed: database keys aren't configured yet, so picks won't sync. Organizer: paste the Supabase URL + anon key into the file.</div>
       <label class="fl">Instagram username</label>
       <input class="input" id="j-ig" type="text" placeholder="@yourhandle" autocomplete="off" autocapitalize="none" maxlength="31" />
       <label class="fl">Display name</label>
       <input class="input" id="j-name" placeholder="How you want to appear on the board" autocomplete="off" maxlength="40" />
-      <label class="fl">PIN · 4 digits (optional — locks your handle)</label>
+      <label class="fl">PIN · 4 digits (required — protects your entry)</label>
       <input class="input" id="j-pin" type="password" inputmode="numeric" placeholder="••••" autocomplete="off" maxlength="4" />
       <label class="fl">Department</label>
       <select class="input" id="j-dept">
@@ -344,7 +344,7 @@
       <details style="margin-top:16px;font-size:11.5px;color:var(--muted);line-height:1.6">
         <summary style="cursor:pointer;color:var(--gold);font-weight:700">📜 Rules &amp; terms</summary>
         <div style="margin-top:8px">
-        One entry per person — your real Instagram handle is your identity. Predict each group match. <b>Predictions lock 24 hours before kickoff</b> (Matchday 1 locks at kickoff). Scoring: <b>+3</b> correct result, <b>+2</b> exact score. <b>Champion pick: +25 points, locks Thursday 18 June, 7:00 PM Doha.</b> Results are official FIFA full-time scores. Ties: most exact scores, then most correct results. Set a PIN to protect your handle; tampering with other players' picks or entering predictions after lock by any means leads to removal. Winners are verified by DM from their Instagram account. <b>No money, no buy-in, no side bets — bragging rights only.</b> The organizer may correct errors and has final say on disputes. Your handle, display name, department and country are visible to other players; all data is deleted after the final.
+        <b>Free to enter — strictly no buy-ins, no side bets.</b> One entry per person; your real Instagram handle is your identity and a 4-digit PIN protects it. Predict each group match. <b>Predictions lock 24 hours before kickoff</b> (Matchday 1 locks at kickoff). Scoring: <b>+3</b> correct result, <b>+2</b> exact score. <b>Champion pick: +25 points</b> — locks with the tiebreaker on <b>Thursday 18 June, 7:00 PM Doha</b>. Results are official FIFA full-time scores. <b>Grand prize</b> goes to the overall #1; prize ties resolve by most exact scores, then most correct results, then closest total-goals tiebreaker, then earliest sign-up. Pool admins play for bragging rights only and are not prize-eligible. The winner is verified by DM from their Instagram account and an audit of their entry before any award. Tampering with other players' picks or entering predictions after lock by any means leads to removal. The organizer may correct errors and has final say. Your handle, display name, department and country are visible to other players; all data is deleted after the final.
         </div>
       </details>
       <p class="sub" style="margin:14px 0 0;font-size:11px">Your picks sync to the live shared leaderboard — the same handle on any device resumes your game.</p>
@@ -671,7 +671,7 @@ async function joinNow(){
   if(!name)name="@"+ig;
   if(!CONFIGURED){toast("Database not set up yet — ask the organizer");return;}
   const pin=document.getElementById("j-pin").value.trim();
-  if(pin&&!/^\d{4}$/.test(pin)){toast("PIN must be exactly 4 digits");return;}
+  if(!/^\d{4}$/.test(pin)){toast("Set a 4-digit PIN — it protects your entry");return;}
   const sl=ig;
   let existing=await getJSON("wc:player:"+sl,true);
   if(existing&&existing.pin){
@@ -748,13 +748,17 @@ function renderChampCard(){
     const got=mine===win;
     inner+='<div class="done" style="color:'+(got?'var(--ok)':'var(--bad)')+'">'+(got?('✓ You called it — '+esc(win)+' · +'+CHAMP_PTS+' pts'):('✗ Champion: '+esc(win)+(mine?' · you picked '+esc(mine):' · no pick')))+'</div>';
   }else if(lk){
-    inner+='<div class="done">'+(mine?('🔒 Locked in: '+(FL[mine]?flagTag(FL[mine])+' ':'')+esc(mine)):'<span style="color:var(--muted)">🔒 Champion picks are locked</span>')+'</div>';
+    inner+='<div class="done">'+(mine?('🔒 Locked in: '+(FL[mine]?flagTag(FL[mine])+' ':'')+esc(mine)):'<span style="color:var(--muted)">🔒 Champion picks are locked</span>')+(state.player.goals!=null?'<span style="color:var(--muted)">· TB: '+state.player.goals+' goals</span>':'')+'</div>';
   }else{
-    inner+='<select class="input" id="champ-sel"><option value="">Choose your champion…</option>'+teams.map(t=>'<option value="'+esc(t)+'"'+(t===mine?' selected':'')+'>'+esc(t)+'</option>').join("")+'</select>';
+    inner+='<select class="input" id="champ-sel"><option value="">Choose your champion…</option>'+teams.map(t=>'<option value="'+esc(t)+'"'+(t===mine?' selected':'')+'>'+esc(t)+'</option>').join("")+'</select>'+
+    '<div style="margin-top:9px;font-size:11px;color:var(--muted);font-weight:700">Prize tiebreaker · total goals in the whole tournament</div>'+
+    '<input class="input" id="goals-in" type="number" inputmode="numeric" min="0" max="600" placeholder="e.g. 170" value="'+(state.player.goals!=null?state.player.goals:"")+'" style="margin-top:6px">';
   }
   host.innerHTML='<div class="champ">'+inner+'</div>';
   const sel=document.getElementById("champ-sel");
   if(sel)sel.addEventListener("change",()=>{state.player.champ=sel.value||null;queueSave();toast(sel.value?("Champion saved: "+sel.value+" 🏆"):"Champion cleared");});
+  const gi=document.getElementById("goals-in");
+  if(gi)gi.addEventListener("change",()=>{const v=parseInt(gi.value,10);state.player.goals=isNaN(v)?null:Math.max(0,Math.min(600,v));queueSave();if(state.player.goals!=null)toast("Tiebreaker saved: "+state.player.goals+" goals");});
 }
 function renderMatches(){
   if(!state.player)return;
@@ -1004,7 +1008,7 @@ function csvEsc(v){v=String(v==null?"":v);return '"'+v.replace(/"/g,'""')+'"';}
 async function downloadReport(){
   toast("Building report…");
   const players=await sbulkJSON("wc:player:");
-  const rows=players.map(p=>{const s=scoreFor(p.predictions,state.results,p.champ);return{name:p.name,ig:"@"+(p.ig||p.slug),dept:p.dept||"",country:p.country||"",pts:s.pts,exact:s.exact,correct:s.correct,picked:Object.values(p.predictions||{}).filter(x=>x.o).length,champ:p.champ||""};});
+  const rows=players.map(p=>{const s=scoreFor(p.predictions,state.results,p.champ);return{name:p.name,ig:"@"+(p.ig||p.slug),dept:p.dept||"",country:p.country||"",pts:s.pts,exact:s.exact,correct:s.correct,picked:Object.values(p.predictions||{}).filter(x=>x.o).length,champ:p.champ||"",goals:(p.goals!=null?p.goals:"")};});
   rows.sort((a,b)=>b.pts-a.pts||b.exact-a.exact||b.correct-a.correct);
   rows.forEach((r,i)=>r.rank=i+1);
   const depts={};
@@ -1013,15 +1017,15 @@ async function downloadReport(){
   try{
     if(!window.XLSX){await new Promise((res,rej)=>{const s=document.createElement("script");s.src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";s.onload=res;s.onerror=rej;document.head.appendChild(s);});}
     const wb=XLSX.utils.book_new();
-    const s1=XLSX.utils.json_to_sheet(rows.map(r=>({Rank:r.rank,Name:r.name,Instagram:r.ig,Department:r.dept,Country:r.country,Points:r.pts,"Exact scores":r.exact,"Correct results":r.correct,"Matches picked":r.picked,"Champion pick":r.champ})));
+    const s1=XLSX.utils.json_to_sheet(rows.map(r=>({Rank:r.rank,Name:r.name,Instagram:r.ig,Department:r.dept,Country:r.country,Points:r.pts,"Exact scores":r.exact,"Correct results":r.correct,"Matches picked":r.picked,"Champion pick":r.champ,"Tiebreaker (goals)":r.goals})));
     XLSX.utils.book_append_sheet(wb,s1,"Standings");
     const s2=XLSX.utils.json_to_sheet(Object.keys(depts).sort().map(d=>({Department:d,Players:depts[d].n,"Total points":depts[d].pts,"Avg points":Math.round(depts[d].pts/depts[d].n*10)/10,"Top scorer":depts[d].top})));
     XLSX.utils.book_append_sheet(wb,s2,"By Department");
     XLSX.writeFile(wb,"wc26-standings-"+day+".xlsx");
     toast("Excel report downloaded 📊");
   }catch(e){
-    const head=["Rank","Name","Instagram","Department","Country","Points","Exact","Correct","Picked","Champion"];
-    const csv=[head.join(",")].concat(rows.map(r=>[r.rank,r.name,r.ig,r.dept,r.country,r.pts,r.exact,r.correct,r.picked,r.champ].map(csvEsc).join(","))).join("\n");
+    const head=["Rank","Name","Instagram","Department","Country","Points","Exact","Correct","Picked","Champion","Tiebreaker"];
+    const csv=[head.join(",")].concat(rows.map(r=>[r.rank,r.name,r.ig,r.dept,r.country,r.pts,r.exact,r.correct,r.picked,r.champ,r.goals].map(csvEsc).join(","))).join("\n");
     const blob=new Blob(["\ufeff"+csv],{type:"text/csv"});
     const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="wc26-standings-"+day+".csv";a.click();URL.revokeObjectURL(a.href);
     toast("Network blocked the Excel library — downloaded CSV instead (opens in Excel)");
