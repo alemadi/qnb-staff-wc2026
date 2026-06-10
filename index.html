@@ -346,7 +346,7 @@
       <details style="margin-top:16px;font-size:11.5px;color:var(--muted);line-height:1.6">
         <summary style="cursor:pointer;color:var(--gold);font-weight:700">📜 Rules &amp; terms</summary>
         <div style="margin-top:8px">
-        <b>Free to enter — strictly no buy-ins, no side bets.</b> One entry per person; your real Instagram handle is your identity and a 4-digit PIN protects it. Predict each group match. <b>Predictions lock 24 hours before kickoff</b> (Matchday 1 locks at kickoff). Scoring: <b>+3</b> correct result, <b>+2</b> exact score. <b>Champion pick: +25 points</b> — locks with the tiebreaker on <b>Thursday 18 June, 7:00 PM Doha</b>. Results are official FIFA full-time scores. <b>Grand prize</b> goes to the overall #1; prize ties resolve by most exact scores, then most correct results, then closest total-goals tiebreaker, then earliest sign-up. Pool admins play for bragging rights only and are not prize-eligible. The winner is verified by DM from their Instagram account and an audit of their entry before any award. Tampering with other players' picks or entering predictions after lock by any means leads to removal. The organizer may correct errors and has final say. Your handle, display name, department and country are visible to other players; all data is deleted after the final.
+        <b>Free to enter — strictly no buy-ins, no side bets.</b> One entry per person; your real Instagram handle is your identity and a 4-digit PIN protects it. Predict each group match. <b>Predictions lock at kickoff.</b> Scoring: <b>+3</b> correct result, <b>+2</b> exact score. <b>Champion pick: +25 points</b> — locks with the tiebreaker on <b>Thursday 18 June, 7:00 PM Doha</b>. Results are official FIFA full-time scores. <b>Grand prize</b> goes to the overall #1; prize ties resolve by most exact scores, then most correct results, then closest total-goals tiebreaker, then earliest sign-up. Pool admins play for bragging rights only and are not prize-eligible. The winner is verified by DM from their Instagram account and an audit of their entry before any award. Tampering with other players' picks or entering predictions after lock by any means leads to removal. The organizer may correct errors and has final say. Your handle, display name, department and country are visible to other players; all data is deleted after the final.
         </div>
       </details>
       <p class="sub" style="margin:14px 0 0;font-size:11px">Your picks sync to the live shared leaderboard — the same handle on any device resumes your game.</p>
@@ -359,7 +359,7 @@
     <div class="progress">
       <div class="top"><span>Group-stage predictions</span><span><b id="pred-count">0</b> / 72</span></div>
       <div class="bar"><i id="pred-bar" style="width:0%"></i></div>
-      <div class="rules"><b>+3</b> correct result &nbsp;·&nbsp; <b>+2</b> exact score &nbsp;·&nbsp; locks <b>24h</b> before kickoff (Matchday 1: at kickoff) &nbsp;·&nbsp; 🏆 champion <b>+25</b></div>
+      <div class="rules"><b>+3</b> correct result &nbsp;·&nbsp; <b>+2</b> exact score &nbsp;·&nbsp; predictions lock at <b>kickoff</b> &nbsp;·&nbsp; 🏆 champion <b>+25</b></div>
     </div>
     <div id="champ-card"></div>
     <div class="filters" id="filters"></div>
@@ -422,7 +422,7 @@
 const PASS = "DOHA2026"; // organizer access code — share with admins only
 const CHAMP_PTS=25;                       // champion bonus
 const CHAMP_LOCK="2026-06-18T16:00:00Z";  // champion picks lock: Thu 18 Jun, 7:00 PM Doha (first Matchday 2 kickoff)
-const LOCK_HRS=24;                        // predictions lock this many hours before kickoff (Matchday 1: at kickoff)
+const LOCK_HRS=0;                         // predictions lock at kickoff (raise to lock hours earlier)
 
 const FL = {
  "Mexico":"mx","South Africa":"za","South Korea":"kr","Czechia":"cz","Canada":"ca","Bosnia & H.":"ba",
