@@ -97,6 +97,11 @@
   .bar>i{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,var(--magenta),var(--gold));transition:width .5s cubic-bezier(.2,.8,.2,1)}
   .rules{font-size:11px;color:var(--muted);margin-top:9px;line-height:1.5}
   .rules b{color:var(--cream);font-weight:700}
+  .champ{margin-top:13px;background:linear-gradient(100deg,rgba(231,200,121,.14),rgba(196,21,111,.1));border:1px solid rgba(231,200,121,.4);border-radius:16px;padding:13px 15px}
+  .champ .t{display:flex;align-items:center;gap:8px;font-weight:800;font-size:13px}
+  .champ .t small{margin-left:auto;font-size:10px;color:var(--muted);font-weight:700;text-align:right}
+  .champ select{width:100%;margin-top:10px}
+  .champ .done{margin-top:9px;font-size:13px;font-weight:800;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 
   .filters{display:flex;gap:8px;overflow-x:auto;padding:13px 2px 4px;scrollbar-width:none}
   .filters::-webkit-scrollbar{display:none}
@@ -324,7 +329,24 @@
         <option>Group Risk</option><option>Group Finance</option><option>Group Operations</option>
         <option>Asset &amp; Wealth Management</option><option>Group Compliance</option><option>Other</option>
       </select>
+      <label class="fl">Country / QNB market</label>
+      <select class="input" id="j-country">
+        <option>Qatar</option><option>Türkiye</option><option>Egypt</option><option>Saudi Arabia</option>
+        <option>Kuwait</option><option>Oman</option><option>UAE</option><option>Lebanon</option>
+        <option>Jordan</option><option>Iraq</option><option>Palestine</option><option>Yemen</option>
+        <option>Sudan</option><option>South Sudan</option><option>Tunisia</option><option>Algeria</option>
+        <option>Libya</option><option>Mauritania</option><option>Indonesia</option><option>India</option>
+        <option>Singapore</option><option>China</option><option>Hong Kong</option><option>Vietnam</option>
+        <option>Myanmar</option><option>United Kingdom</option><option>France</option><option>Switzerland</option>
+        <option>Other</option>
+      </select>
       <button class="btn btn-primary" onclick="joinNow()">Join the pool ⚽</button>
+      <details style="margin-top:16px;font-size:11.5px;color:var(--muted);line-height:1.6">
+        <summary style="cursor:pointer;color:var(--gold);font-weight:700">📜 Rules &amp; terms</summary>
+        <div style="margin-top:8px">
+        One entry per person — your real Instagram handle is your identity. Predict each group match. <b>Predictions lock 24 hours before kickoff</b> (Matchday 1 locks at kickoff). Scoring: <b>+3</b> correct result, <b>+2</b> exact score. <b>Champion pick: +25 points, locks Thursday 18 June, 7:00 PM Doha.</b> Results are official FIFA full-time scores. Ties: most exact scores, then most correct results. Set a PIN to protect your handle; tampering with other players' picks or entering predictions after lock by any means leads to removal. Winners are verified by DM from their Instagram account. <b>No money, no buy-in, no side bets — bragging rights only.</b> The organizer may correct errors and has final say on disputes. Your handle, display name, department and country are visible to other players; all data is deleted after the final.
+        </div>
+      </details>
       <p class="sub" style="margin:14px 0 0;font-size:11px">Your picks sync to the live shared leaderboard — the same handle on any device resumes your game.</p>
     </div>
   </section>
@@ -335,8 +357,9 @@
     <div class="progress">
       <div class="top"><span>Group-stage predictions</span><span><b id="pred-count">0</b> / 72</span></div>
       <div class="bar"><i id="pred-bar" style="width:0%"></i></div>
-      <div class="rules"><b>+3</b> correct result &nbsp;·&nbsp; <b>+2</b> exact score (5 total) &nbsp;·&nbsp; predictions lock at kickoff</div>
+      <div class="rules"><b>+3</b> correct result &nbsp;·&nbsp; <b>+2</b> exact score &nbsp;·&nbsp; locks <b>24h</b> before kickoff (Matchday 1: at kickoff) &nbsp;·&nbsp; 🏆 champion <b>+25</b></div>
     </div>
+    <div id="champ-card"></div>
     <div class="filters" id="filters"></div>
     <div id="match-list"></div>
   </section>
@@ -368,6 +391,10 @@
         <select class="input org-pick" id="org-round" onchange="renderResultsEditor()"></select>
         <div id="res-list"></div>
         <div style="display:flex;gap:9px;margin-top:18px"><button class="btn btn-ghost" onclick="exportBackup()">⬇ Export backup</button><button class="btn btn-ghost" onclick="document.getElementById('restore-file').click()">⬆ Restore</button></div>
+        <button class="btn btn-ghost" style="margin-top:10px" onclick="downloadReport()">📊 Download standings report (Excel)</button>
+        <div class="org-note" style="margin-top:14px">Champion result — set only after the Final. Awards +25 to everyone who called it.</div>
+        <select class="input" id="org-champ"></select>
+        <div class="field" style="margin-top:14px"><input class="input" id="org-pinclear" placeholder="Forgot PIN? Enter handle to clear it" /><button class="btn btn-ghost btn-sm" onclick="orgClearPin()">Clear PIN</button></div>
         <input type="file" id="restore-file" accept="application/json" style="display:none" onchange="restoreBackup(this)" />
         <div class="field" style="margin-top:14px"><input class="input" id="org-del" placeholder="Remove a player — enter handle" /><button class="btn btn-danger btn-sm" onclick="orgDelete()">Remove</button></div>
         <button class="btn btn-danger" style="margin-top:14px" onclick="resetAll()">Reset all data (clear players &amp; results)</button>
@@ -391,6 +418,9 @@
 <script>
 /* ===== Matchday — World Cup 2026 staff pool · full 104-match build ===== */
 const PASS = "DOHA2026"; // organizer access code — share with admins only
+const CHAMP_PTS=25;                       // champion bonus
+const CHAMP_LOCK="2026-06-18T16:00:00Z";  // champion picks lock: Thu 18 Jun, 7:00 PM Doha (first Matchday 2 kickoff)
+const LOCK_HRS=24;                        // predictions lock this many hours before kickoff (Matchday 1: at kickoff)
 
 const FL = {
  "Mexico":"mx","South Africa":"za","South Korea":"kr","Czechia":"cz","Canada":"ca","Bosnia & H.":"ba",
@@ -548,7 +578,7 @@ async function sget(k,sh){
 async function sset(k,v,sh){
   if(!sh){lsSet(k,v);return true;}
   if(!CONFIGURED)return false;
-  try{const r=await fetch(SUPABASE_URL+"/rest/v1/kv",{method:"POST",headers:Object.assign({Prefer:"resolution=merge-duplicates"},SBH),body:JSON.stringify({key:k,value:v,updated_at:new Date().toISOString()})});return r.ok;}catch(e){return false;}
+  try{const r=await fetch(SUPABASE_URL+"/rest/v1/kv",{method:"POST",headers:Object.assign({Prefer:"resolution=merge-duplicates,return=minimal"},SBH),body:JSON.stringify({key:k,value:v,updated_at:new Date().toISOString()})});return r.ok;}catch(e){return false;}
 }
 async function sdel(k,sh){
   if(!sh){lsDel(k);return;}
@@ -593,6 +623,8 @@ function fmtTime(iso){return fT.format(new Date(iso)).toUpperCase();}
 function fmtWk(iso){return fWk.format(new Date(iso));}
 function dayKey(iso){return fDayKey.format(new Date(iso));}
 function locked(iso){return new Date(iso).getTime()<=Date.now()+CLOCK_OFFSET;}
+function lockedM(m){const off=(m.round==="MD1")?0:LOCK_HRS*3600*1000;return new Date(m.ko).getTime()-off<=Date.now()+CLOCK_OFFSET;}
+function champLocked(){return new Date(CHAMP_LOCK).getTime()<=Date.now()+CLOCK_OFFSET;}
 
 let state={view:"matches",meSlug:null,player:null,results:{},org:false,demo:false,filter:"MD1"};
 
@@ -600,9 +632,10 @@ function slug(s){return s.trim().toLowerCase().replace(/[\s"'\/\\]+/g,"-").repla
 function initials(name){const p=name.trim().split(/\s+/);return ((p[0]||"")[0]||"?").toUpperCase()+((p[1]||"")[0]||"").toUpperCase();}
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]));}
 
-function scoreFor(preds,results){
+function scoreFor(preds,results,champ){
   let pts=0,exact=0,correct=0,scored=0;
   for(const id in results){
+    if(id.charAt(0)==="_")continue;
     const r=results[id],p=preds&&preds[id];
     if(!p||!p.o)continue;
     scored++;
@@ -610,6 +643,7 @@ function scoreFor(preds,results){
     if(p.o===ro){pts+=3;correct++;}
     if(p.h!=null&&p.a!=null&&Number(p.h)===r.h&&Number(p.a)===r.a){pts+=2;exact++;}
   }
+  if(results&&results._champ&&champ&&champ===results._champ)pts+=CHAMP_PTS;
   return {pts,exact,correct,scored};
 }
 function predCount(){if(!state.player)return 0;let c=0;for(const id in state.player.predictions){if(state.player.predictions[id].o)c++;}return c;}
@@ -644,8 +678,9 @@ async function joinNow(){
     if(!pin){toast("@"+sl+" is PIN-locked — enter its 4-digit PIN");return;}
     if(await pinHash(pin)!==existing.pin){toast("Wrong PIN for @"+sl);return;}
   }
-  if(!existing)existing={ig,name,dept,slug:sl,joinedAt:Date.now(),predictions:{}};
-  existing.name=name;existing.dept=dept;existing.ig=ig;
+  const country=document.getElementById("j-country").value||"Qatar";
+  if(!existing)existing={ig,name,dept,country,slug:sl,joinedAt:Date.now(),predictions:{}};
+  existing.name=name;existing.dept=dept;existing.ig=ig;existing.country=country;
   if(pin&&!existing.pin)existing.pin=await pinHash(pin);
   const ok=await setJSON("wc:player:"+sl,existing,true);
   if(!ok){toast("Couldn't reach the database — try again");return;}
@@ -671,7 +706,7 @@ function updateChip(){
   if(!state.player)return;
   document.getElementById("chip-av").textContent=initials(state.player.name);
   document.getElementById("chip-name").textContent=state.player.name;
-  document.getElementById("chip-pts").textContent=scoreFor(state.player.predictions,state.results).pts+" PTS";
+  document.getElementById("chip-pts").textContent=scoreFor(state.player.predictions,state.results,state.player.champ).pts+" PTS";
 }
 
 function defaultRound(){
@@ -702,8 +737,28 @@ function fixturesFor(filter){
   });
 }
 
+const CHAMP_LOCK_LABEL="Thu 18 Jun · 7:00 PM";
+function renderChampCard(){
+  const host=document.getElementById("champ-card");if(!host||!state.player)return;
+  const teams=Object.keys(FL).sort();
+  const mine=state.player.champ||"";
+  const lk=champLocked(), win=state.results._champ;
+  let inner='<div class="t">🏆 Pick the Champion <small>+'+CHAMP_PTS+' pts · locks '+CHAMP_LOCK_LABEL+'</small></div>';
+  if(win){
+    const got=mine===win;
+    inner+='<div class="done" style="color:'+(got?'var(--ok)':'var(--bad)')+'">'+(got?('✓ You called it — '+esc(win)+' · +'+CHAMP_PTS+' pts'):('✗ Champion: '+esc(win)+(mine?' · you picked '+esc(mine):' · no pick')))+'</div>';
+  }else if(lk){
+    inner+='<div class="done">'+(mine?('🔒 Locked in: '+(FL[mine]?flagTag(FL[mine])+' ':'')+esc(mine)):'<span style="color:var(--muted)">🔒 Champion picks are locked</span>')+'</div>';
+  }else{
+    inner+='<select class="input" id="champ-sel"><option value="">Choose your champion…</option>'+teams.map(t=>'<option value="'+esc(t)+'"'+(t===mine?' selected':'')+'>'+esc(t)+'</option>').join("")+'</select>';
+  }
+  host.innerHTML='<div class="champ">'+inner+'</div>';
+  const sel=document.getElementById("champ-sel");
+  if(sel)sel.addEventListener("change",()=>{state.player.champ=sel.value||null;queueSave();toast(sel.value?("Champion saved: "+sel.value+" 🏆"):"Champion cleared");});
+}
 function renderMatches(){
   if(!state.player)return;
+  renderChampCard();
   const c=predCount();
   document.getElementById("pred-count").textContent=c;
   document.getElementById("pred-bar").style.width=(c/PRED_TOTAL*100)+"%";
@@ -726,7 +781,7 @@ function renderMatches(){
 
 function matchCard(m,idx){
   const p=state.player.predictions[m.id]||{};
-  const lk=locked(m.ko),res=state.results[m.id];
+  const lk=lockedM(m),res=state.results[m.id];
   const ribbon=m.tag==="qatar"?'<div class="ribbon">⭐ Qatar</div>':(m.tag==="open"?'<div class="ribbon open">Opener</div>':'');
   let mid;
   if(res){mid='<div class="midcol"><div class="final-score">'+res.h+'–'+res.a+'</div><div class="final-tag">Full time</div></div>';}
@@ -813,7 +868,7 @@ async function renderLeaderboard(){
   let rows=[];
   const players=await sbulkJSON("wc:player:");
   for(const p of players){
-    const s=scoreFor(p.predictions,resultsForScore);
+    const s=scoreFor(p.predictions,resultsForScore,p.champ);
     rows.push({name:p.name,dept:p.dept,slug:p.slug,pts:s.pts,exact:s.exact,correct:s.correct,predicted:Object.values(p.predictions||{}).filter(x=>x.o).length,me:p.slug===state.meSlug,demo:false});
   }
   if(state.demo)DEMO_PLAYERS.forEach(d=>rows.push({name:d.name,dept:d.dept,slug:"demo:"+d.name,pts:d.correct*3+d.exact*2,exact:d.exact,correct:d.correct,predicted:d.predicted,me:false,demo:true}));
@@ -838,9 +893,9 @@ async function renderLeaderboard(){
 
 async function renderMe(){
   if(!state.player){go("join");return;}
-  const s=scoreFor(state.player.predictions,state.results);
+  const s=scoreFor(state.player.predictions,state.results,state.player.champ);
   const pc=predCount();
-  let rows=(await sbulkJSON("wc:player:")).map(p=>({slug:p.slug,pts:scoreFor(p.predictions,state.results).pts}));
+  let rows=(await sbulkJSON("wc:player:")).map(p=>({slug:p.slug,pts:scoreFor(p.predictions,state.results,p.champ).pts}));
   rows.sort((a,b)=>b.pts-a.pts);
   let myRank="—",total=rows.length;
   rows.forEach((r,i)=>{if(r.slug===state.meSlug&&myRank==="—")myRank=i+1;});
@@ -870,6 +925,16 @@ function showOrg(){
   if(state.org){
     const sel=document.getElementById("org-round");
     if(!sel.options.length){sel.innerHTML=ROUNDS.filter(([k])=>k!=="R16"&&k!=="QF"&&k!=="SF"&&k!=="FINAL"&&k!=="R32").map(([k,l])=>'<option value="'+k+'">'+l+'</option>').join("")+ROUNDS.filter(([k])=>["R32"].includes(k)).map(([k,l])=>'<option value="'+k+'">'+l+' (teams TBD)</option>').join("");}
+    const oc=document.getElementById("org-champ");
+    if(oc&&!oc.options.length){
+      oc.innerHTML='<option value="">— Champion result: not set —</option>'+Object.keys(FL).sort().map(t=>'<option'+(state.results._champ===t?' selected':'')+'>'+t+'</option>').join("");
+      oc.addEventListener("change",async()=>{
+        if(oc.value){if(!confirm("Set "+oc.value+" as World Champion and award +"+CHAMP_PTS+" pts to correct picks?")){oc.value=state.results._champ||"";return;}state.results._champ=oc.value;}
+        else delete state.results._champ;
+        await setJSON("wc:results",state.results,true);updateChip();
+        toast(oc.value?("Champion set: "+oc.value+" 🏆"):"Champion result cleared");
+      });
+    }
     renderResultsEditor();
   }
 }
@@ -925,6 +990,42 @@ async function restoreBackup(inp){
     toast("Backup restored ✓");updateChip();
   }catch(e){toast("Couldn't read that backup file");}
   inp.value="";
+}
+async function orgClearPin(){
+  const h=document.getElementById("org-pinclear").value.trim().replace(/^@+/,"").toLowerCase();
+  if(!h)return;
+  const p=await getJSON("wc:player:"+h,true);
+  if(!p){toast("No player @"+h);return;}
+  delete p.pin;await setJSON("wc:player:"+h,p,true);
+  document.getElementById("org-pinclear").value="";
+  toast("PIN cleared for @"+h+" — they set a new one on next sign-in");
+}
+function csvEsc(v){v=String(v==null?"":v);return '"'+v.replace(/"/g,'""')+'"';}
+async function downloadReport(){
+  toast("Building report…");
+  const players=await sbulkJSON("wc:player:");
+  const rows=players.map(p=>{const s=scoreFor(p.predictions,state.results,p.champ);return{name:p.name,ig:"@"+(p.ig||p.slug),dept:p.dept||"",country:p.country||"",pts:s.pts,exact:s.exact,correct:s.correct,picked:Object.values(p.predictions||{}).filter(x=>x.o).length,champ:p.champ||""};});
+  rows.sort((a,b)=>b.pts-a.pts||b.exact-a.exact||b.correct-a.correct);
+  rows.forEach((r,i)=>r.rank=i+1);
+  const depts={};
+  rows.forEach(r=>{const d=r.dept||"—";if(!depts[d])depts[d]={n:0,pts:0,top:r.name,toppts:r.pts};else{depts[d].n;}depts[d].n++;depts[d].pts+=r.pts;if(r.pts>depts[d].toppts){depts[d].top=r.name;depts[d].toppts=r.pts;}});
+  const day=new Date().toISOString().slice(0,10);
+  try{
+    if(!window.XLSX){await new Promise((res,rej)=>{const s=document.createElement("script");s.src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";s.onload=res;s.onerror=rej;document.head.appendChild(s);});}
+    const wb=XLSX.utils.book_new();
+    const s1=XLSX.utils.json_to_sheet(rows.map(r=>({Rank:r.rank,Name:r.name,Instagram:r.ig,Department:r.dept,Country:r.country,Points:r.pts,"Exact scores":r.exact,"Correct results":r.correct,"Matches picked":r.picked,"Champion pick":r.champ})));
+    XLSX.utils.book_append_sheet(wb,s1,"Standings");
+    const s2=XLSX.utils.json_to_sheet(Object.keys(depts).sort().map(d=>({Department:d,Players:depts[d].n,"Total points":depts[d].pts,"Avg points":Math.round(depts[d].pts/depts[d].n*10)/10,"Top scorer":depts[d].top})));
+    XLSX.utils.book_append_sheet(wb,s2,"By Department");
+    XLSX.writeFile(wb,"wc26-standings-"+day+".xlsx");
+    toast("Excel report downloaded 📊");
+  }catch(e){
+    const head=["Rank","Name","Instagram","Department","Country","Points","Exact","Correct","Picked","Champion"];
+    const csv=[head.join(",")].concat(rows.map(r=>[r.rank,r.name,r.ig,r.dept,r.country,r.pts,r.exact,r.correct,r.picked,r.champ].map(csvEsc).join(","))).join("\n");
+    const blob=new Blob(["\ufeff"+csv],{type:"text/csv"});
+    const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="wc26-standings-"+day+".csv";a.click();URL.revokeObjectURL(a.href);
+    toast("Network blocked the Excel library — downloaded CSV instead (opens in Excel)");
+  }
 }
 async function orgDelete(){
   const h=document.getElementById("org-del").value.trim().replace(/^@+/,"").toLowerCase();
