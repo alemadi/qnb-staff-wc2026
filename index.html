@@ -317,6 +317,15 @@
   .res-row .si:focus{outline:none;border-color:var(--gold)}
   .res-row .saved{color:var(--ok);font-size:14px;width:14px}
   .btn.confirmall{width:100%;margin:2px 0 4px;background:linear-gradient(115deg,var(--gold-deep),var(--gold));color:#181106;border:none;font-weight:800;padding:12px;border-radius:12px;cursor:pointer;font:inherit;font-size:13px}
+  .pp-head,.pp-row{display:grid;grid-template-columns:1fr 96px 96px 58px;gap:8px;align-items:center;padding:8px 4px;border-bottom:1px solid var(--line-2);font-size:12px}
+  .pp-head{color:var(--faint);font-weight:800;letter-spacing:.1em;text-transform:uppercase;font-size:10px;border-bottom:1px solid var(--line)}
+  .pp-n{font-weight:700;color:var(--cream);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .pp-n small{display:block;color:var(--faint);font-weight:600;font-size:10px}
+  .pp-p{font-weight:800;color:var(--gold-bright)}
+  .pp-e{color:var(--muted)}
+  .pp-part{color:#f3b13d;font-weight:700}
+  .pp-s{text-align:right;font-weight:800}
+  #pp-match{margin-top:10px}
   .org-note{font-size:11px;color:var(--muted);line-height:1.5;margin:10px 0 14px;background:var(--glass);border-radius:12px;padding:11px 13px}
   .org-pick{margin:6px 0 10px}
 
@@ -604,6 +613,12 @@
         <div class="org-note">Group rounds: results auto-confirm about 30 minutes after full time — no action needed on most nights. You can correct any score and Save; your value always wins and is never overwritten. Finished matches also arrive prefilled here from the live feed. Knockout rounds: set both teams for each tie (Round of 32 once the group stage ends), then record the winner after full time or penalties — the next round fills itself in automatically.</div>
         <select class="input org-pick" id="org-round" onchange="renderResultsEditor()"></select>
         <div id="res-list"></div>
+        <div class="t" style="margin-top:24px">👁 Player picks</div>
+        <div class="org-note" style="margin-top:6px">Locked matches only — picks stay sealed until kickoff, even here.</div>
+        <select class="input org-pick" id="pp-match" onchange="renderPicks()"></select>
+        <div id="pp-consensus" class="org-note" style="margin-top:8px;display:none"></div>
+        <div id="pp-body"></div>
+        <button class="btn btn-ghost" style="margin-top:10px" onclick="exportPicksCSV()">⬇ Export picks CSV — all locked matches</button>
         <div style="display:flex;gap:9px;margin-top:18px"><button class="btn btn-ghost" onclick="exportBackup()">⬇ Export backup</button><button class="btn btn-ghost" onclick="document.getElementById('restore-file').click()">⬆ Restore</button></div>
         <button class="btn btn-ghost" style="margin-top:10px" onclick="downloadReport()">📊 Download standings report (Excel)</button>
         <div class="org-note" style="margin-top:14px">Champion result — set only after the Final. Awards +25 to everyone who called it.</div>
@@ -1436,6 +1451,7 @@ function renderResultsEditor(){
     const id=inp.dataset.rh||inp.dataset.ra;
     saveResult(id,document.querySelector('[data-rh="'+id+'"]').value,document.querySelector('[data-ra="'+id+'"]').value);
   }));
+  if(document.getElementById("pp-match"))renderPicks();
 }
 async function saveResult(id,h,a,quiet){
   if(h===""||a===""){delete state.results[id];await setJSON("wc:results",state.results,true);const m=document.querySelector('[data-rs="'+id+'"]');if(m)m.textContent="";updateChip();return false;}
@@ -1459,6 +1475,101 @@ async function confirmAllResults(){
   toast(n?("✓ "+n+" result"+(n===1?"":"s")+" confirmed · standings updated"):"Nothing to confirm — fill scores first");
 }
 
+/* ===== Organizer: player picks viewer (locked matches only) ===== */
+let PP_CACHE={t:0,players:null};
+async function ppPlayers(force){
+  if(!force&&PP_CACHE.players&&Date.now()-PP_CACHE.t<60000)return PP_CACHE.players;
+  const players=await sbulkJSON("wc:player:");
+  PP_CACHE={t:Date.now(),players:players};
+  return players;
+}
+function ppEligible(){
+  return FIXTURES.filter(m=>(m.kn?koReady(m):true)&&(lockedM(m)||state.results[m.id]))
+    .sort((a,b)=>new Date(b.ko)-new Date(a.ko));
+}
+function ppPickLabel(mv,kn,pk){
+  if(!pk)return null;
+  if(kn)return pk.w||null;
+  if(!pk.o)return null;
+  return pk.o==="H"?mv.home.n:pk.o==="A"?mv.away.n:"Draw";
+}
+function ppExactHTML(pk){
+  if(!pk)return "—";
+  const hs=pk.h!=null,as=pk.a!=null;
+  if(!hs&&!as)return "—";
+  if(hs&&as)return pk.h+"–"+pk.a;
+  return '<span class="pp-part">⚠ '+(hs?pk.h+"–·":"·–"+pk.a)+' partial</span>';
+}
+function ppPtsHTML(m,pk,r){
+  const dash='<span style="color:var(--faint)">—</span>';
+  if(!r)return dash;
+  if(m.kn){
+    if(r.w==null||!pk||!pk.w)return dash;
+    return pk.w===r.w?'<span style="color:var(--lime)">✓ +'+koPts(m)+'</span>':'<span style="color:#ff7b84">✗ +0</span>';
+  }
+  if(r.h==null||!pk||!pk.o)return dash;
+  const ro=r.h>r.a?"H":(r.h<r.a?"A":"D");
+  const pts=(pk.o===ro?3:0)+((pk.h!=null&&pk.a!=null&&Number(pk.h)===r.h&&Number(pk.a)===r.a)?2:0);
+  return (pk.o===ro?'<span style="color:var(--lime)">✓ +':'<span style="color:#ff7b84">✗ +')+pts+'</span>';
+}
+async function renderPicks(){
+  const sel=document.getElementById("pp-match");if(!sel)return;
+  const list=ppEligible();
+  const cur=sel.value;
+  sel.innerHTML=list.map(m=>{const v=fxView(m);return '<option value="'+m.id+'"'+(m.id===cur?' selected':'')+'>'+m.id+' · '+esc(v.home.n)+' v '+esc(v.away.n)+'</option>';}).join("");
+  const body=document.getElementById("pp-body"),con=document.getElementById("pp-consensus");
+  if(!list.length){body.innerHTML='<div class="org-note">Nothing locked yet — this opens as kickoffs pass.</div>';con.style.display="none";return;}
+  const m=FIXBYID[sel.value]||list[0];
+  const mv=fxView(m);
+  body.innerHTML='<div class="org-note">Loading picks…</div>';
+  const players=await ppPlayers();
+  const r=state.results[m.id];
+  const rows=players.map(p=>({p:p,pk:(p.predictions||{})[m.id]}))
+    .filter(x=>x.pk&&(x.pk.o||x.pk.w))
+    .sort((a,b)=>(a.p.name||"").localeCompare(b.p.name||""));
+  const n=rows.length||1;
+  if(!m.kn){
+    const c={H:0,D:0,A:0},ex={};
+    rows.forEach(x=>{c[x.pk.o]=(c[x.pk.o]||0)+1;if(x.pk.h!=null&&x.pk.a!=null){const k=x.pk.h+"–"+x.pk.a;ex[k]=(ex[k]||0)+1;}});
+    const top=Object.entries(ex).sort((a,b)=>b[1]-a[1])[0];
+    con.innerHTML='Consensus: '+esc(mv.home.n)+' '+Math.round(c.H/n*100)+'% · Draw '+Math.round(c.D/n*100)+'% · '+esc(mv.away.n)+' '+Math.round(c.A/n*100)+'%'+(top?' · most-picked exact: '+esc(top[0]):'');
+  }else{
+    let h=0;rows.forEach(x=>{if(x.pk.w===mv.home.n)h++;});
+    con.innerHTML='Consensus: '+esc(mv.home.n)+' '+Math.round(h/n*100)+'% · '+esc(mv.away.n)+' '+Math.round((rows.length-h)/n*100)+'%';
+  }
+  con.style.display="block";
+  let html='<div class="pp-head"><span>Player</span><span>Pick</span><span>Exact</span><span>Pts</span></div>';
+  rows.forEach(x=>{
+    html+='<div class="pp-row"><span class="pp-n">'+esc(x.p.name||x.p.slug)+'<small>'+esc(x.p.dept||"")+'</small></span>'+
+      '<span class="pp-p">'+esc(ppPickLabel(mv,m.kn,x.pk)||"—")+'</span>'+
+      '<span class="pp-e">'+ppExactHTML(x.pk)+'</span>'+
+      '<span class="pp-s">'+ppPtsHTML(m,x.pk,r)+'</span></div>';
+  });
+  html+='<div class="org-note" style="margin-top:8px">'+rows.length+' of '+players.length+' players picked this match.</div>';
+  body.innerHTML=html;
+}
+async function exportPicksCSV(){
+  const players=await ppPlayers(true);
+  const list=ppEligible().slice().sort((a,b)=>new Date(a.ko)-new Date(b.ko));
+  const head=["Player","Dept"].concat(list.map(m=>{const v=fxView(m);return m.id+" "+v.home.n+" v "+v.away.n;}));
+  const lines=[head];
+  players.slice().sort((a,b)=>(a.name||"").localeCompare(b.name||"")).forEach(p=>{
+    const row=[p.name||p.slug,p.dept||""];
+    list.forEach(m=>{
+      const v=fxView(m),pk=(p.predictions||{})[m.id];
+      let cell="";
+      if(pk){const lab=ppPickLabel(v,m.kn,pk);
+        if(lab){cell=lab;if(!m.kn&&(pk.h!=null||pk.a!=null))cell+=" ("+(pk.h!=null?pk.h:"·")+"–"+(pk.a!=null?pk.a:"·")+")";}}
+      row.push(cell);
+    });
+    lines.push(row);
+  });
+  const csv=String.fromCharCode(0xFEFF)+lines.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(",")).join("\r\n");
+  const blob=new Blob([csv],{type:"text/csv;charset=utf-8"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="staff-challenge-picks.csv";a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+  toast("⬇ Picks CSV exported");
+}
 /* ===== Knockout bracket: organizer editor + auto-propagation ===== */
 function teamOpts(sel){return '<option value="">— TBD —</option>'+Object.keys(FL).sort().map(t=>'<option value="'+esc(t)+'"'+(sel===t?' selected':'')+'>'+esc(t)+'</option>').join("");}
 function renderKnockoutEditor(host,rnd){
