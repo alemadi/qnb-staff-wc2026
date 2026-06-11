@@ -28,7 +28,42 @@ const tnorm = s => (s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").to
 const GRACE_MS = 130 * 60e3;        // kickoff + ~90' + stoppage + HT + 30 min calm
 const WINDOW_MS = 26 * 36e5;        // how far back we look for finished matches
 
+function cmpSt(a, b) {
+  return (b.pts | 0) - (a.pts | 0) || ((b.predicted | 0) - (a.predicted | 0)) ||
+         ((b.exact | 0) - (a.exact | 0)) || ((b.correct | 0) - (a.correct | 0));
+}
+
+/* Once per Doha-day, snapshot everyone's leaderboard rank into wc:ranksnap.
+   The app paints yesterday-vs-now movement arrows against it. Uses the same
+   comparator and shared-rank rule as the client so numbers always agree. */
+export async function snapshotRanks({ fetchImpl = fetch, now = Date.now(), dry = false, log = console.log } = {}) {
+  const g = await fetchImpl(SUPABASE_URL + "/rest/v1/kv?key=eq.wc:ranksnap&select=value", { headers: HJ });
+  if (!g.ok) throw new Error("snap read " + g.status);
+  const rows = await g.json();
+  const cur = rows.length ? JSON.parse(rows[0].value || "{}") : {};
+  const dohaDate = new Date(now + 3 * 36e5).toISOString().slice(0, 10);
+  if (cur.date === dohaDate) return { snapped: false };
+  const st = await fetchImpl(SUPABASE_URL + "/rest/v1/rpc/standings", { method: "POST", headers: HJ, body: "{}" });
+  if (!st.ok) throw new Error("standings rpc " + st.status);
+  const players = await st.json();
+  if (!Array.isArray(players)) throw new Error("standings shape");
+  players.sort(cmpSt);
+  const ranks = {}; let rank = 0, prev = null;
+  players.forEach((p, i) => { if (prev === null || cmpSt(p, prev) !== 0) { rank = i + 1; prev = p; } ranks[p.slug] = rank; });
+  log("rank snapshot " + dohaDate + " (" + players.length + " players)");
+  if (dry) { log("DRY \u2014 snapshot not written"); return { snapped: false, dry: true }; }
+  const w = await fetchImpl(SUPABASE_URL + "/rest/v1/kv", {
+    method: "POST",
+    headers: Object.assign({ Prefer: "resolution=merge-duplicates,return=minimal" }, HJ),
+    body: JSON.stringify({ key: "wc:ranksnap", value: JSON.stringify({ date: dohaDate, ranks }), updated_at: new Date(now).toISOString() })
+  });
+  if (!w.ok) throw new Error("snap write " + w.status);
+  return { snapped: true, players: players.length };
+}
+
 export async function run({ fetchImpl = fetch, now = Date.now(), dry = false, log = console.log } = {}) {
+  try { await snapshotRanks({ fetchImpl, now, dry, log }); }
+  catch (e) { log("snapshot skipped: " + e.message); }
   const FX = JSON.parse(readFileSync(new URL("./fixtures-group.json", import.meta.url), "utf8"));
   const OUR = {};
   FX.forEach(f => { OUR[tnorm(f.home)] = f.home; OUR[tnorm(f.away)] = f.away; });

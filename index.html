@@ -400,6 +400,10 @@
   .sk-row{display:flex;align-items:center;gap:12px;background:var(--glass);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
   .sk{background:linear-gradient(90deg,rgba(255,255,255,.05) 25%,rgba(255,255,255,.13) 37%,rgba(255,255,255,.05) 63%);background-size:400% 100%;animation:skm 1.2s ease-in-out infinite;border-radius:8px;height:14px}
   .sk.r{width:18px}.sk.av{width:36px;height:36px;border-radius:50%}.sk.nm{flex:1;max-width:180px}.sk.pt{width:46px;margin-left:auto}
+  .rmove{width:34px;flex:none;font-size:10.5px;font-weight:800;letter-spacing:.02em}
+  .rmove.up{color:var(--lime)}
+  .rmove.down{color:#ff7b84}
+  .rmove.flat,.rmove.none{color:var(--faint)}
   @keyframes skm{0%{background-position:100% 0}100%{background-position:-100% 0}}
   @media (prefers-reduced-motion:reduce){.pb-dot{animation:none}.sk{animation:none}}
 
@@ -1244,8 +1248,14 @@ async function persistPlayer(){const ok=await setJSON("wc:player:"+state.meSlug,
 let LB_SHOWN=100;
 /* Rank order everywhere: points, then most predictions, then exact, then correct */
 function cmpSt(a,b){return (b.pts|0)-(a.pts|0)||((b.predicted|0)-(a.predicted|0))||((b.exact|0)-(a.exact|0))||((b.correct|0)-(a.correct|0));}
+function moveHTML(d){
+  if(d==null)return '<div class="rmove none"></div>';
+  if(d>0)return '<div class="rmove up">\u25b2'+d+'</div>';
+  if(d<0)return '<div class="rmove down">\u25bc'+(-d)+'</div>';
+  return '<div class="rmove flat">\u2013</div>';
+}
 function lbRowHTML(r,i,PT){
-  return '<div class="lb-row '+(r.me?"me":"")+'" style="animation-delay:'+Math.min(i*0.03,0.5)+'s"><div class="rank">'+r.rank+'</div><div class="avatar">'+initials(r.name)+'</div>'+
+  return '<div class="lb-row '+(r.me?"me":"")+'" style="animation-delay:'+Math.min(i*0.03,0.5)+'s"><div class="rank">'+r.rank+'</div>'+moveHTML(r.dRank)+'<div class="avatar">'+initials(r.name)+'</div>'+
     '<div class="lb-info"><div class="n">'+esc(r.name)+(r.me?'<span class="youtag">YOU</span>':'')+(r.demo?'<span class="demotag">demo</span>':'')+'</div><div class="d">'+esc(r.dept||"")+'</div>'+
     '<div class="lb-stats"><span>◎ <b>'+r.exact+'</b> exact</span><span>✓ <b>'+r.correct+'</b> correct</span><span>'+r.predicted+'/'+PT+' picked</span></div></div>'+
     '<div class="lb-pts"><b>'+r.pts+'</b><span>pts</span></div></div>';
@@ -1271,6 +1281,10 @@ async function renderLeaderboard(){
   }
   rows.sort((a,b)=>cmpSt(a,b)||a.name.localeCompare(b.name));
   let rank=0,prevR=null;rows.forEach((r,i)=>{if(prevR===null||cmpSt(r,prevR)!==0){rank=i+1;prevR=r;}r.rank=rank;});
+  if(!state.demo){
+    const snap=await rankSnap();
+    if(snap&&snap.ranks)rows.forEach(r=>{const pr=snap.ranks[r.slug];r.dRank=(pr!=null)?(pr-r.rank):null;});
+  }
   if(!rows.length){body.innerHTML='<div class="empty"><div class="ic">🏆</div><b>No predictions yet</b><span>Be the first to lock in your picks under “Matches”.</span></div>';return;}
   const PT=predTotal();
   let html="";
@@ -1798,6 +1812,14 @@ function locksSoonSplit(list,now){
   });
   soon.sort((a,b)=>lockTs(a)-lockTs(b));
   return {soon:soon,rest:rest};
+}
+let SNAP_CACHE={t:0,val:null};
+async function rankSnap(){
+  if(Date.now()-SNAP_CACHE.t<300000)return SNAP_CACHE.val;
+  let v=null;
+  try{v=await getJSON("wc:ranksnap",true);}catch(e){}
+  SNAP_CACHE={t:Date.now(),val:(v&&v.ranks)?v:null};
+  return SNAP_CACHE.val;
 }
 function nextUnpicked(){
   if(!state.player)return null;
