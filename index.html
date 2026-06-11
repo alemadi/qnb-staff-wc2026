@@ -34,14 +34,22 @@
   }
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
   html,body{height:100%}
+  html{background:#000}
   body{
     font-family:var(--font-b); color:var(--cream); line-height:1.45;
+    background:transparent;
+    min-height:100%; overflow-x:hidden;
+  }
+  /* ambient glow on a fixed viewport-sized layer: same look as the old
+     background-attachment:fixed, but composited (no iOS repaint, and no gold
+     smear from gradients stretching over a 10k-px document). body::before is
+     the tricolor strip and body::after the grain, so this lives on html. */
+  html::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
     background:
       radial-gradient(1100px 760px at 8% -6%, rgba(180,151,89,.13), transparent 58%),
       radial-gradient(1000px 720px at 102% 14%, rgba(45,111,224,.10), transparent 54%),
       radial-gradient(900px 900px at 50% 128%, rgba(239,51,64,.07), transparent 60%),
       linear-gradient(162deg, #121214 0%, #0a0a0c 42%, #000000 100%);
-    min-height:100%; overflow-x:hidden;
   }
   body::before{content:"";position:fixed;top:0;left:0;right:0;height:3px;background:var(--tiles);z-index:10000;pointer-events:none}
   @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
