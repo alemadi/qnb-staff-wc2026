@@ -43,8 +43,7 @@
       linear-gradient(162deg, #121214 0%, #0a0a0c 42%, #000000 100%);
     min-height:100%; overflow-x:hidden;
   }
-  body::before{content:"";position:fixed;top:0;left:0;right:0;height:3px;background:var(--tiles);background-size:300% 100%;animation:stripflow 18s linear infinite alternate;z-index:10000;pointer-events:none}
-  @keyframes stripflow{from{background-position:0 0}to{background-position:100% 0}}
+  body::before{content:"";position:fixed;top:0;left:0;right:0;height:3px;background:var(--tiles);z-index:10000;pointer-events:none}
   @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
   body::after{
     content:""; position:fixed; inset:0; pointer-events:none; z-index:9999; opacity:.03;
