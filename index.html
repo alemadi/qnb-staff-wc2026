@@ -107,7 +107,7 @@
   .sec-title .tag{margin-left:auto;font-size:11px;color:var(--muted);font-weight:600;text-align:right}
   .live{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);font-weight:700}
 
-  .progress{background:var(--glass);border:1px solid var(--line);border-radius:16px;padding:13px 15px;margin-bottom:6px}
+  .progress{background:#101014;border:1px solid var(--line);border-radius:16px;padding:13px 15px;margin-bottom:6px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 8px);z-index:30}
   .progress .top{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;margin-bottom:9px}
   .progress .top b{color:var(--gold);font-weight:800}
   .bar{height:7px;border-radius:6px;background:rgba(0,0,0,.28);overflow:hidden}
@@ -405,7 +405,37 @@
   .rmove.down{color:#ff7b84}
   .rmove.flat,.rmove.none{color:var(--faint)}
   @keyframes skm{0%{background-position:100% 0}100%{background-position:-100% 0}}
-  @media (prefers-reduced-motion:reduce){.pb-dot{animation:none}.sk{animation:none}}
+  .qpbtn{display:none;width:100%;justify-content:center;align-items:center;gap:6px;margin-top:11px;padding:12px;border-radius:12px;border:none;cursor:pointer;background:linear-gradient(115deg,var(--gold-deep),var(--gold));color:#181106;font:inherit;font-size:13.5px;font-weight:800;box-shadow:0 6px 18px -6px rgba(180,151,89,.5)}
+  .qpbtn:active{transform:scale(.985)}
+  .swipe{position:fixed;inset:0;z-index:200;background:rgba(6,6,9,.97);display:flex;flex-direction:column;padding:calc(14px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px))}
+  .sw-top{display:flex;align-items:center;gap:12px}
+  .sw-x,.sw-skip{font:inherit;background:none;border:none;color:var(--faint);font-weight:800;cursor:pointer;font-size:14px;padding:8px}
+  .sw-prog{flex:1}
+  .sw-prog .bar{margin-top:5px}
+  #sw-count{font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+  .sw-stage{flex:1;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+  .sw-card{width:min(320px,86vw);background:#15151a;border:1px solid rgba(180,151,89,.5);border-radius:24px;padding:30px 20px 30px;text-align:center;touch-action:none;user-select:none;-webkit-user-select:none;animation:sw-in .25s ease;will-change:transform;cursor:grab}
+  .sw-tag{font-size:10px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:var(--gold)}
+  .sw-teams{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:26px}
+  .sw-t{flex:1;display:flex;flex-direction:column;align-items:center;gap:12px;font-size:14px;font-weight:800;color:var(--cream)}
+  .sw-t .fl-img{width:58px;height:auto;border-radius:7px}
+  .sw-vs{font-family:var(--font-d);color:var(--faint);font-size:18px}
+  .sw-glow{position:absolute;top:50%;transform:translateY(-50%);font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;opacity:0;pointer-events:none;transition:opacity .08s;writing-mode:vertical-rl}
+  .sw-glow.l{left:6px;color:#ff7b84;rotate:180deg}
+  .sw-glow.r{right:6px;color:var(--lime)}
+  .sw-legend{text-align:center;font-size:12px;color:var(--muted);font-weight:600;padding:12px 0 6px}
+  .sw-btns{display:flex;gap:8px;justify-content:center;padding-bottom:4px}
+  .sw-b{flex:1;max-width:132px;font:inherit;font-size:12.5px;font-weight:800;padding:13px 8px;border-radius:99px;border:1px solid var(--line);background:transparent;color:var(--cream);cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .sw-b.dim{color:var(--faint)}
+  .sw-b:active{transform:scale(.95)}
+  .sw-b.sw-done-b{background:linear-gradient(115deg,var(--gold-deep),var(--gold));color:#181106;border:none}
+  .sw-done{text-align:center;font-size:25px;font-weight:800;color:var(--cream);line-height:1.55}
+  .sw-done span{font-size:14px;color:var(--gold);font-weight:800}
+  .fly-r{transform:translate(150%,-6%) rotate(16deg)!important;opacity:0;transition:.24s ease-in!important}
+  .fly-l{transform:translate(-150%,-6%) rotate(-16deg)!important;opacity:0;transition:.24s ease-in!important}
+  .fly-u{transform:translateY(-130%) rotate(-3deg)!important;opacity:0;transition:.24s ease-in!important}
+  @keyframes sw-in{from{transform:translateY(16px);opacity:0}}
+  @media (prefers-reduced-motion:reduce){.pb-dot{animation:none}.sk{animation:none}.sw-card{animation:none}}
 
   footer.app{text-align:center;font-size:10.5px;color:var(--faint);padding:26px 10px 6px;line-height:1.7}
   footer.app b{color:var(--muted)}
@@ -520,6 +550,7 @@
     <div class="progress">
       <div class="top"><span>Predictions</span><span><b id="pred-count">0</b> / <span id="pred-total">72</span></span></div>
       <div class="bar"><i id="pred-bar" style="width:0%"></i></div>
+      <button id="qpbtn" class="qpbtn" style="display:none" onclick="openSwipe()">⚡ Quick-pick · <span id="qp-left">0</span> left</button>
       <div class="rules"><b>+3</b> result &nbsp;·&nbsp; <b>+2</b> exact bonus &nbsp;·&nbsp; knockouts <b>+4→+10</b> &nbsp;·&nbsp; 🏆 champion <b>+25</b> &nbsp;·&nbsp; ties break on <b>most predictions</b></div>
       <button class="ptbtn" onclick="togglePts(this)">How do points work? ▾</button>
       <div class="ptable" id="ptable">
@@ -597,7 +628,17 @@
   <a class="navbtn" href="/watch.html" style="text-decoration:none"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>Watch</a>
   <button class="navbtn" id="nav-me" onclick="go('me')"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M5 21a7 7 0 0 1 14 0"/></svg>Me</button>
 </nav>
-<div id="toast"></div>
+<div id="swipe" class="swipe" style="display:none" role="dialog" aria-modal="true" aria-label="Quick-pick">
+    <div class="sw-top">
+      <button class="sw-x" onclick="closeSwipe()" aria-label="Close">✕</button>
+      <div class="sw-prog"><span id="sw-count"></span><div class="bar"><i id="sw-bar" style="width:0%"></i></div></div>
+      <button class="sw-skip" onclick="swipeSkip()">skip ↷</button>
+    </div>
+    <div class="sw-stage" id="sw-stage"></div>
+    <div class="sw-legend" id="sw-legend"></div>
+    <div class="sw-btns" id="sw-btns"></div>
+  </div>
+  <div id="toast"></div>
 
 <script>
 /* ===== Matchday — World Cup 2026 staff pool · full 104-match build · v2: knockout predictions · WC26 official theme (black/gold + host tricolor) ===== */
@@ -1222,7 +1263,8 @@ function queueSave(){saveChain=saveChain.then(()=>persistPlayer());}
 function pickWinner(id,team){
   if(!state.player.predictions[id])state.player.predictions[id]={};
   state.player.predictions[id].w=team;
-  syncPickRow(id);syncProgress();updateChip();
+  syncPickRow(id);syncProgress();updateChip();updateJump();
+  try{navigator.vibrate&&navigator.vibrate(8);}catch(e){}
   queueSave();
 }
 function pickOutcome(id,o){
@@ -1827,9 +1869,18 @@ function nextUnpicked(){
   return FIXTURES.filter(m=>(m.kn?koReady(m):true)&&lockTs(m)>now&&!((state.player.predictions[m.id]||{}).o||(state.player.predictions[m.id]||{}).w))
     .sort((a,b)=>new Date(a.ko)-new Date(b.ko))[0]||null;
 }
+function swipeQueue(){
+  if(!state.player)return [];
+  const now=Date.now()+CLOCK_OFFSET;
+  return FIXTURES.filter(m=>(m.kn?koReady(m):true)&&lockTs(m)>now&&
+    !((state.player.predictions[m.id]||{}).o||(state.player.predictions[m.id]||{}).w))
+    .sort((a,b)=>new Date(a.ko)-new Date(b.ko));
+}
 function updateJump(){
-  const b=document.getElementById("jumpnext");if(!b)return;
-  b.style.display=nextUnpicked()?"block":"none";
+  const q=swipeQueue();
+  const b=document.getElementById("jumpnext");if(b)b.style.display=q.length?"block":"none";
+  const qb=document.getElementById("qpbtn");
+  if(qb){qb.style.display=q.length?"flex":"none";const l=document.getElementById("qp-left");if(l)l.textContent=q.length;}
 }
 function jumpToNext(){
   const nu=nextUnpicked();if(!nu)return;
@@ -1839,6 +1890,106 @@ function jumpToNext(){
   if(!el)return;
   el.scrollIntoView({behavior:"smooth",block:"center"});
   el.classList.add("jflash");setTimeout(()=>el.classList.remove("jflash"),1300);
+}
+/* ===== quick-pick swipe mode ===== */
+const SW={list:[],i:0,open:false};
+function openSwipe(){
+  SW.list=swipeQueue();SW.i=0;
+  if(!SW.list.length){toast("All picked \u2014 nothing left \u26a1");return;}
+  SW.open=true;
+  document.getElementById("swipe").style.display="flex";
+  document.body.style.overflow="hidden";
+  document.addEventListener("keydown",swKey);
+  renderSwipeCard();
+}
+function closeSwipe(){
+  SW.open=false;
+  document.getElementById("swipe").style.display="none";
+  document.body.style.overflow="";
+  document.removeEventListener("keydown",swKey);
+}
+function swKey(e){
+  if(!SW.open)return;
+  if(e.key==="Escape")closeSwipe();
+  else if(e.key==="ArrowRight")swipeCommit("H");
+  else if(e.key==="ArrowLeft")swipeCommit("A");
+  else if(e.key==="ArrowUp")swipeCommit("D");
+}
+function swCur(){
+  const now=Date.now()+CLOCK_OFFSET;
+  while(SW.i<SW.list.length){
+    const m=SW.list[SW.i],p=(state.player.predictions[m.id]||{});
+    if(!(p.o||p.w)&&lockTs(m)>now&&(m.kn?koReady(m):true))return m;
+    SW.i++;
+  }
+  return null;
+}
+function renderSwipeCard(){
+  const m=swCur();
+  const st=document.getElementById("sw-stage"),lg=document.getElementById("sw-legend"),bt=document.getElementById("sw-btns");
+  const done=SW.list.filter(x=>{const p=state.player.predictions[x.id]||{};return p.o||p.w;}).length;
+  document.getElementById("sw-count").textContent=(SW.list.length-done)+" left";
+  document.getElementById("sw-bar").style.width=(SW.list.length?done/SW.list.length*100:100)+"%";
+  if(!m){
+    st.innerHTML='<div class="sw-done">\ud83c\udf89<br>All caught up<br><span>'+predCount()+' / '+predTotal()+' picked</span></div>';
+    lg.textContent="";
+    bt.innerHTML='<button class="sw-b sw-done-b" onclick="closeSwipe()">Done</button>';
+    confetti();return;
+  }
+  const win=m.kn?" through":" wins";
+  st.innerHTML='<div class="sw-card" id="sw-card">'+
+    '<div class="sw-tag">'+esc((RLABEL[m.round]||m.round)+" \u00b7 "+fmtDay(m.ko)+" "+fmtTime(m.ko))+'</div>'+
+    '<div class="sw-teams"><div class="sw-t">'+m.home.f+'<b>'+esc(m.home.n)+'</b></div><span class="sw-vs">VS</span><div class="sw-t">'+m.away.f+'<b>'+esc(m.away.n)+'</b></div></div></div>'+
+    '<div class="sw-glow l" id="sw-gl">'+esc(m.away.n+win)+'</div>'+
+    '<div class="sw-glow r" id="sw-gr">'+esc(m.home.n+win)+'</div>';
+  lg.innerHTML='\u2190 '+esc(m.away.n+win)+' &nbsp;\u00b7&nbsp; \u2191 '+(m.kn?"skip":"draw")+' &nbsp;\u00b7&nbsp; '+esc(m.home.n+win)+' \u2192';
+  bt.innerHTML='<button class="sw-b" onclick="swipeCommit(\'A\')">'+esc(m.away.n)+'</button>'+
+    (m.kn?'<button class="sw-b dim" onclick="swipeSkip()">skip</button>':'<button class="sw-b" onclick="swipeCommit(\'D\')">Draw</button>')+
+    '<button class="sw-b" onclick="swipeCommit(\'H\')">'+esc(m.home.n)+'</button>';
+  bindSwipeGestures();
+}
+function swipeCommit(dir){
+  const m=swCur();if(!m)return;
+  const card=document.getElementById("sw-card");
+  if(m.kn){if(dir==="D")return swipeSkip();pickWinner(m.id,dir==="H"?m.home.n:m.away.n);}
+  else pickOutcome(m.id,dir);
+  SW.i++;
+  flyOff(card,dir,renderSwipeCard);
+}
+function swipeSkip(){
+  const m=swCur();if(!m)return;
+  SW.list.push(SW.list.splice(SW.i,1)[0]);
+  flyOff(document.getElementById("sw-card"),"U",renderSwipeCard);
+}
+function flyOff(card,dir,done){
+  const rm=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if(!card||rm){done();return;}
+  card.classList.add(dir==="H"?"fly-r":dir==="A"?"fly-l":"fly-u");
+  setTimeout(done,240);
+}
+function bindSwipeGestures(){
+  const c=document.getElementById("sw-card");
+  if(!c||!window.PointerEvent)return;
+  let sx=0,sy=0,drag=false;
+  const gl=document.getElementById("sw-gl"),gr=document.getElementById("sw-gr");
+  c.addEventListener("pointerdown",e=>{drag=true;sx=e.clientX;sy=e.clientY;try{c.setPointerCapture(e.pointerId);}catch(x){}c.style.transition="none";});
+  c.addEventListener("pointermove",e=>{
+    if(!drag)return;
+    const dx=e.clientX-sx,dy=e.clientY-sy;
+    c.style.transform="translate("+dx+"px,"+(dy*0.4)+"px) rotate("+(dx*0.05)+"deg)";
+    if(gr)gr.style.opacity=Math.min(1,Math.max(0,dx/90));
+    if(gl)gl.style.opacity=Math.min(1,Math.max(0,-dx/90));
+  });
+  c.addEventListener("pointerup",e=>{
+    if(!drag)return;drag=false;
+    const dx=e.clientX-sx,dy=e.clientY-sy;
+    if(gl)gl.style.opacity=0;if(gr)gr.style.opacity=0;
+    if(dx>90)return swipeCommit("H");
+    if(dx<-90)return swipeCommit("A");
+    if(dy<-90)return swipeCommit("D");
+    c.style.transition="transform .25s";c.style.transform="";
+  });
+  c.addEventListener("pointercancel",()=>{drag=false;c.style.transition="transform .25s";c.style.transform="";if(gl)gl.style.opacity=0;if(gr)gr.style.opacity=0;});
 }
 function liveTick(){
   const now=Date.now()+CLOCK_OFFSET;
