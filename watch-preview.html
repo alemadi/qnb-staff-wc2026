@@ -222,6 +222,12 @@
   .leaflet-container{background:#0A0E1A;font-family:var(--en)}
   .dot-hotel{width:12px;height:12px;border-radius:50%;background:var(--turq);border:2px solid #0A0E1A;box-shadow:0 0 0 1.5px rgba(43,217,199,.55)}
   .dot-fan{width:16px;height:16px;border-radius:50%;background:var(--grape);border:2px solid #0A0E1A;box-shadow:0 0 0 2.5px rgba(124,92,250,.7)}
+  .dot-me{width:14px;height:14px;border-radius:50%;background:var(--gold);border:2.5px solid #fff;box-shadow:0 0 0 2px rgba(217,180,91,.5)}
+  .locate-btn{display:flex;align-items:center;gap:6px;background:var(--night-3);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-family:var(--en);font-weight:700;font-size:.78rem;letter-spacing:.02em;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.45)}
+  .locate-btn:hover{border-color:var(--gold);color:var(--gold)}
+  .locate-btn.busy{opacity:.55;pointer-events:none}
+  .locate-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2}
+  #loc-note{font-size:.75rem;color:var(--ink-dim)}
   .leaflet-popup-content-wrapper{background:var(--night-3);color:var(--ink);border-radius:10px;border:1px solid var(--line);box-shadow:0 10px 30px rgba(0,0,0,.5)}
   .leaflet-popup-tip{background:var(--night-3)}
   .leaflet-popup-content{font-family:var(--en);font-size:.85rem;margin:10px 14px;line-height:1.5}
@@ -398,6 +404,7 @@
     <div class="legend" id="legend">
       <span><i style="background:var(--grape)"></i>Official fanzone</span>
       <span><i style="background:var(--turq)"></i>Hotel screenings</span>
+      <span id="loc-note"></span>
     </div>
 
     <div class="venues" id="venues"></div>
@@ -552,6 +559,46 @@ if (window.L && L.markerClusterGroup) {
 
   const pts = VENUES.map(v => [v.lat, v.lng]); pts.push([FANZONE.lat, FANZONE.lng]);
   map.fitBounds(L.latLngBounds(pts).pad(0.06));
+
+  /* ---- "Near me" (opt-in, one-shot, on-device only) ---- */
+  const locNote = document.getElementById("loc-note");
+  let meMarker = null, meRing = null, locBtnEl = null;
+  const locCtl = L.control({ position: "topright" });
+  locCtl.onAdd = function(){
+    locBtnEl = L.DomUtil.create("button", "locate-btn");
+    locBtnEl.type = "button";
+    locBtnEl.innerHTML = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>Near me';
+    locBtnEl.title = "Show my location on the map";
+    L.DomEvent.disableClickPropagation(locBtnEl);
+    locBtnEl.onclick = function(){
+      locBtnEl.classList.add("busy");
+      locNote.textContent = "";
+      map.locate({ setView: true, maxZoom: 14, enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 });
+    };
+    return locBtnEl;
+  };
+  locCtl.addTo(map);
+
+  map.on("locationfound", function(e){
+    locBtnEl.classList.remove("busy");
+    if (meMarker) {
+      meMarker.setLatLng(e.latlng);
+      meRing.setLatLng(e.latlng).setRadius(Math.min(e.accuracy / 2, 400));
+    } else {
+      meRing = L.circle(e.latlng, { radius: Math.min(e.accuracy / 2, 400), stroke: false, fillColor: "#D9B45B", fillOpacity: .12 }).addTo(map);
+      meMarker = L.marker(e.latlng, {
+        icon: L.divIcon({ className: "", html: '<div class="dot-me"></div>', iconSize: [14,14], iconAnchor: [7,7] }),
+        zIndexOffset: 1200
+      }).addTo(map);
+      meMarker.bindPopup("You are here");
+    }
+    locNote.textContent = "Location shown on your device only \u2014 nothing is sent or stored.";
+  });
+
+  map.on("locationerror", function(){
+    locBtnEl.classList.remove("busy");
+    locNote.textContent = "Couldn\u2019t get your location \u2014 allow location access, or open this page in Safari/Chrome.";
+  });
 } else {
   const mb = document.getElementById("map"); if (mb) mb.style.display = "none";
   const lg = document.getElementById("legend"); if (lg) lg.style.display = "none";
