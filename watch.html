@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#0A0E1A">
+<meta name="theme-color" content="#0a0a0c">
 <title>Where to Watch · World Cup 2026 in Qatar — MATCHDAY</title>
 <meta name="description" content="Every World Cup 2026 match lands in Doha's evening and overnight hours. Qatar's Group B fixtures in Doha time, the Visit Qatar Fanzone at Al Maha Island, and 43 hotel screenings across town.">
 <meta property="og:title" content="Where to watch the World Cup in Qatar">
@@ -14,16 +14,17 @@
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,300..900&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --night:#0A0E1A;          /* Doha sky, 1 AM */
-    --night-2:#10172A;        /* card surface */
-    --night-3:#161F38;        /* raised surface */
+    --night:#0a0a0c;          /* Doha sky, 1 AM */
+    --night-2:#131318;        /* card surface */
+    --night-3:#1b1b21;        /* raised surface */
     --line:rgba(233,234,242,.10);
     --ink:#EDEEF6;
     --ink-dim:#9BA1B6;
     --maroon:#8A1538;         /* Qatar flag maroon */
     --maroon-deep:#5E0E26;
     --rose:#E0566F;           /* maroon, lit — for small text accents */
-    --sand:#E6C683;           /* sodium-lit skyline warmth */
+    --sand:#b49759;           /* sodium-lit skyline warmth */
+    --tiles:linear-gradient(90deg,#ef3340 0 33.34%,#2ea84f 33.34% 66.67%,#2d6fe0 66.67% 100%);
     --radius:14px;
     --en:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif;
     --ar:"IBM Plex Sans Arabic","Archivo",system-ui,sans-serif;
@@ -33,7 +34,7 @@
   body{
     background:
       radial-gradient(1100px 560px at 78% -8%, rgba(138,21,56,.28), transparent 62%),
-      radial-gradient(900px 500px at -10% 12%, rgba(230,198,131,.07), transparent 55%),
+      radial-gradient(900px 500px at -10% 12%, rgba(180,151,89,.07), transparent 55%),
       var(--night);
     color:var(--ink);
     font-family:var(--en);
@@ -43,6 +44,7 @@
     min-height:100vh;
   }
   [lang="ar"]{font-family:var(--ar)}
+  body::before{content:"";position:fixed;top:0;left:0;right:0;height:3px;background:var(--tiles);z-index:1000;pointer-events:none}
   a{color:inherit}
   .wrap{max-width:980px;margin:0 auto;padding:0 20px}
 
@@ -112,7 +114,7 @@
     padding:18px 18px 16px;display:flex;flex-direction:column;gap:10px;
     transition:border-color .2s;
   }
-  .match.next{border-color:rgba(230,198,131,.55);background:linear-gradient(180deg,rgba(230,198,131,.07),transparent 60%),var(--night-2)}
+  .match.next{border-color:rgba(180,151,89,.55);background:linear-gradient(180deg,rgba(180,151,89,.07),transparent 60%),var(--night-2)}
   .match.live{border-color:rgba(224,86,111,.65);background:linear-gradient(180deg,rgba(138,21,56,.22),transparent 60%),var(--night-2)}
   .match.done{opacity:.55}
   .pill{
@@ -120,7 +122,7 @@
     padding:4px 10px;border-radius:99px;border:1px solid var(--line);color:var(--ink-dim);
     display:flex;align-items:center;gap:6px;
   }
-  .match.next .pill{color:var(--sand);border-color:rgba(230,198,131,.4)}
+  .match.next .pill{color:var(--sand);border-color:rgba(180,151,89,.4)}
   .match.live .pill{color:var(--rose);border-color:rgba(224,86,111,.45)}
   .dot{width:7px;height:7px;border-radius:50%;background:currentColor}
   .match.live .dot{animation:pulse 1.4s ease-in-out infinite}
@@ -174,7 +176,7 @@
   .tv-card h3{font-weight:800;font-stretch:110%;font-size:1.05rem;margin-bottom:8px}
   .tv-card p{font-size:.9rem;color:var(--ink-dim)}
   .tv-card p b{color:var(--ink)}
-  .tv-final{display:flex;flex-direction:column;justify-content:center;border-color:rgba(230,198,131,.35)}
+  .tv-final{display:flex;flex-direction:column;justify-content:center;border-color:rgba(180,151,89,.35)}
   .tv-final .when{font-weight:850;font-stretch:108%;font-size:1.5rem;color:var(--sand);margin-top:4px}
 
   /* ---------- hotels ---------- */
@@ -198,7 +200,7 @@
     padding:14px 15px;display:flex;flex-direction:column;gap:8px;
     transition:border-color .15s;
   }
-  .venue:hover{border-color:rgba(230,198,131,.45)}
+  .venue:hover{border-color:rgba(180,151,89,.45)}
   .venue .name{font-weight:600;font-size:.93rem;line-height:1.3}
   .venue a{
     font-size:.76rem;font-weight:600;color:var(--ink-dim);text-decoration:none;
