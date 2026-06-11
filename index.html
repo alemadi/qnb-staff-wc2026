@@ -12,7 +12,7 @@
 <title>QNB Staff WC2026 · World Cup Predictor</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Hanken+Grotesk:wght@400;500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 <style>
   :root{
     /* FIFA World Cup 26 look: black + white + trophy gold core, host-nation tricolor accents (Trionda) */
@@ -63,7 +63,6 @@
   .mark .wc b{font-weight:800;font-size:clamp(13px,3.4vw,16px);letter-spacing:3px;text-transform:uppercase}
   .mark .wc span{font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold)}
   .mark .wc em{font-style:normal;font-size:10px;letter-spacing:.6px;color:var(--faint)}
-  .mark .wc .ar{letter-spacing:0;text-transform:none;font-family:'IBM Plex Sans Arabic',var(--font-b);font-size:12.5px;font-weight:700;text-align:left}
   .userchip{display:flex;align-items:center;gap:9px;background:var(--glass);border:1px solid var(--line);
     padding:7px 10px 7px 7px;border-radius:40px;backdrop-filter:blur(8px);flex-shrink:0;cursor:pointer;transition:.2s}
   .userchip:hover{border-color:var(--gold);background:var(--glass-2)}
@@ -319,7 +318,7 @@
       <div class="mark">
         <div class="wm">STAFF<br>CHALLENGE</div>
         <div class="divider"></div>
-        <div class="wc"><b>World Cup 26</b><span class="ar" lang="ar" dir="rtl">تحدي الموظفين</span><em>predict · climb · win</em></div>
+        <div class="wc"><b>World Cup 26</b><em>predict · climb · win</em></div>
       </div>
       <div class="userchip" id="userchip" style="display:none" onclick="go('me')">
         <div class="avatar" id="chip-av">--</div>
