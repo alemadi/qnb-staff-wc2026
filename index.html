@@ -547,7 +547,7 @@
       </div>
       <div id="org-panel" style="display:none">
         <div class="switch-row"><div class="txt"><b>🎬 Demo mode</b><span>Populate the leaderboard with a sample field for a pitch. Presentation only — saves nothing.</span></div><div class="switch" id="demo-switch" onclick="toggleDemo()"></div></div>
-        <div class="org-note">Group rounds: enter final scores below — saving updates everyone's points instantly. Finished matches may arrive prefilled from the live feed; review and press Save to make them official. Knockout rounds: set both teams for each tie (Round of 32 once the group stage ends), then record the winner after full time or penalties — the next round fills itself in automatically.</div>
+        <div class="org-note">Group rounds: results auto-confirm about 30 minutes after full time — no action needed on most nights. You can correct any score and Save; your value always wins and is never overwritten. Finished matches also arrive prefilled here from the live feed. Knockout rounds: set both teams for each tie (Round of 32 once the group stage ends), then record the winner after full time or penalties — the next round fills itself in automatically.</div>
         <select class="input org-pick" id="org-round" onchange="renderResultsEditor()"></select>
         <div id="res-list"></div>
         <div style="display:flex;gap:9px;margin-top:18px"><button class="btn btn-ghost" onclick="exportBackup()">⬇ Export backup</button><button class="btn btn-ghost" onclick="document.getElementById('restore-file').click()">⬆ Restore</button></div>
