@@ -123,6 +123,29 @@
   .watchlink:hover{border-color:var(--gold)}
   .watchlink small{color:var(--muted);font-weight:600}
   .watchlink .go{margin-left:auto;color:var(--gold);font-weight:800}
+  /* Prizes — departure board */
+  .dep{background:#0c0c10;border:1px solid var(--line);border-radius:16px;padding:13px 14px 6px;margin:2px 0 16px;box-shadow:0 12px 36px rgba(0,0,0,.5)}
+  .dep-hd{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid var(--line-2);padding-bottom:9px;margin-bottom:3px}
+  .dep-hd b{font-size:10.5px;letter-spacing:3.5px;text-transform:uppercase;color:var(--gold);font-weight:800}
+  .dep-hd span{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--faint);font-weight:700}
+  .dep-row{display:flex;align-items:center;gap:11px;padding:12px 0;border-bottom:1px solid var(--line-2)}
+  .dep-row:last-of-type{border-bottom:none}
+  .dep-rk{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;font-family:var(--font-d);font-size:16px;flex-shrink:0;background:var(--glass);border:1px solid var(--line);color:var(--faint)}
+  .dep-rk.g{background:linear-gradient(170deg,var(--gold-bright),var(--gold-deep));color:#181106;border-color:rgba(227,211,163,.6)}
+  .dep-main{flex:1;min-width:0}
+  .dep-fb{display:flex;gap:3px;flex-wrap:wrap}
+  .dep-fc{position:relative;width:24px;height:32px;display:grid;place-items:center;flex-shrink:0;font-family:var(--font-d);font-size:19px;color:var(--cream);border-radius:4px;background:linear-gradient(180deg,#222227 0 48%,#121216 52% 100%);border:1px solid rgba(255,255,255,.07);animation:flap .5s both}
+  .dep-fc::after{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:rgba(0,0,0,.7)}
+  .dep-fb.gold .dep-fc{color:var(--gold-bright)}
+  @keyframes flap{from{transform:rotateX(86deg);opacity:.15}to{transform:rotateX(0);opacity:1}}
+  .dep-sub{font-size:9px;letter-spacing:1.8px;text-transform:uppercase;color:var(--muted);font-weight:700;margin-top:6px}
+  .dep-st{font-size:8.5px;letter-spacing:1.6px;text-transform:uppercase;font-weight:800;color:var(--faint);text-align:right;width:62px;flex-shrink:0;line-height:1.5}
+  .dep-st.b{color:var(--gold-bright);animation:blink 1.7s steps(2) infinite}
+  @keyframes blink{50%{opacity:.3}}
+  .dep-ft{font-size:9px;letter-spacing:1.6px;text-transform:uppercase;color:var(--faint);font-weight:700;text-align:center;padding:8px 0 7px}
+  .prize-strip{display:flex;flex-wrap:wrap;align-items:center;gap:4px 9px;background:var(--glass);border:1px solid var(--line);border-radius:12px;padding:9px 13px;margin:0 0 12px;font-size:11.5px;font-weight:700}
+  .prize-strip b{color:var(--gold-bright)}
+  .prize-strip .ps-note{color:var(--muted);font-weight:600;width:100%;font-size:10.5px}
   .champ{margin-top:13px;background:linear-gradient(100deg,rgba(180,151,89,.14),rgba(239,51,64,.07));border:1px solid rgba(180,151,89,.4);border-radius:16px;padding:13px 15px}
   .champ .t{display:flex;align-items:center;gap:8px;font-weight:800;font-size:13px}
   .champ .t small{margin-left:auto;font-size:10px;color:var(--muted);font-weight:700;text-align:right}
@@ -352,7 +375,41 @@
     <div class="join-card">
       <h2>Join the pool</h2>
       <p class="sub">Predict all 104 matches of World Cup 2026, earn points, and climb the office leaderboard.</p>
-      <div class="sso-note">📸&nbsp;<div><b>No passwords, no work email.</b> Your Instagram handle is your identity — use the same handle on any device to pick up where you left off. A pool for QNB colleagues — free to enter, with a grand prize for the overall winner.</div></div>
+      <div class="dep">
+        <div class="dep-hd"><b>Departures</b><span>WC26 staff pool · prizes</span></div>
+        <div class="dep-row">
+          <div class="dep-rk g">1</div>
+          <div class="dep-main">
+            <div class="dep-fb gold">
+              <span class="dep-fc" style="animation-delay:.02s">M</span><span class="dep-fc" style="animation-delay:.07s">A</span><span class="dep-fc" style="animation-delay:.12s">L</span><span class="dep-fc" style="animation-delay:.17s">D</span><span class="dep-fc" style="animation-delay:.22s">I</span><span class="dep-fc" style="animation-delay:.27s">V</span><span class="dep-fc" style="animation-delay:.32s">E</span><span class="dep-fc" style="animation-delay:.37s">S</span>
+            </div>
+            <div class="dep-sub">Trip for one · 3-night accommodation</div>
+          </div>
+          <div class="dep-st b">Now<br>boarding</div>
+        </div>
+        <div class="dep-row">
+          <div class="dep-rk">2</div>
+          <div class="dep-main">
+            <div class="dep-fb">
+              <span class="dep-fc" style="animation-delay:.30s">6</span><span class="dep-fc" style="animation-delay:.34s">0</span><span class="dep-fc" style="animation-delay:.38s">,</span><span class="dep-fc" style="animation-delay:.42s">0</span><span class="dep-fc" style="animation-delay:.46s">0</span><span class="dep-fc" style="animation-delay:.50s">0</span>
+            </div>
+            <div class="dep-sub">QNB Life Rewards points</div>
+          </div>
+          <div class="dep-st">On time</div>
+        </div>
+        <div class="dep-row">
+          <div class="dep-rk">3</div>
+          <div class="dep-main">
+            <div class="dep-fb">
+              <span class="dep-fc" style="animation-delay:.52s">4</span><span class="dep-fc" style="animation-delay:.56s">0</span><span class="dep-fc" style="animation-delay:.60s">,</span><span class="dep-fc" style="animation-delay:.64s">0</span><span class="dep-fc" style="animation-delay:.68s">0</span><span class="dep-fc" style="animation-delay:.72s">0</span>
+            </div>
+            <div class="dep-sub">QNB Life Rewards points</div>
+          </div>
+          <div class="dep-st">On time</div>
+        </div>
+        <div class="dep-ft">Final call · 19 July · top three at the final whistle</div>
+      </div>
+      <div class="sso-note">📸&nbsp;<div><b>No passwords, no work email.</b> Your Instagram handle is your identity — use the same handle on any device to pick up where you left off. A pool for QNB colleagues — free to enter, with prizes for the top three.</div></div>
       <div id="cfg-warn" style="display:none;background:rgba(255,107,107,.12);border:1px solid rgba(255,107,107,.4);color:#ff9b9b;border-radius:12px;padding:10px 13px;font-size:11.5px;font-weight:600;margin-bottom:15px">⚠️ Setup needed: database keys aren't configured yet, so picks won't sync. Organizer: paste the Supabase URL + anon key into the file.</div>
       <label class="fl">Instagram username</label>
       <input class="input" id="j-ig" type="text" placeholder="@yourhandle" autocomplete="off" autocapitalize="none" maxlength="31" />
@@ -384,7 +441,7 @@
       <details style="margin-top:16px;font-size:11.5px;color:var(--muted);line-height:1.6">
         <summary style="cursor:pointer;color:var(--gold);font-weight:700">📜 Rules &amp; terms</summary>
         <div style="margin-top:8px">
-        <b>Free to enter — strictly no buy-ins, no side bets.</b> One entry per person; your real Instagram handle is your identity and a 4-digit PIN protects it. Predict every match. <b>Predictions lock at kickoff.</b> Group matches: <b>+3</b> for the correct result, plus a <b>+2</b> bonus if you nail the exact score (a perfect call = 5 points). Knockout matches (from 28 June): just pick who goes through — extra time and penalties count. Each round is worth more: <b>+4</b> Round of 32 → <b>+5</b> Round of 16 → <b>+6</b> quarter-finals → <b>+8</b> semi-finals → <b>+10</b> Final (third-place match <b>+6</b>); no exact-score bonus in knockouts. Ties open for picks once both teams are confirmed. <b>Champion pick: +25 points</b> — locks on <b>Thursday 18 June, 7:00 PM Doha</b>. Results are official FIFA full-time scores. <b>Grand prize</b> goes to the overall #1; prize ties resolve by most exact scores, then most correct results, then earliest sign-up. Pool admins play for bragging rights only and are not prize-eligible. The winner is verified by DM from their Instagram account and an audit of their entry before any award. Tampering with other players' picks or entering predictions after lock by any means leads to removal. The organizer may correct errors and has final say. Your handle, display name, department and country are visible to other players; all data is deleted after the final.
+        <b>Free to enter — strictly no buy-ins, no side bets.</b> One entry per person; your real Instagram handle is your identity and a 4-digit PIN protects it. Predict every match. <b>Predictions lock at kickoff.</b> Group matches: <b>+3</b> for the correct result, plus a <b>+2</b> bonus if you nail the exact score (a perfect call = 5 points). Knockout matches (from 28 June): just pick who goes through — extra time and penalties count. Each round is worth more: <b>+4</b> Round of 32 → <b>+5</b> Round of 16 → <b>+6</b> quarter-finals → <b>+8</b> semi-finals → <b>+10</b> Final (third-place match <b>+6</b>); no exact-score bonus in knockouts. Ties open for picks once both teams are confirmed. <b>Champion pick: +25 points</b> — locks on <b>Thursday 18 June, 7:00 PM Doha</b>. Results are official FIFA full-time scores. <b>Prizes:</b> 1st — a Maldives trip for one with 3-night accommodation included; 2nd — 60,000 QNB Life Rewards points; 3rd — 40,000 QNB Life Rewards points. Prize ties resolve by most exact scores, then most correct results, then earliest sign-up. Pool admins play for bragging rights only and are not prize-eligible. Winners are verified by DM from their Instagram account and an audit of their entry before any award. Tampering with other players' picks or entering predictions after lock by any means leads to removal. The organizer may correct errors and has final say. Your handle, display name, department and country are visible to other players; all data is deleted after the final.
         </div>
       </details>
       <p class="sub" style="margin:14px 0 0;font-size:11px">Your picks sync to the live shared leaderboard — the same handle on any device resumes your game.</p>
@@ -423,6 +480,7 @@
   <!-- LEADERBOARD -->
   <section class="view" id="view-leaderboard">
     <div class="sec-title"><h2>Leaderboard</h2><span class="live tag"><span class="pulse"></span> Live</span></div>
+    <div class="prize-strip">🥇 <b>Maldives trip</b> · 🥈 60,000 pts · 🥉 40,000 pts<span class="ps-note">QNB Life Rewards · prizes for the top three at the final whistle</span></div>
     <div id="demo-banner" class="demo-banner" style="display:none">🎬 Demo mode — sample players shown for presentation. Nothing here is saved.</div>
     <div id="lb-body"></div>
     <button class="btn btn-ghost btn-sm" style="margin:10px auto 0;display:flex" onclick="renderLeaderboard()">↻ Refresh standings</button>
