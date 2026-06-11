@@ -1450,7 +1450,8 @@ function tickCountdown(){
   if(state.player){
     document.getElementById("userchip").style.display="flex";
     document.getElementById("countdown").style.display="flex";
-    updateChip();go("matches");
+    const h=(location.hash||"").slice(1);
+    updateChip();go(["matches","leaderboard","me"].indexOf(h)>=0?h:"matches");
   }else{go("join");}
   if(!CONFIGURED){const w=document.getElementById("cfg-warn");if(w)w.style.display="block";}
   syncClock();setInterval(syncClock,600000);
