@@ -13,6 +13,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<link rel="manifest" href="manifest.json" />
+<link rel="apple-touch-icon" href="apple-touch-icon.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+<meta name="apple-mobile-web-app-title" content="Staff Challenge" />
 <style>
   :root{
     /* FIFA World Cup 26 look: black + white + trophy gold core, host-nation tricolor accents (Trionda) */
@@ -345,6 +350,43 @@
   #toast{position:fixed;left:50%;bottom:calc(var(--nav-h) + 16px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);background:linear-gradient(100deg,var(--grape),var(--sapphire));border:1px solid var(--gold);color:var(--cream);padding:12px 18px;border-radius:14px;font-size:13px;font-weight:700;z-index:200;opacity:0;pointer-events:none;transition:.3s;box-shadow:0 12px 40px -10px rgba(0,0,0,.6);max-width:90vw;text-align:center}
   #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
+  /* ===== Matchday Live pack ===== */
+  .pulsebar{display:flex;align-items:center;gap:9px;background:var(--glass);border:1px solid var(--line);border-radius:13px;padding:11px 14px;margin:0 0 12px;font-size:12.5px;color:var(--muted);font-weight:600}
+  .pulsebar b{color:var(--cream)}
+  .pulsebar.live{border-color:rgba(239,51,64,.55);background:linear-gradient(100deg,rgba(239,51,64,.12),transparent 60%),var(--glass);color:var(--cream)}
+  .pulsebar.qatar{border-color:rgba(180,151,89,.55)}
+  .pb-dot{width:8px;height:8px;border-radius:50%;background:#ef3340;flex:none;animation:pbpulse 1.4s ease-in-out infinite}
+  .pb-dot.idle{background:var(--gold);animation:none}
+  .pb-more{color:var(--faint);font-weight:700;margin-left:auto}
+  @keyframes pbpulse{0%,100%{opacity:1}50%{opacity:.25}}
+
+  .delta-pop{position:fixed;left:50%;top:14px;transform:translateX(-50%) translateY(-8px);z-index:300;opacity:0;transition:.35s;
+    background:linear-gradient(135deg,#1a160d,#0e0c08);border:1px solid var(--gold);border-radius:16px;padding:14px 20px;text-align:center;
+    box-shadow:0 18px 50px -12px rgba(180,151,89,.5);max-width:92vw}
+  .delta-pop.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .delta-pop .dt{font-size:10.5px;font-weight:800;letter-spacing:.22em;text-transform:uppercase;color:var(--gold)}
+  .delta-pop .dv{font-family:var(--font-d);font-size:26px;color:var(--gold-bright);margin-top:3px;letter-spacing:.03em}
+  .delta-pop .ds{font-size:11.5px;color:var(--muted);margin-top:2px;font-weight:600}
+
+  .lbmode{display:flex;gap:8px;margin:0 0 12px}
+  .lbmode button{font:inherit;font-size:12px;font-weight:800;letter-spacing:.02em;padding:8px 16px;border-radius:99px;border:1px solid var(--line);background:transparent;color:var(--muted);cursor:pointer;transition:.15s}
+  .lbmode button.on{background:linear-gradient(115deg,var(--gold-deep),var(--gold));border-color:transparent;color:#181106}
+  .dept-note{font-size:11px;color:var(--faint);font-weight:600;margin:0 0 10px}
+
+  .sharebtn{display:flex;width:100%;justify-content:center;margin-top:12px;padding:13px;border-radius:13px;border:none;cursor:pointer;
+    background:linear-gradient(115deg,var(--gold-deep),var(--gold));color:#181106;font:inherit;font-size:14px;font-weight:800;box-shadow:0 6px 20px -6px rgba(180,151,89,.5)}
+  .sharebtn:active{transform:scale(.985)}
+
+  .rival{margin-top:14px;padding-top:13px;border-top:1px solid var(--line)}
+  .rival .rv-t{font-size:10.5px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:var(--gold)}
+  .rival .rv-line{display:flex;align-items:baseline;justify-content:center;gap:10px;margin-top:7px;font-size:17px}
+  .rival .rv-line b{color:var(--cream)}
+  .rival .rv-vs{font-size:11px;color:var(--faint);font-weight:800;letter-spacing:.1em}
+  .rival .rv-sub{font-size:11.5px;color:var(--muted);margin-top:4px;font-weight:600}
+  .rival .rv-x{background:none;border:none;color:var(--faint);font:inherit;font-size:11px;font-weight:700;cursor:pointer;margin-top:6px;text-decoration:underline}
+  .rv-pick{margin-top:8px;width:100%}
+  @media (prefers-reduced-motion:reduce){.pb-dot{animation:none}}
+
   footer.app{text-align:center;font-size:10.5px;color:var(--faint);padding:26px 10px 6px;line-height:1.7}
   footer.app b{color:var(--muted)}
   @media(max-width:420px){.me-stat{gap:18px}.teams{gap:2px}.tname{font-size:12.5px}}
@@ -453,6 +495,7 @@
   <!-- MATCHES -->
   <section class="view" id="view-matches">
     <div class="sec-title"><h2>Matches</h2><div class="tag" id="match-tag">104 fixtures</div></div>
+    <div id="pulsebar" class="pulsebar" style="display:none"></div>
     <div class="progress">
       <div class="top"><span>Predictions</span><span><b id="pred-count">0</b> / <span id="pred-total">72</span></span></div>
       <div class="bar"><i id="pred-bar" style="width:0%"></i></div>
@@ -482,6 +525,7 @@
   <!-- LEADERBOARD -->
   <section class="view" id="view-leaderboard">
     <div class="sec-title"><h2>Leaderboard</h2><span class="live tag"><span class="pulse"></span> Live</span></div>
+    <div class="lbmode" id="lbmode"><button type="button" data-m="people" class="on">People</button><button type="button" data-m="dept">Departments</button></div>
     <div class="prize-strip">🥇 <b>Maldives trip</b> · 🥈 60,000 pts · 🥉 40,000 pts<span class="ps-note">QNB Life Rewards · prizes for the top three at the final whistle</span></div>
     <div id="demo-banner" class="demo-banner" style="display:none">🎬 Demo mode — sample players shown for presentation. Nothing here is saved.</div>
     <div id="lb-body"></div>
@@ -492,6 +536,7 @@
   <section class="view" id="view-me">
     <div class="sec-title"><h2>Me</h2></div>
     <div class="mecard" id="mecard"></div>
+    <button class="btn sharebtn" onclick="shareCard()">📤 Share my card</button>
     <button class="btn btn-ghost" style="margin-top:14px" onclick="signOut()">Sign out</button>
 
     <div class="org-sec">
@@ -1167,6 +1212,9 @@ async function renderLeaderboard(){
   const body=document.getElementById("lb-body");
   document.getElementById("demo-banner").style.display=state.demo?"flex":"none";
   body.innerHTML='<div class="empty"><div class="ic">⏳</div><span>Loading standings…</span></div>';
+  const lm=document.getElementById("lbmode");
+  if(lm)lm.style.display=state.demo?"none":"flex";
+  if(LB_MODE==="dept"&&!state.demo){await renderDept(body);return;}
   let rows=[];
   if(state.demo){ /* demo: client-side scoring against demo results + demo players (never cached) */
     const players=await sbulkJSON("wc:player:");
@@ -1215,7 +1263,26 @@ async function renderMe(){
     '<div class="role">'+esc(state.player.dept)+'</div>'+(state.player.ig?'<div class="mail">@'+esc(state.player.ig)+'</div>':'')+
     '<div class="me-stat"><div class="s"><b>'+s.pts+'</b><span>Points</span></div><div class="s"><b>'+(awaiting?"—":("#"+myRank))+'</b><span>Rank'+(total?(" of "+total):"")+'</span></div><div class="s"><b>'+pc+'</b><span>Predicted</span></div></div>'+
     '<div class="me-break">'+(awaiting?'You\u2019ve locked in <b>'+pc+'/'+predTotal()+'</b> picks. Points appear here once matches kick off.':'<b>'+s.correct+'</b> correct results &nbsp;·&nbsp; <b>'+s.exact+'</b> exact scores &nbsp;·&nbsp; <b>'+s.scored+'</b> matches scored')+'</div>'+
-    '<div class="badges">'+badges.map(b=>'<div class="badge '+(b.g?"gold":"")+'">'+b.t+'</div>').join("")+'</div>';
+    '<div class="badges">'+badges.map(b=>'<div class="badge '+(b.g?"gold":"")+'">'+b.t+'</div>').join("")+'</div>'+
+    await rivalHTML(s,st);
+}
+
+async function rivalHTML(s,st){
+  const rs=await getJSON("wc:rival",false);
+  let inner;
+  if(rs){
+    const idx=st.findIndex(r=>r.slug===rs);
+    if(idx>=0){
+      const meRow=st.find(r=>r.slug===state.meSlug);
+      const myPts=meRow?meRow.pts:s.pts;
+      const rv=st[idx],diff=myPts-rv.pts;
+      inner='<div class="rv-t">\ud83c\udfaf Rival watch</div>'+
+        '<div class="rv-line"><b>You '+myPts+'</b><span class="rv-vs">VS</span><b>'+rv.pts+' '+esc(rv.name)+'</b></div>'+
+        '<div class="rv-sub">'+(diff>0?("You lead by "+diff+" pt"+(diff===1?"":"s")):(diff<0?(esc(rv.name)+" leads by "+(-diff)+" pt"+(diff===-1?"":"s")):"Dead level"))+' \u00b7 they\u2019re #'+(idx+1)+'</div>'+
+        '<button class="rv-x" onclick="clearRival()">change rival</button>';
+    }else inner='<button class="btn btn-ghost btn-sm" style="margin:0 auto" onclick="pickRival()">\ud83c\udfaf Pick a rival</button><div id="rival-slot"></div>';
+  }else inner='<button class="btn btn-ghost btn-sm" style="margin:0 auto" onclick="pickRival()">\ud83c\udfaf Pick a rival</button><div id="rival-slot"></div>';
+  return '<div class="rival">'+inner+'</div>';
 }
 
 async function unlockOrg(){
@@ -1439,6 +1506,178 @@ function tickCountdown(){
   wrap.innerHTML=u(d,"days")+u(h,"hrs")+u(mi,"min")+u(se,"sec");
 }
 
+/* ===== Matchday Live pack ===== */
+let LB_MODE="people";
+(function(){
+  const lm=document.getElementById("lbmode");
+  if(lm)lm.querySelectorAll("button").forEach(b=>b.onclick=()=>{LB_MODE=b.dataset.m;
+    lm.querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b));renderLeaderboard();});
+})();
+
+function renderPulse(){
+  const el=document.getElementById("pulsebar");if(!el)return;
+  const now=Date.now()+CLOCK_OFFSET;
+  const live=FIXTURES.filter(m=>isLive(m));
+  if(live.length){
+    const m=live[0];const min=Math.max(1,Math.min(120,Math.floor((now-new Date(m.ko).getTime())/60000)));
+    el.innerHTML='<span class="pb-dot"></span><b>LIVE</b>&nbsp;'+(m.home.f?m.home.f+' ':'')+esc(m.home.n)+' v '+esc(m.away.n)+(m.away.f?' '+m.away.f:'')+' \u00b7 '+min+'\u2032'+(live.length>1?'<span class="pb-more">+'+(live.length-1)+' more live</span>':'');
+    el.className="pulsebar live";el.style.display="flex";return;
+  }
+  const next=FIXTURES.filter(m=>new Date(m.ko).getTime()>now).sort((a,b)=>new Date(a.ko)-new Date(b.ko))[0];
+  if(!next){el.style.display="none";return;}
+  const ms=new Date(next.ko).getTime()-now;
+  const h=Math.floor(ms/36e5),mn=Math.floor(ms%36e5/6e4);
+  const qat=(next.home.n==="Qatar"||next.away.n==="Qatar");
+  const when=h>=48?("on "+fmtDay(next.ko)):(h>0?(h+"h "+mn+"m"):(mn+"m"));
+  el.innerHTML='<span class="pb-dot idle"></span>Next kickoff \u00b7 <b>'+esc(next.home.n)+' v '+esc(next.away.n)+'</b> \u00b7 in '+when+(qat?" \ud83c\uddf6\ud83c\udde6":"");
+  el.className="pulsebar"+(qat?" qatar":"");el.style.display="flex";
+}
+
+function confetti(){
+  if(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+  try{
+    const c=document.createElement("canvas");c.style.cssText="position:fixed;inset:0;width:100%;height:100%;z-index:299;pointer-events:none";
+    c.width=innerWidth;c.height=innerHeight;document.body.appendChild(c);
+    const x=c.getContext("2d");if(!x){c.remove();return;}
+    const cols=["#e3d3a3","#b49759","#ef3340","#2ea84f","#f4eee3"];
+    const P=[];for(let i=0;i<90;i++)P.push({x:c.width/2+(Math.random()-0.5)*120,y:-20-Math.random()*40,
+      vx:(Math.random()-0.5)*7,vy:2+Math.random()*4,r:3+Math.random()*5,a:Math.random()*Math.PI,
+      va:(Math.random()-0.5)*0.3,col:cols[i%cols.length]});
+    const t0=Date.now();
+    (function frame(){
+      const t=Date.now()-t0;x.clearRect(0,0,c.width,c.height);
+      P.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=0.08;p.a+=p.va;
+        x.save();x.translate(p.x,p.y);x.rotate(p.a);x.fillStyle=p.col;
+        x.globalAlpha=Math.max(0,1-t/1900);x.fillRect(-p.r,-p.r/2,p.r*2,p.r);x.restore();});
+      if(t<2000)requestAnimationFrame(frame);else c.remove();
+    })();
+  }catch(e){}
+}
+
+async function welcomeDelta(){
+  try{
+    const st=(await fetchStandings()).slice().sort((a,b)=>b.pts-a.pts||b.exact-a.exact||b.correct-a.correct);
+    let rank=null,pts=0;st.forEach((r,i)=>{if(r.slug===state.meSlug&&rank===null){rank=i+1;pts=r.pts;}});
+    if(rank===null)return;
+    const last=await getJSON("wc:lastSeen",false);
+    await setJSON("wc:lastSeen",{pts:pts,rank:rank,t:Date.now()},false);
+    if(!last||typeof last.pts!=="number")return;
+    const dp=pts-last.pts,dr=(typeof last.rank==="number")?(last.rank-rank):0;
+    if(dp<=0&&dr<=0)return;
+    const pop=document.createElement("div");pop.className="delta-pop";
+    pop.innerHTML='<div class="dt">Since your last visit</div>'+
+      '<div class="dv">'+(dp>0?("+"+dp+" pts"):"")+(dp>0&&dr>0?" \u00b7 ":"")+(dr>0?("\u25b2 "+dr+" place"+(dr===1?"":"s")):"")+'</div>'+
+      '<div class="ds">'+(dr>0?("You\u2019re now #"+rank):"Keep climbing \u2014 #"+rank)+'</div>';
+    document.body.appendChild(pop);
+    requestAnimationFrame(()=>pop.classList.add("show"));
+    setTimeout(()=>{pop.classList.remove("show");setTimeout(()=>pop.remove(),400);},6200);
+    if(dp>0)confetti();
+  }catch(e){}
+}
+
+async function renderDept(body){
+  const rows=await fetchStandings();
+  const map={};
+  rows.forEach(r=>{const d=((r.dept||"").trim())||"Unassigned";(map[d]=map[d]||[]).push(r.pts);});
+  const deps=Object.keys(map).map(d=>{const a=map[d];const sum=a.reduce((p,q)=>p+q,0);
+    return{d:d,n:a.length,sum:sum,avg:a.length?sum/a.length:0};});
+  deps.sort((a,b)=>b.avg-a.avg||b.sum-a.sum||a.d.localeCompare(b.d));
+  let html='<div class="dept-note">Ranked by average points per player \u00b7 ties broken by total points</div>';
+  deps.forEach((x,i)=>{
+    html+='<div class="lb-row" style="animation-delay:'+Math.min(i*0.03,0.4)+'s"><div class="rank">'+(i+1)+'</div>'+
+      '<div class="avatar">'+esc((x.d.replace(/[^A-Za-z ]/g,"").split(/\s+/).map(w=>w[0]||"").join("").slice(0,2).toUpperCase())||"?")+'</div>'+
+      '<div class="lb-info"><div class="n">'+esc(x.d)+'</div><div class="d">'+x.n+' player'+(x.n===1?"":"s")+' \u00b7 \u03a3 '+x.sum+' pts</div></div>'+
+      '<div class="lb-pts"><b>'+(Math.round(x.avg*10)/10)+'</b><span>avg</span></div></div>';});
+  body.innerHTML=html;
+}
+
+async function pickRival(){
+  const st=(await fetchStandings()).filter(r=>r.slug!==state.meSlug).sort((a,b)=>a.name.localeCompare(b.name));
+  const host=document.getElementById("rival-slot");if(!host)return;
+  host.innerHTML='<select class="input rv-pick" id="rv-sel"><option value="">Choose your rival\u2026</option>'+
+    st.map(r=>'<option value="'+esc(r.slug)+'">'+esc(r.name)+(r.dept?(" \u00b7 "+esc(r.dept)):"")+'</option>').join("")+'</select>';
+  document.getElementById("rv-sel").addEventListener("change",async e=>{
+    if(!e.target.value)return;
+    await setJSON("wc:rival",e.target.value,false);
+    toast("Rival locked in \ud83c\udfaf");renderMe();
+  });
+}
+async function clearRival(){lsDel("wc:rival");renderMe();}
+
+async function shareCard(){
+  try{
+    if(!state.player){toast("Sign in first");return;}
+    const sc=scoreFor(state.player.predictions,state.results,state.player.champ);
+    const st=(await fetchStandings()).slice().sort((a,b)=>b.pts-a.pts||b.exact-a.exact||b.correct-a.correct);
+    let rank=null,total=st.length;st.forEach((r,i)=>{if(r.slug===state.meSlug&&rank===null)rank=i+1;});
+    try{if(document.fonts&&document.fonts.load)await Promise.all([
+      document.fonts.load("400 200px Anton"),document.fonts.load("800 44px 'Hanken Grotesk'")]);}catch(e){}
+    const W=1080,H=1350,c=document.createElement("canvas");c.width=W;c.height=H;
+    const x=c.getContext&&c.getContext("2d");
+    if(!x){toast("Sharing isn\u2019t supported in this browser");return;}
+    x.fillStyle="#0a0a0c";x.fillRect(0,0,W,H);
+    let g=x.createRadialGradient(W/2,180,40,W/2,180,760);
+    g.addColorStop(0,"rgba(180,151,89,.30)");g.addColorStop(1,"rgba(180,151,89,0)");
+    x.fillStyle=g;x.fillRect(0,0,W,H);
+    x.fillStyle="#ef3340";x.fillRect(0,0,W/3,12);x.fillStyle="#2ea84f";x.fillRect(W/3,0,W/3,12);x.fillStyle="#2d6fe0";x.fillRect(W/3*2,0,W/3+2,12);
+    x.textAlign="center";
+    x.fillStyle="#b49759";x.font="800 32px 'Hanken Grotesk',sans-serif";
+    x.fillText("S T A F F   C H A L L E N G E   \u00b7   W C 2 6",W/2,96);
+    drawCardTrophy(x,W/2,150,210);
+    x.fillStyle="#f4eee3";x.font="800 56px 'Hanken Grotesk',sans-serif";
+    x.fillText(state.player.name,W/2,470);
+    x.fillStyle="rgba(244,238,227,.55)";x.font="600 30px 'Hanken Grotesk',sans-serif";
+    x.fillText((state.player.dept||"")+(state.player.ig?("  \u00b7  @"+state.player.ig):""),W/2,516);
+    const grd=x.createLinearGradient(0,560,0,860);grd.addColorStop(0,"#e3d3a3");grd.addColorStop(.55,"#b49759");grd.addColorStop(1,"#8a734a");
+    x.fillStyle=grd;x.font="400 250px Anton,'Arial Narrow',sans-serif";
+    x.fillText(rank?("#"+rank):"\u2013",W/2,810);
+    x.fillStyle="rgba(244,238,227,.5)";x.font="700 26px 'Hanken Grotesk',sans-serif";
+    x.fillText("RANK"+(total?("  OF  "+total):""),W/2,856);
+    const stats=[[sc.pts,"POINTS"],[sc.exact,"EXACT"],[sc.correct,"CORRECT"]];
+    stats.forEach((p,i)=>{const cx=W/2+(i-1)*300;
+      x.fillStyle="rgba(0,0,0,.4)";roundRect(x,cx-125,930,250,170,22);x.fill();
+      x.strokeStyle="rgba(244,238,227,.14)";x.lineWidth=2;roundRect(x,cx-125,930,250,170,22);x.stroke();
+      x.fillStyle="#e3d3a3";x.font="400 84px Anton,'Arial Narrow',sans-serif";x.fillText(String(p[0]),cx,1018);
+      x.fillStyle="rgba(244,238,227,.5)";x.font="700 22px 'Hanken Grotesk',sans-serif";x.fillText(p[1],cx,1066);});
+    x.fillStyle="#b49759";x.font="700 30px 'Hanken Grotesk',sans-serif";
+    x.fillText("Think you can beat me? \u2192 staffchallenge26.com",W/2,1220);
+    x.fillStyle="rgba(244,238,227,.35)";x.font="600 22px 'Hanken Grotesk',sans-serif";
+    x.fillText("QNB Staff World Cup 2026 \u00b7 11 June \u2013 19 July",W/2,1266);
+    c.toBlob(async b=>{
+      if(!b){toast("Couldn\u2019t build the card");return;}
+      const f=new File([b],"matchday-card.png",{type:"image/png"});
+      if(navigator.canShare&&navigator.canShare({files:[f]})){
+        try{await navigator.share({files:[f],title:"Staff Challenge",text:"My World Cup 26 standing \u2014 come beat me: https://staffchallenge26.com"});return;}catch(e){if(e&&e.name==="AbortError")return;}
+      }
+      const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="matchday-card.png";a.click();
+      setTimeout(()=>URL.revokeObjectURL(a.href),4000);toast("Card saved \u2014 share it on the group \ud83d\udce4");
+    },"image/png");
+  }catch(e){toast("Couldn\u2019t build the card");}
+}
+function roundRect(x,a,b,w,h,r){x.beginPath();x.moveTo(a+r,b);x.arcTo(a+w,b,a+w,b+h,r);x.arcTo(a+w,b+h,a,b+h,r);x.arcTo(a,b+h,a,b,r);x.arcTo(a,b,a+w,b,r);x.closePath();}
+function drawCardTrophy(x,cx,cy,s){
+  const u=s/140;
+  const gold=x.createLinearGradient(cx-70*u,cy,cx+70*u,cy+140*u);
+  gold.addColorStop(0,"#e3d3a3");gold.addColorStop(.5,"#b49759");gold.addColorStop(1,"#8a734a");
+  const bowl=x.createLinearGradient(0,cy,0,cy+90*u);bowl.addColorStop(0,"#f4e9c8");bowl.addColorStop(1,"#b49759");
+  x.save();x.lineCap="round";
+  x.strokeStyle=gold;x.lineWidth=7*u;
+  x.beginPath();x.moveTo(cx-40*u,cy+16*u);x.bezierCurveTo(cx-62*u,cy+16*u,cx-64*u,cy+44*u,cx-40*u,cy+49*u);x.stroke();
+  x.beginPath();x.moveTo(cx+40*u,cy+16*u);x.bezierCurveTo(cx+62*u,cy+16*u,cx+64*u,cy+44*u,cx+40*u,cy+49*u);x.stroke();
+  x.fillStyle=bowl;x.beginPath();x.moveTo(cx-40*u,cy+5*u);x.lineTo(cx+40*u,cy+5*u);x.lineTo(cx+40*u,cy+25*u);
+  x.arc(cx,cy+25*u,40*u,0,Math.PI,false);x.closePath();x.fill();
+  x.strokeStyle="rgba(138,115,74,.55)";x.lineWidth=1.6*u;
+  x.beginPath();x.arc(cx,cy+28*u,14.5*u,0,2*Math.PI);x.stroke();
+  x.beginPath();x.ellipse(cx,cy+28*u,14.5*u,5.6*u,0,0,2*Math.PI);x.stroke();
+  x.beginPath();x.ellipse(cx,cy+28*u,5.6*u,14.5*u,0,0,2*Math.PI);x.stroke();
+  x.fillStyle=gold;roundRect(x,cx-43*u,cy,86*u,7*u,3.5*u);x.fill();
+  x.beginPath();x.moveTo(cx-9*u,cy+65*u);x.bezierCurveTo(cx-9*u,cy+77*u,cx-16*u,cy+82*u,cx-19*u,cy+88*u);
+  x.lineTo(cx+19*u,cy+88*u);x.bezierCurveTo(cx+16*u,cy+82*u,cx+9*u,cy+77*u,cx+9*u,cy+65*u);x.closePath();x.fill();
+  x.fillStyle=bowl;roundRect(x,cx-27*u,cy+88*u,54*u,8*u,3*u);x.fill();
+  x.fillStyle=gold;roundRect(x,cx-36*u,cy+96*u,72*u,12*u,4*u);x.fill();
+  x.restore();
+}
+
 (async function init(){
   state.results=await getJSON("wc:results",true)||{};
   state.kteams=await getJSON("wc:kteams",true)||{};
@@ -1452,7 +1691,9 @@ function tickCountdown(){
     document.getElementById("countdown").style.display="flex";
     const h=(location.hash||"").slice(1);
     updateChip();go(["matches","leaderboard","me"].indexOf(h)>=0?h:"matches");
+    welcomeDelta();
   }else{go("join");}
+  renderPulse();setInterval(renderPulse,30000);
   if(!CONFIGURED){const w=document.getElementById("cfg-warn");if(w)w.style.display="block";}
   syncClock();setInterval(syncClock,600000);
   tickCountdown();setInterval(tickCountdown,1000);
