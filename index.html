@@ -1243,10 +1243,12 @@ function bindMatchEvents(){
   }));});
   document.querySelectorAll(".chipb.custom").forEach(b=>b.addEventListener("click",()=>{document.querySelector('[data-bf="'+b.dataset.bt+'"]').classList.toggle("show");}));
   document.querySelectorAll(".chipb[data-cid]").forEach(b=>b.addEventListener("click",()=>chipPick(b.dataset.cid,+b.dataset.h,+b.dataset.a)));
-  document.querySelectorAll(".scorein").forEach(inp=>inp.addEventListener("change",()=>{
-    const id=inp.dataset.sh||inp.dataset.sa;
-    saveScore(id,document.querySelector('[data-sh="'+id+'"]').value,document.querySelector('[data-sa="'+id+'"]').value);
-  }));
+  document.querySelectorAll(".scorein").forEach(inp=>{
+    const fire=()=>{const id=inp.dataset.sh||inp.dataset.sa;
+      saveScore(id,document.querySelector('[data-sh="'+id+'"]').value,document.querySelector('[data-sa="'+id+'"]').value);};
+    inp.addEventListener("change",fire);
+    let t;inp.addEventListener("input",()=>{clearTimeout(t);t=setTimeout(fire,450);}); /* save while typing — blur no longer required */
+  });
 }
 function syncPickRow(id){
   const p=state.player.predictions[id]||{};
