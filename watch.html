@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0A0E1A">
+<title>Where to Watch · World Cup 2026 in Qatar — MATCHDAY</title>
+<meta name="description" content="Every World Cup 2026 match lands in Doha's evening and overnight hours. Qatar's Group B fixtures in Doha time, the Visit Qatar Fanzone at Al Maha Island, and 43 hotel screenings across town.">
+<meta property="og:title" content="Where to watch the World Cup in Qatar">
+<meta property="og:description" content="Qatar's fixtures in Doha time · Visit Qatar Fanzone, Al Maha Island · 43 hotel screenings. 11 June – 19 July.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,300..900&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --night:#0A0E1A;          /* Doha sky, 1 AM */
+    --night-2:#10172A;        /* card surface */
+    --night-3:#161F38;        /* raised surface */
+    --line:rgba(233,234,242,.10);
+    --ink:#EDEEF6;
+    --ink-dim:#9BA1B6;
+    --maroon:#8A1538;         /* Qatar flag maroon */
+    --maroon-deep:#5E0E26;
+    --rose:#E0566F;           /* maroon, lit — for small text accents */
+    --sand:#E6C683;           /* sodium-lit skyline warmth */
+    --radius:14px;
+    --en:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif;
+    --ar:"IBM Plex Sans Arabic","Archivo",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:
+      radial-gradient(1100px 560px at 78% -8%, rgba(138,21,56,.28), transparent 62%),
+      radial-gradient(900px 500px at -10% 12%, rgba(230,198,131,.07), transparent 55%),
+      var(--night);
+    color:var(--ink);
+    font-family:var(--en);
+    font-size:16px;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+  }
+  [lang="ar"]{font-family:var(--ar)}
+  a{color:inherit}
+  .wrap{max-width:980px;margin:0 auto;padding:0 20px}
+
+  /* ---------- top bar ---------- */
+  .bar{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:18px 0 14px;border-bottom:1px solid var(--line);
+  }
+  .brand{
+    font-weight:850;font-stretch:118%;letter-spacing:.14em;
+    font-size:.95rem;text-decoration:none;color:var(--ink);
+    display:flex;align-items:center;gap:10px;
+  }
+  .brand:hover{color:var(--sand)}
+  .brand .arrow{color:var(--ink-dim);font-weight:400;letter-spacing:0}
+  .bar .tag{
+    font-size:.78rem;color:var(--ink-dim);letter-spacing:.05em;
+    display:flex;align-items:center;gap:8px;
+  }
+  .bar .tag [lang="ar"]{font-size:.85rem}
+
+  /* ---------- hero ---------- */
+  .hero{padding:54px 0 36px}
+  .eyebrow{
+    font-size:.74rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--rose);margin-bottom:14px;
+  }
+  h1{
+    font-weight:850;font-stretch:115%;
+    font-size:clamp(2.1rem,6.4vw,3.7rem);
+    line-height:1.04;letter-spacing:-.015em;
+    max-width:15ch;
+  }
+  h1 em{font-style:normal;color:var(--sand)}
+  .hero .ar-sub{
+    margin-top:14px;font-weight:600;font-size:clamp(1.05rem,3.2vw,1.45rem);
+    color:var(--sand);direction:rtl;text-align:left;
+  }
+  .lede{margin-top:18px;max-width:62ch;color:var(--ink-dim);font-size:1.02rem}
+  .lede strong{color:var(--ink);font-weight:600}
+  .chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
+  .chip{
+    font-size:.8rem;font-weight:600;letter-spacing:.02em;
+    border:1px solid var(--line);border-radius:99px;
+    padding:7px 14px;color:var(--ink-dim);background:rgba(255,255,255,.02);
+  }
+  .chip b{color:var(--ink);font-weight:700}
+
+  /* ---------- serrated divider (Qatar flag edge) ---------- */
+  .serr{display:block;width:100%;height:11px;margin:8px 0}
+  .serr path{fill:var(--maroon)}
+
+  /* ---------- sections ---------- */
+  section{padding:44px 0 8px}
+  .sec-head{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:6px}
+  h2{font-weight:800;font-stretch:112%;font-size:clamp(1.35rem,3.6vw,1.8rem);letter-spacing:-.01em}
+  .sec-head [lang="ar"]{color:var(--ink-dim);font-size:1rem;font-weight:500;direction:rtl}
+  .sec-sub{color:var(--ink-dim);font-size:.92rem;max-width:64ch;margin-top:6px}
+
+  .flag{width:30px;height:12px;border-radius:2px;flex:none}
+
+  /* ---------- match cards ---------- */
+  .matches{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:22px}
+  @media(max-width:760px){.matches{grid-template-columns:1fr}}
+  .match{
+    background:var(--night-2);border:1px solid var(--line);border-radius:var(--radius);
+    padding:18px 18px 16px;display:flex;flex-direction:column;gap:10px;
+    transition:border-color .2s;
+  }
+  .match.next{border-color:rgba(230,198,131,.55);background:linear-gradient(180deg,rgba(230,198,131,.07),transparent 60%),var(--night-2)}
+  .match.live{border-color:rgba(224,86,111,.65);background:linear-gradient(180deg,rgba(138,21,56,.22),transparent 60%),var(--night-2)}
+  .match.done{opacity:.55}
+  .pill{
+    align-self:flex-start;font-size:.68rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase;
+    padding:4px 10px;border-radius:99px;border:1px solid var(--line);color:var(--ink-dim);
+    display:flex;align-items:center;gap:6px;
+  }
+  .match.next .pill{color:var(--sand);border-color:rgba(230,198,131,.4)}
+  .match.live .pill{color:var(--rose);border-color:rgba(224,86,111,.45)}
+  .dot{width:7px;height:7px;border-radius:50%;background:currentColor}
+  .match.live .dot{animation:pulse 1.4s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+  @media(prefers-reduced-motion:reduce){.match.live .dot{animation:none}}
+  .opp{font-weight:800;font-stretch:110%;font-size:1.28rem;line-height:1.15}
+  .opp span{color:var(--ink-dim);font-weight:500;font-size:.95rem;font-stretch:100%}
+  .meta{font-size:.86rem;color:var(--ink-dim)}
+  .ko{display:flex;align-items:baseline;gap:8px;margin-top:auto;padding-top:6px}
+  .ko b{font-size:1.7rem;font-weight:850;font-stretch:108%;letter-spacing:-.01em;color:var(--ink)}
+  .ko small{font-size:.74rem;color:var(--ink-dim);letter-spacing:.06em;text-transform:uppercase}
+  .remind{
+    font-size:.8rem;font-weight:600;color:var(--sand);text-decoration:none;
+    border-top:1px solid var(--line);padding-top:10px;margin-top:4px;
+  }
+  .remind:hover{text-decoration:underline}
+  .group-note{margin-top:16px;font-size:.86rem;color:var(--ink-dim);max-width:70ch}
+
+  /* ---------- fanzone hero card ---------- */
+  .fanzone{
+    margin-top:22px;border-radius:var(--radius);overflow:hidden;
+    border:1px solid rgba(138,21,56,.55);
+    background:linear-gradient(135deg,rgba(138,21,56,.42),rgba(94,14,38,.16) 55%,transparent),var(--night-2);
+  }
+  .fz-in{padding:26px 24px}
+  .fz-eyebrow{font-size:.72rem;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:var(--rose)}
+  .fz-title{font-weight:850;font-stretch:112%;font-size:clamp(1.4rem,4vw,1.9rem);margin-top:8px;line-height:1.1}
+  .fz-title [lang="ar"]{display:block;font-size:1.05rem;font-weight:600;color:var(--sand);margin-top:6px;direction:rtl;text-align:left}
+  .fz-rows{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px 22px;margin-top:20px}
+  .fz-row small{display:block;font-size:.7rem;letter-spacing:.15em;text-transform:uppercase;color:var(--ink-dim);margin-bottom:3px}
+  .fz-row span{font-weight:600;font-size:.98rem}
+  .fz-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:22px}
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;text-decoration:none;
+    font-weight:700;font-size:.9rem;letter-spacing:.02em;
+    padding:11px 20px;border-radius:10px;transition:transform .15s,background .2s;
+  }
+  .btn:active{transform:scale(.97)}
+  .btn-primary{background:var(--maroon);color:#fff}
+  .btn-primary:hover{background:#A21A44}
+  .btn-ghost{border:1px solid var(--line);color:var(--ink)}
+  .btn-ghost:hover{border-color:var(--sand);color:var(--sand)}
+  .fz-partners{margin-top:18px;font-size:.76rem;color:var(--ink-dim);letter-spacing:.04em}
+
+  /* ---------- TV strip ---------- */
+  .tv{
+    margin-top:22px;display:grid;grid-template-columns:1.4fr 1fr;gap:14px;
+  }
+  @media(max-width:700px){.tv{grid-template-columns:1fr}}
+  .tv-card{background:var(--night-2);border:1px solid var(--line);border-radius:var(--radius);padding:20px}
+  .tv-card h3{font-weight:800;font-stretch:110%;font-size:1.05rem;margin-bottom:8px}
+  .tv-card p{font-size:.9rem;color:var(--ink-dim)}
+  .tv-card p b{color:var(--ink)}
+  .tv-final{display:flex;flex-direction:column;justify-content:center;border-color:rgba(230,198,131,.35)}
+  .tv-final .when{font-weight:850;font-stretch:108%;font-size:1.5rem;color:var(--sand);margin-top:4px}
+
+  /* ---------- hotels ---------- */
+  .tools{display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin-top:20px}
+  .search{
+    flex:1;min-width:230px;display:flex;align-items:center;gap:10px;
+    background:var(--night-2);border:1px solid var(--line);border-radius:10px;padding:11px 14px;
+  }
+  .search:focus-within{border-color:var(--sand)}
+  .search svg{flex:none;opacity:.5}
+  .search input{
+    flex:1;background:none;border:none;outline:none;color:var(--ink);
+    font-family:var(--en);font-size:.95rem;
+  }
+  .search input::placeholder{color:var(--ink-dim)}
+  .count{font-size:.82rem;color:var(--ink-dim);white-space:nowrap}
+  .count b{color:var(--sand)}
+  .venues{display:grid;grid-template-columns:repeat(auto-fill,minmax(236px,1fr));gap:10px;margin-top:18px}
+  .venue{
+    background:var(--night-2);border:1px solid var(--line);border-radius:12px;
+    padding:14px 15px;display:flex;flex-direction:column;gap:8px;
+    transition:border-color .15s;
+  }
+  .venue:hover{border-color:rgba(230,198,131,.45)}
+  .venue .name{font-weight:600;font-size:.93rem;line-height:1.3}
+  .venue a{
+    font-size:.76rem;font-weight:600;color:var(--ink-dim);text-decoration:none;
+    display:inline-flex;align-items:center;gap:5px;margin-top:auto;
+  }
+  .venue a:hover{color:var(--sand)}
+  .empty{display:none;margin-top:18px;color:var(--ink-dim);font-size:.92rem}
+  .foot-note{margin-top:20px;font-size:.82rem;color:var(--ink-dim);max-width:72ch}
+
+  /* ---------- footer ---------- */
+  footer{
+    margin-top:60px;border-top:1px solid var(--line);
+    padding:26px 0 44px;font-size:.8rem;color:var(--ink-dim);
+    display:flex;flex-direction:column;gap:6px;
+  }
+  footer a{color:var(--sand);text-decoration:none}
+  footer a:hover{text-decoration:underline}
+
+  :focus-visible{outline:2px solid var(--sand);outline-offset:2px;border-radius:4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <nav class="bar">
+    <a class="brand" href="/"><span class="arrow">←</span> MATCHDAY</a>
+    <div class="tag">Watch Guide <span lang="ar">· دليل المشاهدة</span></div>
+  </nav>
+
+  <header class="hero">
+    <div class="eyebrow">FIFA World Cup 26 · 11 June – 19 July</div>
+    <h1>Where to <em>watch</em> the World Cup in Qatar</h1>
+    <div class="ar-sub" lang="ar">مشاهدة مباريات كأس العالم 2026 في قطر</div>
+    <p class="lede">
+      This tournament is being played in the USA, Canada and Mexico — which means in Doha it's a
+      <strong>night event</strong>. Kickoffs land between roughly <strong>7:00 PM and 5:00 AM</strong> Doha time
+      for the whole month. Here's where to settle in.
+    </p>
+    <div class="chips">
+      <div class="chip"><b>3</b> Qatar group matches</div>
+      <div class="chip"><b>1</b> official fanzone</div>
+      <div class="chip"><b>43</b> hotel screenings</div>
+      <div class="chip">All matches on <b>beIN SPORTS</b></div>
+    </div>
+  </header>
+
+  <svg class="serr" viewBox="0 0 1200 12" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M0,12 L0,3 L33,12 L66,3 L99,12 L132,3 L165,12 L198,3 L231,12 L264,3 L297,12 L330,3 L363,12 L396,3 L429,12 L462,3 L495,12 L528,3 L561,12 L594,3 L627,12 L660,3 L693,12 L726,3 L759,12 L792,3 L825,12 L858,3 L891,12 L924,3 L957,12 L990,3 L1023,12 L1056,3 L1089,12 L1122,3 L1155,12 L1188,3 L1200,6 L1200,12 Z"/>
+  </svg>
+
+  <!-- ================= QATAR FIXTURES ================= -->
+  <section id="qatar">
+    <div class="sec-head">
+      <svg class="flag" viewBox="0 0 30 12" aria-hidden="true">
+        <rect width="30" height="12" fill="#8A1538"/>
+        <path d="M0,0 H8 L11,1.33 L8,2.67 L11,4 L8,5.33 L11,6.67 L8,8 L11,9.33 L8,10.67 L11,12 H0 Z" fill="#FFFFFF"/>
+      </svg>
+      <h2>Qatar at the World Cup</h2>
+      <span lang="ar">العنّابي في المونديال</span>
+    </div>
+    <p class="sec-sub">Group B · all kickoff times shown in <b>Doha time (AST)</b>.</p>
+
+    <div class="matches">
+      <article class="match" id="m1">
+        <div class="pill"><span class="dot"></span><span class="pill-txt">Matchday 1</span></div>
+        <div class="opp">vs Switzerland <span>سويسرا</span></div>
+        <div class="meta">Sat 13 June · Levi's Stadium, Santa Clara</div>
+        <div class="ko"><b>10:00 PM</b><small>Doha</small></div>
+        <a class="remind" target="_blank" rel="noopener" href="https://www.google.com/calendar/render?action=TEMPLATE&text=Qatar%20v%20Switzerland%20%E2%80%93%20World%20Cup%202026&dates=20260613T190000Z/20260613T210000Z&details=Group%20B%20%C2%B7%20Levi%27s%20Stadium%2C%20Santa%20Clara%20%C2%B7%2010%3A00%20PM%20Doha%20time%20%C2%B7%20beIN%20SPORTS&location=Doha%2C%20Qatar">+ Add reminder</a>
+      </article>
+
+      <article class="match" id="m2">
+        <div class="pill"><span class="dot"></span><span class="pill-txt">Matchday 2</span></div>
+        <div class="opp">vs Canada <span>كندا</span></div>
+        <div class="meta">Thu 18 June (night) · BC Place, Vancouver</div>
+        <div class="ko"><b>1:00 AM</b><small>Fri · Doha</small></div>
+        <a class="remind" target="_blank" rel="noopener" href="https://www.google.com/calendar/render?action=TEMPLATE&text=Canada%20v%20Qatar%20%E2%80%93%20World%20Cup%202026&dates=20260618T220000Z/20260619T000000Z&details=Group%20B%20%C2%B7%20BC%20Place%2C%20Vancouver%20%C2%B7%201%3A00%20AM%20Doha%20time%20(Thu%20night)%20%C2%B7%20beIN%20SPORTS&location=Doha%2C%20Qatar">+ Add reminder</a>
+      </article>
+
+      <article class="match" id="m3">
+        <div class="pill"><span class="dot"></span><span class="pill-txt">Matchday 3</span></div>
+        <div class="opp">vs Bosnia &amp; Herzegovina <span>البوسنة</span></div>
+        <div class="meta">Wed 24 June · Lumen Field, Seattle</div>
+        <div class="ko"><b>10:00 PM</b><small>Doha</small></div>
+        <a class="remind" target="_blank" rel="noopener" href="https://www.google.com/calendar/render?action=TEMPLATE&text=Bosnia%20%26%20Herzegovina%20v%20Qatar%20%E2%80%93%20World%20Cup%202026&dates=20260624T190000Z/20260624T210000Z&details=Group%20B%20%C2%B7%20Lumen%20Field%2C%20Seattle%20%C2%B7%2010%3A00%20PM%20Doha%20time%20%C2%B7%20beIN%20SPORTS&location=Doha%2C%20Qatar">+ Add reminder</a>
+      </article>
+    </div>
+
+    <p class="group-note" id="qatarNote">
+      Group B: Qatar, Switzerland, Canada, Bosnia &amp; Herzegovina. Top two advance to the Round of 32 —
+      and with the new 48-team format, a strong third place can sneak through too.
+    </p>
+  </section>
+
+  <!-- ================= FANZONE ================= -->
+  <section id="fanzone">
+    <div class="sec-head">
+      <h2>The big screen</h2>
+      <span lang="ar">الفان زون الرسمي</span>
+    </div>
+
+    <div class="fanzone">
+      <div class="fz-in">
+        <div class="fz-eyebrow">Official Fanzone · Every Match</div>
+        <div class="fz-title">
+          Visit Qatar Fanzone — Al Maha Island
+          <span lang="ar">فان زون قطر — جزيرة المها، لوسيل</span>
+        </div>
+        <div class="fz-rows">
+          <div class="fz-row"><small>Dates</small><span>11 June – 19 July, daily</span></div>
+          <div class="fz-row"><small>Hours</small><span>6:00 PM – 7:00 AM</span></div>
+          <div class="fz-row"><small>Where</small><span>Al Maha Island, Lusail</span></div>
+          <div class="fz-row"><small>Reservations</small><span>+974 5114 0000</span></div>
+        </div>
+        <div class="fz-actions">
+          <a class="btn btn-primary" href="tel:+97451140000">Call to book</a>
+          <a class="btn btn-ghost" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=Al%20Maha%20Island%20Lusail%20Qatar">Open in Maps</a>
+        </div>
+        <div class="fz-partners">Visit Qatar × Al Maha Island × Aura Group · all matches screened under one tent, through the late kickoffs</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= ON TV ================= -->
+  <section id="tv">
+    <div class="sec-head">
+      <h2>Watching from home</h2>
+      <span lang="ar">من البيت</span>
+    </div>
+    <div class="tv">
+      <div class="tv-card">
+        <h3>Every match is on beIN SPORTS</h3>
+        <p>
+          All <b>104 matches live</b> on the dedicated <b>beIN SPORTS MAX 1–6</b> channels plus <b>beIN 4K HDR</b>,
+          with Arabic, English and French coverage — and streaming on <b>beIN CONNECT</b> and <b>TOD</b>.
+          No free-to-air coverage has been announced in the region, so sort the subscription before the matches you care about.
+        </p>
+      </div>
+      <div class="tv-card tv-final">
+        <h3>The Final, in prime time</h3>
+        <p>Sunday 19 July · New York New Jersey</p>
+        <div class="when">10:00 PM Doha</div>
+      </div>
+    </div>
+  </section>
+
+  <svg class="serr" viewBox="0 0 1200 12" preserveAspectRatio="none" aria-hidden="true" style="margin-top:46px">
+    <path d="M0,12 L0,3 L33,12 L66,3 L99,12 L132,3 L165,12 L198,3 L231,12 L264,3 L297,12 L330,3 L363,12 L396,3 L429,12 L462,3 L495,12 L528,3 L561,12 L594,3 L627,12 L660,3 L693,12 L726,3 L759,12 L792,3 L825,12 L858,3 L891,12 L924,3 L957,12 L990,3 L1023,12 L1056,3 L1089,12 L1122,3 L1155,12 L1188,3 L1200,6 L1200,12 Z"/>
+  </svg>
+
+  <!-- ================= HOTELS ================= -->
+  <section id="hotels">
+    <div class="sec-head">
+      <h2>Hotel screenings across town</h2>
+      <span lang="ar">شاشات الفنادق</span>
+    </div>
+    <p class="sec-sub">
+      These hotels are screening matches with food &amp; beverage offers through the tournament.
+      Search for one near you, tap to open it in Maps.
+    </p>
+
+    <div class="tools">
+      <label class="search">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="q" type="search" placeholder="Search a hotel… e.g. Hilton, Pearl, Rotana" aria-label="Search hotels">
+      </label>
+      <div class="count" id="count"></div>
+    </div>
+
+    <div class="venues" id="venues"></div>
+    <p class="empty" id="empty">No venue matches that — try a shorter name.</p>
+    <noscript><p class="foot-note">Enable JavaScript to browse the hotel list.</p></noscript>
+
+    <p class="foot-note">
+      List as published by Qatar Calendar / Visit Qatar, June 2026. Screening rooms, offers and
+      minimum spends vary by hotel and by match — call ahead on big nights.
+    </p>
+  </section>
+
+  <footer>
+    <div>Compiled for the MATCHDAY staff challenge · Times shown in Doha (UTC+3).</div>
+    <div>Sources: Qatar Calendar, Visit Qatar, beIN SPORTS · <a href="/">← Back to predictions</a></div>
+  </footer>
+
+</div>
+
+<script>
+/* ============================================================
+   1) QATAR MATCH STATUS — auto-highlights the next/live match.
+   Kickoffs are fixed UTC instants, so this works on any device
+   timezone. durMin ≈ match window incl. stoppage.
+============================================================ */
+const MATCHES = [
+  { id: "m1", start: "2026-06-13T19:00:00Z", durMin: 125 },
+  { id: "m2", start: "2026-06-18T22:00:00Z", durMin: 125 },
+  { id: "m3", start: "2026-06-24T19:00:00Z", durMin: 125 }
+];
+
+function paintMatches(){
+  const now = Date.now();
+  let nextId = null, nextStart = Infinity, allDone = true;
+
+  MATCHES.forEach(m => {
+    const el = document.getElementById(m.id);
+    if(!el) return;
+    const start = Date.parse(m.start);
+    const end = start + m.durMin * 60000;
+    const pill = el.querySelector(".pill-txt");
+    el.classList.remove("next","live","done");
+
+    if(now >= start && now <= end){
+      el.classList.add("live");
+      pill.textContent = "Live now";
+      allDone = false;
+    } else if(now > end){
+      el.classList.add("done");
+      pill.textContent = "Full time";
+    } else {
+      allDone = false;
+      if(start < nextStart){ nextStart = start; nextId = m.id; }
+    }
+  });
+
+  if(nextId){
+    const el = document.getElementById(nextId);
+    el.classList.add("next");
+    el.querySelector(".pill-txt").textContent = "Up next";
+  }
+  if(allDone){
+    document.getElementById("qatarNote").textContent =
+      "Group stage complete — knockout fixtures and times are on beIN SPORTS and the MATCHDAY app.";
+  }
+}
+paintMatches();
+setInterval(paintMatches, 60000);
+
+/* ============================================================
+   2) HOTEL SCREENINGS — edit this array to add/remove venues.
+   Source: Qatar Calendar / Visit Qatar story, June 2026.
+============================================================ */
+const VENUES = [
+  "Adagio Doha Hotel Apartments",
+  "Aleph Doha Residences, Curio Collection by Hilton",
+  "Banyan Tree Doha",
+  "Best Western Plus Doha",
+  "Central Inn Souq Waqif Hotel",
+  "Centro Capital Doha",
+  "City Centre Rotana",
+  "Delta Hotels Doha",
+  "DoubleTree by Hilton Doha – Al Sadd",
+  "Dusit Hotel & Suites Doha",
+  "Element by Marriott West Bay",
+  "Fraser Suites Doha",
+  "Grand Regal Hotel",
+  "Grand Regency Doha, Trademark Collection by Wyndham",
+  "Hilton Doha Hotel",
+  "Holiday Inn Doha – The Business Park by IHG",
+  "Holiday Villa Hotel & Residence Doha",
+  "Hyatt Regency Oryx Doha",
+  "Imperial Suites Doha",
+  "InterContinental Doha Beach & Spa",
+  "InterContinental Doha The City",
+  "Kempinski Residences & Suites Doha",
+  "La Cigale Doha",
+  "Marriott Marquis City Center Doha Hotel",
+  "Marsa Malaz Kempinski, The Pearl Doha",
+  "Mondrian Doha",
+  "Mövenpick Hotel Doha",
+  "Pullman Doha West Bay",
+  "Raffles & Fairmont Doha",
+  "Ramada Encore Doha",
+  "Retaj Al Rayyan Hotel",
+  "Rosewood Doha",
+  "Saraya Corniche Hotel",
+  "Sedra Arjaan by Rotana",
+  "Swissotel Corniche Park Towers Doha",
+  "The Grand Lux Hotel",
+  "The Royal Riviera Hotel",
+  "The St. Regis Doha",
+  "Time Rako Hotel",
+  "Tio Sea Resort",
+  "W Doha Hotel and Residences",
+  "Waldorf Astoria Doha Lusail",
+  "Waldorf Astoria Doha West Bay"
+];
+
+const grid  = document.getElementById("venues");
+const count = document.getElementById("count");
+const empty = document.getElementById("empty");
+const q     = document.getElementById("q");
+
+const norm = s => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+
+function render(filter){
+  const f = norm(filter || "");
+  grid.innerHTML = "";
+  let shown = 0;
+  VENUES.forEach(name => {
+    if(f && !norm(name).includes(f)) return;
+    shown++;
+    const card = document.createElement("div");
+    card.className = "venue";
+    const mapsURL = "https://www.google.com/maps/search/?api=1&query=" +
+                    encodeURIComponent(name + " Qatar");
+    card.innerHTML =
+      '<div class="name"></div>' +
+      '<a target="_blank" rel="noopener" href="' + mapsURL + '">Open in Maps ↗</a>';
+    card.querySelector(".name").textContent = name;
+    grid.appendChild(card);
+  });
+  count.innerHTML = f
+    ? "<b>" + shown + "</b> of " + VENUES.length + " venues"
+    : "<b>" + VENUES.length + "</b> venues";
+  empty.style.display = shown ? "none" : "block";
+}
+q.addEventListener("input", () => render(q.value));
+render("");
+</script>
+</body>
+</html>
