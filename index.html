@@ -414,7 +414,7 @@
       <div class="sso-note">📸&nbsp;<div><b>No passwords, no work email.</b> Your Instagram handle is your identity — use the same handle on any device to pick up where you left off. A pool for QNB colleagues — free to enter, with prizes for the top three.</div></div>
       <div id="cfg-warn" style="display:none;background:rgba(255,107,107,.12);border:1px solid rgba(255,107,107,.4);color:#ff9b9b;border-radius:12px;padding:10px 13px;font-size:11.5px;font-weight:600;margin-bottom:15px">⚠️ Setup needed: database keys aren't configured yet, so picks won't sync. Organizer: paste the Supabase URL + anon key into the file.</div>
       <label class="fl">Instagram username</label>
-      <input class="input" id="j-ig" type="text" placeholder="@yourhandle" autocomplete="off" autocapitalize="none" maxlength="31" />
+      <input class="input" id="j-ig" type="text" placeholder="@yourhandle" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" inputmode="email" maxlength="64" />
       <label class="fl">Display name</label>
       <input class="input" id="j-name" placeholder="How you want to appear on the board" autocomplete="off" maxlength="40" />
       <label class="fl">PIN · 4 digits (required — protects your entry)</label>
@@ -903,10 +903,14 @@ function rollBoard(){
 }
 
 async function joinNow(){
-  let ig=document.getElementById("j-ig").value.trim().replace(/^@+/,"").toLowerCase();
+  let ig=document.getElementById("j-ig").value
+    .replace(/[\u200B-\u200F\u202A-\u202E\u2060\uFEFF]/g,"")
+    .replace(/[\u0660-\u0669]/g,function(d){return String.fromCharCode(d.charCodeAt(0)-0x0660+48);})
+    .replace(/^.*instagram\.com\//i,"").replace(/[\/?#].*$/,"")
+    .trim().replace(/^@+/,"").toLowerCase();
   let name=document.getElementById("j-name").value.trim();
   const dept=document.getElementById("j-dept").value;
-  if(!/^[a-z0-9._]{1,30}$/.test(ig)){toast("Enter a valid Instagram username");return;}
+  if(!/^[a-z0-9._]{1,30}$/.test(ig)){toast("Handle can use letters, numbers, dots, underscores \u2014 e.g. ahmad_94 (no spaces)");return;}
   if(!dept){toast("Please select your department");return;}
   if(!name)name="@"+ig;
   if(!CONFIGURED){toast("Database not set up yet — ask the organizer");return;}
