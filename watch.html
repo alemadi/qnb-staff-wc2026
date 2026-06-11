@@ -11,7 +11,7 @@
 <meta property="og:type" content="website">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Hanken+Grotesk:wght@400;500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.css">
@@ -34,7 +34,6 @@
     --nav-h:68px;
     --en:'Hanken Grotesk',ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
     --d:'Anton','Arial Narrow',Impact,sans-serif;
-    --ar:"IBM Plex Sans Arabic",'Hanken Grotesk',system-ui,sans-serif;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html{scroll-behavior:smooth;background:#000}
@@ -59,7 +58,6 @@
     background:linear-gradient(90deg,#ef3340 0 33.34%,#2ea84f 33.34% 66.67%,#2d6fe0 66.67% 100%)}
   body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:9999;opacity:.03;
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
-  [lang="ar"]{font-family:var(--ar)}
   a{color:inherit}
   .wrap{max-width:980px;margin:0 auto;padding:0 20px calc(var(--nav-h) + env(safe-area-inset-bottom) + 26px)}
 
@@ -79,7 +77,6 @@
     font-size:.78rem;color:var(--ink-dim);letter-spacing:.05em;
     display:flex;align-items:center;gap:8px;
   }
-  .bar .tag [lang="ar"]{font-size:.85rem}
 
   /* ---------- hero ---------- */
   .hero{padding:54px 0 36px}
@@ -94,10 +91,6 @@
     max-width:16ch;
   }
   h1 em{font-style:normal;color:var(--gold)}
-  .hero .ar-sub{
-    margin-top:14px;font-weight:600;font-size:clamp(1.05rem,3.2vw,1.45rem);
-    color:var(--gold);direction:rtl;text-align:left;
-  }
   .lede{margin-top:18px;max-width:62ch;color:var(--ink-dim);font-size:1.02rem}
   .lede strong{color:var(--ink);font-weight:600}
   .chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
@@ -116,7 +109,6 @@
   section{padding:44px 0 8px}
   .sec-head{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:6px}
   h2{font-family:var(--d);font-weight:400;text-transform:uppercase;font-size:clamp(1.25rem,3.4vw,1.65rem);letter-spacing:.03em}
-  .sec-head [lang="ar"]{color:var(--ink-dim);font-size:1rem;font-weight:500;direction:rtl}
   .sec-sub{color:var(--ink-dim);font-size:.92rem;max-width:64ch;margin-top:6px}
 
   .flag{width:30px;height:12px;border-radius:2px;flex:none}
@@ -144,7 +136,6 @@
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
   @media(prefers-reduced-motion:reduce){.match.live .dot{animation:none}}
   .opp{font-weight:800;font-stretch:110%;font-size:1.28rem;line-height:1.15}
-  .opp span{color:var(--ink-dim);font-weight:500;font-size:.95rem;font-stretch:100%}
   .meta{font-size:.86rem;color:var(--ink-dim)}
   .ko{display:flex;align-items:baseline;gap:8px;margin-top:auto;padding-top:6px}
   .ko b{font-family:var(--d);font-size:1.7rem;font-weight:400;letter-spacing:.02em;color:var(--gold-bright)}
@@ -166,7 +157,6 @@
   .fz-in{padding:26px 24px}
   .fz-eyebrow{font-size:.72rem;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:var(--grape)}
   .fz-title{font-weight:850;font-stretch:112%;font-size:clamp(1.4rem,4vw,1.9rem);margin-top:8px;line-height:1.1}
-  .fz-title [lang="ar"]{display:block;font-size:1.05rem;font-weight:600;color:var(--gold);margin-top:6px;direction:rtl;text-align:left}
   .fz-rows{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px 22px;margin-top:20px}
   .fz-row small{display:block;font-size:.7rem;letter-spacing:.15em;text-transform:uppercase;color:var(--ink-dim);margin-bottom:3px}
   .fz-row span{font-weight:600;font-size:.98rem}
@@ -276,13 +266,12 @@
 
   <nav class="bar">
     <a class="brand" href="/"><span class="arrow">←</span> STAFF CHALLENGE</a>
-    <div class="tag">Watch Guide <span lang="ar">· دليل المشاهدة</span></div>
+    <div class="tag">Watch Guide</div>
   </nav>
 
   <header class="hero">
     <div class="eyebrow">FIFA World Cup 26 · 11 June – 19 July</div>
     <h1>Where to <em>watch</em> the World Cup in Qatar</h1>
-    <div class="ar-sub" lang="ar">مشاهدة مباريات كأس العالم 2026 في قطر</div>
     <p class="lede">
       This tournament is being played in the USA, Canada and Mexico — which means in Doha it's a
       <strong>night event</strong>. Kickoffs land between roughly <strong>7:00 PM and 5:00 AM</strong> Doha time
@@ -309,14 +298,13 @@
         <path d="M0,0 H8 L11,1.33 L8,2.67 L11,4 L8,5.33 L11,6.67 L8,8 L11,9.33 L8,10.67 L11,12 H0 Z" fill="#FFFFFF"/>
       </svg>
       <h2>Qatar at the World Cup</h2>
-      <span lang="ar">العنّابي في المونديال</span>
     </div>
     <p class="sec-sub">Group B · all kickoff times shown in <b>Doha time (AST)</b>.</p>
 
     <div class="matches">
       <article class="match" id="m1">
         <div class="pill"><span class="dot"></span><span class="pill-txt">Matchday 1</span></div>
-        <div class="opp">vs Switzerland <span>سويسرا</span></div>
+        <div class="opp">vs Switzerland</div>
         <div class="meta">Sat 13 June · Levi's Stadium, Santa Clara</div>
         <div class="ko"><b>10:00 PM</b><small>Doha</small></div>
         <a class="remind" target="_blank" rel="noopener" href="https://www.google.com/calendar/render?action=TEMPLATE&text=Qatar%20v%20Switzerland%20%E2%80%93%20World%20Cup%202026&dates=20260613T190000Z/20260613T210000Z&details=Group%20B%20%C2%B7%20Levi%27s%20Stadium%2C%20Santa%20Clara%20%C2%B7%2010%3A00%20PM%20Doha%20time%20%C2%B7%20beIN%20SPORTS&location=Doha%2C%20Qatar">+ Add reminder</a>
@@ -324,7 +312,7 @@
 
       <article class="match" id="m2">
         <div class="pill"><span class="dot"></span><span class="pill-txt">Matchday 2</span></div>
-        <div class="opp">vs Canada <span>كندا</span></div>
+        <div class="opp">vs Canada</div>
         <div class="meta">Thu 18 June (night) · BC Place, Vancouver</div>
         <div class="ko"><b>1:00 AM</b><small>Fri · Doha</small></div>
         <a class="remind" target="_blank" rel="noopener" href="https://www.google.com/calendar/render?action=TEMPLATE&text=Canada%20v%20Qatar%20%E2%80%93%20World%20Cup%202026&dates=20260618T220000Z/20260619T000000Z&details=Group%20B%20%C2%B7%20BC%20Place%2C%20Vancouver%20%C2%B7%201%3A00%20AM%20Doha%20time%20(Thu%20night)%20%C2%B7%20beIN%20SPORTS&location=Doha%2C%20Qatar">+ Add reminder</a>
@@ -332,7 +320,7 @@
 
       <article class="match" id="m3">
         <div class="pill"><span class="dot"></span><span class="pill-txt">Matchday 3</span></div>
-        <div class="opp">vs Bosnia &amp; Herzegovina <span>البوسنة</span></div>
+        <div class="opp">vs Bosnia &amp; Herzegovina</div>
         <div class="meta">Wed 24 June · Lumen Field, Seattle</div>
         <div class="ko"><b>10:00 PM</b><small>Doha</small></div>
         <a class="remind" target="_blank" rel="noopener" href="https://www.google.com/calendar/render?action=TEMPLATE&text=Bosnia%20%26%20Herzegovina%20v%20Qatar%20%E2%80%93%20World%20Cup%202026&dates=20260624T190000Z/20260624T210000Z&details=Group%20B%20%C2%B7%20Lumen%20Field%2C%20Seattle%20%C2%B7%2010%3A00%20PM%20Doha%20time%20%C2%B7%20beIN%20SPORTS&location=Doha%2C%20Qatar">+ Add reminder</a>
@@ -349,7 +337,6 @@
   <section id="fanzone">
     <div class="sec-head">
       <h2>The big screen</h2>
-      <span lang="ar">الفان زون الرسمي</span>
     </div>
 
     <div class="fanzone">
@@ -357,7 +344,6 @@
         <div class="fz-eyebrow">Official Fanzone · Every Match</div>
         <div class="fz-title">
           Visit Qatar Fanzone — Al Maha Island
-          <span lang="ar">فان زون قطر — جزيرة المها، لوسيل</span>
         </div>
         <div class="fz-rows">
           <div class="fz-row"><small>Dates</small><span>11 June – 19 July, daily</span></div>
@@ -378,7 +364,6 @@
   <section id="tv">
     <div class="sec-head">
       <h2>Watching from home</h2>
-      <span lang="ar">من البيت</span>
     </div>
     <div class="tv">
       <div class="tv-card" style="border-color:rgba(180,151,89,.5);box-shadow:0 8px 26px -8px rgba(180,151,89,.3)">
@@ -414,11 +399,10 @@
   <section id="hotels">
     <div class="sec-head">
       <h2>Hotel screenings across town</h2>
-      <span lang="ar">شاشات الفنادق</span>
     </div>
     <p class="sec-sub">
-      Every pin is screening matches through the tournament — purple is the official fanzone, turquoise are hotels.
-      Search to filter the map and the list together, or tap any card to find it on the map.
+      Every venue below is screening matches through the tournament. Search to filter the list and the
+      map together — tap any card to jump to its pin on the map at the bottom (blue is the official fanzone, gold are hotels).
     </p>
 
     <div class="tools">
@@ -429,15 +413,15 @@
       <div class="count" id="count"></div>
     </div>
 
+    <div class="venues" id="venues"></div>
+    <p class="empty" id="empty">No venue matches that — try a shorter name.</p>
+
     <div class="mapbox" id="map" role="region" aria-label="Map of all screening venues"></div>
     <div class="legend" id="legend">
       <span><i style="background:var(--grape)"></i>Official fanzone</span>
       <span><i style="background:var(--turq)"></i>Hotel screenings</span>
       <span id="loc-note"></span>
     </div>
-
-    <div class="venues" id="venues"></div>
-    <p class="empty" id="empty">No venue matches that — try a shorter name.</p>
     <noscript><p class="foot-note">Enable JavaScript to browse the hotel list.</p></noscript>
 
     <p class="foot-note">
