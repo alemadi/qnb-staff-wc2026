@@ -445,7 +445,51 @@
   .fly-l{transform:translate(-150%,-6%) rotate(-16deg)!important;opacity:0;transition:.24s ease-in!important}
   .fly-u{transform:translateY(-130%) rotate(-3deg)!important;opacity:0;transition:.24s ease-in!important}
   @keyframes sw-in{from{transform:translateY(16px);opacity:0}}
-  @media (prefers-reduced-motion:reduce){.pb-dot{animation:none}.sk{animation:none}.sw-card{animation:none}}
+  .pulsebar{flex-wrap:wrap}
+  .pb-stakes{width:100%;font-size:11.5px;font-weight:600;color:var(--muted);padding-top:4px}
+  .pb-stakes b.up{color:var(--lime)} .pb-stakes b.zero{color:var(--cream)}
+  .pb-stakes .up2{color:var(--lime);opacity:.8} .pb-stakes .down{color:#ff7b84}
+  .pb-stakes i{color:var(--faint);font-style:italic;font-size:10px;margin-left:4px}
+  .daybanner{background:var(--glass);border:1px solid var(--line);border-radius:13px;padding:11px 14px;margin:0 0 12px;font-size:12.5px;font-weight:700;color:var(--gold-bright)}
+  .daybanner b{font-family:var(--font-d);letter-spacing:.03em}
+  .daybanner small{display:block;color:var(--faint);font-weight:600;font-size:10.5px;margin-top:2px}
+  .reveal{position:fixed;inset:0;z-index:210;background:rgba(6,6,9,.97);display:flex;flex-direction:column;padding:calc(14px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px))}
+  .rv-top{display:flex;align-items:center;gap:12px}
+  .rv-mid{flex:1;text-align:center}
+  #rv-step{font-size:10.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+  .rv-count{font-family:var(--font-d);font-size:26px;color:var(--gold-bright);letter-spacing:.03em}
+  .rv-stage{flex:1;display:flex;align-items:center;justify-content:center}
+  .rv-card{width:min(320px,86vw);background:#15151a;border:1px solid rgba(180,151,89,.5);border-radius:24px;padding:28px 22px;text-align:center;cursor:pointer;animation:sw-in .25s ease;user-select:none;-webkit-user-select:none}
+  .rv-lab{font-size:10px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:var(--gold)}
+  .rv-sec{font-size:9.5px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:var(--faint);margin-top:20px}
+  .rv-pick{font-size:15px;font-weight:800;color:var(--muted);margin-top:6px}
+  .rv-res{font-size:17px;font-weight:800;color:var(--cream);margin-top:6px;opacity:0;transform:translateY(8px);transition:.3s}
+  .rv-card.flipped .rv-res{opacity:1;transform:none}
+  .rv-stamp{display:inline-block;margin-top:14px;padding:9px 18px;border-radius:99px;font-size:14px;font-weight:800;opacity:0;transform:scale(.7);transition:.25s .1s}
+  .rv-card.flipped .rv-stamp{opacity:1;transform:scale(1)}
+  .rv-stamp.exact{background:linear-gradient(115deg,var(--gold-deep),var(--gold));color:#181106}
+  .rv-stamp.hit{background:rgba(61,220,151,.16);color:var(--lime);border:1px solid rgba(61,220,151,.4)}
+  .rv-stamp.miss{background:rgba(255,123,132,.12);color:#ff7b84;border:1px solid rgba(255,123,132,.35)}
+  .rv-card.exactfx{animation:rvgold .7s ease}
+  .rv-card.hitfx{animation:rvflash .55s ease}
+  .rv-card.missfx{animation:rvshake .4s ease}
+  @keyframes rvgold{30%{box-shadow:0 0 46px rgba(180,151,89,.65);border-color:var(--gold)}}
+  @keyframes rvflash{30%{box-shadow:0 0 34px rgba(61,220,151,.45)}}
+  @keyframes rvshake{20%{transform:translateX(-7px)}45%{transform:translateX(6px)}70%{transform:translateX(-3px)}}
+  .rv-quick,.rv-quick .rv-res,.rv-quick .rv-stamp{transition-duration:.15s}
+  .rv-done{text-align:center}
+  .rv-big{font-family:var(--font-d);font-size:54px;color:var(--gold-bright);letter-spacing:.02em;margin-top:8px}
+  .rv-climb{font-size:14px;font-weight:800;color:var(--lime);margin-top:8px}
+  .rv-sub{font-size:12.5px;font-weight:700;color:var(--muted);margin-top:8px}
+  .rv-foot{display:flex;gap:8px;justify-content:center;padding-bottom:4px}
+  .rv-sum{width:100%;max-width:420px;display:flex;flex-direction:column;gap:8px;max-height:62vh;overflow-y:auto}
+  .rv-row{display:flex;justify-content:space-between;align-items:center;background:#0f0f12;border:1px solid var(--line);border-radius:12px;padding:11px 14px;font-size:12.5px;font-weight:700;color:var(--cream)}
+  .rv-row.exact b{color:var(--gold-bright)} .rv-row.hit b{color:var(--lime)} .rv-row.miss b{color:#ff7b84}
+  .me-set{display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding:12px 14px;background:var(--glass);border:1px solid var(--line);border-radius:13px;font-size:13px;font-weight:700;color:var(--cream)}
+  .sndtog{font:inherit;font-size:12px;font-weight:800;padding:7px 16px;border-radius:99px;border:1px solid var(--line);background:transparent;color:var(--faint);cursor:pointer}
+  .sndtog.on{background:linear-gradient(115deg,var(--gold-deep),var(--gold));color:#181106;border-color:transparent}
+  .btn:active,.ptbtn:active{transform:scale(.97)}
+  @media (prefers-reduced-motion:reduce){.pb-dot{animation:none}.sk{animation:none}.sw-card{animation:none}.rv-card{animation:none}.rv-res,.rv-stamp{transition:none}}
 
   footer.app{text-align:center;font-size:10.5px;color:var(--faint);padding:26px 10px 6px;line-height:1.7}
   footer.app b{color:var(--muted)}
@@ -556,6 +600,7 @@
   <section class="view" id="view-matches">
     <div class="sec-title"><h2>Matches</h2><div class="tag" id="match-tag">104 fixtures</div></div>
     <div id="pulsebar" class="pulsebar" style="display:none" onclick="location.href='watch.html'" title="Where to watch" role="link"></div>
+    <div id="daybanner" class="daybanner" style="display:none"></div>
     <button id="jumpnext" class="jumpnext" style="display:none" onclick="jumpToNext()">Next unpicked ↓</button>
     <div class="progress">
       <div class="top"><span>Predictions</span><span><b id="pred-count">0</b> / <span id="pred-total">72</span></span></div>
@@ -644,7 +689,16 @@
   <a class="navbtn" href="/watch.html" style="text-decoration:none"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>Watch</a>
   <button class="navbtn" id="nav-me" onclick="go('me')"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M5 21a7 7 0 0 1 14 0"/></svg>Me</button>
 </nav>
-<div id="swipe" class="swipe" style="display:none" role="dialog" aria-modal="true" aria-label="Quick-pick">
+<div id="reveal" class="reveal" style="display:none" role="dialog" aria-modal="true" aria-label="Results reveal">
+    <div class="rv-top">
+      <button class="sw-x" onclick="closeReveal()" aria-label="Close">✕</button>
+      <div class="rv-mid"><span id="rv-step"></span><div class="rv-count">+<span id="rv-odo">0</span></div></div>
+      <button class="sw-skip" onclick="revealSummary()">skip ↓</button>
+    </div>
+    <div class="rv-stage" id="rv-stage"></div>
+    <div class="rv-foot" id="rv-foot"></div>
+  </div>
+  <div id="swipe" class="swipe" style="display:none" role="dialog" aria-modal="true" aria-label="Quick-pick">
     <div class="sw-top">
       <button class="sw-x" onclick="closeSwipe()" aria-label="Close">✕</button>
       <div class="sw-prog"><span id="sw-count"></span><div class="bar"><i id="sw-bar" style="width:0%"></i></div></div>
@@ -1156,6 +1210,7 @@ function renderMatches(){
   host.innerHTML=html;
   bindMatchEvents();
   updateJump();
+  renderDayBanner();
 }
 
 function matchCard(m,idx){
@@ -1245,6 +1300,7 @@ function chipPick(id,h,a){
   if(ih)ih.value=h;if(ia)ia.value=a;
   syncPickRow(id);syncChips(id);syncProgress();updateChip();updateJump();
   try{navigator.vibrate&&navigator.vibrate(8);}catch(e){}
+  sndTick();
   queueSave();
 }
 function syncChips(id){
@@ -1283,6 +1339,7 @@ function pickWinner(id,team){
   state.player.predictions[id].w=team;
   syncPickRow(id);syncProgress();updateChip();updateJump();
   try{navigator.vibrate&&navigator.vibrate(8);}catch(e){}
+  sndTick();
   queueSave();
 }
 function pickOutcome(id,o){
@@ -1290,6 +1347,7 @@ function pickOutcome(id,o){
   state.player.predictions[id].o=o;
   syncPickRow(id);syncProgress();updateChip();updateJump();
   try{navigator.vibrate&&navigator.vibrate(8);}catch(e){}
+  sndTick();
   queueSave();
 }
 function saveScore(id,h,a){
@@ -1318,7 +1376,7 @@ function lbRowHTML(r,i,PT){
   return '<div class="lb-row '+(r.me?"me":"")+'" style="animation-delay:'+Math.min(i*0.03,0.5)+'s"><div class="rank">'+r.rank+'</div>'+moveHTML(r.dRank)+'<div class="avatar">'+initials(r.name)+'</div>'+
     '<div class="lb-info"><div class="n">'+esc(r.name)+(r.me?'<span class="youtag">YOU</span>':'')+(r.demo?'<span class="demotag">demo</span>':'')+'</div><div class="d">'+esc(r.dept||"")+'</div>'+
     '<div class="lb-stats"><span>◎ <b>'+r.exact+'</b> exact</span><span>✓ <b>'+r.correct+'</b> correct</span><span>'+r.predicted+'/'+PT+' picked</span></div></div>'+
-    '<div class="lb-pts"><b>'+r.pts+'</b><span>pts</span></div></div>';
+    '<div class="lb-pts"><b>'+'<span class="ptsn" data-pslug="'+r.slug+'">'+r.pts+'</span>'+'</b><span>pts</span></div></div>';
 }
 function lbMore(){LB_SHOWN+=200;renderLeaderboard();}
 async function renderLeaderboard(){
@@ -1360,6 +1418,11 @@ async function renderLeaderboard(){
   if(meIdx>=lim)html+='<div class="lb-gap">⋯</div>'+lbRowHTML(rows[meIdx],lim,PT);
   if(rows.length>lim)html+='<button class="lb-more" onclick="lbMore()">Show more · '+(rows.length-lim)+' below</button>';
   body.innerHTML=html;
+  rows.forEach(function(r){
+    const sp=body.querySelector('.ptsn[data-pslug="'+r.slug+'"]');
+    if(sp&&LB_PREV[r.slug]!=null&&LB_PREV[r.slug]!==r.pts)odo(sp,LB_PREV[r.slug],r.pts,600);
+    LB_PREV[r.slug]=r.pts;
+  });
 }
 
 async function renderMe(){
@@ -1382,6 +1445,9 @@ async function renderMe(){
     '<div class="me-break">'+(awaiting?'You\u2019ve locked in <b>'+pc+'/'+predTotal()+'</b> picks. Points appear here once matches kick off.':'<b>'+s.correct+'</b> correct results &nbsp;·&nbsp; <b>'+s.exact+'</b> exact scores &nbsp;·&nbsp; <b>'+s.scored+'</b> matches scored')+'</div>'+
     '<div class="badges">'+badges.map(b=>'<div class="badge '+(b.g?"gold":"")+'">'+b.t+'</div>').join("")+'</div>'+
     await rivalHTML(s,st);
+  const mc=document.getElementById("mecard");
+  if(mc)mc.insertAdjacentHTML("beforeend",
+    '<div class="me-set"><span>Sounds</span><button class="sndtog'+(sndOn()?" on":"")+'" onclick="toggleSnd(this)">'+(sndOn()?"On":"Off")+'</button></div>');
 }
 
 async function rivalHTML(s,st){
@@ -1749,13 +1815,18 @@ function renderPulse(){
   const now=Date.now()+CLOCK_OFFSET;
   const live=FIXTURES.filter(m=>isLive(m));
   if(live.length){
-    const m=live[0];const le=(typeof liveFor==="function")?liveFor(m):null;
+    if(live.length>1&&!PULSE_ROT)PULSE_ROT=setInterval(pulseRotate,8000);
+    if(live.length<=1&&PULSE_ROT){clearInterval(PULSE_ROT);PULSE_ROT=null;window.__pulseIdx=0;}
+    const m=live[(window.__pulseIdx||0)%live.length];
+    const le=(typeof liveFor==="function")?liveFor(m):null;
     const min=Math.max(1,Math.min(120,Math.floor((now-new Date(m.ko).getTime())/60000)));
     const sc=(le&&le.hs!=null&&le.state!=="pre")?('<b>'+le.hs+'\u2013'+le.as+'</b>'):'v';
     const done=!!(le&&le.done);
     const ck=done?'FT':((le&&le.state==="in"&&le.clock)?le.clock:(min+'\u2032'));
-    el.innerHTML='<span class="pb-dot'+(done?' idle':'')+'"></span><b>'+(done?'FT':'LIVE')+'</b>&nbsp;'+(m.home.f?m.home.f+' ':'')+esc(m.home.n)+' '+sc+' '+esc(m.away.n)+(m.away.f?' '+m.away.f:'')+(done?'':' \u00b7 '+esc(ck))+(live.length>1?'<span class="pb-more">+'+(live.length-1)+' more live</span>':'');
-    el.className="pulsebar live";el.style.display="flex";return;
+    el.innerHTML='<span class="pb-dot'+(done?' idle':'')+'"></span><b>'+(done?'FT':'LIVE')+'</b>&nbsp;'+(m.home.f?m.home.f+' ':'')+esc(m.home.n)+' '+sc+' '+esc(m.away.n)+(m.away.f?' '+m.away.f:'')+(done?'':' \u00b7 '+esc(ck))+(live.length>1?'<span class="pb-more">+'+(live.length-1)+' more live</span>':'')+'<div class="pb-stakes" id="pbstk" style="display:none"></div>';
+    el.className="pulsebar live";el.style.display="flex";
+    if(le)fillStakes(m,le);
+    return;
   }
   const next=FIXTURES.filter(m=>new Date(m.ko).getTime()>now).sort((a,b)=>new Date(a.ko)-new Date(b.ko))[0];
   if(!next){el.style.display="none";return;}
@@ -2021,6 +2092,211 @@ function jumpToNext(){
   el.scrollIntoView({behavior:"smooth",block:"center"});
   el.classList.add("jflash");setTimeout(()=>el.classList.remove("jflash"),1300);
 }
+/* ===== juice: sounds + odometers ===== */
+function sndOn(){try{return localStorage.getItem("wc:snd")==="1";}catch(e){return false;}}
+function toggleSnd(btn){
+  const v=!sndOn();try{localStorage.setItem("wc:snd",v?"1":"0");}catch(e){}
+  if(btn){btn.classList.toggle("on",v);btn.textContent=v?"On":"Off";}
+  if(v)sndTick(true);
+}
+let ACTX=null;
+function actx(){if(!ACTX){const C=window.AudioContext||window.webkitAudioContext;if(C)try{ACTX=new C();}catch(e){}}return ACTX;}
+function tone(f,t,d,g){const a=actx();if(!a)return;
+  const o=a.createOscillator(),v=a.createGain();
+  o.type="sine";o.frequency.value=f;o.connect(v);v.connect(a.destination);
+  const st=a.currentTime+(t||0);v.gain.setValueAtTime(g||0.05,st);
+  v.gain.exponentialRampToValueAtTime(0.0001,st+d);o.start(st);o.stop(st+d+0.02);}
+function sndTick(force){if(!sndOn()&&!force)return;try{tone(1200,0,.04);}catch(e){}}
+function sndCorrect(){if(!sndOn())return;try{tone(600,0,.07);tone(900,.08,.1);}catch(e){}}
+function sndExact(){if(!sndOn())return;try{tone(800,0,.06);tone(1200,.07,.06);tone(1600,.14,.14);tone(2400,.3,.06,.03);}catch(e){}}
+function odo(el,from,to,ms){
+  if(!el)return;
+  const rm=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
+  from=isFinite(from)?from:0;to=isFinite(to)?to:0;
+  if(rm||from===to||!window.requestAnimationFrame){el.textContent=to;return;}
+  const t0=performance.now();ms=ms||600;
+  (function step(t){const k=Math.min(1,(t-t0)/ms);const e=1-Math.pow(1-k,3);
+    el.textContent=Math.round(from+(to-from)*e);
+    if(k<1)requestAnimationFrame(step);})(t0);
+}
+let LB_PREV={};
+
+/* ===== the reveal ritual ===== */
+function rvVerdict(m,p,r){
+  if(m.kn){const ok=p.w&&r.w&&p.w===r.w;
+    return ok?{pts:koPts(m),cls:"hit",label:"\u2713 +"+koPts(m)}:{pts:0,cls:"miss",label:"\u2717 +0"};}
+  const ro=r.h>r.a?"H":r.h<r.a?"A":"D";
+  const ex=p.h!=null&&p.a!=null&&Number(p.h)===r.h&&Number(p.a)===r.a;
+  const oc=p.o===ro;const pts=(oc?3:0)+(ex?2:0);
+  if(ex&&oc)return{pts:pts,cls:"exact",label:"\u25ce EXACT! +"+pts};
+  if(ex)return{pts:pts,cls:"hit",label:"\u25ce exact score +"+pts};
+  if(oc)return{pts:pts,cls:"hit",label:"\u2713 +"+pts};
+  return{pts:0,cls:"miss",label:"\u2717 +0"};
+}
+function markRevealed(id){
+  try{const a=JSON.parse(localStorage.getItem("wc:revealed")||"[]");
+    if(a.indexOf(id)<0){a.push(id);localStorage.setItem("wc:revealed",JSON.stringify(a));}}catch(e){}
+}
+function revealQueue(){
+  if(!state.player||state.demo)return [];
+  let seen=[];try{seen=JSON.parse(localStorage.getItem("wc:revealed")||"[]");}catch(e){}
+  const out=[];
+  Object.keys(state.results||{}).forEach(id=>{
+    if(seen.indexOf(id)>=0)return;
+    const r=state.results[id],m=FIXBYID[id];if(!m||!r)return;
+    if(m.kn?(r.w==null):(r.h==null))return;
+    const p=(state.player.predictions||{})[id];
+    if(!p||!(p.o||p.w)){markRevealed(id);return;}
+    out.push(m);
+  });
+  out.sort((a,b)=>new Date(a.ko)-new Date(b.ko));
+  return out;
+}
+const RV={q:[],i:0,total:0,open:false,timer:null,quick:false};
+function openReveal(){
+  const q=revealQueue();if(!q.length)return false;
+  RV.q=q;RV.i=0;RV.total=0;RV.open=true;RV.quick=q.length>=7;
+  document.getElementById("reveal").style.display="flex";
+  document.body.style.overflow="hidden";
+  const o=document.getElementById("rv-odo");if(o)o.textContent="0";
+  const rm=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if(rm)revealSummary();else renderRevealCard();
+  return true;
+}
+function closeReveal(){
+  RV.open=false;clearTimeout(RV.timer);
+  document.getElementById("reveal").style.display="none";
+  document.body.style.overflow="";
+}
+function renderRevealCard(){
+  const m=RV.q[RV.i];
+  if(!m)return revealFinale();
+  document.getElementById("rv-step").textContent=(RV.i+1)+" / "+RV.q.length;
+  const mv=fxView(m),p=state.player.predictions[m.id]||{},r=state.results[m.id];
+  const pick=m.kn?(p.w||"\u2014")
+    :((p.o==="H"?mv.home.n:p.o==="A"?mv.away.n:"Draw")+((p.h!=null&&p.a!=null)?(" "+p.h+"\u2013"+p.a):""));
+  const res=m.kn?(r.w+" through"):(mv.home.n+" "+r.h+"\u2013"+r.a+" "+mv.away.n);
+  document.getElementById("rv-stage").innerHTML=
+    '<div class="rv-card'+(RV.quick?' rv-quick':'')+'" id="rv-card" onclick="revealFlip()">'+
+    '<div class="rv-lab">'+esc(RLABEL[m.round]||m.round)+'</div>'+
+    '<div class="rv-sec">YOUR PICK</div><div class="rv-pick">'+esc(pick)+'</div>'+
+    '<div class="rv-sec">RESULT \u00b7 tap</div>'+
+    '<div class="rv-res">'+esc(res)+'<div class="rv-stamp" id="rv-stamp"></div></div></div>';
+  document.getElementById("rv-foot").innerHTML="";
+  clearTimeout(RV.timer);RV.timer=setTimeout(revealFlip,RV.quick?700:1400);
+}
+function revealFlip(){
+  const card=document.getElementById("rv-card");
+  if(!card||card.classList.contains("flipped"))return;
+  clearTimeout(RV.timer);
+  const m=RV.q[RV.i],p=state.player.predictions[m.id]||{},r=state.results[m.id];
+  const v=rvVerdict(m,p,r);
+  card.classList.add("flipped",v.cls+"fx");
+  const st=document.getElementById("rv-stamp");
+  st.textContent=v.label;st.className="rv-stamp "+v.cls;
+  const from=RV.total;RV.total+=v.pts;
+  odo(document.getElementById("rv-odo"),from,RV.total,500);
+  try{
+    if(v.cls==="exact"){navigator.vibrate&&navigator.vibrate([10,40,10,40,30]);sndExact();}
+    else if(v.cls==="hit"){navigator.vibrate&&navigator.vibrate([15,60,15]);sndCorrect();}
+  }catch(e){}
+  markRevealed(m.id);
+  RV.timer=setTimeout(function(){RV.i++;renderRevealCard();},RV.quick?900:1500);
+}
+async function revealFinale(){
+  clearTimeout(RV.timer);
+  document.getElementById("rv-step").textContent="";
+  let rank=null,dr=0;
+  try{
+    const rows=(await fetchStandings()).slice().sort(cmpSt);
+    rows.forEach(function(r,i){if(r.slug===state.meSlug&&rank===null)rank=i+1;});
+    const me=rows.find(function(r){return r.slug===state.meSlug;});
+    const last=await getJSON("wc:lastSeen",false);
+    if(last&&typeof last.rank==="number"&&rank)dr=last.rank-rank;
+    if(me&&rank)await setJSON("wc:lastSeen",{pts:me.pts,rank:rank,t:Date.now()},false);
+  }catch(e){}
+  document.getElementById("rv-stage").innerHTML=
+    '<div class="rv-done"><div class="rv-sec">THIS REVEAL</div>'+
+    '<div class="rv-big">+'+RV.total+'</div>'+
+    (dr>0?'<div class="rv-climb">\u25b2 '+dr+' place'+(dr===1?"":"s")+(rank?' \u00b7 now #'+rank:'')+'</div>'
+        :(rank?'<div class="rv-sub">#'+rank+' overall</div>':''))+'</div>';
+  document.getElementById("rv-foot").innerHTML=
+    '<button class="sw-b" onclick="shareCard()">Share this</button>'+
+    '<button class="sw-b sw-done-b" onclick="closeReveal()">Done</button>';
+  if(dr>0)confetti();
+}
+function revealSummary(){
+  clearTimeout(RV.timer);
+  let total=0,html='<div class="rv-sum">';
+  RV.q.forEach(function(m){
+    const p=state.player.predictions[m.id]||{},r=state.results[m.id],v=rvVerdict(m,p,r);
+    total+=v.pts;markRevealed(m.id);
+    const mv=fxView(m);
+    html+='<div class="rv-row '+v.cls+'"><span>'+esc(mv.home.n+" v "+mv.away.n)+'</span><b>'+esc(v.label)+'</b></div>';
+  });
+  html+='</div>';
+  document.getElementById("rv-stage").innerHTML=html;
+  RV.total=total;RV.i=RV.q.length;
+  odo(document.getElementById("rv-odo"),0,total,500);
+  document.getElementById("rv-foot").innerHTML='<button class="sw-b sw-done-b" onclick="revealFinale()">Continue</button>';
+}
+
+/* ===== live stakes ===== */
+function provFor(m,le,preds){
+  const p=preds&&preds[m.id];if(!p||!(p.o||p.w))return null;
+  if(le==null||le.hs==null||le.as==null)return null;
+  if(m.kn){const mv=fxView(m);
+    const lead=le.hs>le.as?mv.home.n:le.hs<le.as?mv.away.n:null;
+    return {pts:(lead&&p.w===lead)?koPts(m):0};}
+  const ro=le.hs>le.as?"H":le.hs<le.as?"A":"D";
+  return {pts:(p.o===ro?3:0)+((p.h!=null&&p.a!=null&&Number(p.h)===le.hs&&Number(p.a)===le.as)?2:0)};
+}
+let RIVP={slug:null,t:0,preds:null,name:null};
+async function rivalPreds(){
+  let rv=null;try{rv=await getJSON("wc:rival",false);}catch(e){}
+  const slug=rv&&(rv.slug||rv);if(!slug||typeof slug!=="string")return null;
+  if(RIVP.slug===slug&&Date.now()-RIVP.t<300000)return RIVP;
+  let preds=null,name=slug;
+  try{const v=await getJSON("wc:player:"+slug,true);if(v){preds=v.predictions||{};name=v.name||slug;}}catch(e){}
+  RIVP={slug:slug,t:Date.now(),preds:preds,name:name};
+  return RIVP;
+}
+async function fillStakes(m,le){
+  const el=document.getElementById("pbstk");if(!el)return;
+  const mine=state.player?provFor(m,le,state.player.predictions):null;
+  if(!mine){el.style.display="none";return;}
+  let html='as it stands: <b class="'+(mine.pts>0?"up":"zero")+'">you +'+mine.pts+'</b>';
+  const rp=await rivalPreds();
+  if(rp&&rp.preds){const rpv=provFor(m,le,rp.preds);
+    if(rpv)html+=' \u00b7 <span class="'+(rpv.pts>0?"up2":"down")+'">'+esc(rp.name)+' +'+rpv.pts+'</span>';}
+  html+=' <i>provisional</i>';
+  el.innerHTML=html;el.style.display="block";
+}
+let PULSE_ROT=null;
+function pulseRotate(){window.__pulseIdx=(window.__pulseIdx||0)+1;renderPulse();}
+function renderDayBanner(){
+  const el=document.getElementById("daybanner");if(!el)return;
+  if(!state.player){el.style.display="none";return;}
+  const now=Date.now()+CLOCK_OFFSET;
+  const doha=function(t){return new Date(t+3*36e5).toISOString().slice(0,10);};
+  const today=doha(now);
+  const mine=FIXTURES.filter(function(m){
+    const p=state.player.predictions[m.id];
+    return p&&(p.o||p.w)&&(m.kn?koReady(m):true)&&doha(new Date(m.ko).getTime())===today;});
+  if(!mine.length){el.style.display="none";return;}
+  let pot=0,got=0,left=0;
+  mine.forEach(function(m){
+    const r=state.results[m.id],p=state.player.predictions[m.id];
+    const settled=m.kn?(r&&r.w!=null):(r&&r.h!=null);
+    if(settled)got+=rvVerdict(m,p,r).pts;
+    else{left++;pot+=m.kn?koPts(m):((p.h!=null&&p.a!=null)?5:3);}
+  });
+  if(left>0&&got===0)el.innerHTML='Today: up to <b>+'+pot+'</b> riding on your '+left+' pick'+(left===1?'':'s');
+  else if(left>0)el.innerHTML='Today so far: <b>+'+got+'</b> \u00b7 '+left+' still to play <small>up to +'+(got+pot)+' possible</small>';
+  else el.innerHTML='Today: <b>+'+got+'</b> \u2014 all settled \u2713';
+  el.style.display="block";
+}
+
 /* ===== quick-pick swipe mode ===== */
 const SW={list:[],i:0,open:false};
 function openSwipe(){
@@ -2140,7 +2416,7 @@ function liveTick(){
     document.getElementById("countdown").style.display="flex";
     const h=(location.hash||"").slice(1);
     updateChip();go(["matches","leaderboard","me"].indexOf(h)>=0?h:"matches");
-    welcomeDelta();
+    if(!openReveal())welcomeDelta();
   }else{go("join");}
   renderPulse();setInterval(renderPulse,30000);
   fetchLive();setInterval(liveTick,60000);
