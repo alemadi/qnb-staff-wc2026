@@ -5,6 +5,40 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-06-12 17:05 (Doha) — Anti-cheat Phase 1: APPLIED to production + promoted
+
+**Pushed:** `25b2d13` fast-forwarded onto `main` (from `a98a477`), plus this addendum commit.
+
+**What happened (all times Doha, 12 Jun 2026):**
+
+- **16:57** — full `kv` snapshot taken via Management API *before* any change
+  (376 rows; `wc:results` value md5 `086a066c2c97be71ecda0f586c480d30`). Snapshot
+  retained off-repo by the operator (contains pre-migration PIN hashes — must
+  never enter this public repo). Satisfies the snapshot-before-overwrite rule.
+- **16:57** — `sql/protect.sql` exactly as committed in `4f5ed8f` applied to the
+  production database in a single atomic batch (Supabase Management API).
+- **Verified in-DB:** `wc_locks` = 105 · `wc_auth` = 374 (= player rows) ·
+  player rows still carrying `"pin"` = 0 · kv rows = 376 (unchanged) ·
+  `wc:results` byte-identical to snapshot · anon privileges on `kv` reduced to
+  SELECT only · robot cron `wc-autoconfirm` (*/10) still active.
+- **Verified outside-in (publishable key):** `org_check` → 200 `false` ·
+  direct `kv` write → `42501 permission denied` · public reads → 200 ·
+  `save_picks` reachable and rejecting bad input (`bad_slug`), no write.
+- **17:01** — `main` promoted `a98a477..25b2d13`; hardened client confirmed
+  live on staffchallenge26.com (cache-busted) at **17:00:47**. Old-client
+  write gap: ≈ 3 minutes. Players mid-session on the old client must reload
+  once to regain saving.
+- **Observed, pre-existing, left as-is:** `kv` already had RLS enabled with
+  legacy wide-open policies `r`/`i`/`u`/`d` (PUBLIC) and full anon table grants
+  incl. TRUNCATE. Writes are blocked by the privilege revoke regardless;
+  the open `i`/`u`/`d` policies are now dead weight. **Follow-up:** add
+  `drop policy if exists` for them to `protect.sql` via the normal
+  prove-locally-first flow.
+
+**Rollback:** unchanged — see the 16:27 entry below (`git revert 4f5ed8f` +
+`sql/rollback.sql`). The operator-held snapshot can additionally restore
+`wc:results` (or any key) verbatim if ever needed.
+
 ## 2026-06-12 16:27 — Anti-cheat Phase 1: server-side enforcement (RLS + RPCs)
 
 **Commits:** `4f5ed8f` (app + SQL) + this changelog commit.
