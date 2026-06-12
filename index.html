@@ -1026,8 +1026,15 @@ function reconcilePicks(srv){
   if(sealed){syncProgress();updateChip();toast("🔒 "+sealed+" pick"+(sealed>1?"s":"")+" had already kicked off — kept as sealed");}
 }
 function needPin(){
+  if(SW.open)closeSwipe(); /* the prompt is invisible behind the deck — close it so Join can actually be seen */
   toast("Enter your 4-digit PIN to keep your picks saving");
-  const ig=document.getElementById("j-ig");if(ig&&state.meSlug)ig.value=state.meSlug;
+  const ig=document.getElementById("j-ig");
+  if(ig&&state.meSlug){ig.value=state.meSlug;ig.dispatchEvent(new Event("input"));} /* fire the welcome-back note + Resume CTA */
+  if(state.player){ /* instant prefill from the live session — re-claim is one field (PIN), dept/country aren't blanked */
+    const n=document.getElementById("j-name");if(n&&!n.value&&state.player.name)n.value=state.player.name;
+    const d=document.getElementById("j-dept");if(d&&!d.value&&state.player.dept)d.value=state.player.dept;
+    const c=document.getElementById("j-country");if(c&&state.player.country)c.value=state.player.country;
+  }
   go("join");
 }
 /* Organizer writes: access code rides along, verified in Postgres each call */
@@ -1229,6 +1236,15 @@ async function joinNow(){
   if(!existing)existing={ig,name,dept,country,slug:sl,joinedAt:Date.now(),predictions:{}};
   const rawName=document.getElementById("j-name").value.trim();
   existing.name=rawName||existing.name||name;existing.dept=dept;existing.ig=ig;existing.country=country;
+  /* Re-claiming this session's own entry: keep picks made before the PIN was
+     entered — otherwise they'd be silently replaced by the server copy. In-memory
+     wins, same as every normal save (savePicksRPC sends state.player wholesale);
+     kickoff locks are enforced server-side either way. Never merges when claiming
+     a different handle. */
+  if(state.meSlug===sl&&state.player&&state.player.predictions){
+    existing.predictions=Object.assign({},existing.predictions||{},state.player.predictions);
+    if(state.player.champ)existing.champ=state.player.champ;
+  }
   delete existing.pin; /* PINs live server-side now (wc_auth) — never in the player row */
   const res=await rpc("save_picks",{p_slug:sl,p_pin:pin,p_payload:existing});
   if(!res.ok){
