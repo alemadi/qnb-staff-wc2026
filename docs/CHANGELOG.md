@@ -354,3 +354,17 @@ writes simply start failing, which is the point) — but keep the gap short.
 
 **kv snapshot taken before overwrite (if applicable):**
     n/a
+
+## 2026-06-12 22:45 (Doha)
+**Pushed:** 3dad395, fca6dac
+**Changed:** (1) Sticky progress panel: fixed the collapse/expand jitter at the scroll boundary (overflow-anchor:none on #view-matches breaks the scroll-anchoring feedback loop) and made the mini transition smooth — Swipe-to-pick button and panel now animate width/padding/font/radius over .18s; observer guarded against redundant toggles. (2) Champion pick lifecycle: full card only while unpicked; collapses to a slim tap-to-change chip once picked; after the 18 Jun lock it leaves the Matches feed (trophy+flag token in the sticky bar links to Me, new champion line on the Me card, +25 nudge for players with no pick); payoff banner returns to Matches after the final. ?champlock URL param previews the locked state. Frontend only — no DB/robot/kv change.
+
+**Rollback (git):**
+    git revert fca6dac 3dad395
+    git push https://x-access-token:<TOKEN>@github.com/alemadi/qnb-staff-wc2026.git main
+
+**Rollback (DB), if applicable:**
+    N/A — frontend only, no SQL or kv writes in this push.
+
+**kv snapshot taken before overwrite (if applicable):**
+    N/A — no kv key was written.
