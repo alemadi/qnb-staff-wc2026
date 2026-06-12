@@ -576,6 +576,13 @@
   .cons .c2{display:block;margin-top:4px}
   .rv-of{margin-top:13px;font-size:11.5px;color:var(--muted);font-weight:700;line-height:1.85;letter-spacing:.2px}
   .champ-soc .fl-img{width:15px;height:11px;border-radius:2px;vertical-align:-1px}
+  /* ===== UX wave 3: fun stats sprinkle ===== */
+  .lb-tick{text-align:center;font-size:11.5px;color:var(--muted);font-weight:700;letter-spacing:.2px;margin:2px 4px 12px;min-height:16px;opacity:0;transition:opacity .25s ease}
+  .lb-tick.on{opacity:1}
+  .lb-tick b{color:var(--gold)}
+  .me-fun{margin:14px auto 2px;font-size:11.5px;color:var(--muted);font-weight:700;line-height:2;letter-spacing:.2px}
+  .me-fun b{color:var(--gold)}
+  .me-fun .fl-img{width:15px;height:11px;border-radius:2px;vertical-align:-1px}
 </style>
 </head>
 <body>
@@ -1742,6 +1749,7 @@ async function renderLeaderboard(){
     ord.forEach((r,i)=>{html+='<div class="pod '+cls[i]+'" style="animation-delay:'+(i*0.08)+'s"><div class="medal">'+med[i]+'</div><div class="avatar av">'+avatarFill(r.name)+'</div><div class="pname">'+esc(r.name)+'</div><div class="stand"><div class="ppts">'+r.pts+'<small> PTS</small></div></div></div>';});
     html+='</div>';
   }
+  html+='<div class="lb-tick" id="lb-tick" style="display:none"></div>';
   const lim=Math.min(rows.length,LB_SHOWN);
   for(let i=0;i<lim;i++)html+=lbRowHTML(rows[i],i,PT);
   const meIdx=rows.findIndex(r=>r.me);
@@ -1754,6 +1762,40 @@ async function renderLeaderboard(){
     if(sp&&LB_PREV[r.slug]!=null&&LB_PREV[r.slug]!==r.pts)odo(sp,LB_PREV[r.slug],r.pts,600);
     LB_PREV[r.slug]=r.pts;
   });
+  startLbTicker(rows);
+}
+
+/* ===== fun-stat ticker (leaderboard) =====
+   Rotating one-liners built from data already in hand: the standings rows +
+   the ranksnap deltas, then enriched once the consensus pull resolves. */
+let TICK_T=null;
+function startLbTicker(rows){
+  clearInterval(TICK_T);
+  const el=document.getElementById("lb-tick");
+  if(!el||state.demo||!rows.length)return;
+  const facts=[];
+  let cl=null;rows.forEach(function(r){if(r.dRank>0&&(!cl||r.dRank>cl.dRank))cl=r;});
+  if(cl)facts.push('\ud83d\udcc8 Biggest climber: <b>'+esc(cl.name)+'</b> \u25b2'+cl.dRank+' overnight');
+  let ek=null;rows.forEach(function(r){if(r.exact>=2&&(!ek||r.exact>ek.exact))ek=r;});
+  if(ek)facts.push('\ud83c\udfaf Exact-score king: <b>'+esc(ek.name)+'</b> \u2014 '+ek.exact+' nailed');
+  const dm={};rows.forEach(function(r){if(r.dept)(dm[r.dept]=dm[r.dept]||[]).push(r.pts);});
+  let bd=null;for(const d in dm){if(dm[d].length<5)continue;
+    const avg=dm[d].reduce(function(a,b){return a+b;},0)/dm[d].length;
+    if(avg>0&&(!bd||avg>bd.avg))bd={d:d,avg:avg};}
+  if(bd)facts.push('\ud83c\udfe2 Sharpest department: <b>'+esc(bd.d)+'</b> \u2014 '+bd.avg.toFixed(1)+' pts avg');
+  if(CONFIGURED)consensus().then(function(c){
+    if(c.best&&c.best.streak>=3)facts.push('\ud83d\udd25 Hot hand: <b>'+esc((c.best.name||"").split(" ")[0])+'</b> \u2014 '+c.best.streak+' in a row');
+    if(c.bestUpset&&c.bestUpset.n>=2)facts.push('\ud83d\udde1 Upset hunter: <b>'+esc(c.bestUpset.name)+'</b> \u2014 '+c.bestUpset.n+' shocks called');
+  }).catch(function(){});
+  if(!facts.length)return;
+  let i=0;
+  const show=function(){
+    if(!document.body.contains(el)){clearInterval(TICK_T);return;}
+    el.classList.remove("on");
+    setTimeout(function(){el.innerHTML=facts[i%facts.length];el.classList.add("on");i++;},250);
+  };
+  el.style.display="block";show();
+  TICK_T=setInterval(function(){if(facts.length>1)show();},6000);
 }
 
 async function renderMe(){
@@ -1779,6 +1821,20 @@ async function renderMe(){
     if(CONS.map){let mav=false;settled.forEach(function(f){if(f.kn||mav)return;const q=state.player.predictions[f.id]||{},r=state.results[f.id];if(rvVerdict(f,q,r).pts<3)return;const c=CONS.map[f.id];if(!c)return;const tot=c.H+c.D+c.A;if(tot>=8&&Math.round(c[q.o]/tot*100)<=25)mav=true;});if(mav)badges.unshift({g:true,t:"\ud83c\udccf Maverick"});}
   }catch(e){}
   if(!badges.length)badges.push({g:false,t:"🌱 Getting started"});
+  /* personal fun stats — own picks only, so safe to show pre-lock */
+  const fun=[];
+  try{
+    const pr=state.player.predictions||{},scm={},tm={};
+    for(const id in pr){const v=pr[id];if(!v)continue;const m=FIXBYID[id];if(!m)continue;
+      if(!m.kn&&v.h!=null&&v.a!=null)scm[v.h+"-"+v.a]=(scm[v.h+"-"+v.a]||0)+1;
+      if(m.kn){if(v.w)tm[v.w]=(tm[v.w]||0)+1;}
+      else if(v.o==="H")tm[m.home.n]=(tm[m.home.n]||0)+1;
+      else if(v.o==="A")tm[m.away.n]=(tm[m.away.n]||0)+1;}
+    let ts=null;for(const k in scm)if(!ts||scm[k]>scm[ts])ts=k;
+    if(ts&&scm[ts]>=3)fun.push('\ud83d\udd8a Signature scoreline: <b>'+ts.replace("-","\u2013")+'</b> \u00b7 picked \u00d7'+scm[ts]);
+    let tt=null;for(const k in tm)if(!tt||tm[k]>tm[tt])tt=k;
+    if(tt&&tm[tt]>=3)fun.push('\u2764\ufe0f Most-backed team: <b>'+(FL[tt]?flagTag(FL[tt])+' ':'')+esc(tt)+'</b> \u00d7'+tm[tt]);
+  }catch(e){}
   const awaiting=s.scored===0;
   document.getElementById("mecard").innerHTML=
     '<div class="avatar av">'+avatarFill(state.player.name)+'</div><h3>'+esc(state.player.name)+'</h3>'+
@@ -1786,7 +1842,25 @@ async function renderMe(){
     '<div class="me-stat"><div class="s"><b>'+s.pts+'</b><span>Points</span></div><div class="s"><b>'+(awaiting?"—":("#"+myRank))+'</b><span>Rank'+(total?(" of "+total):"")+'</span></div><div class="s"><b>'+pc+'</b><span>Predicted</span></div></div>'+
     '<div class="me-break">'+(awaiting?'You\u2019ve locked in <b>'+pc+'/'+predTotal()+'</b> picks. Points appear here once matches kick off.':'<b>'+s.correct+'</b> correct results &nbsp;·&nbsp; <b>'+s.exact+'</b> exact scores &nbsp;·&nbsp; <b>'+s.scored+'</b> matches scored')+'</div>'+
     '<div class="badges">'+badges.slice(0,5).map(b=>'<div class="badge '+(b.g?"gold":"")+'">'+b.t+'</div>').join("")+'</div>'+
+    '<div class="me-fun" id="me-fun"'+(fun.length?'':' style="display:none"')+'>'+fun.map(function(t){return '<div>'+t+'</div>';}).join("")+'</div>'+
     await rivalHTML(s,st);
+  if(CONFIGURED&&!state.demo)consensus().then(function(c){
+    const f=document.getElementById("me-fun");if(!f||!c.map||f.dataset.agree)return;
+    const now=Date.now()+CLOCK_OFFSET;let agree=0,n=0;
+    FIXTURES.forEach(function(m){
+      if(lockTs(m)>now)return;
+      const v=(state.player&&state.player.predictions||{})[m.id];if(!v)return;
+      const cc=c.map[m.id];if(!cc)return;
+      if(m.kn){if(!v.w)return;let tot=0,top=null;for(const k in cc.w){tot+=cc.w[k];if(top===null||cc.w[k]>cc.w[top])top=k;}
+        if(tot<5)return;n++;if(v.w===top)agree++;}
+      else{if(!v.o)return;const tot=cc.H+cc.D+cc.A;if(tot<5)return;
+        const top=(cc.H>=cc.D&&cc.H>=cc.A)?"H":(cc.D>=cc.A?"D":"A");n++;if(v.o===top)agree++;}});
+    if(n<5)return;
+    const pct=Math.round(agree/n*100);
+    const line=pct<=40?'\ud83c\udccf Office maverick \u2014 you defy the room <b>'+(100-pct)+'%</b> of the time'
+              :'\ud83e\udded You side with the office <b>'+pct+'%</b> of the time';
+    f.dataset.agree="1";f.insertAdjacentHTML("beforeend",'<div>'+line+'</div>');f.style.display="";
+  }).catch(function(){});
   const mc=document.getElementById("mecard");
   if(mc)mc.insertAdjacentHTML("beforeend",
     '<div class="me-set"><span>Sounds</span><button class="sndtog'+(sndOn()?" on":"")+'" onclick="toggleSnd(this)">'+(sndOn()?"On":"Off")+'</button></div>'+
@@ -2472,7 +2546,25 @@ function consensus(){
       if(stk>best.streak||(stk===best.streak&&hits>best.hits))best={name:p.name||p.slug||"",streak:stk,hits:hits};
       for(const k in byDay){const a=byDay[k];if(a.length>=2&&a.every(function(x){return x;}))pday[k]=(pday[k]||0)+1;}
     });
-    CONS={t:Date.now(),map:map,n:players.length,champN:champN,champMap:cm,best:best,perfectByDay:pday,busy:null};
+    /* second pass (needs the finished map): upset hunters + department form by day */
+    const resPct={};
+    done.forEach(function(f){const c=map[f.id];if(!c)return;const r=state.results[f.id];
+      if(f.kn){let tot=0;for(const k in c.w)tot+=c.w[k];
+        if(tot>=8&&r.w!=null)resPct[f.id]=Math.round((c.w[r.w]||0)/tot*100);}
+      else{const tot=c.H+c.D+c.A;
+        if(tot>=8){const ro=r.h>r.a?"H":r.h<r.a?"A":"D";resPct[f.id]=Math.round(c[ro]/tot*100);}}});
+    let bestUp={name:"",n:0};const deptDay={};
+    players.forEach(function(p){
+      if(!p)return;const pr=p.predictions||{};let up=0;
+      done.forEach(function(f){const v=pr[f.id];if(!v)return;
+        if(f.kn?!v.w:!v.o)return;
+        const r=state.results[f.id];
+        const hit=f.kn?(v.w===r.w):(v.o===(r.h>r.a?"H":r.h<r.a?"A":"D"));
+        const dk=dayKey(f.ko),dd=deptDay[dk]||(deptDay[dk]={}),dn=p.dept||"";
+        if(dn){const e=dd[dn]||(dd[dn]={hit:0,tot:0});e.tot++;if(hit)e.hit++;}
+        if(hit&&resPct[f.id]!=null&&resPct[f.id]<=30)up++;});
+      if(up>bestUp.n)bestUp={name:p.name||p.slug||"",n:up};});
+    CONS={t:Date.now(),map:map,n:players.length,champN:champN,champMap:cm,best:best,perfectByDay:pday,bestUpset:bestUp,deptByDay:deptDay,busy:null};
     return CONS;
   })();
   return CONS.busy;
@@ -2487,7 +2579,10 @@ function consText(m,p){
     const hN=c.w[mv.home.n]||0,aN=c.w[mv.away.n]||0,tot=hN+aN;
     if(tot<5)return "";
     const hp=Math.round(hN/tot*100);
-    return '\ud83c\udfdf '+tot+' colleagues called it: '+seg(mv.home.n,hp,p&&p.w===mv.home.n)+' \u00b7 '+seg(mv.away.n,100-hp,p&&p.w===mv.away.n);
+    let kline='\ud83c\udfdf '+tot+' colleagues called it: '+seg(mv.home.n,hp,p&&p.w===mv.home.n)+' \u00b7 '+seg(mv.away.n,100-hp,p&&p.w===mv.away.n);
+    if(res&&res.w&&tot>=8){const rp=Math.round((c.w[res.w]||0)/tot*100);
+      if(rp<=25)kline+='<span class="c2">\ud83e\udde8 Upset \u2014 only '+rp+'% of the office saw it coming</span>';}
+    return kline;
   }
   const tot=c.H+c.D+c.A;if(tot<5)return "";
   let line='\ud83c\udfdf '+tot+' colleagues called it: '
@@ -2504,6 +2599,9 @@ function consText(m,p){
     else if(youNailed)l2='\ud83c\udfaf You + '+(n-1)+' other'+(n===2?'':'s')+' nailed '+scoreTxt;
     else l2='\ud83c\udfaf '+n+' colleague'+(n===1?'':'s')+' nailed '+scoreTxt;
     line+='<span class="c2">'+l2+'</span>';
+    const ro=res.h>res.a?"H":res.h<res.a?"A":"D";
+    if(tot>=8){const rp=Math.round(c[ro]/tot*100);
+      if(rp<=25)line+='<span class="c2">\ud83e\udde8 Upset \u2014 only '+rp+'% of the office saw it coming</span>';}
   }else{
     let top=null;for(const k in sc){if(!top||sc[k]>sc[top])top=k;}
     if(top&&sc[top]>=3)line+='<span class="c2">\ud83c\udfaf Top score pick: '+top.replace("-","\u2013")+' ('+sc[top]+')</span>';
@@ -2720,11 +2818,29 @@ function revealOfficeLines(){
   });
   if(worst&&worst.pct<=45){const mv=fxView(worst.m);
     out.push('\ud83d\ude2c '+(100-worst.pct)+'% of the office missed '+esc(mv.home.n)+' v '+esc(mv.away.n));}
+  /* biggest heartbreak: the most-backed pick that didn't land */
+  let hb=null;
+  (RV.q||[]).forEach(function(m){
+    const r=state.results[m.id];if(!r)return;
+    const c=CONS.map[m.id];if(!c)return;
+    if(m.kn){if(!r.w)return;
+      for(const k in c.w){if(k!==r.w&&c.w[k]>=15&&(!hb||c.w[k]>hb.n))hb={n:c.w[k],who:k};}}
+    else{if(r.h==null)return;
+      const ro=r.h>r.a?"H":r.h<r.a?"A":"D",mv=fxView(m);
+      [["H",mv.home.n],["D","a draw"],["A",mv.away.n]].forEach(function(o){
+        if(o[0]!==ro&&c[o[0]]>=15&&(!hb||c[o[0]]>hb.n))hb={n:c[o[0]],who:o[1]};});}});
+  if(hb)out.push('\ud83d\udc94 '+hb.n+' colleagues backed '+esc(hb.who)+' \u2014 hearts broken');
   if(CONS.best&&CONS.best.streak>=3)
     out.push('\ud83d\udd25 Longest streak: '+esc((CONS.best.name||"").split(" ")[0])+' \u2014 '+CONS.best.streak+' in a row');
-  if(out.length<2&&lastDay&&CONS.perfectByDay&&CONS.perfectByDay[lastDay])
+  /* department of the day: best hit rate on the last revealed matchday */
+  if(lastDay&&CONS.deptByDay&&CONS.deptByDay[lastDay]){
+    const dd=CONS.deptByDay[lastDay];let bd=null;
+    for(const d in dd){const e=dd[d];if(e.tot<5)continue;
+      const r=e.hit/e.tot;if(r>0&&(!bd||r>bd.r))bd={d:d,r:r};}
+    if(bd)out.push('\ud83c\udfe2 Dept of the day: '+esc(bd.d)+' \u2014 '+Math.round(bd.r*100)+'% hit rate');}
+  if(out.length<3&&lastDay&&CONS.perfectByDay&&CONS.perfectByDay[lastDay])
     out.push('\ud83d\udc8e '+CONS.perfectByDay[lastDay]+' colleague'+(CONS.perfectByDay[lastDay]===1?'':'s')+' had a perfect day');
-  return out.slice(0,2);
+  return out.slice(0,3);
 }
 function fillRevealOffice(){
   const of=document.getElementById("rv-of");if(!of)return;
