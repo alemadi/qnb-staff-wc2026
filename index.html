@@ -4,6 +4,19 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <meta name="theme-color" content="#0a0a0c" />
+<meta name="description" content="QNB staff World Cup 2026 pool — predict all 104 matches, climb the office leaderboard. Maldives trip for #1. Free to enter." />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Staff Challenge 26" />
+<meta property="og:title" content="Staff Challenge · QNB World Cup 2026" />
+<meta property="og:description" content="Predict all 104 matches, climb the office leaderboard. 1st: Maldives trip · 2nd: 60,000 pts · 3rd: 40,000 pts. Free to enter." />
+<meta property="og:url" content="https://staffchallenge26.com/" />
+<meta property="og:image" content="https://staffchallenge26.com/og.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Staff Challenge · QNB World Cup 2026" />
+<meta name="twitter:description" content="Predict all 104 matches · climb the office leaderboard · prizes for the top three." />
+<meta name="twitter:image" content="https://staffchallenge26.com/og.png" />
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -108,7 +121,7 @@
   .sec-title .tag{margin-left:auto;font-size:11px;color:var(--muted);font-weight:600;text-align:right}
   .live{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);font-weight:700}
 
-  .progress{background:#101014;border:1px solid var(--line);border-radius:16px;padding:13px 15px;margin-bottom:6px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 8px);z-index:30}
+  .progress{background:#101014;border:1px solid var(--line);border-radius:16px;padding:13px 15px;margin-bottom:6px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 58px);z-index:30;transition:padding .18s ease}
   .progress .top{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;margin-bottom:9px}
   .progress .top b{color:var(--gold);font-weight:800}
   .bar{height:7px;border-radius:6px;background:rgba(0,0,0,.28);overflow:hidden}
@@ -394,7 +407,7 @@
   .pulsebar{cursor:pointer}
   .chips-lab{font-size:10px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin-top:12px}
   .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-  .chipb{font:inherit;font-size:12px;font-weight:800;padding:7px 12px;border-radius:99px;border:1px solid var(--line);background:transparent;color:var(--muted);cursor:pointer;transition:.12s}
+  .chipb{font:inherit;font-size:12px;font-weight:800;padding:9px 13px;border-radius:99px;border:1px solid var(--line);background:transparent;color:var(--muted);cursor:pointer;transition:.12s}
   .chipb.sel{background:linear-gradient(115deg,var(--gold-deep),var(--gold));color:#181106;border-color:transparent}
   .chipb.custom{color:var(--faint)}
   .chipb:active{transform:scale(.94)}
@@ -512,6 +525,37 @@
   footer.app{text-align:center;font-size:10.5px;color:var(--faint);padding:26px 10px 6px;line-height:1.7}
   footer.app b{color:var(--muted)}
   @media(max-width:420px){.me-stat{gap:18px}.teams{gap:2px}.tname{font-size:12.5px}}
+  /* ===== UX wave: header fit, slim sticky bar, consensus, welcome-back, swipe score step ===== */
+  @media(max-width:439px){body.in .mark .wc,body.in .mark .divider{display:none}}
+  #prog-sent{height:1px}
+  .progress.mini{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:13px}
+  .progress.mini .top{margin:0;flex:0 0 auto;display:flex;gap:7px;font-size:12px}
+  .progress.mini .bar{flex:1;height:5px;min-width:40px}
+  .progress.mini .rules,.progress.mini .ptbtn,.progress.mini .ptable{display:none}
+  .progress.mini .qpbtn{width:auto;margin:0;padding:7px 12px;font-size:12px;border-radius:99px;flex:0 0 auto}
+  .progress.mini .qp-full{display:none}
+  .cons{display:none;margin-top:9px;font-size:11px;color:var(--muted);text-align:center;letter-spacing:.2px;line-height:1.6}
+  .cons b{color:var(--cream);font-weight:700}
+  .cons b.cmine{color:var(--gold-bright)}
+  .champ-soc{margin-top:9px;font-size:11px;color:var(--muted);text-align:center;font-weight:700;min-height:0}
+  .champ-soc:empty{display:none}
+  .rv-cons{margin-top:11px;font-size:11.5px;color:var(--muted);font-weight:700;letter-spacing:.2px;opacity:0;transition:.3s .15s;min-height:14px}
+  .rv-card.flipped .rv-cons{opacity:1}
+  .wbnote{margin:-6px 0 13px;font-size:12px;color:var(--lime);background:rgba(61,220,151,.08);border:1px solid rgba(61,220,151,.28);padding:9px 12px;border-radius:11px;font-weight:600;line-height:1.5}
+  .wbnote b{color:var(--cream)}
+  .rivtag{margin-left:6px;font-size:8.5px;font-weight:800;letter-spacing:.5px;color:var(--magenta-2);background:rgba(239,51,64,.12);border:1px solid rgba(239,51,64,.3);padding:1px 6px;border-radius:5px;vertical-align:1px}
+  .sw-card.sw-score{cursor:default}
+  .sw-sq{margin-top:14px;font-size:14.5px;color:var(--cream);font-weight:700}
+  .sw-sq b{color:var(--gold)}
+  .sw-chips{display:flex;flex-wrap:wrap;gap:9px;justify-content:center;margin-top:15px}
+  .sw-chip{font-size:15px;padding:11px 17px}
+  .sw-sn{margin-top:15px;font-size:11px;color:var(--faint);letter-spacing:.3px}
+  @media(max-width:430px){
+    .dep-row{gap:8px}
+    .dep-fb{gap:2px;flex-wrap:nowrap}
+    .dep-fc{width:clamp(15px,4.4vw,24px);height:27px;font-size:14px;border-radius:3px}
+    .dep-st{width:54px;letter-spacing:1.2px}
+  }
 </style>
 </head>
 <body>
@@ -579,6 +623,7 @@
       <div id="cfg-warn" style="display:none;background:rgba(255,107,107,.12);border:1px solid rgba(255,107,107,.4);color:#ff9b9b;border-radius:12px;padding:10px 13px;font-size:11.5px;font-weight:600;margin-bottom:15px">⚠️ Setup needed: database keys aren't configured yet, so picks won't sync. Organizer: paste the Supabase URL + anon key into the file.</div>
       <label class="fl">Instagram username</label>
       <input class="input" id="j-ig" type="text" placeholder="@yourhandle" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" inputmode="email" maxlength="64" />
+      <div class="wbnote" id="wbnote" style="display:none"></div>
       <label class="fl">Display name</label>
       <input class="input" id="j-name" placeholder="How you want to appear on the board" autocomplete="off" maxlength="40" />
       <label class="fl">PIN · 4 digits (required — protects your entry)</label>
@@ -603,7 +648,7 @@
         <option>Myanmar</option><option>United Kingdom</option><option>France</option><option>Switzerland</option>
         <option>Other</option>
       </select>
-      <button class="btn btn-primary" onclick="joinNow()">Join the pool ⚽</button>
+      <button class="btn btn-primary" id="join-cta" onclick="joinNow()">Join the pool ⚽</button>
       <button class="faq-link" onclick="openFaq()">How does this work?</button>
       <details style="margin-top:16px;font-size:11.5px;color:var(--muted);line-height:1.6">
         <summary style="cursor:pointer;color:var(--gold);font-weight:700">📜 Rules &amp; terms</summary>
@@ -621,10 +666,11 @@
     <div id="pulsebar" class="pulsebar" style="display:none" onclick="location.href='watch.html'" title="Where to watch" role="link"></div>
     <div id="daybanner" class="daybanner" style="display:none"></div>
     <button id="jumpnext" class="jumpnext" style="display:none" onclick="jumpToNext()">Next unpicked ↓</button>
+    <div id="prog-sent" aria-hidden="true"></div>
     <div class="progress">
       <div class="top"><span>Predictions</span><span><b id="pred-count">0</b> / <span id="pred-total">72</span></span></div>
       <div class="bar"><i id="pred-bar" style="width:0%"></i></div>
-      <button id="qpbtn" class="qpbtn" style="display:none" onclick="openSwipe()">⚡ Swipe to pick · <span id="qp-left">0</span> left</button>
+      <button id="qpbtn" class="qpbtn" style="display:none" onclick="openSwipe()">⚡ <span class="qp-full">Swipe to pick · </span><span id="qp-left">0</span><span class="qp-full"> left</span></button>
       <div class="rules"><b>+3</b> result &nbsp;·&nbsp; <b>+2</b> exact bonus &nbsp;·&nbsp; knockouts <b>+4→+10</b> &nbsp;·&nbsp; 🏆 champion <b>+25</b> &nbsp;·&nbsp; ties break on <b>most predictions</b></div>
       <button class="ptbtn" onclick="togglePts(this)">How do points work? ▾</button>
       <div class="ptable" id="ptable">
@@ -1119,8 +1165,11 @@ let toastT;
 function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("show"),2200);}
 function togglePts(btn){const t=document.getElementById("ptable");const on=t.classList.toggle("show");btn.textContent=on?"How do points work? ▴":"How do points work? ▾";}
 
-function go(view){state.view=view;showView(view);}
+function go(view){
+  if((view==="matches"||view==="me")&&!state.player){toast("Join the pool to make picks \u26bd");view="join";}
+  state.view=view;showView(view);}
 function showView(view){
+  document.body.classList.toggle("in",!!state.player);
   document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
   const el=document.getElementById("view-"+view);if(el)el.classList.add("active");
   ["matches","leaderboard","me"].forEach(n=>{const b=document.getElementById("nav-"+n);if(b)b.classList.toggle("on",n===view);});
@@ -1167,15 +1216,15 @@ async function joinNow(){
     .replace(/^.*instagram\.com\//i,"").replace(/[\/?#].*$/,"")
     .trim().replace(/^@+/,"").toLowerCase();
   let name=document.getElementById("j-name").value.trim();
-  const dept=document.getElementById("j-dept").value;
   if(!/^[a-z0-9._]{1,30}$/.test(ig)){toast("Handle can use letters, numbers, dots, underscores \u2014 e.g. ahmad_94 (no spaces)");return;}
-  if(!dept){toast("Please select your department");return;}
   if(!name)name="@"+ig;
   if(!CONFIGURED){toast("Database not set up yet — ask the organizer");return;}
   const pin=document.getElementById("j-pin").value.trim();
   if(!/^\d{4}$/.test(pin)){toast("Set a 4-digit PIN — it protects your entry");return;}
   const sl=ig;
   let existing=await getJSON("wc:player:"+sl,true);
+  const dept=document.getElementById("j-dept").value||(existing&&existing.dept)||"";
+  if(!dept){toast("Please select your department");return;}
   const country=document.getElementById("j-country").value||"Qatar";
   if(!existing)existing={ig,name,dept,country,slug:sl,joinedAt:Date.now(),predictions:{}};
   const rawName=document.getElementById("j-name").value.trim();
@@ -1198,7 +1247,7 @@ async function joinNow(){
   go("matches");
 }
 async function signOut(){
-  if(!confirm("Sign out? Your predictions stay saved — sign back in with the same email to resume."))return;
+  if(!confirm("Sign out? Your predictions stay saved — sign back in with the same handle to resume."))return;
   await sdel("wc:me",false);lsDel("wc:pin");
   state.meSlug=null;state.player=null;
   document.getElementById("userchip").style.display="none";
@@ -1253,10 +1302,10 @@ function renderChampCard(){
     const got=mine===win;
     inner+='<div class="done" style="color:'+(got?'var(--ok)':'var(--bad)')+'">'+(got?('✓ You called it — '+esc(win)+' · +'+CHAMP_PTS+' pts'):('✗ Champion: '+esc(win)+(mine?' · you picked '+esc(mine):' · no pick')))+'</div>';
   }else if(lk){
-    inner+='<div class="done">'+(mine?('🔒 Locked in: '+(FL[mine]?flagTag(FL[mine])+' ':'')+esc(mine)):'<span style="color:var(--muted)">🔒 Champion picks are locked</span>')+'</div>';
+    inner+='<div class="done">'+(mine?('🔒 Locked in: '+(FL[mine]?flagTag(FL[mine])+' ':'')+esc(mine)):'<span style="color:var(--muted)">🔒 Champion picks are locked</span>')+'</div>'+'<div class="champ-soc" id="champ-soc"></div>';
   }else{
     inner+='<select class="input" id="champ-sel"><option value="">Choose your champion…</option>'+teams.map(t=>'<option value="'+esc(t)+'"'+(t===mine?' selected':'')+'>'+esc(t)+'</option>').join("")+'</select>'+
-    '<div class="lockin" data-lockts="'+Date.parse(CHAMP_LOCK)+'">⏳ '+fmtLeft(Date.parse(CHAMP_LOCK)-Date.now()-CLOCK_OFFSET)+'</div>';
+    '<div class="lockin" data-lockts="'+Date.parse(CHAMP_LOCK)+'">⏳ '+fmtLeft(Date.parse(CHAMP_LOCK)-Date.now()-CLOCK_OFFSET)+'</div>'+'<div class="champ-soc" id="champ-soc"></div>';
   }
   host.innerHTML='<div class="champ">'+inner+'</div>';
   const sel=document.getElementById("champ-sel");
@@ -1293,6 +1342,7 @@ function renderMatches(){
   bindMatchEvents();
   updateJump();
   renderDayBanner();
+  fillConsensus();
 }
 
 function matchCard(m,idx){
@@ -1308,16 +1358,17 @@ function matchCard(m,idx){
       const got=(p.o===ro?3:0)+((p.h!=null&&p.a!=null&&Number(p.h)===res.h&&Number(p.a)===res.a)?2:0);
       picks='<div class="result-line '+(p.o===ro?"win":"lose")+'">'+(p.o===ro?"✓ ":"✗ ")+esc(lab)+(p.h!=null?' &nbsp;<span style="color:var(--faint)">('+p.h+'–'+p.a+')</span>':'')+'<span class="pts">+'+got+' pts</span></div>';
     }else{picks='<div class="result-line">'+(isLive(m)?'<span class="live-pill"><span class="pulse"></span>LIVE</span>':'<span class="locked-tag">Locked</span>')+' <span style="color:var(--muted)">'+esc(lab)+'</span></div>';}
+    picks+='<div class="cons" data-cons="'+m.id+'"></div>';
   }else{
     picks='<div class="picks" data-mid="'+m.id+'">'+
-      '<button class="pick '+(p.o==="H"?"sel":"")+'" data-o="H"><span class="mini">'+m.home.f+'</span></button>'+
+      '<button class="pick '+(p.o==="H"?"sel":"")+'" data-o="H" aria-label="Pick '+esc(m.home.n)+'"><span class="mini">'+m.home.f+'</span></button>'+
       '<button class="pick draw '+(p.o==="D"?"sel":"")+'" data-o="D">DRAW</button>'+
-      '<button class="pick '+(p.o==="A"?"sel":"")+'" data-o="A"><span class="mini">'+m.away.f+'</span></button></div>'+
+      '<button class="pick '+(p.o==="A"?"sel":"")+'" data-o="A" aria-label="Pick '+esc(m.away.n)+'"><span class="mini">'+m.away.f+'</span></button></div>'+
       '<div class="chips-lab">Exact score · one tap · +2 bonus</div>'+
       '<div class="chips" data-ch="'+m.id+'">'+SCORE_CHIPS.map(c=>'<button class="chipb'+((p.h===c[0]&&p.a===c[1])?' sel':'')+'" data-cid="'+m.id+'" data-h="'+c[0]+'" data-a="'+c[1]+'">'+c[0]+'\u2013'+c[1]+'</button>').join('')+'<button class="chipb custom" data-bt="'+m.id+'">custom\u2026</button></div>'+
       '<div class="bonus-fields '+((p.h!=null&&!SCORE_CHIPS.some(c=>c[0]===p.h&&c[1]===p.a))?"show":"")+'" data-bf="'+m.id+'">'+
-      '<label>'+m.home.f+'</label><input class="scorein" type="number" min="0" max="20" inputmode="numeric" data-sh="'+m.id+'" value="'+(p.h!=null?p.h:"")+'">'+
-      '<span class="scoredash">–</span><input class="scorein" type="number" min="0" max="20" inputmode="numeric" data-sa="'+m.id+'" value="'+(p.a!=null?p.a:"")+'"><label>'+m.away.f+'</label></div></div>'+
+      '<label>'+m.home.f+'</label><input class="scorein" type="number" min="0" max="20" inputmode="numeric" aria-label="'+esc(m.home.n)+' goals" data-sh="'+m.id+'" value="'+(p.h!=null?p.h:"")+'">'+
+      '<span class="scoredash">–</span><input class="scorein" type="number" min="0" max="20" inputmode="numeric" aria-label="'+esc(m.away.n)+' goals" data-sa="'+m.id+'" value="'+(p.a!=null?p.a:"")+'"><label>'+m.away.f+'</label></div></div>'+
       '<div class="lockin'+((lockTs(m)-Date.now()-CLOCK_OFFSET)<7200000?' soon':'')+'" data-lockts="'+lockTs(m)+'">⏳ '+fmtLeft(lockTs(m)-Date.now()-CLOCK_OFFSET)+'</div>';
   }
   return '<div class="match-card '+(m.tag==="qatar"?"qatar":"")+'" style="animation-delay:'+Math.min(idx*0.03,0.4)+'s">'+ribbon+
@@ -1359,10 +1410,11 @@ function koMatchCard(m,idx){
     }else{
       picks='<div class="result-line">'+(isLive(m)?'<span class="live-pill"><span class="pulse"></span>LIVE</span>':'<span class="locked-tag">Locked</span>')+' <span style="color:var(--muted)">'+esc(lab)+'</span></div>';
     }
+    picks+='<div class="cons" data-cons="'+m.id+'"></div>';
   }else{
     picks='<div class="picks ko" data-mid="'+m.id+'">'+
-      '<button class="pick '+(p.w===m.home.n?"sel":"")+'" data-w="'+esc(m.home.n)+'"><span class="mini">'+m.home.f+'</span></button>'+
-      '<button class="pick '+(p.w===m.away.n?"sel":"")+'" data-w="'+esc(m.away.n)+'"><span class="mini">'+m.away.f+'</span></button></div>'+
+      '<button class="pick '+(p.w===m.home.n?"sel":"")+'" data-w="'+esc(m.home.n)+'" aria-label="Pick '+esc(m.home.n)+' to go through"><span class="mini">'+m.home.f+'</span></button>'+
+      '<button class="pick '+(p.w===m.away.n?"sel":"")+'" data-w="'+esc(m.away.n)+'" aria-label="Pick '+esc(m.away.n)+' to go through"><span class="mini">'+m.away.f+'</span></button></div>'+
       '<div class="kn-note">Pick who goes through — extra time &amp; penalties count</div>'+
       '<div class="lockin'+((lockTs(m)-Date.now()-CLOCK_OFFSET)<7200000?' soon':'')+'" data-lockts="'+lockTs(m)+'">⏳ '+fmtLeft(lockTs(m)-Date.now()-CLOCK_OFFSET)+'</div>';
   }
@@ -1456,7 +1508,7 @@ function moveHTML(d){
 }
 function lbRowHTML(r,i,PT){
   return '<div class="lb-row '+(r.me?"me":"")+'" style="animation-delay:'+Math.min(i*0.03,0.5)+'s"><div class="rank">'+r.rank+'</div>'+moveHTML(r.dRank)+'<div class="avatar">'+initials(r.name)+'</div>'+
-    '<div class="lb-info"><div class="n">'+esc(r.name)+(r.me?'<span class="youtag">YOU</span>':'')+(r.demo?'<span class="demotag">demo</span>':'')+'</div><div class="d">'+esc(r.dept||"")+'</div>'+
+    '<div class="lb-info"><div class="n">'+esc(r.name)+(r.me?'<span class="youtag">YOU</span>':'')+(r.rv?'<span class="rivtag">\ud83c\udfaf RIVAL</span>':'')+(r.demo?'<span class="demotag">demo</span>':'')+'</div><div class="d">'+esc(r.dept||"")+'</div>'+
     '<div class="lb-stats"><span>◎ <b>'+r.exact+'</b> exact</span><span>✓ <b>'+r.correct+'</b> correct</span><span>'+r.predicted+'/'+PT+' picked</span></div></div>'+
     '<div class="lb-pts"><b>'+'<span class="ptsn" data-pslug="'+r.slug+'">'+r.pts+'</span>'+'</b><span>pts</span></div></div>';
 }
@@ -1467,6 +1519,7 @@ async function renderLeaderboard(){
   body.innerHTML='<div class="sk-wrap">'+Array(6).fill('<div class="sk-row"><div class="sk r"></div><div class="sk av"></div><div class="sk nm"></div><div class="sk pt"></div></div>').join('')+'</div>';
   const lm=document.getElementById("lbmode");
   if(lm)lm.style.display=state.demo?"none":"flex";
+  const rvSlug=state.demo?null:await getJSON("wc:rival",false);
   if(LB_MODE==="dept"&&!state.demo){await renderDept(body);return;}
   let rows=[];
   if(state.demo){ /* demo: client-side scoring against demo results + demo players (never cached) */
@@ -1477,7 +1530,7 @@ async function renderLeaderboard(){
     }
     DEMO_PLAYERS.forEach(d=>rows.push({name:d.name,dept:d.dept,slug:"demo:"+d.name,pts:d.correct*3+d.exact*2,exact:d.exact,correct:d.correct,predicted:d.predicted,me:false,demo:true}));
   }else{
-    rows=(await fetchStandings()).map(r=>({name:r.name,dept:r.dept,slug:r.slug,pts:r.pts,exact:r.exact,correct:r.correct,predicted:r.predicted,me:r.slug===state.meSlug,demo:false}));
+    rows=(await fetchStandings()).map(r=>({name:r.name,dept:r.dept,slug:r.slug,pts:r.pts,exact:r.exact,correct:r.correct,predicted:r.predicted,me:r.slug===state.meSlug,rv:!!rvSlug&&r.slug===rvSlug,demo:false}));
   }
   rows.sort((a,b)=>cmpSt(a,b)||a.name.localeCompare(b.name));
   let rank=0,prevR=null;rows.forEach((r,i)=>{if(prevR===null||cmpSt(r,prevR)!==0){rank=i+1;prevR=r;}r.rank=rank;});
@@ -1500,6 +1553,7 @@ async function renderLeaderboard(){
   if(meIdx>=lim)html+='<div class="lb-gap">⋯</div>'+lbRowHTML(rows[meIdx],lim,PT);
   if(rows.length>lim)html+='<button class="lb-more" onclick="lbMore()">Show more · '+(rows.length-lim)+' below</button>';
   body.innerHTML=html;
+  if(!state.player)body.insertAdjacentHTML("beforeend",'<button class="btn btn-primary" style="margin:16px auto 4px;display:flex" onclick="go(\'join\')">Join the pool \u26bd</button>');
   rows.forEach(function(r){
     const sp=body.querySelector('.ptsn[data-pslug="'+r.slug+'"]');
     if(sp&&LB_PREV[r.slug]!=null&&LB_PREV[r.slug]!==r.pts)odo(sp,LB_PREV[r.slug],r.pts,600);
@@ -1509,6 +1563,7 @@ async function renderLeaderboard(){
 
 async function renderMe(){
   if(!state.player){go("join");return;}
+  if(CONFIGURED&&!state.demo)consensus().catch(function(){});
   const s=scoreFor(state.player.predictions,state.results,state.player.champ);
   const pc=predCount();
   const st=(await fetchStandings()).slice().sort(cmpSt);
@@ -1518,6 +1573,16 @@ async function renderMe(){
   if(pc>=predTotal())badges.push({g:true,t:"⚡ All-In · "+pc+"/"+predTotal()});
   if(s.exact>=1)badges.push({g:true,t:"🎯 Sharpshooter"});
   if(s.correct>=1)badges.push({g:false,t:"✓ On the board"});
+  try{
+    const settled=FIXTURES.filter(function(f){const r=state.results[f.id];if(!r)return false;if(f.kn?r.w==null:r.h==null)return false;const q=state.player.predictions[f.id]||{};return !!(q.o||q.w);}).sort(function(a,b){return new Date(a.ko)-new Date(b.ko);});
+    let stk=0;for(let i=settled.length-1;i>=0;i--){const f=settled[i];if(rvVerdict(f,state.player.predictions[f.id]||{},state.results[f.id]).pts>0)stk++;else break;}
+    if(stk>=3)badges.unshift({g:true,t:"\ud83d\udd25 "+stk+" streak"});
+    const byDay={};settled.forEach(function(f){const k=dayKey(f.ko);(byDay[k]=byDay[k]||[]).push(f);});
+    for(const k in byDay){const a=byDay[k];if(a.length>=2&&a.every(function(f){return rvVerdict(f,state.player.predictions[f.id]||{},state.results[f.id]).pts>0;})){badges.unshift({g:true,t:"\ud83d\udc8e Perfect day"});break;}}
+    const qa=FIXTURES.filter(function(f){return !f.kn&&(f.home.n==="Qatar"||f.away.n==="Qatar");});
+    if(qa.length&&qa.every(function(f){const q=state.player.predictions[f.id]||{};return q.o===(f.home.n==="Qatar"?"H":"A");}))badges.push({g:false,t:"\ud83c\uddf6\ud83c\udde6 All-in on Qatar"});
+    if(CONS.map){let mav=false;settled.forEach(function(f){if(f.kn||mav)return;const q=state.player.predictions[f.id]||{},r=state.results[f.id];if(rvVerdict(f,q,r).pts<3)return;const c=CONS.map[f.id];if(!c)return;const tot=c.H+c.D+c.A;if(tot>=8&&Math.round(c[q.o]/tot*100)<=25)mav=true;});if(mav)badges.unshift({g:true,t:"\ud83c\udccf Maverick"});}
+  }catch(e){}
   if(!badges.length)badges.push({g:false,t:"🌱 Getting started"});
   const awaiting=s.scored===0;
   document.getElementById("mecard").innerHTML=
@@ -1525,7 +1590,7 @@ async function renderMe(){
     '<div class="role">'+esc(state.player.dept)+'</div>'+(state.player.ig?'<div class="mail">@'+esc(state.player.ig)+'</div>':'')+
     '<div class="me-stat"><div class="s"><b>'+s.pts+'</b><span>Points</span></div><div class="s"><b>'+(awaiting?"—":("#"+myRank))+'</b><span>Rank'+(total?(" of "+total):"")+'</span></div><div class="s"><b>'+pc+'</b><span>Predicted</span></div></div>'+
     '<div class="me-break">'+(awaiting?'You\u2019ve locked in <b>'+pc+'/'+predTotal()+'</b> picks. Points appear here once matches kick off.':'<b>'+s.correct+'</b> correct results &nbsp;·&nbsp; <b>'+s.exact+'</b> exact scores &nbsp;·&nbsp; <b>'+s.scored+'</b> matches scored')+'</div>'+
-    '<div class="badges">'+badges.map(b=>'<div class="badge '+(b.g?"gold":"")+'">'+b.t+'</div>').join("")+'</div>'+
+    '<div class="badges">'+badges.slice(0,5).map(b=>'<div class="badge '+(b.g?"gold":"")+'">'+b.t+'</div>').join("")+'</div>'+
     await rivalHTML(s,st);
   const mc=document.getElementById("mecard");
   if(mc)mc.insertAdjacentHTML("beforeend",
@@ -2116,9 +2181,9 @@ function liveFor(m){
 function midHTML(m,res){
   if(res)return '<div class="final-score">'+res.h+'\u2013'+res.a+'</div><div class="final-tag">Full time</div>';
   const le=liveFor(m);
-  if(le&&le.state==="in"&&le.hs!=null)
+  if(le&&le.state==="in"&&le.hs!=null&&lockedM(m))
     return '<div class="final-score">'+le.hs+'\u2013'+le.as+'</div><div class="final-tag live-tag"><span class="pulse"></span>'+esc(le.clock||"LIVE")+'</div>';
-  if(le&&le.done&&le.hs!=null)
+  if(le&&le.done&&le.hs!=null&&lockedM(m))
     return '<div class="final-score" style="opacity:.82">'+le.hs+'\u2013'+le.as+'</div><div class="final-tag">FT \u00b7 unofficial</div>';
   return '<div class="vs">VS</div><div class="kotime">'+fmtTime(m.ko)+'</div><div class="koday">'+fmtWk(m.ko)+'</div>';
 }
@@ -2176,6 +2241,71 @@ function jumpToNext(){
   el.scrollIntoView({behavior:"smooth",block:"center"});
   el.classList.add("jflash");setTimeout(()=>el.classList.remove("jflash"),1300);
 }
+/* ===== office consensus (locked matches only) =====
+   Lazily pulls all player blobs once per 10 min (same payload the leaderboard
+   fallback already uses) and aggregates pick splits client-side. Only ever
+   DISPLAYED for matches that are locked \u2014 never a herding tool before kickoff.
+   Future optimisation: have the robot write a wc:consensus key instead. */
+let CONS={t:0,map:null,n:0,champN:0,busy:null};
+function consensus(){
+  if(CONS.map&&Date.now()-CONS.t<600000)return Promise.resolve(CONS);
+  if(CONS.busy)return CONS.busy;
+  CONS.busy=(async function(){
+    const players=await sbulkJSON("wc:player:");
+    const map={};let champN=0;
+    players.forEach(function(p){
+      if(!p)return;
+      if(p.champ)champN++;
+      const pr=p.predictions||{};
+      for(const id in pr){const v=pr[id];if(!v)continue;
+        const m=FIXBYID[id];if(!m)continue;
+        const c=map[id]||(map[id]={H:0,D:0,A:0,w:{}});
+        if(m.kn){if(v.w){c.w[v.w]=(c.w[v.w]||0)+1;}}
+        else if(v.o){c[v.o]++;}}
+    });
+    CONS={t:Date.now(),map:map,n:players.length,champN:champN,busy:null};
+    return CONS;
+  })();
+  return CONS.busy;
+}
+function consText(m,p){
+  if(state.demo||!CONS.map)return "";
+  const c=CONS.map[m.id];if(!c)return "";
+  if(m.kn){
+    const mv=fxView(m);
+    const hN=c.w[mv.home.n]||0,aN=c.w[mv.away.n]||0,tot=hN+aN;
+    if(tot<5)return "";
+    const hp=Math.round(hN/tot*100);
+    const seg=function(pc,nm,mine){return '<b'+(mine?' class="cmine"':'')+'>'+pc+'% '+esc(nm)+'</b>';};
+    return '\ud83c\udfdf Office: '+seg(hp,mv.home.n,p&&p.w===mv.home.n)+' \u00b7 '+seg(100-hp,mv.away.n,p&&p.w===mv.away.n);
+  }
+  const tot=c.H+c.D+c.A;if(tot<5)return "";
+  const seg=function(k,lab){const pc=Math.round(c[k]/tot*100);return '<b'+((p&&p.o===k)?' class="cmine"':'')+'>'+pc+'% '+lab+'</b>';};
+  return '\ud83c\udfdf Office: '+seg("H",esc(m.home.n))+' \u00b7 '+seg("D","draw")+' \u00b7 '+seg("A",esc(m.away.n));
+}
+function consRevealText(m,r,v){
+  if(state.demo||!CONS.map)return "";
+  const c=CONS.map[m.id];if(!c)return "";
+  let pct;
+  if(m.kn){const tot=Object.values(c.w).reduce(function(a,b){return a+b;},0);if(tot<5||!r.w)return "";pct=Math.round((c.w[r.w]||0)/tot*100);}
+  else{const tot=c.H+c.D+c.A;if(tot<5)return "";const ro=r.h>r.a?"H":r.h<r.a?"A":"D";pct=Math.round(c[ro]/tot*100);}
+  if(v.cls!=="miss")return pct<=35?("Only "+pct+"% of the office called this \u2014 sharp."):(pct+"% of the office called it too.");
+  return pct+"% of the office got this one.";
+}
+async function fillConsensus(){
+  if(state.demo||!CONFIGURED)return;
+  const nodes=document.querySelectorAll(".cons[data-cons]");
+  const soc=document.getElementById("champ-soc");
+  if(!nodes.length&&!soc)return;
+  try{await consensus();}catch(e){return;}
+  nodes.forEach(function(n){
+    const m=FIXBYID[n.dataset.cons];if(!m)return;
+    const h=consText(m,(state.player&&state.player.predictions||{})[m.id]);
+    if(h){n.innerHTML=h;n.style.display="block";}
+  });
+  if(soc&&CONS.champN>=10)soc.textContent="\ud83c\udfc6 "+CONS.champN+" colleagues have locked their champion";
+}
+
 /* ===== how it works · FAQ ===== */
 const FAQ_ITEMS=[
  {q:"How do points work?",a:"Group matches: 3 points for the right result, +2 for the exact score \u2014 5 max. Knockouts pay more each round: Round of 32 = 4 \u00b7 Round of 16 = 5 \u00b7 Quarterfinals = 6 \u00b7 Semifinals = 8 \u00b7 Third place = 6 \u00b7 the Final = 10."},
@@ -2266,6 +2396,7 @@ const RV={q:[],i:0,total:0,open:false,timer:null,quick:false};
 function openReveal(){
   const q=revealQueue();if(!q.length)return false;
   RV.q=q;RV.i=0;RV.total=0;RV.open=true;RV.quick=q.length>=7;
+  if(CONFIGURED&&!state.demo)consensus().catch(function(){});
   document.getElementById("reveal").style.display="flex";
   document.body.style.overflow="hidden";
   const o=document.getElementById("rv-odo");if(o)o.textContent="0";
@@ -2291,7 +2422,7 @@ function renderRevealCard(){
     '<div class="rv-lab">'+esc(RLABEL[m.round]||m.round)+'</div>'+
     '<div class="rv-sec">YOUR PICK</div><div class="rv-pick">'+esc(pick)+'</div>'+
     '<div class="rv-sec">RESULT \u00b7 tap</div>'+
-    '<div class="rv-res">'+esc(res)+'<div class="rv-stamp" id="rv-stamp"></div></div></div>';
+    '<div class="rv-res">'+esc(res)+'</div><div class="rv-stamp" id="rv-stamp"></div><div class="rv-cons" id="rv-cons"></div></div>';
   document.getElementById("rv-foot").innerHTML="";
   clearTimeout(RV.timer);RV.timer=setTimeout(revealFlip,RV.quick?700:1400);
 }
@@ -2304,6 +2435,8 @@ function revealFlip(){
   card.classList.add("flipped",v.cls+"fx");
   const st=document.getElementById("rv-stamp");
   st.textContent=v.label;st.className="rv-stamp "+v.cls;
+  const cn=document.getElementById("rv-cons");
+  if(cn){const ct=consRevealText(m,r,v);if(ct)cn.textContent=ct;}
   const from=RV.total;RV.total+=v.pts;
   odo(document.getElementById("rv-odo"),from,RV.total,500);
   try{
@@ -2426,7 +2559,7 @@ armSheet("#reveal",()=>closeReveal());
 armSheet("#faqov",()=>closeFaq());
 
 /* ===== quick-pick swipe mode ===== */
-const SW={list:[],i:0,open:false,peek:false};
+const SW={list:[],i:0,open:false,peek:false,step:null};
 function openSwipe(){
   SW.list=swipeQueue();SW.i=0;
   if(!SW.list.length){toast("All picked \u2014 nothing left \u26a1");return;}
@@ -2444,8 +2577,9 @@ function closeSwipe(){
 }
 function swKey(e){
   if(!SW.open)return;
-  if(e.key==="Escape")closeSwipe();
-  else if(e.key==="ArrowRight")swipeCommit("A");
+  if(e.key==="Escape")return closeSwipe();
+  if(SW.step){if(e.key==="ArrowRight"||e.key==="ArrowUp")swScoreSkip();return;}
+  if(e.key==="ArrowRight")swipeCommit("A");
   else if(e.key==="ArrowLeft")swipeCommit("H");
   else if(e.key==="ArrowUp")swipeCommit("D");
 }
@@ -2459,6 +2593,7 @@ function swCur(){
   return null;
 }
 function renderSwipeCard(){
+  SW.step=null;
   const m=swCur();
   const st=document.getElementById("sw-stage"),lg=document.getElementById("sw-legend"),bt=document.getElementById("sw-btns");
   const done=SW.list.filter(x=>{const p=state.player.predictions[x.id]||{};return p.o||p.w;}).length;
@@ -2472,7 +2607,7 @@ function renderSwipeCard(){
   }
   const win=m.kn?" through":" wins";
   st.innerHTML='<div class="sw-card'+(SW.peek?" peek":"")+'" id="sw-card">'+
-    '<div class="sw-tag">'+esc((RLABEL[m.round]||m.round)+" \u00b7 "+fmtDay(m.ko)+" "+fmtTime(m.ko))+'</div>'+
+    '<div class="sw-tag">'+esc((RLABEL[m.round]||m.round)+" \u00b7 "+fmtWk(m.ko)+" \u00b7 "+fmtTime(m.ko))+'</div>'+
     '<div class="sw-teams"><div class="sw-t">'+m.home.f+'<b>'+esc(m.home.n)+'</b></div><span class="sw-vs">VS</span><div class="sw-t">'+m.away.f+'<b>'+esc(m.away.n)+'</b></div></div></div>'+
     '<div class="sw-glow l" id="sw-gl">'+esc(m.home.n+win)+'</div>'+
     '<div class="sw-glow r" id="sw-gr">'+esc(m.away.n+win)+'</div>';
@@ -2486,16 +2621,36 @@ function renderSwipeCard(){
 function swipeCommit(dir){
   const m=swCur();if(!m)return;
   const card=document.getElementById("sw-card");
-  if(m.kn){if(dir==="D")return swipeSkip();pickWinner(m.id,dir==="H"?m.home.n:m.away.n);}
-  else pickOutcome(m.id,dir);
+  if(m.kn){if(dir==="D")return swipeSkip();pickWinner(m.id,dir==="H"?m.home.n:m.away.n);SW.i++;flyOff(card,dir,renderSwipeCard);return;}
+  pickOutcome(m.id,dir);
   SW.i++;
-  flyOff(card,dir,renderSwipeCard);
+  flyOff(card,dir,function(){renderScoreStep(m,dir);});
 }
 function swipeSkip(){
   const m=swCur();if(!m)return;
   SW.list.push(SW.list.splice(SW.i,1)[0]);
   flyOff(document.getElementById("sw-card"),"U",renderSwipeCard);
 }
+const SW_SCORES={H:[[1,0],[2,0],[2,1],[3,1]],D:[[0,0],[1,1],[2,2]],A:[[0,1],[0,2],[1,2],[1,3]]};
+function renderScoreStep(m,dir){
+  if(!SW.open)return;
+  SW.step=m.id;
+  const st=document.getElementById("sw-stage"),lg=document.getElementById("sw-legend"),bt=document.getElementById("sw-btns");
+  const done=SW.list.filter(function(x){const q=state.player.predictions[x.id]||{};return q.o||q.w;}).length;
+  document.getElementById("sw-count").textContent=(SW.list.length-done)+" left";
+  document.getElementById("sw-bar").style.width=(SW.list.length?done/SW.list.length*100:100)+"%";
+  const picked=dir==="H"?m.home.n:dir==="A"?m.away.n:"Draw";
+  const p=state.player.predictions[m.id]||{};
+  st.innerHTML='<div class="sw-card sw-score" id="sw-card">'+
+    '<div class="sw-tag">\u2713 '+esc(picked)+(dir==="D"?"":" wins")+'</div>'+
+    '<div class="sw-sq">Exact score? <b>+2 bonus</b></div>'+
+    '<div class="sw-chips">'+SW_SCORES[dir].map(function(c){return '<button class="chipb sw-chip'+((p.h===c[0]&&p.a===c[1])?' sel':'')+'" onclick="swScore(\''+m.id+'\','+c[0]+','+c[1]+')">'+c[0]+'\u2013'+c[1]+'</button>';}).join('')+'</div>'+
+    '<div class="sw-sn">'+esc(m.home.n)+' \u2013 '+esc(m.away.n)+'</div></div>';
+  lg.textContent="one tap arms the bonus \u00b7 or skip";
+  bt.innerHTML='<button class="sw-b sw-done-b" style="flex:1" onclick="swScoreSkip()">Skip \u2192</button>';
+}
+function swScore(id,h,a){chipPick(id,h,a);SW.step=null;renderSwipeCard();}
+function swScoreSkip(){SW.step=null;renderSwipeCard();}
 function flyOff(card,dir,done){
   const rm=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
   if(!card||rm){done();return;}
@@ -2531,6 +2686,42 @@ function liveTick(){
   const active=FIXTURES.some(m=>{const k=new Date(m.ko).getTime();return now>k-15*60e3&&now<k+150*60e3;});
   if(active)fetchLive();
 }
+
+/* collapse the progress panel to a slim bar once it sticks */
+(function(){
+  const s=document.getElementById("prog-sent"),p=document.querySelector(".progress");
+  if(!s||!p||!window.IntersectionObserver)return;
+  new IntersectionObserver(function(en){
+    const e=en[0];const st=!e.isIntersecting&&e.boundingClientRect.top<0;
+    p.classList.toggle("mini",st);
+    if(st){const t=document.getElementById("ptable");
+      if(t&&t.classList.contains("show")){t.classList.remove("show");const b=p.querySelector(".ptbtn");if(b)b.textContent="How do points work? \u25be";}}
+  },{threshold:0}).observe(s);
+})();
+
+/* welcome back: detect an existing handle while typing, prefill, soften the form */
+(function(){
+  const inp=document.getElementById("j-ig");if(!inp)return;
+  let t=null,last="";
+  function note(html){const n=document.getElementById("wbnote");if(!n)return;n.innerHTML=html||"";n.style.display=html?"block":"none";}
+  inp.addEventListener("input",function(){
+    clearTimeout(t);const v=inp.value;
+    t=setTimeout(async function(){
+      const ig=v.replace(/^.*instagram\.com\//i,"").replace(/[\/?#].*$/,"").trim().replace(/^@+/,"").toLowerCase();
+      if(!/^[a-z0-9._]{1,30}$/.test(ig)){note("");return;}
+      if(ig===last)return;last=ig;
+      let ex=null;try{ex=await getJSON("wc:player:"+ig,true);}catch(e){}
+      const btn=document.getElementById("join-cta");
+      if(ex){
+        note("\ud83d\udc4b Welcome back, <b>"+esc(ex.name||("@"+ig))+"</b> \u2014 just enter your PIN to resume. Your picks are safe.");
+        if(btn)btn.textContent="Resume my game \u26bd";
+        const d=document.getElementById("j-dept");if(d&&!d.value&&ex.dept)d.value=ex.dept;
+        const c=document.getElementById("j-country");if(c&&ex.country)c.value=ex.country;
+        const n=document.getElementById("j-name");if(n&&!n.value&&ex.name)n.placeholder=ex.name;
+      }else{note("");if(btn)btn.textContent="Join the pool \u26bd";}
+    },450);
+  });
+})();
 
 (async function init(){
   state.results=await getJSON("wc:results",true)||{};
