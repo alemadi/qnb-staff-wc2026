@@ -245,3 +245,17 @@ writes simply start failing, which is the point) — but keep the gap short.
     git push https://x-access-token:<TOKEN>@github.com/alemadi/qnb-staff-wc2026.git main
 
 **Rollback (DB):** n/a.
+
+## 2026-06-12 20:13 (Doha)
+**Pushed:** 188bed0 (+ this ops commit) — **staging branch only, production main untouched**
+**Changed:** Exact-score chips on match cards now follow the result pick (outcome-keyed sets, same as the swipe fine-tune pass) with a 3-chip starter set before a result is chosen. Switching result clears a contradictory stored score (toast shown); complete custom scores always derive the result; `syncChips` removed in favor of `rerenderChips`. No DB/kv change.
+
+**Rollback (git):**
+    git push origin --delete staging        # discard the test branch entirely
+    # or, to keep the branch but undo the change:
+    git revert 188bed0
+    git push https://x-access-token:<TOKEN>@github.com/alemadi/qnb-staff-wc2026.git staging
+
+**Rollback (DB), if applicable:** none — frontend only.
+
+**kv snapshot taken before overwrite (if applicable):** n/a.
