@@ -490,6 +490,21 @@
   .sndtog{font:inherit;font-size:12px;font-weight:800;padding:7px 16px;border-radius:99px;border:1px solid var(--line);background:transparent;color:var(--faint);cursor:pointer}
   .sndtog.on{background:linear-gradient(115deg,var(--gold-deep),var(--gold));color:#181106;border-color:transparent}
   .btn:active,.ptbtn:active{transform:scale(.97)}
+  .faqov{position:fixed;inset:0;z-index:230;background:rgba(6,6,9,.97);display:flex;flex-direction:column;padding:calc(14px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px))}
+  .faq-top{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+  .faq-title{flex:1;text-align:center;font-family:var(--font-d);font-size:15px;letter-spacing:.22em;color:var(--gold-bright)}
+  .faq-sp{width:34px;flex:none}
+  .faq-list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:9px;max-width:520px;width:100%;margin:0 auto}
+  .faq-item{background:#0f0f12;border:1px solid var(--line);border-radius:13px;overflow:hidden;flex:none}
+  .faq-q{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:0;color:var(--cream);font:inherit;font-size:13px;font-weight:800;padding:13px 16px;cursor:pointer}
+  .faq-q b{color:var(--gold);transition:.2s}
+  .faq-item.open .faq-q b{transform:rotate(180deg)}
+  .faq-a{display:none;padding:0 16px 13px;font-size:12.5px;line-height:1.55;color:var(--muted);font-weight:600}
+  .faq-item.open .faq-a{display:block}
+  .faq-item.open{border-color:rgba(180,151,89,.45)}
+  .faq-link{display:block;margin:14px auto 0;background:none;border:0;color:var(--faint);font:inherit;font-size:12px;font-weight:700;text-decoration:underline;cursor:pointer}
+  .me-faq{cursor:pointer}
+  .me-faq b{color:var(--gold);font-size:15px}
   @media (prefers-reduced-motion:reduce){.pb-dot{animation:none}.sk{animation:none}.sw-card{animation:none}.rv-card{animation:none}.rv-res,.rv-stamp{transition:none}}
 
   footer.app{text-align:center;font-size:10.5px;color:var(--faint);padding:26px 10px 6px;line-height:1.7}
@@ -587,6 +602,7 @@
         <option>Other</option>
       </select>
       <button class="btn btn-primary" onclick="joinNow()">Join the pool ⚽</button>
+      <button class="faq-link" onclick="openFaq()">How does this work?</button>
       <details style="margin-top:16px;font-size:11.5px;color:var(--muted);line-height:1.6">
         <summary style="cursor:pointer;color:var(--gold);font-weight:700">📜 Rules &amp; terms</summary>
         <div style="margin-top:8px">
@@ -690,7 +706,14 @@
   <a class="navbtn" href="/watch.html" style="text-decoration:none"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>Watch</a>
   <button class="navbtn" id="nav-me" onclick="go('me')"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M5 21a7 7 0 0 1 14 0"/></svg>Me</button>
 </nav>
-<div id="reveal" class="reveal" style="display:none" role="dialog" aria-modal="true" aria-label="Results reveal">
+<div id="faqov" class="faqov" style="display:none" role="dialog" aria-modal="true" aria-label="How it works">
+    <div class="faq-top">
+      <button class="sw-x" onclick="closeFaq()" aria-label="Close">✕</button>
+      <div class="faq-title">HOW IT WORKS</div><span class="faq-sp"></span>
+    </div>
+    <div class="faq-list" id="faq-list"></div>
+  </div>
+  <div id="reveal" class="reveal" style="display:none" role="dialog" aria-modal="true" aria-label="Results reveal">
     <div class="rv-top">
       <button class="sw-x" onclick="closeReveal()" aria-label="Close">✕</button>
       <div class="rv-mid"><span id="rv-step"></span><div class="rv-count">+<span id="rv-odo">0</span></div></div>
@@ -1448,7 +1471,8 @@ async function renderMe(){
     await rivalHTML(s,st);
   const mc=document.getElementById("mecard");
   if(mc)mc.insertAdjacentHTML("beforeend",
-    '<div class="me-set"><span>Sounds</span><button class="sndtog'+(sndOn()?" on":"")+'" onclick="toggleSnd(this)">'+(sndOn()?"On":"Off")+'</button></div>');
+    '<div class="me-set"><span>Sounds</span><button class="sndtog'+(sndOn()?" on":"")+'" onclick="toggleSnd(this)">'+(sndOn()?"On":"Off")+'</button></div>'+
+    '<div class="me-set me-faq" onclick="openFaq()"><span>How it works \u00b7 FAQ</span><b>\u203a</b></div>');
 }
 
 async function rivalHTML(s,st){
@@ -2093,6 +2117,32 @@ function jumpToNext(){
   el.scrollIntoView({behavior:"smooth",block:"center"});
   el.classList.add("jflash");setTimeout(()=>el.classList.remove("jflash"),1300);
 }
+/* ===== how it works · FAQ ===== */
+const FAQ_ITEMS=[
+ {q:"How do points work?",a:"Group matches: 3 points for the right result, +2 for the exact score \u2014 5 max. Knockouts pay more each round: Round of 32 = 4 \u00b7 Round of 16 = 5 \u00b7 Quarterfinals = 6 \u00b7 Semifinals = 8 \u00b7 Third place = 6 \u00b7 the Final = 10."},
+ {q:"When do picks lock?",a:"At kickoff, match by match. Until then edit freely \u2014 changes save as you type."},
+ {q:"I got the score right but only received 3 points?",a:"Exact-score points need both number boxes filled before kickoff. If one was empty, only your result pick counted."},
+ {q:"When do results and points appear?",a:"Scores post and points update about 30 minutes after the final whistle \u2014 automatically. Next time you open the app, the morning reveal replays how your picks did."},
+ {q:"What do the \u25b2\u25bc arrows mean?",a:"Your movement since yesterday\u2019s standings snapshot. Big jumps in week one are normal \u2014 everyone starts level."},
+ {q:"What\u2019s a rival?",a:"Pick anyone from the dropdown in your Me tab. During live matches the pulse bar shows both your provisional points, head to head."},
+ {q:"How are ties broken?",a:"Full tiebreaker rules will be announced before the knockouts begin \u2014 watch this space."},
+ {q:"Is my Instagram handle visible to others?",a:"Sign-in only. Other players see your display name and department; handles are never shown on the leaderboard."},
+ {q:"Wrong name, lost access, something odd?",a:"Message Internal Communications and we\u2019ll sort it."},
+ {q:"Who built this?",a:"Internal Communications \u2014 fuelled by karak."}
+];
+function renderFaq(open){
+  const L=document.getElementById("faq-list");if(!L)return;
+  L.innerHTML=FAQ_ITEMS.map(function(it,i){
+    return '<div class="faq-item'+(i===open?' open':'')+'"><button class="faq-q" onclick="toggleFaq('+i+')">'+esc(it.q)+'<b>\u25be</b></button><div class="faq-a">'+esc(it.a)+'</div></div>';
+  }).join("");
+}
+function openFaq(){renderFaq(-1);document.getElementById("faqov").style.display="flex";document.body.style.overflow="hidden";}
+function closeFaq(){document.getElementById("faqov").style.display="none";document.body.style.overflow="";}
+function toggleFaq(i){
+  const it=document.querySelectorAll("#faq-list .faq-item")[i];
+  renderFaq(it&&it.classList.contains("open")?-1:i);
+}
+
 /* ===== juice: sounds + odometers ===== */
 function sndOn(){try{return localStorage.getItem("wc:snd")==="1";}catch(e){return false;}}
 function toggleSnd(btn){
