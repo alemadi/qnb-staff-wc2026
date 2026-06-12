@@ -285,3 +285,17 @@ writes simply start failing, which is the point) — but keep the gap short.
 **Rollback (DB), if applicable:** none — frontend only.
 
 **kv snapshot taken before overwrite (if applicable):** n/a.
+
+## 2026-06-12 20:45 (Doha)
+**Pushed:** 7c8a488 (+ this ops commit) — **staging branch only, production main untouched**
+**Changed:** The Departments leaderboard now uses a dedicated department badge (new `deptAvatarFill`) instead of the people Komposition badge — a rounded-square plaque (vs the circular people avatar) with a Bauhaus quarter-disc, a three-dot "group" glyph, and the department initials; new `.avatar.deptbadge` CSS gives it the square corners. Deterministic from the department name, same jewel palette. People avatars (leaderboard rows, podium, profile, chip) unchanged. Frontend only — no kv/DB change, robot untouched. Builds on the 20:35 Komposition entry.
+
+**Rollback (git):**
+    git push origin --delete staging        # discard the test branch entirely
+    # or, to keep staging but undo just the department badge:
+    git revert 7c8a488
+    git push https://x-access-token:<TOKEN>@github.com/alemadi/qnb-staff-wc2026.git staging
+
+**Rollback (DB), if applicable:** none — frontend only.
+
+**kv snapshot taken before overwrite (if applicable):** n/a.
