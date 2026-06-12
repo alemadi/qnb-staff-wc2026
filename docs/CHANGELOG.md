@@ -5,6 +5,71 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-06-12 16:27 — Anti-cheat Phase 1: server-side enforcement (RLS + RPCs)
+
+**Commits:** `4f5ed8f` (app + SQL) + this changelog commit.
+_(SHA filled at commit time — see "Deploy order" below; nothing is live until the SQL is run in Supabase.)_
+
+**Why:** every rule (pick locks, result entry, identity) was enforced in the
+browser only. With the publishable key, anyone could `curl` the kv table to
+edit picks after kickoff, forge results, read/overwrite rivals, or delete
+entries. Proven end-to-end in `proof/` (all four work pre-change, all blocked
+after).
+
+**What changed**
+
+- **`sql/protect.sql`** (new — run once in Supabase, after `robot.sql`):
+  - `wc_locks` (105 rows: m1–m72, k1–k32, `_champ`) — when each pick seals,
+    generated from the client's own FIXTURES.
+  - `wc_auth` (private) — PIN hashes migrated out of player rows; the `pin`
+    key is stripped from every `wc:player:*` row.
+  - `wc_org_auth` (private) — seeded with the existing shipped organizer hash,
+    so the current access code keeps working. Rotate:
+    `update wc_org_auth set code_hash = wc_pin_hash('NEW CODE')`.
+  - `save_picks(slug,pin,payload)` — the ONLY player write path. Verifies PIN
+    in SQL (wrong PIN → 0.3 s nap), keeps the stored value for any match whose
+    kickoff has passed (server clock), sanitizes every field, never stores the
+    PIN. Returns the canonical row for the client to reconcile.
+  - `org_check` / `org_exec` — organizer reads/writes gated by the code in SQL
+    (wrong code → 0.4 s nap); writes limited to `wc:results`, `wc:kteams`,
+    `wc:player:*`, plus `clearpin`.
+  - **The wall:** RLS on `kv` (world-readable, zero direct writes from
+    anon/authenticated); auth/locks/robot tables revoked from the API roles.
+  - The ESPN robot is unaffected — it runs as the table owner (SECURITY
+    DEFINER), so it still confirms group results and still never overwrites the
+    organizer. Verified in `proof/30_robot.sql`.
+- **`index.html`** (frontend, 85 ins / 32 del): all shared-state writes now go
+  through the RPCs. Removed the shipped organizer hash. Device PIN stored
+  locally (`wc:pin`); organizer code held in memory only (relocks on reload).
+  `persistPlayer`→`savePicksRPC` + `reconcilePicks`; all organizer writes →
+  `orgSet`/`orgDel`. No remaining direct writes to shared keys (grep-verified).
+- **`sql/rollback.sql`** (new) — exact inverse (see below).
+- **`proof/`** (new) — a local Postgres harness that recreates the live shape,
+  runs the four cheats before/after, exercises every legit path, and runs the
+  robot's two-tick ESPN cycle. `proof/run_all.sh` reproduces it from a clean DB;
+  `proof/PROOF_RUN.log` is the captured run.
+
+**DB:** **YES — live change.** Run `sql/protect.sql` once. It is idempotent and
+the PIN migration is one-time. **Before running, snapshot the current value of
+`wc:results`** (copy the row out of the SQL editor) per project rule.
+
+**Deploy order:** (1) snapshot `wc:results`; (2) run `sql/protect.sql` in
+Supabase; (3) push the `index.html` commit. Running the SQL first means the old
+client keeps working in the gap (reads are unaffected; the old client's direct
+writes simply start failing, which is the point) — but keep the gap short.
+
+**Rollback (exact, executable):**
+1. `git revert 4f5ed8f && git push origin main` — restores the old
+   client (which reads the PIN from the player row).
+2. Run **`sql/rollback.sql`** in Supabase — it restores PIN hashes into the
+   player rows, drops the RLS policy, `disable row level security` on `kv`,
+   re-grants insert/update/delete on `kv` to anon/authenticated, drops
+   `save_picks`/`org_check`/`org_exec`/`wc_pin_hash` and the `wc_auth`/
+   `wc_org_auth`/`wc_locks` tables (keeps `server_time()`, which predates this
+   push). Round-trip (protect → rollback → protect) verified clean in the proof.
+3. If a manual `wc:results` edit was made after hardening, restore the
+   pre-change snapshot from step (1) of Deploy order.
+
 ## 2026-06-12 12:04 — Swipe discoverability · honest exits · Matches header decluttered
 
 **Commits:** `a576e35` (app) + this changelog commit.
