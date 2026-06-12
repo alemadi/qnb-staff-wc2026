@@ -168,6 +168,14 @@
   .champ .t small{margin-left:auto;font-size:10px;color:var(--muted);font-weight:700;text-align:right}
   .champ select{width:100%;margin-top:10px}
   .champ .done{margin-top:9px;font-size:13px;font-weight:800;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .champ.slim{display:flex;align-items:center;gap:9px;padding:9px 13px;cursor:pointer}
+  .champ.slim .t{font-size:12.5px;flex:1;min-width:0;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .champ.slim small{font-size:10px;color:var(--muted);font-weight:700;flex:none}
+  #champ-tok{display:none;cursor:pointer;margin-left:7px;font-weight:700}
+  #champ-tok .fl-img{width:auto;height:11px;border-radius:2px;vertical-align:-1px;display:inline-block}
+  .me-champ{margin-top:13px;font-size:12px;font-weight:700;color:var(--cream);position:relative}
+  .me-champ .fl-img{width:15px;height:11px;border-radius:2px;vertical-align:-1px}
+  .me-champ .dim{color:var(--muted)}
   .lockin{margin-top:9px;font-size:10.5px;font-weight:800;color:var(--gold);letter-spacing:.3px;text-align:center;opacity:.85}
   .lockin.soon{color:var(--bad);opacity:1}
 
@@ -698,7 +706,7 @@
     <button id="jumpnext" class="jumpnext" style="display:none" onclick="jumpToNext()">Next unpicked ↓</button>
     <div id="prog-sent" aria-hidden="true"></div>
     <div class="progress">
-      <div class="top"><span>Predictions</span><span><b id="pred-count">0</b> / <span id="pred-total">72</span></span></div>
+      <div class="top"><span>Predictions<span id="champ-tok" role="button" onclick="go('me')"></span></span><span><b id="pred-count">0</b> / <span id="pred-total">72</span></span></div>
       <div class="bar"><i id="pred-bar" style="width:0%"></i></div>
       <button id="qpbtn" class="qpbtn" style="display:none" onclick="openSwipe()">⚡ <span class="qp-full">Swipe to pick · </span><span id="qp-left">0</span><span class="qp-full"> left</span></button>
       <div class="rules"><b>+3</b> result &nbsp;·&nbsp; <b>+2</b> exact bonus &nbsp;·&nbsp; knockouts <b>+4→+10</b> &nbsp;·&nbsp; 🏆 champion <b>+25</b> &nbsp;·&nbsp; ties break on <b>most predictions</b></div>
@@ -1168,7 +1176,7 @@ setInterval(function(){
   });
   if(flip&&state.player)renderMatches();
 },30000);
-function champLocked(){return new Date(CHAMP_LOCK).getTime()<=Date.now()+CLOCK_OFFSET;}
+function champLocked(){if(/[?&]champlock\b/.test(location.search))return true;return new Date(CHAMP_LOCK).getTime()<=Date.now()+CLOCK_OFFSET;}
 
 let state={view:"matches",meSlug:null,player:null,results:{},kteams:{},org:false,demo:false,filter:"MD1"};
 
@@ -1419,24 +1427,49 @@ function fixturesFor(filter){
 }
 
 const CHAMP_LOCK_LABEL="Thu 18 Jun · 7:00 PM";
+let CHAMP_EXP=false;
+function champExpand(){CHAMP_EXP=true;renderChampCard();}
+function champCollapse(){CHAMP_EXP=false;renderChampCard();}
 function renderChampCard(){
   const host=document.getElementById("champ-card");if(!host||!state.player)return;
   const teams=Object.keys(FL).sort();
   const mine=state.player.champ||"";
   const lk=champLocked(), win=state.results._champ;
-  let inner='<div class="t">🏆 Pick the Champion <small>+'+CHAMP_PTS+' pts · locks '+CHAMP_LOCK_LABEL+'</small></div>';
+  /* progress-bar token: visible only while locked & undecided — the pick itself lives in Me */
+  const tok=document.getElementById("champ-tok");
+  if(tok){
+    if(lk&&!win){tok.innerHTML='\ud83c\udfc6'+(mine&&FL[mine]?' '+flagTag(FL[mine]):'');tok.title=mine?('Your champion: '+mine+' (locked) \u2014 tap for details'):'Champion picks are locked';tok.style.display='inline';}
+    else{tok.style.display='none';}
+  }
+  /* STATE: result known — payoff banner back in Matches */
   if(win){
     const got=mine===win;
-    inner+='<div class="done" style="color:'+(got?'var(--ok)':'var(--bad)')+'">'+(got?('✓ You called it — '+esc(win)+' · +'+CHAMP_PTS+' pts'):('✗ Champion: '+esc(win)+(mine?' · you picked '+esc(mine):' · no pick')))+'</div>';
-  }else if(lk){
-    inner+='<div class="done">'+(mine?('🔒 Locked in: '+(FL[mine]?flagTag(FL[mine])+' ':'')+esc(mine)):'<span style="color:var(--muted)">🔒 Champion picks are locked</span>')+'</div>'+'<div class="champ-soc" id="champ-soc"></div>';
-  }else{
-    inner+='<select class="input" id="champ-sel"><option value="">Choose your champion…</option>'+teams.map(t=>'<option value="'+esc(t)+'"'+(t===mine?' selected':'')+'>'+esc(t)+'</option>').join("")+'</select>'+
-    '<div class="lockin" data-lockts="'+Date.parse(CHAMP_LOCK)+'">⏳ '+fmtLeft(Date.parse(CHAMP_LOCK)-Date.now()-CLOCK_OFFSET)+'</div>'+'<div class="champ-soc" id="champ-soc"></div>';
+    host.innerHTML='<div class="champ"><div class="t">\ud83c\udfc6 Pick the Champion <small>+'+CHAMP_PTS+' pts</small></div><div class="done" style="color:'+(got?'var(--ok)':'var(--bad)')+'">'+(got?('\u2713 You called it \u2014 '+esc(win)+' \u00b7 +'+CHAMP_PTS+' pts'):('\u2717 Champion: '+esc(win)+(mine?' \u00b7 you picked '+esc(mine):' \u00b7 no pick')))+'</div></div>';
+    return;
   }
+  /* STATE: locked — leaves the Matches feed; see Me view + token above */
+  if(lk){host.innerHTML='';return;}
+  /* STATE: picked & collapsed — slim chip, tap to change */
+  if(mine&&!CHAMP_EXP){
+    host.innerHTML='<div class="champ slim" role="button" tabindex="0" onclick="champExpand()" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();champExpand();}" aria-label="Your champion: '+esc(mine)+' \u2014 tap to change"><span class="t">\ud83c\udfc6 Champion: '+(FL[mine]?flagTag(FL[mine])+' ':'')+esc(mine)+'</span><small>change until '+CHAMP_LOCK_LABEL+' \u203a</small></div>';
+    return;
+  }
+  /* STATE: open — full selector (no pick yet, or expanded to change) */
+  let inner='<div class="t">\ud83c\udfc6 Pick the Champion <small>'+(mine?'<a href="javascript:void 0" onclick="champCollapse()" style="color:var(--muted);text-decoration:none;font-weight:700">minimise \u25b4</a>':'+'+CHAMP_PTS+' pts \u00b7 locks '+CHAMP_LOCK_LABEL)+'</small></div>';
+  inner+='<select class="input" id="champ-sel"><option value="">Choose your champion\u2026</option>'+teams.map(t=>'<option value="'+esc(t)+'"'+(t===mine?' selected':'')+'>'+esc(t)+'</option>').join("")+'</select>'+
+    '<div class="lockin" data-lockts="'+Date.parse(CHAMP_LOCK)+'">\u23f3 '+fmtLeft(Date.parse(CHAMP_LOCK)-Date.now()-CLOCK_OFFSET)+'</div>'+'<div class="champ-soc" id="champ-soc"></div>';
   host.innerHTML='<div class="champ">'+inner+'</div>';
   const sel=document.getElementById("champ-sel");
-  if(sel)sel.addEventListener("change",()=>{state.player.champ=sel.value||null;queueSave();toast(sel.value?("Champion saved: "+sel.value+" 🏆"):"Champion cleared");});
+  if(sel)sel.addEventListener("change",()=>{state.player.champ=sel.value||null;queueSave();toast(sel.value?("Champion saved: "+sel.value+" \ud83c\udfc6"):"Champion cleared");CHAMP_EXP=false;renderChampCard();if(typeof fillConsensus==="function")fillConsensus();});
+}
+function meChampLine(){
+  const mine=(state.player&&state.player.champ)||"",w=state.results._champ;
+  const fl=function(t){return FL[t]?flagTag(FL[t])+' ':'';};
+  if(w){const got=mine===w;
+    return '<div class="me-champ">\ud83c\udfc6 Champion: '+fl(w)+esc(w)+' \u00b7 '+(got?'<span style="color:var(--ok)">\u2713 you called it \u00b7 +'+CHAMP_PTS+'</span>':'<span style="color:var(--bad)">\u2717 '+(mine?('you picked '+esc(mine)):'no pick')+'</span>')+'</div>';}
+  if(champLocked())
+    return '<div class="me-champ">\ud83c\udfc6 Your champion: '+(mine?(fl(mine)+esc(mine)+' \u00b7 \ud83d\udd12 locked'):'<span class="dim">no pick \u00b7 picks are locked</span>')+'</div>';
+  return '<div class="me-champ">'+(mine?('\ud83c\udfc6 Your champion: '+fl(mine)+esc(mine)+' <span class="dim">\u00b7 change in Matches until '+CHAMP_LOCK_LABEL+'</span>'):('\ud83c\udfc6 <span class="dim">No champion picked yet \u2014 worth +'+CHAMP_PTS+' \u00b7 pick in Matches</span>'))+'</div>';
 }
 function renderMatches(){
   if(!state.player)return;
@@ -1844,6 +1877,7 @@ async function renderMe(){
     '<div class="role">'+esc(state.player.dept)+'</div>'+(state.player.ig?'<div class="mail">@'+esc(state.player.ig)+'</div>':'')+
     '<div class="me-stat"><div class="s"><b>'+s.pts+'</b><span>Points</span></div><div class="s"><b>'+(awaiting?"—":("#"+myRank))+'</b><span>Rank'+(total?(" of "+total):"")+'</span></div><div class="s"><b>'+pc+'</b><span>Predicted</span></div></div>'+
     '<div class="me-break">'+(awaiting?'You\u2019ve locked in <b>'+pc+'/'+predTotal()+'</b> picks. Points appear here once matches kick off.':'<b>'+s.correct+'</b> correct results &nbsp;·&nbsp; <b>'+s.exact+'</b> exact scores &nbsp;·&nbsp; <b>'+s.scored+'</b> matches scored')+'</div>'+
+    meChampLine()+
     '<div class="badges">'+badges.slice(0,5).map(b=>'<div class="badge '+(b.g?"gold":"")+'">'+b.t+'</div>').join("")+'</div>'+
     '<div class="me-fun" id="me-fun"'+(fun.length?'':' style="display:none"')+'>'+fun.map(function(t){return '<div>'+t+'</div>';}).join("")+'</div>'+
     await rivalHTML(s,st);
