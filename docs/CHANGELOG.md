@@ -172,3 +172,23 @@ writes simply start failing, which is the point) — but keep the gap short.
 **DB:** none. No kv writes, no SQL, `wc:results` untouched.
 
 **Rollback:** `git revert cca580c && git push origin main` — pure frontend, nothing else to undo.
+
+
+## 2026-06-12 18:17 (Doha) — Pick reward layer: pop+glow, stakes float, completion confetti
+
+**Commits:** `8e16fbb` (app) + this changelog commit.
+
+**What changed** (frontend only, `index.html`; additive, all new JS guarded in try/catch):
+- Selected pick pops with a springy scale + expanding gold glow ring (`.pick.pop`). Fires on every choose path: H/D/A taps, knockout winner taps, quick-score chips (`chipPick`), typed scores (`saveScore`).
+- A "+N on the line" float rises off the chosen pick showing real stakes: `+3` group outcome, `+5 ⚡` once the exact-score bonus is armed, `koPts(m)` for knockouts (`+4` R32 … `+10` final) via the fixture `kn` flag.
+- Completion celebration: confetti burst (gold + tricolor, self-removing canvas) + `#pred-bar` glow + toast "🎉 All picks locked in · N/N". Fires only on the transition `_lastPredC < tot → c === tot` inside `syncProgress()` — no retro-fire on boot for already-complete players; re-arms whenever `predTotal()` grows (new KO round unlocking).
+- Haptics deliberately unchanged (`vibrate(8)` as-is — stronger haptics considered and declined). `prefers-reduced-motion` respected: CSS via the existing global override, confetti via a JS matchMedia gate.
+
+**DB:** none. No kv writes, no SQL, `wc:results` untouched. **kv snapshot:** n/a — no kv overwrite.
+
+**Rollback (git):**
+
+    git revert 8e16fbb
+    git push https://x-access-token:<TOKEN>@github.com/alemadi/qnb-staff-wc2026.git main
+
+**Rollback (DB):** n/a.
