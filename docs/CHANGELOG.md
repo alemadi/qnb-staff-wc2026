@@ -7,7 +7,7 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ## 2026-06-13 04:55 (Doha) — Fix: robot couldn't confirm m3 (ESPN name "Bosnia-Herzegovina" unaliased)
 
-**Commits:** `cdca8da` (this commit, sql/robot.sql + changelog).
+**Commits:** `8d8802f` (sql/robot.sql + changelog) and a follow-up SHA-correction commit (this one).
 
 **What changed:**
 - ESPN's scoreboard names last night's m3 opponent **"Bosnia-Herzegovina"** (hyphen, no "and"), which normalizes to `bosniaherzegovina`. The alias table only had `bosniaandherzegovina`, and the fixture name "Bosnia & H." normalizes to `bosniah`, so `wc_ourname()` returned null and the robot's both-names-or-nothing guard skipped the match every tick. Cron, fetches (all 200 OK), and m1/m2 confirms were healthy throughout.
@@ -21,7 +21,7 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 **Rollback (git):**
 
-    git revert cdca8da
+    git revert 8d8802f
     git push https://x-access-token:<TOKEN>@github.com/alemadi/qnb-staff-wc2026.git main
 
 **Rollback (DB):**
