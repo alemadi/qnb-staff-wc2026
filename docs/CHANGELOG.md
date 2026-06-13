@@ -452,3 +452,20 @@ day-grouped thin rows; each still expands to a full receipt. Frontend only — n
 
 **kv snapshot taken before overwrite (if applicable):**
     n/a
+
+## 2026-06-13 14:44 (Doha)
+**Pushed:** f0fd8c7, plus this ops commit
+**Changed:** Removed the foldable "Completed" archive section (introduced in c87f11b and
+moved to top in 91e4032). Finished matches now stay inline in their day groups as receipt
+cards. Kept the .done receipt treatment; removed archive grouping, fold header, thin rows,
+and their CSS/JS. Frontend only — no DB/robot change.
+
+**Rollback (git):**
+    git revert f0fd8c7
+    git push https://x-access-token:<TOKEN>@github.com/alemadi/qnb-staff-wc2026.git main
+
+**Rollback (DB), if applicable:**
+    none — no database or kv change in this push
+
+**kv snapshot taken before overwrite (if applicable):**
+    n/a
