@@ -87,7 +87,8 @@ on conflict (id) do nothing;
 create table if not exists wc_alias(espn text primary key, ours text not null);
 insert into wc_alias(espn,ours) values
  ('unitedstates','USA'),('turkey','Türkiye'),('czechrepublic','Czechia'),
- ('bosniaandherzegovina','Bosnia & H.'),('cotedivoire','Ivory Coast'),
+ ('bosniaandherzegovina','Bosnia & H.'),('bosniaherzegovina','Bosnia & H.'),
+ ('cotedivoire','Ivory Coast'),
  ('capeverdeislands','Cape Verde'),('caboverde','Cape Verde'),
  ('congodr','DR Congo'),('democraticrepublicofthecongo','DR Congo'),
  ('iriran','Iran'),('korearepublic','South Korea')

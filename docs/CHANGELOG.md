@@ -5,6 +5,37 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-06-13 04:55 (Doha) — Fix: robot couldn't confirm m3 (ESPN name "Bosnia-Herzegovina" unaliased)
+
+**Commits:** `cdca8da` (this commit, sql/robot.sql + changelog).
+
+**What changed:**
+- ESPN's scoreboard names last night's m3 opponent **"Bosnia-Herzegovina"** (hyphen, no "and"), which normalizes to `bosniaherzegovina`. The alias table only had `bosniaandherzegovina`, and the fixture name "Bosnia & H." normalizes to `bosniah`, so `wc_ourname()` returned null and the robot's both-names-or-nothing guard skipped the match every tick. Cron, fetches (all 200 OK), and m1/m2 confirms were healthy throughout.
+- Added alias row `('bosniaherzegovina','Bosnia & H.')` to `wc_alias` — applied live in Supabase at 04:51 Doha and mirrored into `sql/robot.sql` here.
+- Ran `wc_autoconfirm_tick()` once manually after the insert: it confirmed **m3 = Canada 1–1 Bosnia & H.** from the already-fetched payload (`confirmed 1 · snapshot 2026-06-13→2026-06-13 · next fetch: yes`). No manual `wc:results` write — the robot wrote it through its normal path, organizer supremacy untouched.
+
+**DB applied (live):**
+
+    insert into wc_alias(espn, ours) values ('bosniaherzegovina', 'Bosnia & H.')
+    on conflict (espn) do nothing;
+
+**Rollback (git):**
+
+    git revert cdca8da
+    git push https://x-access-token:<TOKEN>@github.com/alemadi/qnb-staff-wc2026.git main
+
+**Rollback (DB):**
+
+    delete from wc_alias where espn = 'bosniaherzegovina';
+    -- and to undo the m3 confirm itself (only if genuinely wrong):
+    -- update kv set value = (value::jsonb - 'm3')::text, updated_at = now() where key = 'wc:results';
+
+**kv snapshot before robot wrote m3** (`wc:results`, updated 2026-06-12 08:00 Doha):
+
+    {"m1": {"a": 0, "h": 2}, "m2": {"a": 1, "h": 2}}
+
+---
+
 ## 2026-06-12 19:12 (Doha) — Fix: countdown header jitter (flag imgs rebuilt every second)
 
 **Commits:** `6ceb352` (app) + this changelog commit.
