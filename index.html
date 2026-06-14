@@ -399,6 +399,35 @@
   .lbmode{display:flex;gap:8px;margin:0 0 12px}
   .lbmode button{font:inherit;font-size:12px;font-weight:800;letter-spacing:.02em;padding:8px 16px;border-radius:99px;border:1px solid var(--line);background:transparent;color:var(--muted);cursor:pointer;transition:.15s}
   .lbmode button.on{background:linear-gradient(115deg,var(--gold-deep),var(--gold));border-color:transparent;color:#181106}
+
+  /* Groups — World Cup group standings tables */
+  .navbtn{white-space:nowrap}
+  @media(max-width:390px){.navbtn{font-size:9.5px;letter-spacing:.2px}}
+  .grp-legend{display:flex;flex-wrap:wrap;gap:14px;margin:0 2px 14px;font-size:11px;color:var(--muted);font-weight:600}
+  .grp-legend span{display:inline-flex;align-items:center;gap:6px}
+  .grp-legend i{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+  .grp-legend .gq{background:var(--c-green)}
+  .grp-legend .gp{background:var(--gold)}
+  .gcard{background:var(--glass);border:1px solid var(--line);border-radius:16px;padding:13px 13px 5px;margin-bottom:13px;animation:rise .45s both}
+  .ghdr{display:flex;align-items:baseline;gap:10px;margin:0 2px 9px}
+  .ghdr b{font-family:var(--font-d);font-size:20px;letter-spacing:.5px;color:var(--gold-bright);font-weight:400}
+  .ghdr .gsub{font-size:9px;letter-spacing:1.6px;text-transform:uppercase;color:var(--faint);font-weight:700;margin-left:auto}
+  table.gtab{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+  table.gtab th{font-size:8.5px;letter-spacing:.8px;text-transform:uppercase;color:var(--faint);font-weight:800;text-align:center;padding:0 0 7px}
+  table.gtab th.tl{text-align:left;padding-left:30px}
+  table.gtab td{padding:8px 0;border-top:1px solid var(--line-2);text-align:center;font-size:13px;color:var(--cream);font-weight:600}
+  table.gtab td.pos{width:24px;color:var(--muted);font-family:var(--font-d);font-size:14px}
+  table.gtab td.team{text-align:left;font-weight:700}
+  table.gtab td.team .fl-img{width:21px;height:14px;border-radius:2px;object-fit:cover;vertical-align:-2px;margin-right:8px;box-shadow:0 0 0 1px var(--line)}
+  table.gtab td.pts{font-family:var(--font-d);font-size:16px;color:var(--gold-bright);font-weight:400}
+  table.gtab td.mut{color:var(--muted);font-weight:500}
+  table.gtab tr.q td.pos{color:var(--c-green)}
+  table.gtab tr.q td.team::before,table.gtab tr.p td.team::before{content:"";display:inline-block;width:3px;height:15px;border-radius:2px;vertical-align:-3px;margin-right:7px;margin-left:-10px}
+  table.gtab tr.q td.team::before{background:var(--c-green)}
+  table.gtab tr.p td.team::before{background:var(--gold)}
+  table.gtab td.gd-pos{color:var(--ok)}
+  table.gtab td.gd-neg{color:var(--bad)}
+  @media(max-width:360px){table.gtab td{font-size:11.5px;padding:7px 0}table.gtab th.tl{padding-left:24px}table.gtab td.team .fl-img{width:18px;height:12px;margin-right:5px}table.gtab td.pts{font-size:15px}}
   .dept-note{font-size:11px;color:var(--faint);font-weight:600;margin:0 0 10px}
 
   .sharebtn{display:flex;width:100%;justify-content:center;margin-top:12px;padding:13px;border-radius:13px;border:none;cursor:pointer;
@@ -713,6 +742,17 @@
     <div id="match-list"></div>
   </section>
 
+  <!-- GROUPS -->
+  <section class="view" id="view-groups">
+    <div class="sec-title"><h2>Groups</h2><div class="tag" id="grp-tag">12 groups</div></div>
+    <div class="grp-legend">
+      <span><i class="gq"></i> Through to Round of 32</span>
+      <span><i class="gp"></i> 3rd · best-thirds race</span>
+    </div>
+    <div id="grp-body"></div>
+    <div class="org-note" style="margin-top:14px">Live group tables for all 48 teams · top two of each group advance, plus the eight best third-placed teams. Ranked by points, then goal difference, then goals scored.</div>
+  </section>
+
   <!-- LEADERBOARD -->
   <section class="view" id="view-leaderboard">
     <div class="sec-title"><h2>Leaderboard</h2><span class="live tag"><span class="pulse"></span> Live</span></div>
@@ -769,6 +809,7 @@
 
 <nav class="bottom">
   <button class="navbtn on" id="nav-matches" onclick="go('matches')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3v4M12 17v4M3 12h4M17 12h4M7 7l2.5 2.5M17 7l-2.5 2.5M7 17l2.5-2.5M17 17l-2.5-2.5"/></svg>Matches</button>
+  <button class="navbtn" id="nav-groups" onclick="go('groups')"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg>Groups</button>
   <button class="navbtn" id="nav-leaderboard" onclick="go('leaderboard')"><svg viewBox="0 0 24 24"><path d="M6 9V4h12v5a6 6 0 0 1-12 0Z"/><path d="M6 5H3v2a3 3 0 0 0 3 3M18 5h3v2a3 3 0 0 1-3 3M9 21h6M12 15v6"/></svg>Leaderboard</button>
   <a class="navbtn" href="/watch.html" style="text-decoration:none"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>Watch</a>
   <button class="navbtn" id="nav-me" onclick="go('me')"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M5 21a7 7 0 0 1 14 0"/></svg>Me</button>
@@ -1280,8 +1321,9 @@ function showView(view){
   document.body.classList.toggle("in",!!state.player);
   document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
   const el=document.getElementById("view-"+view);if(el)el.classList.add("active");
-  ["matches","leaderboard","me"].forEach(n=>{const b=document.getElementById("nav-"+n);if(b)b.classList.toggle("on",n===view);});
+  ["matches","groups","leaderboard","me"].forEach(n=>{const b=document.getElementById("nav-"+n);if(b)b.classList.toggle("on",n===view);});
   if(view==="matches"){renderFilters();renderMatches();}
+  if(view==="groups")renderGroups();
   if(view==="leaderboard")renderLeaderboard();
   if(view==="me"){renderMe();showOrg();}
   if(view==="join")rollBoard();
@@ -1839,6 +1881,74 @@ function showOrg(){
     renderResultsEditor();
   }
 }
+/* ===== Group standings — live World Cup group tables =====
+   The 12 groups derive from the 72 group fixtures: teams that meet in the
+   group stage form a 4-team connected component. Letters follow fixture
+   order (A–L), which matches the knockout bracket references
+   ("Winners A", "Best 3rd · A/B/C/D/F" …). No new data needed. */
+const GROUPS=(function(){
+  const adj={},order=[];
+  FIXTURES.forEach(f=>{ if(f.kn)return;
+    const h=f.home.n,a=f.away.n;
+    if(!adj[h]){adj[h]=[];order.push(h);}
+    if(!adj[a]){adj[a]=[];order.push(a);}
+    adj[h].push(a);adj[a].push(h);
+  });
+  const seen=new Set(),out=[];
+  order.forEach(t=>{
+    if(seen.has(t))return;
+    const comp=[],stack=[t];
+    while(stack.length){const x=stack.pop();if(seen.has(x))continue;seen.add(x);comp.push(x);adj[x].forEach(y=>{if(!seen.has(y))stack.push(y);});}
+    out.push(comp);
+  });
+  return out.map((teams,i)=>({letter:String.fromCharCode(65+i),set:new Set(teams),teams}));
+})();
+function grpDone(r){return !!(r&&r.h!=null&&r.a!=null&&isFinite(Number(r.h))&&isFinite(Number(r.a)));}
+function computeGroupTable(g){
+  const row={};
+  g.teams.forEach(t=>row[t]={team:t,P:0,W:0,D:0,L:0,GF:0,GA:0});
+  FIXTURES.forEach(f=>{
+    if(f.kn||!g.set.has(f.home.n)||!g.set.has(f.away.n))return;
+    const r=state.results[f.id];
+    if(!grpDone(r))return;
+    const hh=Number(r.h),aa=Number(r.a),rh=row[f.home.n],ra=row[f.away.n];
+    rh.P++;ra.P++;rh.GF+=hh;rh.GA+=aa;ra.GF+=aa;ra.GA+=hh;
+    if(hh>aa){rh.W++;ra.L++;}
+    else if(hh<aa){ra.W++;rh.L++;}
+    else{rh.D++;ra.D++;}
+  });
+  const arr=g.teams.map(t=>{const r=row[t];r.GD=r.GF-r.GA;r.Pts=r.W*3+r.D;return r;});
+  // FIFA group ranking: points, then goal difference, then goals scored.
+  arr.sort((x,y)=>y.Pts-x.Pts||y.GD-x.GD||y.GF-x.GF||x.team.localeCompare(y.team));
+  return arr;
+}
+function renderGroups(){
+  const host=document.getElementById("grp-body");
+  if(!host)return;
+  let html="",totDone=0;
+  GROUPS.forEach(g=>{
+    const rows=computeGroupTable(g),played=rows.reduce((n,r)=>n+r.P,0)/2;
+    totDone+=played;
+    html+='<div class="gcard"><div class="ghdr"><b>Group '+g.letter+'</b><span class="gsub">'+(played?played+' / 6 played':'not started')+'</span></div>'+
+      '<table class="gtab"><thead><tr><th></th><th class="tl">Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>Pts</th></tr></thead><tbody>';
+    rows.forEach((r,i)=>{
+      const cls=i<2?"q":(i===2?"p":""),z=r.P===0,zc=z?"mut":"";
+      const gd=(r.GD>0?"+":"")+r.GD,gdc=z?"mut":(r.GD>0?"gd-pos":(r.GD<0?"gd-neg":"mut"));
+      html+='<tr'+(cls?' class="'+cls+'"':'')+'>'+
+        '<td class="pos">'+(i+1)+'</td>'+
+        '<td class="team">'+(FL[r.team]?flagTag(FL[r.team]):"")+esc(r.team)+'</td>'+
+        '<td class="'+zc+'">'+r.P+'</td><td class="'+zc+'">'+r.W+'</td><td class="'+zc+'">'+r.D+'</td><td class="'+zc+'">'+r.L+'</td>'+
+        '<td class="'+zc+'">'+r.GF+'</td><td class="'+zc+'">'+r.GA+'</td>'+
+        '<td class="'+gdc+'">'+(z?"0":gd)+'</td>'+
+        '<td class="pts">'+r.Pts+'</td></tr>';
+    });
+    html+='</tbody></table></div>';
+  });
+  host.innerHTML=html;
+  const tag=document.getElementById("grp-tag");
+  if(tag)tag.textContent=totDone?(totDone+' / 72 played'):'12 groups';
+}
+
 function renderResultsEditor(){
   if(!state.org)return;
   const rnd=document.getElementById("org-round").value||"MD1";
@@ -3007,7 +3117,7 @@ function liveTick(){
     document.getElementById("userchip").style.display="flex";
     document.getElementById("countdown").style.display="flex";
     const h=(location.hash||"").slice(1);
-    updateChip();go(["matches","leaderboard","me"].indexOf(h)>=0?h:"matches");
+    updateChip();go(["matches","groups","leaderboard","me"].indexOf(h)>=0?h:"matches");
     if(!openReveal())welcomeDelta();
   }else{go("join");}
   renderPulse();setInterval(renderPulse,30000);
