@@ -289,6 +289,27 @@
   .navbtn.on::before{content:"";position:absolute;top:0;width:30px;height:3px;border-radius:0 0 4px 4px;background:linear-gradient(90deg,var(--gold-deep),var(--gold))}
 
   :focus-visible{outline:2px solid var(--turq);outline-offset:2px;border-radius:4px}
+
+  /* ---------- your teams · reminders ---------- */
+  .fl-img{width:auto;height:13px;border-radius:2px;vertical-align:-1px;display:inline-block;box-shadow:0 1px 4px rgba(0,0,0,.35)}
+  .teamgrid{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}
+  .teamchip{display:inline-flex;align-items:center;gap:7px;font:inherit;font-size:.82rem;font-weight:700;letter-spacing:.01em;padding:8px 13px;border-radius:99px;border:1px solid var(--line);background:rgba(255,255,255,.02);color:var(--ink-dim);cursor:pointer;transition:.15s}
+  .teamchip:hover{border-color:var(--turq);color:var(--ink)}
+  .teamchip.on{background:linear-gradient(115deg,var(--gold-deep),var(--gold));border-color:transparent;color:#181106}
+  .teamchip.on .fl-img{box-shadow:0 1px 3px rgba(0,0,0,.5)}
+  .teamchip:active{transform:scale(.96)}
+  .teamtools{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-top:18px}
+  .teamtools .count{margin-right:auto}
+  #myMatches{margin-top:20px}
+  #myMatches .opp{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:1.12rem}
+  #myMatches .opp .fl-img{height:15px}
+  #myMatches .foll{color:var(--gold-bright)}
+  #myMatches .vs{color:var(--ink-dim);font-weight:600;font-size:.9rem}
+  .match .acts{display:flex;align-items:center;gap:16px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:11px;margin-top:4px}
+  .match .acts .remind-btn{font:inherit;font-size:.82rem;font-weight:700;color:var(--turq);background:none;border:none;cursor:pointer;padding:0}
+  .match .acts .remind-btn:hover{text-decoration:underline}
+  .match .acts .gcal{font-size:.78rem;color:var(--ink-dim);text-decoration:none;font-weight:600}
+  .match .acts .gcal:hover{color:var(--turq)}
 </style>
 </head>
 <body>
@@ -361,6 +382,26 @@
       Group B: Qatar, Switzerland, Canada, Bosnia &amp; Herzegovina. Top two advance to the Round of 32 —
       and with the new 48-team format, a strong third place can sneak through too.
     </p>
+  </section>
+
+  
+  <!-- ================= YOUR TEAMS · REMINDERS ================= -->
+  <section id="myteams">
+    <div class="sec-head">
+      <h2>Your teams</h2>
+    </div>
+    <p class="sec-sub">Pick the teams you're following &mdash; tap as many as you like. We'll list their matches in <b>Doha time</b> and drop a reminder straight into your calendar (Apple, Google or Outlook) with a 1-hour heads-up. Saved on this device.</p>
+
+    <div class="teamgrid" id="teamPicker" role="group" aria-label="Pick teams to follow"></div>
+
+    <div class="teamtools">
+      <div class="count" id="teamCount"></div>
+      <a class="btn btn-primary" id="addAll" href="#" role="button">Add all to calendar</a>
+      <button class="btn btn-ghost" id="clearTeams" type="button">Clear</button>
+    </div>
+
+    <div class="matches" id="myMatches"></div>
+    <p class="group-note" id="myNote"></p>
   </section>
 
   <!-- ================= THE FINAL ================= -->
@@ -792,6 +833,253 @@ render("");
   }
   tick();
   const iv = setInterval(tick, 1000);
+})();
+</script>
+<script>
+(function(){
+const FL = {
+ "Mexico":"mx","South Africa":"za","South Korea":"kr","Czechia":"cz","Canada":"ca","Bosnia & H.":"ba",
+ "USA":"us","Paraguay":"py","Qatar":"qa","Switzerland":"ch","Brazil":"br","Morocco":"ma","Haiti":"ht",
+ "Scotland":"gb-sct","Australia":"au","Türkiye":"tr","Germany":"de","Curaçao":"cw","Netherlands":"nl","Japan":"jp",
+ "Ivory Coast":"ci","Ecuador":"ec","Sweden":"se","Tunisia":"tn","Spain":"es","Cape Verde":"cv","Belgium":"be",
+ "Egypt":"eg","Saudi Arabia":"sa","Uruguay":"uy","Iran":"ir","New Zealand":"nz","France":"fr","Senegal":"sn",
+ "Iraq":"iq","Norway":"no","Argentina":"ar","Algeria":"dz","Austria":"at","Jordan":"jo","Portugal":"pt",
+ "DR Congo":"cd","England":"gb-eng","Croatia":"hr","Ghana":"gh","Panama":"pa","Uzbekistan":"uz","Colombia":"co"
+};
+const RAW=[
+ ["m1","MD1","Mexico","South Africa","2026-06-11T19:00:00Z","Estadio Azteca, Mexico City","open",0],
+ ["m2","MD1","South Korea","Czechia","2026-06-12T02:00:00Z","Estadio Akron, Guadalajara","",0],
+ ["m3","MD1","Canada","Bosnia & H.","2026-06-12T19:00:00Z","BMO Field, Toronto","",0],
+ ["m4","MD1","USA","Paraguay","2026-06-13T01:00:00Z","SoFi Stadium, Los Angeles","",0],
+ ["m5","MD1","Qatar","Switzerland","2026-06-13T19:00:00Z","Levi's Stadium, SF Bay Area","qatar",0],
+ ["m6","MD1","Brazil","Morocco","2026-06-13T22:00:00Z","MetLife Stadium, New Jersey","",0],
+ ["m7","MD1","Haiti","Scotland","2026-06-14T01:00:00Z","Gillette Stadium, Boston","",0],
+ ["m8","MD1","Australia","Türkiye","2026-06-14T04:00:00Z","","",0],
+ ["m9","MD1","Germany","Curaçao","2026-06-14T17:00:00Z","","",0],
+ ["m10","MD1","Netherlands","Japan","2026-06-14T20:00:00Z","","",0],
+ ["m11","MD1","Ivory Coast","Ecuador","2026-06-14T23:00:00Z","","",0],
+ ["m12","MD1","Sweden","Tunisia","2026-06-15T02:00:00Z","","",0],
+ ["m13","MD1","Spain","Cape Verde","2026-06-15T16:00:00Z","","",0],
+ ["m14","MD1","Belgium","Egypt","2026-06-15T19:00:00Z","","",0],
+ ["m15","MD1","Saudi Arabia","Uruguay","2026-06-15T22:00:00Z","","",0],
+ ["m16","MD1","Iran","New Zealand","2026-06-16T01:00:00Z","","",0],
+ ["m17","MD1","France","Senegal","2026-06-16T19:00:00Z","","",0],
+ ["m18","MD1","Iraq","Norway","2026-06-16T22:00:00Z","","",0],
+ ["m19","MD1","Argentina","Algeria","2026-06-17T01:00:00Z","","",0],
+ ["m20","MD1","Austria","Jordan","2026-06-17T04:00:00Z","","",0],
+ ["m21","MD1","Portugal","DR Congo","2026-06-17T17:00:00Z","","",0],
+ ["m22","MD1","England","Croatia","2026-06-17T20:00:00Z","","",0],
+ ["m23","MD1","Ghana","Panama","2026-06-17T23:00:00Z","","",0],
+ ["m24","MD1","Uzbekistan","Colombia","2026-06-18T02:00:00Z","","",0],
+ ["m25","MD2","Czechia","South Africa","2026-06-18T16:00:00Z","Mercedes-Benz Stadium, Atlanta","",0],
+ ["m26","MD2","Switzerland","Bosnia & H.","2026-06-18T19:00:00Z","SoFi Stadium, Los Angeles","",0],
+ ["m27","MD2","Canada","Qatar","2026-06-18T22:00:00Z","BC Place, Vancouver","qatar",0],
+ ["m28","MD2","Mexico","South Korea","2026-06-19T01:00:00Z","Estadio Akron, Guadalajara","",0],
+ ["m29","MD2","USA","Australia","2026-06-19T19:00:00Z","","",0],
+ ["m30","MD2","Scotland","Morocco","2026-06-19T22:00:00Z","","",0],
+ ["m31","MD2","Brazil","Haiti","2026-06-20T01:00:00Z","","",0],
+ ["m32","MD2","Türkiye","Paraguay","2026-06-20T04:00:00Z","","",0],
+ ["m33","MD2","Netherlands","Sweden","2026-06-20T17:00:00Z","","",0],
+ ["m34","MD2","Germany","Ivory Coast","2026-06-20T20:00:00Z","","",0],
+ ["m35","MD2","Ecuador","Curaçao","2026-06-21T00:00:00Z","","",0],
+ ["m36","MD2","Tunisia","Japan","2026-06-21T04:00:00Z","","",0],
+ ["m37","MD2","Spain","Saudi Arabia","2026-06-21T16:00:00Z","","",0],
+ ["m38","MD2","Belgium","Iran","2026-06-21T19:00:00Z","","",0],
+ ["m39","MD2","Uruguay","Cape Verde","2026-06-21T22:00:00Z","","",0],
+ ["m40","MD2","New Zealand","Egypt","2026-06-22T01:00:00Z","","",0],
+ ["m41","MD2","Argentina","Austria","2026-06-22T17:00:00Z","","",0],
+ ["m42","MD2","France","Iraq","2026-06-22T21:00:00Z","","",0],
+ ["m43","MD2","Norway","Senegal","2026-06-23T00:00:00Z","","",0],
+ ["m44","MD2","Jordan","Algeria","2026-06-23T03:00:00Z","","",0],
+ ["m45","MD2","Portugal","Uzbekistan","2026-06-23T17:00:00Z","","",0],
+ ["m46","MD2","England","Ghana","2026-06-23T20:00:00Z","","",0],
+ ["m47","MD2","Panama","Croatia","2026-06-23T23:00:00Z","","",0],
+ ["m48","MD2","Colombia","DR Congo","2026-06-24T02:00:00Z","","",0],
+ ["m49","MD3","Switzerland","Canada","2026-06-24T19:00:00Z","","",0],
+ ["m50","MD3","Bosnia & H.","Qatar","2026-06-24T19:00:00Z","","qatar",0],
+ ["m51","MD3","Scotland","Brazil","2026-06-24T22:00:00Z","","",0],
+ ["m52","MD3","Morocco","Haiti","2026-06-24T22:00:00Z","","",0],
+ ["m53","MD3","Czechia","Mexico","2026-06-25T01:00:00Z","Estadio Azteca, Mexico City","",0],
+ ["m54","MD3","South Africa","South Korea","2026-06-25T01:00:00Z","Estadio BBVA, Monterrey","",0],
+ ["m55","MD3","Ecuador","Germany","2026-06-25T20:00:00Z","","",0],
+ ["m56","MD3","Curaçao","Ivory Coast","2026-06-25T20:00:00Z","","",0],
+ ["m57","MD3","Japan","Sweden","2026-06-25T23:00:00Z","","",0],
+ ["m58","MD3","Tunisia","Netherlands","2026-06-25T23:00:00Z","","",0],
+ ["m59","MD3","Türkiye","USA","2026-06-26T02:00:00Z","","",0],
+ ["m60","MD3","Paraguay","Australia","2026-06-26T02:00:00Z","","",0],
+ ["m61","MD3","Norway","France","2026-06-26T19:00:00Z","","",0],
+ ["m62","MD3","Senegal","Iraq","2026-06-26T19:00:00Z","","",0],
+ ["m63","MD3","Cape Verde","Saudi Arabia","2026-06-27T00:00:00Z","","",0],
+ ["m64","MD3","Uruguay","Spain","2026-06-27T00:00:00Z","","",0],
+ ["m65","MD3","Egypt","Iran","2026-06-27T03:00:00Z","","",0],
+ ["m66","MD3","New Zealand","Belgium","2026-06-27T03:00:00Z","","",0],
+ ["m67","MD3","Panama","England","2026-06-27T21:00:00Z","","",0],
+ ["m68","MD3","Croatia","Ghana","2026-06-27T21:00:00Z","","",0],
+ ["m69","MD3","Colombia","Portugal","2026-06-27T23:30:00Z","","",0],
+ ["m70","MD3","DR Congo","Uzbekistan","2026-06-27T23:30:00Z","","",0],
+ ["m71","MD3","Algeria","Austria","2026-06-28T02:00:00Z","","",0],
+ ["m72","MD3","Jordan","Argentina","2026-06-28T02:00:00Z","","",0],
+ ["k1","R32","Runners-up A","Runners-up B","2026-06-28T19:00:00Z","","",1],
+ ["k2","R32","Winners C","Runners-up F","2026-06-29T17:00:00Z","","",1],
+ ["k3","R32","Winners E","Best 3rd · A/B/C/D/F","2026-06-29T20:30:00Z","","",1],
+ ["k4","R32","Winners F","Runners-up C","2026-06-30T01:00:00Z","","",1],
+ ["k5","R32","Runners-up E","Runners-up I","2026-06-30T17:00:00Z","","",1],
+ ["k6","R32","Winners I","Best 3rd · C/D/F/G/H","2026-06-30T21:00:00Z","","",1],
+ ["k7","R32","Winners A","Best 3rd · C/E/F/H/I","2026-07-01T01:00:00Z","","",1],
+ ["k8","R32","Winners L","Best 3rd · E/H/I/J/K","2026-07-01T16:00:00Z","","",1],
+ ["k9","R32","Winners G","Best 3rd · A/E/H/I/J","2026-07-01T20:00:00Z","","",1],
+ ["k10","R32","Winners D","Best 3rd · B/E/F/I/J","2026-07-02T00:00:00Z","","",1],
+ ["k11","R32","Winners H","Runners-up J","2026-07-02T19:00:00Z","","",1],
+ ["k12","R32","Runners-up K","Runners-up L","2026-07-02T23:00:00Z","","",1],
+ ["k13","R32","Winners B","Best 3rd · E/F/G/I/J","2026-07-03T03:00:00Z","","",1],
+ ["k14","R32","Runners-up D","Runners-up G","2026-07-03T18:00:00Z","","",1],
+ ["k15","R32","Winners J","Runners-up H","2026-07-03T22:00:00Z","","",1],
+ ["k16","R32","Winners K","Best 3rd · D/E/I/J/L","2026-07-04T01:30:00Z","","",1],
+ ["k17","R16","TBD","TBD","2026-07-04T17:00:00Z","","",1],
+ ["k18","R16","TBD","TBD","2026-07-04T21:00:00Z","","",1],
+ ["k19","R16","TBD","TBD","2026-07-05T20:00:00Z","","",1],
+ ["k20","R16","TBD","TBD","2026-07-06T00:00:00Z","","",1],
+ ["k21","R16","TBD","TBD","2026-07-06T19:00:00Z","","",1],
+ ["k22","R16","TBD","TBD","2026-07-07T00:00:00Z","","",1],
+ ["k23","R16","TBD","TBD","2026-07-07T16:00:00Z","","",1],
+ ["k24","R16","TBD","TBD","2026-07-07T20:00:00Z","","",1],
+ ["k25","QF","TBD","TBD","2026-07-09T20:00:00Z","","",1],
+ ["k26","QF","TBD","TBD","2026-07-10T19:00:00Z","","",1],
+ ["k27","QF","TBD","TBD","2026-07-11T21:00:00Z","","",1],
+ ["k28","QF","TBD","TBD","2026-07-12T01:00:00Z","","",1],
+ ["k29","SF","TBD","TBD","2026-07-14T19:00:00Z","","",1],
+ ["k30","SF","TBD","TBD","2026-07-15T19:00:00Z","","",1],
+ ["k31","FINAL","TBD","TBD","2026-07-18T21:00:00Z","","third",1],
+ ["k32","FINAL","TBD","TBD","2026-07-19T19:00:00Z","","final",1]
+];
+
+/* ============================================================
+   YOUR TEAMS — pick several nations, get match reminders.
+   FL (flag map) and RAW (fixtures) are injected directly above,
+   copied from the predictor's single fixture source so the
+   schedule never drifts between the two pages.
+   [id, round, home, away, kickoffUTC, venue, tag, isKnockout]
+============================================================ */
+var FIX = RAW.map(function(r){ return {id:r[0],round:r[1],home:r[2],away:r[3],ko:r[4],venue:r[5]||"",tag:r[6]||null,kn:!!r[7]}; });
+var RLAB = {MD1:"Matchday 1",MD2:"Matchday 2",MD3:"Matchday 3",R32:"Round of 32",R16:"Round of 16",QF:"Quarter-finals",SF:"Semi-finals",FINAL:"Final"};
+var ARAB = ["Qatar","Morocco","Egypt","Tunisia","Saudi Arabia","Algeria","Iraq","Jordan"];
+
+/* selectable teams = real nations (FL keys); Arab teams pinned first, then A–Z */
+var ALL = Object.keys(FL);
+var REST = ALL.filter(function(t){ return ARAB.indexOf(t) < 0; }).sort(function(a,b){ return a.localeCompare(b); });
+var TEAMS = ARAB.filter(function(t){ return ALL.indexOf(t) >= 0; }).concat(REST);
+
+var LS = "wc_myteams";
+function loadSel(){ try{ var v=JSON.parse(localStorage.getItem(LS)); if(Array.isArray(v)) return v; }catch(e){} return ["Qatar"]; }
+function saveSel(){ try{ localStorage.setItem(LS, JSON.stringify(Array.from(sel))); }catch(e){} }
+var sel = new Set(loadSel());
+
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function flag(name){ var c=FL[name]; return c ? '<img class="fl-img" src="https://flagcdn.com/w40/'+c+'.png" srcset="https://flagcdn.com/w80/'+c+'.png 2x" alt="" loading="lazy">' : ''; }
+
+function inDoha(ms, opts){ return new Date(ms).toLocaleString('en-GB', Object.assign({timeZone:'Asia/Qatar'}, opts)); }
+function fmtDay(ms){ return inDoha(ms, {weekday:'short', day:'numeric', month:'short'}); }
+function fmtTime(ms){ return inDoha(ms, {hour:'2-digit', minute:'2-digit', hour12:true}); }
+
+function pad(n){ return (n<10?'0':'')+n; }
+function dtUTC(ms){ var d=new Date(ms); return d.getUTCFullYear()+pad(d.getUTCMonth()+1)+pad(d.getUTCDate())+'T'+pad(d.getUTCHours())+pad(d.getUTCMinutes())+'00Z'; }
+function icsEsc(s){ return String(s).replace(/\\/g,'\\\\').replace(/([,;])/g,'\\$1').replace(/\r?\n/g,'\\n'); }
+
+function vevent(m){
+  var start=Date.parse(m.ko), end=start+125*60000;
+  var title=m.home+' v '+m.away+' — World Cup 2026';
+  var loc=m.venue||'Doha, Qatar';
+  var desc=(RLAB[m.round]||m.round)+' · '+fmtDay(start)+' '+fmtTime(start)+' Doha time · beIN SPORTS';
+  return ['BEGIN:VEVENT','UID:wc2026-'+m.id+'@staffchallenge26.com','DTSTAMP:'+dtUTC(Date.now()),
+    'DTSTART:'+dtUTC(start),'DTEND:'+dtUTC(end),'SUMMARY:'+icsEsc(title),'LOCATION:'+icsEsc(loc),
+    'DESCRIPTION:'+icsEsc(desc),'BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:'+icsEsc(title),
+    'TRIGGER:-PT60M','END:VALARM','END:VEVENT'].join('\r\n');
+}
+function icsDoc(list){
+  return ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Staff Challenge//WC2026//EN','CALSCALE:GREGORIAN','METHOD:PUBLISH']
+    .concat(list.map(vevent)).concat(['END:VCALENDAR']).join('\r\n');
+}
+function downloadICS(name, text){
+  var blob=new Blob([text], {type:'text/calendar;charset=utf-8'});
+  var url=URL.createObjectURL(blob), a=document.createElement('a');
+  a.href=url; a.download=name; document.body.appendChild(a); a.click();
+  setTimeout(function(){ document.body.removeChild(a); URL.revokeObjectURL(url); }, 600);
+}
+function gcalURL(m){
+  var start=Date.parse(m.ko), end=start+125*60000;
+  var title=m.home+' v '+m.away+' — World Cup 2026';
+  var details=(RLAB[m.round]||m.round)+' · '+fmtTime(start)+' Doha time · beIN SPORTS';
+  return 'https://www.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent(title)+
+    '&dates='+dtUTC(start)+'/'+dtUTC(end)+'&details='+encodeURIComponent(details)+
+    '&location='+encodeURIComponent(m.venue||'Doha, Qatar');
+}
+
+function myMatches(){
+  var now=Date.now();
+  return FIX.filter(function(m){ return !m.kn && (sel.has(m.home)||sel.has(m.away)) && (Date.parse(m.ko)+125*60000) > now; })
+            .sort(function(a,b){ return Date.parse(a.ko)-Date.parse(b.ko); });
+}
+
+var picker   = document.getElementById('teamPicker');
+var grid     = document.getElementById('myMatches');
+var cnt      = document.getElementById('teamCount');
+var note     = document.getElementById('myNote');
+var addAll   = document.getElementById('addAll');
+var clearBtn = document.getElementById('clearTeams');
+
+function side(name){ var inner = flag(name)+' '+esc(name); return sel.has(name) ? '<span class="foll">'+inner+'</span>' : inner; }
+
+function renderPicker(){
+  picker.innerHTML = TEAMS.map(function(t){
+    return '<button type="button" class="teamchip'+(sel.has(t)?' on':'')+'" data-team="'+esc(t)+'" aria-pressed="'+sel.has(t)+'">'+flag(t)+'<span>'+esc(t)+'</span></button>';
+  }).join('');
+  Array.prototype.forEach.call(picker.querySelectorAll('.teamchip'), function(b){
+    b.onclick = function(){ var t=b.getAttribute('data-team'); if(sel.has(t)) sel.delete(t); else sel.add(t); saveSel(); renderPicker(); renderMatches(); };
+  });
+}
+
+function renderMatches(){
+  var list = myMatches();
+  cnt.innerHTML = '<b>'+sel.size+'</b> team'+(sel.size===1?'':'s')+' · <b>'+list.length+'</b> upcoming match'+(list.length===1?'':'es');
+  if(!sel.size){
+    grid.innerHTML=''; addAll.style.display='none';
+    note.textContent='Pick one or more teams above to see their matches and set reminders.';
+    return;
+  }
+  if(!list.length){
+    grid.innerHTML=''; addAll.style.display='none';
+    note.textContent='No upcoming group-stage matches for your teams. Knockout fixtures (from 28 June) appear here once both teams are confirmed.';
+    return;
+  }
+  addAll.style.display='';
+  grid.innerHTML = list.map(function(m){
+    return '<article class="match">'+
+      '<div class="pill"><span class="dot"></span><span>'+(RLAB[m.round]||m.round)+'</span></div>'+
+      '<div class="opp">'+side(m.home)+' <span class="vs">v</span> '+side(m.away)+'</div>'+
+      '<div class="meta">'+fmtDay(Date.parse(m.ko))+(m.venue?(' · '+esc(m.venue)):'')+'</div>'+
+      '<div class="ko"><b>'+fmtTime(Date.parse(m.ko))+'</b><small>Doha</small></div>'+
+      '<div class="acts">'+
+        '<button type="button" class="remind-btn" data-id="'+m.id+'">⏰ Remind me</button>'+
+        '<a class="gcal" target="_blank" rel="noopener" href="'+gcalURL(m)+'">Google Calendar ↗</a>'+
+      '</div>'+
+    '</article>';
+  }).join('');
+  Array.prototype.forEach.call(grid.querySelectorAll('.remind-btn'), function(b){
+    b.onclick = function(){
+      var id=b.getAttribute('data-id');
+      var m=FIX.filter(function(x){ return x.id===id; })[0];
+      if(m) downloadICS((m.home+'-v-'+m.away).replace(/[^a-z0-9]+/gi,'-').toLowerCase()+'.ics', icsDoc([m]));
+    };
+  });
+  note.textContent='“Remind me” saves the match to Apple, Google or Outlook with a 1-hour alert. Knockout fixtures appear here once teams are confirmed.';
+}
+
+addAll.onclick   = function(e){ e.preventDefault(); var list=myMatches(); if(list.length) downloadICS('my-world-cup-2026.ics', icsDoc(list)); };
+clearBtn.onclick = function(){ sel = new Set(); saveSel(); renderPicker(); renderMatches(); };
+
+renderPicker();
+renderMatches();
+
 })();
 </script>
 <nav class="bottom">
