@@ -311,6 +311,11 @@
   .lb-pts{text-align:right}
   .lb-pts b{font-family:var(--font-d);font-size:24px;background:linear-gradient(var(--gold-bright),var(--gold-deep));-webkit-background-clip:text;background-clip:text;color:transparent;display:block;line-height:1}
   .lb-pts span{font-size:9px;color:var(--faint);letter-spacing:1px;text-transform:uppercase}
+  /* Restraint: reserve the metallic gold gradient for the two numbers that
+     earn it — the champion (#1) and your own row — so the eye lands there.
+     Every other points figure reads as calm solid gold. */
+  .lb-pts b,.pod .ppts{background-image:none;-webkit-background-clip:border-box;background-clip:border-box;color:var(--gold)}
+  .lb-row.me .lb-pts b,.pod.first .ppts{background-image:linear-gradient(var(--gold-bright),var(--gold-deep));-webkit-background-clip:text;background-clip:text;color:transparent}
 
   .mecard{background:linear-gradient(135deg,rgba(24,24,28,.85),rgba(10,10,12,.92));border:1px solid var(--line);border-radius:22px;padding:22px 20px;text-align:center;position:relative;overflow:hidden}
   .mecard::before{content:"";position:absolute;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(180,151,89,.22),transparent 70%);top:-120px;right:-90px}
