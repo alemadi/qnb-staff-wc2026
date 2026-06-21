@@ -43,10 +43,14 @@
     --cream:#f4eee3; --muted:rgba(244,238,227,.62); --faint:rgba(244,238,227,.4);
     --line:rgba(244,238,227,.13); --line-2:rgba(244,238,227,.07);
     --glass:rgba(255,255,255,.06); --glass-2:rgba(255,255,255,.095);
+    /* primary content surface: dimensional panel + soft lift (chrome stays flat glass) */
+    --surface:linear-gradient(180deg,rgba(255,255,255,.085),rgba(255,255,255,.028));
+    --elev:0 16px 34px -22px rgba(0,0,0,.9); --elev-sm:0 9px 22px -18px rgba(0,0,0,.85);
     --ok:#3ddc97; --bad:#ff6b6b;
     --font-d:'Anton','Arial Narrow',Impact,sans-serif;
     --font-b:'Hanken Grotesk',ui-sans-serif,system-ui,-apple-system,sans-serif;
     --nav-h:68px;
+    --ease:cubic-bezier(.2,.8,.2,1); --ease-out:cubic-bezier(.16,1,.3,1); --spring:cubic-bezier(.34,1.56,.64,1);
   }
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
   html,body{height:100%}
@@ -55,6 +59,7 @@
     font-family:var(--font-b); color:var(--cream); line-height:1.45;
     background:transparent;
     min-height:100%; overflow-x:hidden;
+    -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; text-rendering:optimizeLegibility;
   }
   /* ambient glow on a fixed viewport-sized layer: same look as the old
      background-attachment:fixed, but composited (no iOS repaint, and no gold
@@ -74,6 +79,16 @@
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   }
   ::selection{background:var(--gold);color:#181106}
+  /* Craft layer: lining/tabular figures so every column of numbers aligns
+     (the Groups table already does this; carry it across the data UI). */
+  .cd-unit b,.cd-clock,.lb-pts b,.lb-row .rank,.lb-stats,.pod .ppts,.me-stat .s b,
+  .final-score,.scorein,.dep-fc,.ptable .prow b,.progress .top,.bar,.koday,.kotime,
+  .badge,.result-line .pts{font-variant-numeric:tabular-nums lining-nums;font-feature-settings:"tnum" 1,"lnum" 1}
+  /* Visible keyboard focus (mouse/touch unaffected) — accessibility floor. */
+  a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible,
+  .pick:focus-visible,.chip:focus-visible,.navbtn:focus-visible,.userchip:focus-visible,
+  .switch:focus-visible,.bonus-toggle:focus-visible,.ptbtn:focus-visible{
+    outline:2px solid var(--cream);outline-offset:2px}
   .wrap{max-width:760px;margin:0 auto;padding:0 16px calc(var(--nav-h) + 28px + env(safe-area-inset-bottom));position:relative;z-index:1}
 
   /* Header */
@@ -182,7 +197,7 @@
   .filters{display:flex;gap:8px;overflow-x:auto;padding:12px 16px 9px;scrollbar-width:none;position:sticky;top:3px;z-index:30;margin:0 -16px;background:rgba(10,10,12,.9);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-bottom:1px solid var(--line-2)}
   .filters::-webkit-scrollbar{display:none}
   .chip{flex-shrink:0;border:1px solid var(--line);background:var(--glass);color:var(--cream);
-    padding:10px 15px;border-radius:30px;font-size:12.5px;font-weight:700;cursor:pointer;transition:.18s;white-space:nowrap;touch-action:manipulation}
+    padding:10px 15px;border-radius:30px;font-size:12.5px;font-weight:700;cursor:pointer;transition:.18s var(--ease-out);white-space:nowrap;touch-action:manipulation}
   .chip:hover{border-color:var(--gold)}
   .chip.on{background:linear-gradient(115deg,var(--gold-deep),var(--gold));border-color:transparent;color:#181106;box-shadow:0 4px 16px rgba(180,151,89,.3)}
   .chip.sep{pointer-events:none;opacity:.3;padding:8px 2px;background:none;border:none}
@@ -199,9 +214,17 @@
   .dayhdr .dot{width:5px;height:5px;border-radius:50%;background:var(--gold)}
   .dayhdr .ln{flex:1;height:1px;background:var(--line)}
 
-  .match-card{background:var(--glass);border:1px solid var(--line);border-radius:20px;padding:15px 15px 13px;
-    margin-bottom:13px;position:relative;overflow:hidden;animation:rise .5s both;transition:border-color .25s}
-  .match-card::before{content:"";position:absolute;inset:0;background:radial-gradient(420px 120px at 50% -30%,rgba(255,255,255,.06),transparent);pointer-events:none}
+  .match-card{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:15px 15px 13px;
+    margin-bottom:13px;position:relative;overflow:hidden;animation:rise .5s both;transition:border-color .25s,box-shadow .25s;
+    box-shadow:var(--elev),inset 0 1px 0 rgba(255,255,255,.05)}
+  /* the card is a stylised pitch: a faint halfway line splits the two teams,
+     with a soft kickoff glow behind the VS (replaces the generic top sheen). */
+  .match-card::before{content:"";position:absolute;inset:0;pointer-events:none;
+    background:
+      radial-gradient(420px 120px at 50% -30%,rgba(255,255,255,.045),transparent),
+      radial-gradient(150px 150px at 50% 32%,rgba(244,238,227,.055),transparent 70%),
+      radial-gradient(circle 3px at 50% 32%,rgba(244,238,227,.16),transparent 3px),
+      linear-gradient(90deg,transparent calc(50% - .65px),rgba(244,238,227,.10) calc(50% - .65px),rgba(244,238,227,.10) calc(50% + .65px),transparent calc(50% + .65px))}
   .match-card.qatar{border-color:rgba(138,21,56,.55);box-shadow:0 0 0 1px rgba(138,21,56,.25),0 14px 38px -22px rgba(138,21,56,.7)}
   .match-card.qatar::after{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(var(--qatar),var(--gold))}
   .ribbon{position:absolute;top:11px;right:-30px;transform:rotate(38deg);background:linear-gradient(100deg,#a31b45,var(--qatar));
@@ -227,7 +250,7 @@
 
   .picks{display:grid;grid-template-columns:1fr .8fr 1fr;gap:7px}
   .pick{border:1px solid var(--line);background:rgba(0,0,0,.18);color:var(--cream);border-radius:13px;
-    padding:13px 6px;min-height:46px;touch-action:manipulation;font-weight:800;font-size:12px;cursor:pointer;transition:.16s;display:flex;align-items:center;justify-content:center;gap:5px;position:relative}
+    padding:13px 6px;min-height:46px;touch-action:manipulation;font-weight:800;font-size:12px;cursor:pointer;transition:.16s var(--ease-out);display:flex;align-items:center;justify-content:center;gap:5px;position:relative}
   @media(hover:hover){.pick:hover:not(:disabled){border-color:var(--gold);transform:translateY(-1px)}}
   .pick:active:not(:disabled){transform:scale(.97)}
   .pick.sel{background:linear-gradient(125deg,var(--gold-deep),var(--gold));border-color:transparent;color:#181106;
@@ -283,10 +306,10 @@
   .pod.first .stand{background:linear-gradient(180deg,rgba(180,151,89,.22),rgba(180,151,89,.04));border-color:rgba(180,151,89,.4);height:118px}
   .pod.second .stand{height:96px} .pod.third .stand{height:80px}
 
-  .lb-row{display:flex;align-items:center;gap:12px;background:var(--glass);border:1px solid var(--line);border-radius:15px;padding:11px 14px;margin-bottom:9px;animation:rise .45s both;transition:.2s}
+  .lb-row{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:15px;padding:11px 14px;margin-bottom:9px;animation:rise .45s both;transition:.2s;box-shadow:var(--elev-sm),inset 0 1px 0 rgba(255,255,255,.04)}
   .lb-gap{text-align:center;color:var(--faint);font-weight:800;letter-spacing:4px;padding:2px 0 8px}
   .lb-more{display:block;width:100%;margin:6px 0 2px;padding:13px;border-radius:13px;border:1px solid var(--line);background:transparent;color:var(--gold);font:inherit;font-size:13px;font-weight:800;cursor:pointer}
-  .lb-row.me{border-color:var(--gold);background:linear-gradient(100deg,rgba(180,151,89,.14),var(--glass));box-shadow:0 0 0 1px rgba(180,151,89,.25)}
+  .lb-row.me{border-color:var(--gold);background:linear-gradient(100deg,rgba(180,151,89,.14),var(--glass));box-shadow:0 0 0 1px rgba(180,151,89,.25),var(--elev-sm)}
   .lb-row .rank{font-family:var(--font-d);font-size:19px;color:var(--muted);min-width:26px;text-align:center}
   .lb-row.me .rank{color:var(--gold)}
   .lb-info{flex:1;min-width:0}
@@ -299,6 +322,11 @@
   .lb-pts{text-align:right}
   .lb-pts b{font-family:var(--font-d);font-size:24px;background:linear-gradient(var(--gold-bright),var(--gold-deep));-webkit-background-clip:text;background-clip:text;color:transparent;display:block;line-height:1}
   .lb-pts span{font-size:9px;color:var(--faint);letter-spacing:1px;text-transform:uppercase}
+  /* Restraint: reserve the metallic gold gradient for the two numbers that
+     earn it — the champion (#1) and your own row — so the eye lands there.
+     Every other points figure reads as calm solid gold. */
+  .lb-pts b,.pod .ppts{background-image:none;-webkit-background-clip:border-box;background-clip:border-box;color:var(--gold)}
+  .lb-row.me .lb-pts b,.pod.first .ppts{background-image:linear-gradient(var(--gold-bright),var(--gold-deep));-webkit-background-clip:text;background-clip:text;color:transparent}
 
   .mecard{background:linear-gradient(135deg,rgba(24,24,28,.85),rgba(10,10,12,.92));border:1px solid var(--line);border-radius:22px;padding:22px 20px;text-align:center;position:relative;overflow:hidden}
   .mecard::before{content:"";position:absolute;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(180,151,89,.22),transparent 70%);top:-120px;right:-90px}
@@ -316,7 +344,7 @@
   .badge{font-size:11px;font-weight:700;padding:6px 12px;border-radius:20px;border:1px solid var(--line);background:var(--glass);display:flex;align-items:center;gap:5px}
   .badge.gold{border-color:var(--gold);color:var(--gold-bright);background:rgba(180,151,89,.1)}
 
-  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;cursor:pointer;font-family:var(--font-b);font-weight:800;font-size:13px;padding:13px 20px;border-radius:14px;transition:.2s;width:100%}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;cursor:pointer;font-family:var(--font-b);font-weight:800;font-size:13px;padding:13px 20px;border-radius:14px;transition:.2s var(--ease-out);width:100%}
   .btn-primary{background:linear-gradient(125deg,var(--gold-deep),var(--gold));color:#181106;box-shadow:0 8px 24px -8px rgba(180,151,89,.6)}
   .btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 30px -8px rgba(180,151,89,.7)}
   .btn-ghost{background:var(--glass);border:1px solid var(--line);color:var(--cream)}
