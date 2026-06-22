@@ -5,6 +5,31 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-06-22 06:59 (Doha) — Docs: add CLAUDE.md (project memory for Claude Code)
+
+**What changed:**
+- Added `CLAUDE.md` at the repo root — a dev-tooling context file read only by
+  Claude Code. It is **not part of the product**: never executed, not imported by
+  `index.html`/`watch.html`, and irrelevant to the live site's behavior.
+- Captures the architecture (static frontend + Supabase `kv`, server-side
+  anti-cheat), the result robot's real home (Supabase `pg_cron` job
+  `wc-autoconfirm` running `wc_autoconfirm_tick()`, **not** GitHub Actions), the
+  deploy split (frontend via Pages on push; DB applied manually in Supabase),
+  the `proof/run_all.sh` test discipline, and the house rules already in use.
+- Records two standing cautions for future sessions: do **not** add a GitHub
+  Actions cron for `scripts/autoconfirm.mjs` (it would double-write `wc:results`
+  alongside the live `pg_cron` robot), and the repo root — including `sql/` and
+  `proof/` — is publicly served by GitHub Pages.
+
+**Impact:** none on the live product. No frontend, DB, kv, robot, or schedule
+change. Documentation only.
+
+**Rollback (git):**
+
+    git revert <this commit>   # or: git rm CLAUDE.md && commit
+
+**DB:** none.
+
 ## 2026-06-13 04:55 (Doha) — Fix: robot couldn't confirm m3 (ESPN name "Bosnia-Herzegovina" unaliased)
 
 **Commits:** `8d8802f` (sql/robot.sql + changelog) and a follow-up SHA-correction commit (this one).
