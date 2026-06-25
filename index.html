@@ -732,7 +732,7 @@
       <details style="margin-top:16px;font-size:11.5px;color:var(--muted);line-height:1.6">
         <summary style="cursor:pointer;color:var(--gold);font-weight:700">📜 Rules &amp; terms</summary>
         <div style="margin-top:8px">
-        <b>Free to enter — strictly no buy-ins, no side bets.</b> One entry per person; your real Instagram handle is your identity and a 4-digit PIN protects it. Predict every match. <b>Predictions lock at kickoff.</b> Group matches: <b>+3</b> for the correct result, plus a <b>+2</b> bonus if you nail the exact score (a perfect call = 5 points). Knockout matches (from 28 June): just pick who goes through — extra time and penalties count. Each round is worth more: <b>+4</b> Round of 32 → <b>+5</b> Round of 16 → <b>+6</b> quarter-finals → <b>+8</b> semi-finals → <b>+10</b> Final (third-place match <b>+6</b>); no exact-score bonus in knockouts. Ties open for picks once both teams are confirmed. <b>Champion pick: +25 points</b> — locks on <b>Thursday 18 June, 7:00 PM Doha</b>. Results are official FIFA full-time scores. <b>Prizes:</b> 1st — a Maldives trip for one with 3-night accommodation included; 2nd — 60,000 QNB Life Rewards points; 3rd — 40,000 QNB Life Rewards points. Prize ties resolve by most predictions made, then most exact scores, then most correct results, then earliest sign-up. Pool admins play for bragging rights only and are not prize-eligible. Winners are verified by DM from their Instagram account and an audit of their entry before any award. Tampering with other players' picks or entering predictions after lock by any means leads to removal. The organizer may correct errors and has final say. Your handle, display name, department and country are visible to other players; all data is deleted after the final.
+        <b>Free to enter — strictly no buy-ins, no side bets.</b> One entry per person; your real Instagram handle is your identity and a 4-digit PIN protects it. Predict every match. <b>Predictions lock at kickoff.</b> Group matches: <b>+3</b> for the correct result, plus a <b>+2</b> bonus if you nail the exact score (a perfect call = 5 points). Knockout matches (from 28 June): just pick who goes through — extra time and penalties count. Each round is worth more: <b>+4</b> Round of 32 → <b>+5</b> Round of 16 → <b>+6</b> quarter-finals → <b>+8</b> semi-finals → <b>+10</b> Final (third-place match <b>+6</b>); no exact-score bonus in knockouts. Ties open for picks once both teams are confirmed. <b>Champion pick: +25 points</b> — locks on <b>Sunday 28 June, 10:00 PM Doha</b>. Results are official FIFA full-time scores. <b>Prizes:</b> 1st — a Maldives trip for one with 3-night accommodation included; 2nd — 60,000 QNB Life Rewards points; 3rd — 40,000 QNB Life Rewards points. Prize ties resolve by most predictions made, then most exact scores, then most correct results, then earliest sign-up. Pool admins play for bragging rights only and are not prize-eligible. Winners are verified by DM from their Instagram account and an audit of their entry before any award. Tampering with other players' picks or entering predictions after lock by any means leads to removal. The organizer may correct errors and has final say. Your handle, display name, department and country are visible to other players; all data is deleted after the final.
         </div>
       </details>
       <p class="sub" style="margin:14px 0 0;font-size:11px">Your picks sync to the live shared leaderboard — the same handle on any device resumes your game.</p>
@@ -765,7 +765,7 @@
         <div class="prow"><span>Third-place match</span><b>+6</b></div>
         <div class="prow"><span>Final</span><b>+10</b></div>
         <div class="pgrp">Champion</div>
-        <div class="prow"><span>Called the World Champion <span class="pfaint">(locks 18 June, 7 PM Doha)</span></span><b>+25</b></div>
+        <div class="prow"><span>Called the World Champion <span class="pfaint">(locks 28 June, 10 PM Doha)</span></span><b>+25</b></div>
       </div>
     </div>
     <div class="filters" id="filters"></div>
@@ -881,7 +881,7 @@
 /* Organizer access code: verified server-side by the org_check RPC — no hash ships in this file anymore */
 const ORG_TTL = 60*60*1000; // organizer unlock auto-expires after 60 minutes
 const CHAMP_PTS=25;                       // champion bonus
-const CHAMP_LOCK="2026-06-18T16:00:00Z";  // champion picks lock: Thu 18 Jun, 7:00 PM Doha (first Matchday 2 kickoff)
+const CHAMP_LOCK="2026-06-28T19:00:00Z";  // champion picks lock: Sun 28 Jun, 10:00 PM Doha (reopened — first knockout kickoff)
 const LOCK_HRS=0;                         // predictions lock at kickoff (raise to lock hours earlier)
 
 const FL = {
@@ -1494,7 +1494,7 @@ function fixturesFor(filter){
   });
 }
 
-const CHAMP_LOCK_LABEL="Thu 18 Jun · 7:00 PM";
+const CHAMP_LOCK_LABEL="Sun 28 Jun · 10:00 PM";
 let CHAMP_EXP=false;
 function champExpand(){CHAMP_EXP=true;renderChampCard();}
 function champCollapse(){CHAMP_EXP=false;renderChampCard();}
