@@ -5,6 +5,49 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-06-28 15:10 (Doha) — Feature: "Maximum Excitement" knockout scoring (steeper ladder + exact-score bonus + exact-score STREAK)
+
+**Commits:** this commit (`index.html` + `sql/standings.sql` + this changelog). **Requires an organiser SQL deploy** (see DB) to keep the leaderboard in sync with the cards.
+
+**What:** Knockouts get much more dramatic. Three changes, all **knockouts only, going forward** (no group-stage or already-locked value is touched):
+
+| Round | Advance (was→now) | Exact 90-min score bonus (was→now) |
+|---|---|---|
+| R32 | 4 → **3** | 4 → **3** |
+| R16 | 5 → **6** | 5 → **4** |
+| QF | 6 → **9** | 6 → **6** |
+| SF | 8 → **14** | 7 → **9** |
+| Third | 6 → **8** | 5 → **5** |
+| Final | 10 → **22** | 8 → **14** |
+
+Plus a NEW **exact-score STREAK** (knockouts only): nail the exact 90-min score in **consecutive knockout matches you predicted** (chronological by k-id) and the per-match bonus snowballs — **1st in a run +0 · 2nd +5 · 3rd +15 · 4th-and-onward +25 each**. Any non-exact predicted knockout match resets the run. Because no knockout match has kicked off yet, the streak window is the entire bracket — it is automatically "only going forward."
+
+**Decision:** Group scoring (**+3 / +2**) and the **Champion +25** pick are **unchanged** — champion was deliberately left at +25 (purely additive rollout; nothing players already locked is devalued).
+
+**What changed** (`index.html`):
+- `KO_PTS` → `{R32:3,R16:6,QF:9,SF:14,third:8,final:22}`, `koPts` fallback `||3`.
+- `KO_BONUS` → `{R32:3,R16:4,QF:6,SF:9,third:5,final:14}` (unchanged helper).
+- New `koStreakBonus(preds,results)`: chronological gaps-and-islands over settled knockout matches the player engaged with (has a winner pick or numeric score); awards 0/5/15/25 by position in each consecutive exact-hit run. Wired into `scoreFor` (`pts+=koStreakBonus(...)` before champion).
+- Points table (`#ptable`), rules one-liner (`.rules`), and FAQ: new ladder, exact-score line, streak group with worked example, and a "does this change my group/champion?" → no entry.
+
+**What changed** (`sql/standings.sql`): mirrors the app exactly — `kadv`/`kbonus` CASE ladders updated; new `ko` / `ko_streak` / `streak_bonus` CTEs implement the same streak via window-function gaps-and-islands; champion stays +25. `CREATE OR REPLACE`, signature unchanged, grant re-applied.
+
+**Verified:**
+- **app ↔ SQL parity:** all 32 per-match advance+bonus tiers match; canonical streaks (2/3/4/5-in-a-row, resets, isolated hits) correct in the real `scoreFor`; **4000/4000 random tournaments** agree between `scoreFor` and an independent translation of the SQL.
+- **real Postgres:** loaded `sql/standings.sql` into a throwaway PG 16 cluster, ran `standings()` over **400 synthetic players** (29 knockouts settled, streak-heavy) — **identical points to `scoreFor()` for every player** (max 316, avg 188.9).
+- `node --check` on the extracted inline script: clean.
+
+**DB (organiser action required):** paste the new `sql/standings.sql` into the Supabase SQL editor and Run. Safe and re-runnable (`CREATE OR REPLACE`, no DROP). Do this **before the first knockout result is entered** so the leaderboard and the personal cards agree from match 1. Until a knockout result exists, the new function returns identical points to the old one (group + champion only), so deploying early is harmless.
+
+**Rollback (git + SQL):**
+
+    git revert <this-commit-sha>
+    git push -u origin claude/group-stage-prediction-6502w4
+    # then re-paste the PREVIOUS sql/standings.sql (from before this commit) into Supabase:
+    git show <this-commit-sha>^:sql/standings.sql   # copy output into the Supabase SQL editor and Run
+
+---
+
 ## 2026-06-28 11:22 (Doha) — Feature: knockout exact-score bonus (scaled by round)
 
 **Commits:** this commit (app `index.html` + this changelog).

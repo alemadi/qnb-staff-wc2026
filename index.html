@@ -782,19 +782,23 @@
       <div class="top"><span>Predictions<span id="champ-tok" role="button" onclick="go('me')"></span></span><span><b id="pred-count">0</b> / <span id="pred-total">72</span></span></div>
       <div class="bar"><i id="pred-bar" style="width:0%"></i></div>
       <button id="qpbtn" class="qpbtn" style="display:none" onclick="openSwipe()">⚡ <span class="qp-full">Swipe to pick · </span><span id="qp-left">0</span><span class="qp-full"> left</span></button>
-      <div class="rules"><b>+3</b> result &nbsp;·&nbsp; <b>+2</b> exact bonus &nbsp;·&nbsp; knockouts <b>+4→+10</b> &nbsp;·&nbsp; 🏆 champion <b>+25</b> &nbsp;·&nbsp; ties break on <b>most predictions</b></div>
+      <div class="rules"><b>+3</b> result &nbsp;·&nbsp; <b>+2</b> exact bonus &nbsp;·&nbsp; knockouts <b>+3→+22</b> &nbsp;·&nbsp; 🔥 exact-score <b>streak</b> bonus &nbsp;·&nbsp; 🏆 champion <b>+25</b> &nbsp;·&nbsp; ties break on <b>most predictions</b></div>
       <button class="ptbtn" onclick="togglePts(this)">How do points work? ▾</button>
       <div class="ptable" id="ptable">
         <div class="pgrp">Group stage · 11–27 June · predict the result</div>
         <div class="prow"><span>Correct result (win / draw / loss)</span><b>+3</b></div>
         <div class="prow"><span>Exact score — bonus on top <span class="pfaint">(perfect call = 5)</span></span><b>+2</b></div>
         <div class="pgrp">Knockouts · from 28 June · who goes through <span style="text-transform:none">(ET &amp; penalties count)</span> + optional 90-min score</div>
-        <div class="prow"><span>Round of 32 <span class="pfaint">· +4 exact 90-min score</span></span><b>+4</b></div>
-        <div class="prow"><span>Round of 16 <span class="pfaint">· +5 score</span></span><b>+5</b></div>
-        <div class="prow"><span>Quarter-final <span class="pfaint">· +6 score</span></span><b>+6</b></div>
-        <div class="prow"><span>Semi-final <span class="pfaint">· +7 score</span></span><b>+8</b></div>
-        <div class="prow"><span>Third-place match <span class="pfaint">· +5 score</span></span><b>+6</b></div>
-        <div class="prow"><span>Final <span class="pfaint">· +8 score</span></span><b>+10</b></div>
+        <div class="prow"><span>Round of 32 <span class="pfaint">· +3 exact 90-min score</span></span><b>+3</b></div>
+        <div class="prow"><span>Round of 16 <span class="pfaint">· +4 score</span></span><b>+6</b></div>
+        <div class="prow"><span>Quarter-final <span class="pfaint">· +6 score</span></span><b>+9</b></div>
+        <div class="prow"><span>Semi-final <span class="pfaint">· +9 score</span></span><b>+14</b></div>
+        <div class="prow"><span>Third-place match <span class="pfaint">· +5 score</span></span><b>+8</b></div>
+        <div class="prow"><span>Final <span class="pfaint">· +14 score</span></span><b>+22</b></div>
+        <div class="pgrp">🔥 Exact-score streak · knockouts only · going forward</div>
+        <div class="prow"><span>Exact 90-min score in 2 knockout games in a row</span><b>+5</b></div>
+        <div class="prow"><span>3 in a row <span class="pfaint">(this game)</span></span><b>+15</b></div>
+        <div class="prow"><span>4+ in a row <span class="pfaint">(each game after, on top of the score bonus)</span></span><b>+25</b></div>
         <div class="pgrp">Champion</div>
         <div class="prow"><span>Called the World Champion <span class="pfaint">(locks 18 June, 7 PM Doha)</span></span><b>+25</b></div>
       </div>
@@ -1054,11 +1058,35 @@ RLABEL["FINAL"]="Final";
    (matches 73–104) on 11 Jun 2026 — note file ids run in KICKOFF order, not FIFA match order
    (e.g. k17 = FIFA M90 = W73 v W75 = winners of k1 & k4). "W" = winners advance into this
    tie; "L" = losers (third-place play-off only). */
-const KO_PTS={R32:4,R16:5,QF:6,SF:8,third:6,final:10};
-function koPts(m){return m.tag==="final"?KO_PTS.final:(m.tag==="third"?KO_PTS.third:(KO_PTS[m.round]||4));}
+const KO_PTS={R32:3,R16:6,QF:9,SF:14,third:8,final:22};
+function koPts(m){return m.tag==="final"?KO_PTS.final:(m.tag==="third"?KO_PTS.third:(KO_PTS[m.round]||3));}
 /* Knockout exact-score bonus (90-min scoreline), scaled by round, on top of the winner points. */
-const KO_BONUS={R32:4,R16:5,QF:6,SF:7,third:5,final:8};
+const KO_BONUS={R32:3,R16:4,QF:6,SF:9,third:5,final:14};
 function koBonus(m){return m.tag==="final"?KO_BONUS.final:(m.tag==="third"?KO_BONUS.third:(KO_BONUS[m.round]||0));}
+/* Knockout exact-score STREAK bonus (knockouts only, going forward). Nail the exact 90-min score in
+   CONSECUTIVE knockout matches you predicted (chronological by k-id). Per match in a run:
+   1st +0 · 2nd +5 · 3rd +15 · 4th-and-onward +25 each. Any non-exact predicted KO match resets the run.
+   Window = settled knockout matches the player engaged with (has a winner pick or a numeric score). */
+function koStreakBonus(preds,results){
+  if(!preds||!results)return 0;
+  const ids=[];
+  for(const id in results){
+    if(id.charAt(0)==="_")continue;
+    if(!/^k[0-9]+$/.test(id))continue;
+    const r=results[id];if(!r||r.w==null)continue;
+    const p=preds[id];if(!p||(!p.w&&p.h==null))continue;
+    ids.push(id);
+  }
+  ids.sort((a,b)=>(+a.slice(1))-(+b.slice(1)));
+  let bonus=0,run=0;
+  for(const id of ids){
+    const r=results[id],p=preds[id];
+    const hit=(r.h!=null&&r.a!=null&&p.h!=null&&p.a!=null&&Number(p.h)===r.h&&Number(p.a)===r.a);
+    if(hit){run++;bonus+=run===1?0:(run===2?5:(run===3?15:25));}
+    else run=0;
+  }
+  return bonus;
+}
 const BRACKET={
   k17:["k1","k4","W"],  k18:["k3","k6","W"],  k19:["k2","k5","W"],  k20:["k7","k8","W"],
   k21:["k12","k11","W"],k22:["k10","k9","W"], k23:["k15","k14","W"],k24:["k13","k16","W"],
@@ -1376,6 +1404,7 @@ function scoreFor(preds,results,champ){
     if(p.o===ro){pts+=3;correct++;}
     if(p.h!=null&&p.a!=null&&Number(p.h)===r.h&&Number(p.a)===r.a){pts+=2;exact++;}
   }
+  pts+=koStreakBonus(preds,results);   // knockout exact-score streak (going forward)
   if(results&&results._champ&&champ&&champ===results._champ)pts+=CHAMP_PTS;
   return {pts,exact,correct,scored};
 }
@@ -3119,7 +3148,9 @@ async function fillConsensus(){
 
 /* ===== how it works · FAQ ===== */
 const FAQ_ITEMS=[
- {q:"How do points work?",a:"Group matches: 3 points for the right result, +2 for the exact score \u2014 5 max. Knockouts pay more each round: Round of 32 = 4 \u00b7 Round of 16 = 5 \u00b7 Quarterfinals = 6 \u00b7 Semifinals = 8 \u00b7 Third place = 6 \u00b7 the Final = 10."},
+ {q:"How do points work?",a:"Group matches: 3 points for the right result, +2 for the exact score \u2014 5 max. Knockouts pay more each round for calling who goes through: Round of 32 = 3 \u00b7 Round of 16 = 6 \u00b7 Quarterfinals = 9 \u00b7 Semifinals = 14 \u00b7 Third place = 8 \u00b7 the Final = 22. On top of that, nail the exact 90-min score for a bonus (+3 R32 up to +14 Final) \u2014 plus the new streak bonus below."},
+ {q:"\ud83d\udd25 What is the exact-score streak bonus?",a:"New for the knockouts. Nail the exact 90-min score in back-to-back knockout games and the bonus snowballs: 2 in a row = +5, 3 in a row = +15, then +25 for every game after that \u2014 all on top of the normal score bonus. Get one wrong (in a game you predicted) and the streak resets. Example: exact scores in your R32, R16 and QF games in a row = +5 then +15 = +20 extra, before the per-game points. It only counts going forward from the Round of 32, knockouts only."},
+ {q:"Does this change my group points or my champion pick?",a:"No. Group-stage points already earned stay exactly as they were (+3 result, +2 exact), and your champion pick is still worth +25. The new knockout score and streak bonuses only apply going forward, from the Round of 32 \u2014 nothing you\u2019ve already locked in is reduced."},
  {q:"When do picks lock?",a:"At kickoff, match by match. Until then edit freely \u2014 changes save as you type."},
  {q:"I got the score right but only received 3 points?",a:"Exact-score points need both number boxes filled before kickoff. If one was empty, only your result pick counted."},
  {q:"When do results and points appear?",a:"Scores post and points update about 30 minutes after the final whistle \u2014 automatically. Next time you open the app, the morning reveal replays how your picks did."},
