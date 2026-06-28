@@ -1516,7 +1516,7 @@ function fixturesFor(filter){
   return FIXTURES.filter(m=>{
     const v=m.kn?fxView(m):m;
     if(filter==="qatar")return v.home.n==="Qatar"||v.away.n==="Qatar";
-    if(filter==="arab")return ARAB.has(v.home.n)||ARAB.has(v.away.n);
+    if(filter==="arab")return (ARAB.has(v.home.n)||ARAB.has(v.away.n))&&!isFinished(m);
     if(filter==="today")return dayKey(m.ko)===todayKey;
     if(filter==="completed")return isFinished(m);
     if(filter==="all")return true;
