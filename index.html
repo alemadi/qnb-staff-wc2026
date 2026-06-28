@@ -635,6 +635,32 @@
   .me-fun{margin:14px auto 2px;font-size:11.5px;color:var(--muted);font-weight:700;line-height:2;letter-spacing:.2px}
   .me-fun b{color:var(--gold)}
   .me-fun .fl-img{width:15px;height:11px;border-radius:2px;vertical-align:-1px}
+  /* Bracket view */
+  .brk-sum{background:var(--glass);border:1px solid var(--line);border-radius:13px;padding:11px 14px;font-size:13px;color:var(--muted);margin-bottom:15px}
+  .brk-sum b{color:var(--gold);font-family:var(--font-d);font-size:17px;vertical-align:-1px}
+  .brk-round{margin-bottom:18px}
+  .brk-rh{display:flex;align-items:center;gap:10px;margin:0 2px 9px}
+  .brk-rh h3{font-size:14px;font-weight:800;letter-spacing:.3px}
+  .brk-ln{flex:1;height:1px;background:var(--line)}
+  .brk-worth{font-size:10px;font-weight:800;color:var(--gold);border:1px solid var(--line);border-radius:6px;padding:2px 7px;white-space:nowrap}
+  .brk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(152px,1fr));gap:8px}
+  .brk-tie{background:var(--glass);border:1px solid var(--line);border-radius:12px;padding:9px 10px}
+  .brk-tie.final{border-color:var(--gold-deep)}
+  .brk-rp{font-size:8.5px;letter-spacing:1px;text-transform:uppercase;color:var(--faint);font-weight:800;margin-bottom:5px}
+  .brk-tm{display:flex;align-items:center;gap:7px;padding:3px 0;font-size:12.5px}
+  .brk-tm .fl-img{width:auto;height:13px;border-radius:2px}
+  .brk-tm.picked{position:relative;padding-left:8px}
+  .brk-tm.picked::before{content:"";position:absolute;left:0;top:4px;bottom:4px;width:3px;border-radius:2px;background:var(--gold)}
+  .brk-nm{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+  .brk-tm.win .brk-nm{color:var(--cream);font-weight:800}
+  .brk-tm.out{opacity:.42}
+  .brk-tm.out .brk-nm{text-decoration:line-through}
+  .brk-tm.tbd{opacity:.4}
+  .brk-ck{color:var(--ok);font-weight:800;font-size:12px}
+  .brk-st{font-size:10px;margin-top:6px;color:var(--muted);font-weight:600;line-height:1.35}
+  .brk-st.ok{color:var(--ok)}
+  .brk-st.bad{color:var(--bad)}
+  .brk-st.dim{color:var(--faint)}
 </style>
 </head>
 <body>
@@ -772,15 +798,20 @@
     <div id="match-list"></div>
   </section>
 
-  <!-- GROUPS -->
-  <section class="view" id="view-groups">
-    <div class="sec-title"><h2>Groups</h2><div class="tag" id="grp-tag">12 groups</div></div>
-    <div class="grp-legend">
-      <span><i class="gq"></i> Through to Round of 32</span>
-      <span><i class="gp"></i> 3rd · best-thirds race</span>
+  <!-- BRACKET -->
+  <section class="view" id="view-bracket">
+    <div class="sec-title"><h2>Bracket</h2><div class="tag" id="brk-tag">Knockouts</div></div>
+    <div id="brk-body"></div>
+    <button class="ptbtn" id="grp-toggle" onclick="toggleGroupTables()" style="margin-top:8px">Final group tables ▾</button>
+    <div id="grp-wrap" style="display:none;margin-top:10px">
+      <div class="grp-legend">
+        <span><i class="gq"></i> Through to Round of 32</span>
+        <span><i class="gp"></i> 3rd · best-thirds race</span>
+      </div>
+      <div class="tag" id="grp-tag" style="margin:0 2px 8px;display:inline-block">12 groups</div>
+      <div id="grp-body"></div>
+      <div class="org-note" style="margin-top:14px">Final group tables · top two of each group advanced, plus the eight best third-placed teams. Ranked by points, then goal difference, then goals scored.</div>
     </div>
-    <div id="grp-body"></div>
-    <div class="org-note" style="margin-top:14px">Live group tables for all 48 teams · top two of each group advance, plus the eight best third-placed teams. Ranked by points, then goal difference, then goals scored.</div>
   </section>
 
   <!-- LEADERBOARD -->
@@ -839,7 +870,7 @@
 
 <nav class="bottom">
   <button class="navbtn on" id="nav-matches" onclick="go('matches')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3v4M12 17v4M3 12h4M17 12h4M7 7l2.5 2.5M17 7l-2.5 2.5M7 17l2.5-2.5M17 17l-2.5-2.5"/></svg>Matches</button>
-  <button class="navbtn" id="nav-groups" onclick="go('groups')"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg>Groups</button>
+  <button class="navbtn" id="nav-bracket" onclick="go('bracket')"><svg viewBox="0 0 24 24"><path d="M3 5h4v6h5"/><path d="M3 19h4v-6"/><path d="M12 11h4V7h5"/><path d="M16 11v4h5"/></svg>Bracket</button>
   <button class="navbtn" id="nav-leaderboard" onclick="go('leaderboard')"><svg viewBox="0 0 24 24"><path d="M6 9V4h12v5a6 6 0 0 1-12 0Z"/><path d="M6 5H3v2a3 3 0 0 0 3 3M18 5h3v2a3 3 0 0 1-3 3M9 21h6M12 15v6"/></svg>Leaderboard</button>
   <a class="navbtn" href="/watch.html" style="text-decoration:none"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>Watch</a>
   <button class="navbtn" id="nav-me" onclick="go('me')"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M5 21a7 7 0 0 1 14 0"/></svg>Me</button>
@@ -1351,9 +1382,9 @@ function showView(view){
   document.body.classList.toggle("in",!!state.player);
   document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
   const el=document.getElementById("view-"+view);if(el)el.classList.add("active");
-  ["matches","groups","leaderboard","me"].forEach(n=>{const b=document.getElementById("nav-"+n);if(b)b.classList.toggle("on",n===view);});
+  ["matches","bracket","leaderboard","me"].forEach(n=>{const b=document.getElementById("nav-"+n);if(b)b.classList.toggle("on",n===view);});
   if(view==="matches"){renderFilters();renderMatches();}
-  if(view==="groups")renderGroups();
+  if(view==="bracket")renderBracket();
   if(view==="leaderboard")renderLeaderboard();
   if(view==="me"){renderMe();showOrg();}
   if(view==="join")rollBoard();
@@ -1463,10 +1494,9 @@ function renderFilters(){
   const onRound=roundKeys.indexOf(state.filter)>=0;
   let html="";
   html+='<button class="chip '+(state.filter==="today"?"on":"")+'" onclick="setFilter(\'today\')">Today</button>';
-  html+='<button class="chip '+(state.filter==="qatar"?"on":"")+'" onclick="setFilter(\'qatar\')">'+flagTag("qa")+' Qatar</button>';
   html+='<button class="chip '+(state.filter==="arab"?"on":"")+'" onclick="setFilter(\'arab\')">Arab Teams</button>';
-  const grp=[["Group stage",["MD1","MD2","MD3"]],["Knockouts",["R32","R16","QF","SF","FINAL"]]];
-  let opts='<option value=""'+(onRound?"":" selected")+' disabled hidden>Rounds</option>';
+  const grp=[["Knockouts",["R32","R16","QF","SF","FINAL"]]];
+  let opts='<option value=""'+(onRound?"":" selected")+' disabled hidden>Knockouts</option>';
   grp.forEach(g=>{
     const ks=g[1].filter(k=>roundKeys.indexOf(k)>=0);
     if(!ks.length)return;
@@ -2106,6 +2136,55 @@ function renderGroups(){
   host.innerHTML=html;
   const tag=document.getElementById("grp-tag");
   if(tag)tag.textContent=totDone?(totDone+' / 72 played'):'12 groups';
+}
+
+/* ===== Bracket view — live knockout tree, R32 → Final, with your picks overlaid =====
+   Read-only mirror of the knockout stage. Teams come from state.kteams (seeded by
+   the organizer / auto-fill), winners from state.results, and each player's picks
+   from state.player.predictions. Final group tables stay reachable via a toggle. */
+function brkTie(m){
+  const t=koTeams(m);
+  const res=state.results[m.id],win=(res&&res.w)?res.w:null;
+  const pk=(state.player&&state.player.predictions[m.id]&&state.player.predictions[m.id].w)||null;
+  const label=m.tag==="final"?"🏆 Final":(m.tag==="third"?"3rd place":RLABEL[m.round]);
+  const row=function(team){
+    if(!team)return '<div class="brk-tm tbd"><span class="brk-fl"></span><span class="brk-nm">TBD</span></div>';
+    const isWin=win&&win===team.n;
+    const cls='brk-tm'+(win?(isWin?' win':' out'):'')+(pk&&pk===team.n?' picked':'');
+    return '<div class="'+cls+'"><span class="brk-fl">'+(team.f||'')+'</span><span class="brk-nm">'+esc(team.n)+'</span>'+(isWin?'<span class="brk-ck">✓</span>':'')+'</div>';
+  };
+  let st;
+  if(win){
+    if(pk){const ok=pk===win;st='<div class="brk-st '+(ok?'ok':'bad')+'">'+(ok?'✓ you called it · +'+koPts(m):'✗ you picked '+esc(pk))+'</div>';}
+    else st='<div class="brk-st dim">decided · no pick</div>';
+  }else if(koReady(m)){
+    st=pk?'<div class="brk-st">Your pick: '+esc(pk)+' · +'+koPts(m)+' on the line</div>':'<div class="brk-st dim">'+fmtWk(m.ko)+' · '+fmtTime(m.ko)+' · no pick</div>';
+  }else{
+    st='<div class="brk-st dim">Awaiting teams</div>';
+  }
+  return '<div class="brk-tie'+(m.tag==="final"?' final':'')+'"><div class="brk-rp">'+label+'</div>'+row(t.h)+row(t.a)+st+'</div>';
+}
+function renderBracket(){
+  const host=document.getElementById("brk-body");if(!host)return;
+  let kp=0,kc=0,ktot=0;
+  if(state.player)FIXTURES.forEach(m=>{if(!m.kn)return;const r=state.results[m.id],p=state.player.predictions[m.id];if(r&&r.w&&p&&p.w){ktot++;if(p.w===r.w){kc++;kp+=koPts(m);}}});
+  const tag=document.getElementById("brk-tag");if(tag)tag.textContent=state.player?(kp+" KO pts"):"Knockouts";
+  let html="";
+  if(state.player)html+='<div class="brk-sum">Your knockout points: <b>'+kp+'</b>'+(ktot?(' · '+kc+'/'+ktot+' correct'):' · picks open as ties are set')+'</div>';
+  [["R32","Round of 32"],["R16","Round of 16"],["QF","Quarter-finals"],["SF","Semi-finals"],["FINAL","Final"]].forEach(function(rr){
+    const ties=FIXTURES.filter(m=>m.kn&&m.round===rr[0]);if(!ties.length)return;
+    const worth=rr[0]==="FINAL"?KO_PTS.final:KO_PTS[rr[0]];
+    html+='<div class="brk-round"><div class="brk-rh"><h3>'+rr[1]+'</h3><span class="brk-ln"></span><span class="brk-worth">+'+worth+' pts</span></div><div class="brk-grid">';
+    ties.forEach(m=>html+=brkTie(m));
+    html+='</div></div>';
+  });
+  host.innerHTML=html;
+  renderGroups();
+}
+function toggleGroupTables(){
+  const w=document.getElementById("grp-wrap"),b=document.getElementById("grp-toggle");if(!w)return;
+  const show=w.style.display==="none";w.style.display=show?"block":"none";
+  if(b)b.textContent="Final group tables "+(show?"▴":"▾");
 }
 
 function renderResultsEditor(){
@@ -3441,7 +3520,7 @@ function liveTick(){
     document.getElementById("userchip").style.display="flex";
     document.getElementById("countdown").style.display="flex";
     const h=(location.hash||"").slice(1);
-    updateChip();go(["matches","groups","leaderboard","me"].indexOf(h)>=0?h:"matches");
+    updateChip();go(["matches","bracket","leaderboard","me"].indexOf(h)>=0?h:"matches");
     if(!openReveal())welcomeDelta();
   }else{go("join");}
   renderPulse();setInterval(renderPulse,30000);
