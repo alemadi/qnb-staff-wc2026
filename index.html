@@ -811,7 +811,7 @@
       <details style="margin-top:16px;font-size:11.5px;color:var(--muted);line-height:1.6">
         <summary style="cursor:pointer;color:var(--gold);font-weight:700">📜 Rules &amp; terms</summary>
         <div style="margin-top:8px">
-        <b>Free to enter — strictly no buy-ins, no side bets.</b> One entry per person; your real Instagram handle is your identity and a 4-digit PIN protects it. Predict every match. <b>Predictions lock at kickoff.</b> Group matches: <b>+3</b> for the correct result, plus a <b>+2</b> bonus if you nail the exact score (a perfect call = 5 points). Knockout matches (from 28 June): just pick who goes through — extra time and penalties count. Each round is worth more: <b>+4</b> Round of 32 → <b>+5</b> Round of 16 → <b>+6</b> quarter-finals → <b>+8</b> semi-finals → <b>+10</b> Final (third-place match <b>+6</b>). Nail the <b>90-minute score</b> for a bonus on top — <b>+4</b> Round of 32 rising to <b>+8</b> Final (third-place <b>+5</b>). Ties open for picks once both teams are confirmed. <b>Champion pick: +25 points</b> — locks on <b>Thursday 18 June, 7:00 PM Doha</b>. Results are official FIFA full-time scores. <b>Prizes:</b> 1st — a Maldives trip for one with 3-night accommodation included; 2nd — 60,000 QNB Life Rewards points; 3rd — 40,000 QNB Life Rewards points. Prize ties resolve by most predictions made, then most exact scores, then most correct results, then earliest sign-up. Pool admins play for bragging rights only and are not prize-eligible. Winners are verified by DM from their Instagram account and an audit of their entry before any award. Tampering with other players' picks or entering predictions after lock by any means leads to removal. The organizer may correct errors and has final say. Your handle, display name, department and country are visible to other players; all data is deleted after the final.
+        <b>Free to enter — strictly no buy-ins, no side bets.</b> One entry per person; your real Instagram handle is your identity and a 4-digit PIN protects it. Predict every match. <b>Predictions lock at kickoff.</b> Group matches: <b>+3</b> for the correct result, plus a <b>+2</b> bonus if you nail the exact score (a perfect call = 5 points). Knockout matches (from 28 June): just pick who goes through — extra time and penalties count. Each round is worth more: <b>+4</b> Round of 32 → <b>+5</b> Round of 16 → <b>+6</b> quarter-finals → <b>+8</b> semi-finals → <b>+10</b> Final (third-place match <b>+6</b>). Nail the <b>90-minute or after-extra-time (120-minute) score</b> for a bonus on top — <b>+4</b> Round of 32 rising to <b>+8</b> Final (third-place <b>+5</b>). Ties open for picks once both teams are confirmed. <b>Champion pick: +25 points</b> — locks on <b>Thursday 18 June, 7:00 PM Doha</b>. Results are official FIFA full-time scores. <b>Prizes:</b> 1st — a Maldives trip for one with 3-night accommodation included; 2nd — 60,000 QNB Life Rewards points; 3rd — 40,000 QNB Life Rewards points. Prize ties resolve by most predictions made, then most exact scores, then most correct results, then earliest sign-up. Pool admins play for bragging rights only and are not prize-eligible. Winners are verified by DM from their Instagram account and an audit of their entry before any award. Tampering with other players' picks or entering predictions after lock by any means leads to removal. The organizer may correct errors and has final say. Your handle, display name, department and country are visible to other players; all data is deleted after the final.
         </div>
       </details>
       <p class="sub" style="margin:14px 0 0;font-size:11px">Your picks sync to the live shared leaderboard — the same handle on any device resumes your game.</p>
@@ -836,8 +836,8 @@
         <div class="pgrp">Group stage · 11–27 June · predict the result</div>
         <div class="prow"><span>Correct result (win / draw / loss)</span><b>+3</b></div>
         <div class="prow"><span>Exact score — bonus on top <span class="pfaint">(perfect call = 5)</span></span><b>+2</b></div>
-        <div class="pgrp">Knockouts · from 28 June · who goes through <span style="text-transform:none">(ET &amp; penalties count)</span> + optional 90-min score</div>
-        <div class="prow"><span>Round of 32 <span class="pfaint">· +4 exact 90-min score</span></span><b>+4</b></div>
+        <div class="pgrp">Knockouts · from 28 June · who goes through <span style="text-transform:none">(ET &amp; penalties count)</span> + optional score, bonus on 90 or 120 min</div>
+        <div class="prow"><span>Round of 32 <span class="pfaint">· +4 exact 90/120-min score</span></span><b>+4</b></div>
         <div class="prow"><span>Round of 16 <span class="pfaint">· +5 score</span></span><b>+5</b></div>
         <div class="prow"><span>Quarter-final <span class="pfaint">· +6 score</span></span><b>+6</b></div>
         <div class="prow"><span>Semi-final <span class="pfaint">· +7 score</span></span><b>+8</b></div>
@@ -1104,9 +1104,18 @@ RLABEL["FINAL"]="Final";
    tie; "L" = losers (third-place play-off only). */
 const KO_PTS={R32:4,R16:5,QF:6,SF:8,third:6,final:10};
 function koPts(m){return m.tag==="final"?KO_PTS.final:(m.tag==="third"?KO_PTS.third:(KO_PTS[m.round]||4));}
-/* Knockout exact-score bonus (90-min scoreline), scaled by round, on top of the winner points. */
+/* Knockout exact-score bonus, scaled by round, on top of the winner points. A prediction
+   wins the bonus if it matches the 90-min scoreline OR the after-extra-time (120-min)
+   scoreline — the organizer records the 120-min score (h2/a2) only when a tie goes to ET. */
 const KO_BONUS={R32:4,R16:5,QF:6,SF:7,third:5,final:8};
 function koBonus(m){return m.tag==="final"?KO_BONUS.final:(m.tag==="third"?KO_BONUS.third:(KO_BONUS[m.round]||0));}
+function koScoreHit(p,r){
+  if(!p||!r||p.h==null||p.a==null)return false;
+  const ph=Number(p.h),pa=Number(p.a);
+  if(r.h!=null&&r.a!=null&&ph===r.h&&pa===r.a)return true;
+  if(r.h2!=null&&r.a2!=null&&ph===r.h2&&pa===r.a2)return true;
+  return false;
+}
 const BRACKET={
   k17:["k1","k4","W"],  k18:["k3","k6","W"],  k19:["k2","k5","W"],  k20:["k7","k8","W"],
   k21:["k12","k11","W"],k22:["k10","k9","W"], k23:["k15","k14","W"],k24:["k13","k16","W"],
@@ -1416,12 +1425,12 @@ function scoreFor(preds,results,champ){
   for(const id in results){
     if(id.charAt(0)==="_")continue;
     const r=results[id],p=preds&&preds[id];
-    if(r&&r.w!=null){ /* knockout: winner points by round ladder + scaled exact-score bonus (90-min) */
+    if(r&&r.w!=null){ /* knockout: winner points by round ladder + scaled exact-score bonus (90 or 120 min) */
       if(!p||(!p.w&&p.h==null))continue;
       scored++;
       const f=FIXBYID[id];
       if(p.w&&p.w===r.w){pts+=f?koPts(f):4;correct++;}
-      if(r.h!=null&&r.a!=null&&p.h!=null&&p.a!=null&&Number(p.h)===r.h&&Number(p.a)===r.a){pts+=f?koBonus(f):0;exact++;}
+      if(koScoreHit(p,r)){pts+=f?koBonus(f):0;exact++;}
       continue;
     }
     if(!p||!p.o)continue;
@@ -1746,7 +1755,7 @@ function koMatchCard(m,idx){
     const lab=p.w?("Picked: "+p.w):"No pick";
     if(win&&p.w){
       const gotW=(p.w===win)?koPts(m):0;
-      const gotB=(res&&res.h!=null&&res.a!=null&&p.h!=null&&p.a!=null&&Number(p.h)===res.h&&Number(p.a)===res.a)?koBonus(m):0;
+      const gotB=koScoreHit(p,res)?koBonus(m):0;
       const sc=(p.h!=null&&p.a!=null)?(' <span style="color:var(--faint)">('+p.h+'–'+p.a+')</span>'):'';
       picks='<div class="result-line '+(gotW?"win":"lose")+'">'+(gotW?"✓ ":"✗ ")+esc(lab)+sc+' <span style="color:var(--faint)">· '+esc(win)+' through</span><span class="pts">+'+(gotW+gotB)+' pts</span></div>';
     }else if(win){
@@ -1760,7 +1769,7 @@ function koMatchCard(m,idx){
       '<button class="pick '+(p.w===m.home.n?"sel":"")+'" data-w="'+esc(m.home.n)+'" aria-label="Pick '+esc(m.home.n)+' to go through"><span class="mini">'+m.home.f+'</span></button>'+
       '<button class="pick '+(p.w===m.away.n?"sel":"")+'" data-w="'+esc(m.away.n)+'" aria-label="Pick '+esc(m.away.n)+' to go through"><span class="mini">'+m.away.f+'</span></button></div>'+
       '<div class="kn-note">Pick who goes through — extra time &amp; penalties count</div>'+
-      '<div class="chips-lab">90-min score · +'+koBonus(m)+' bonus · optional</div>'+
+      '<div class="chips-lab">90 or 120-min score · +'+koBonus(m)+' bonus · optional</div>'+
       '<div class="bonus-fields show"><label>'+m.home.f+'</label><input class="scorein" type="number" min="0" max="20" inputmode="numeric" aria-label="'+esc(m.home.n)+' goals" data-ksh="'+m.id+'" value="'+(p.h!=null?p.h:"")+'"><span class="scoredash">–</span><input class="scorein" type="number" min="0" max="20" inputmode="numeric" aria-label="'+esc(m.away.n)+' goals" data-ksa="'+m.id+'" value="'+(p.a!=null?p.a:"")+'"><label>'+m.away.f+'</label></div>'+
       '<div class="lockin'+((lockTs(m)-Date.now()-CLOCK_OFFSET)<7200000?' soon':'')+'" data-lockts="'+lockTs(m)+'">⏳ '+fmtLeft(lockTs(m)-Date.now()-CLOCK_OFFSET)+'</div>';
   }
@@ -2260,7 +2269,7 @@ function brkTie(m){
     return '<div class="'+cls+'" data-team="'+esc(team.n)+'"><span class="brk-fl">'+(team.f||'')+'</span><span class="brk-nm">'+esc(team.n)+'</span>'+(isWin?'<span class="brk-ck">✓</span>':'')+'</div>';
   };
   const P=(state.player&&state.player.predictions[m.id])||{};
-  const scoreHit=!!(res&&res.h!=null&&res.a!=null&&P.h!=null&&P.a!=null&&Number(P.h)===res.h&&Number(P.a)===res.a);
+  const scoreHit=koScoreHit(P,res);
   let st;
   if(win){
     if(pk){const ok=pk===win;const tot=(ok?koPts(m):0)+(scoreHit?koBonus(m):0);
@@ -2286,7 +2295,7 @@ function nextHint(m){
 function renderBracket(){
   const host=document.getElementById("brk-body");if(!host)return;
   let kp=0,kc=0,ktot=0;
-  if(state.player)FIXTURES.forEach(m=>{if(!m.kn)return;const r=state.results[m.id],p=state.player.predictions[m.id];if(!r||!r.w||!p)return;if(p.w){ktot++;if(p.w===r.w){kc++;kp+=koPts(m);}}if(r.h!=null&&r.a!=null&&p.h!=null&&p.a!=null&&Number(p.h)===r.h&&Number(p.a)===r.a)kp+=koBonus(m);});
+  if(state.player)FIXTURES.forEach(m=>{if(!m.kn)return;const r=state.results[m.id],p=state.player.predictions[m.id];if(!r||!r.w||!p)return;if(p.w){ktot++;if(p.w===r.w){kc++;kp+=koPts(m);}}if(koScoreHit(p,r))kp+=koBonus(m);});
   const tag=document.getElementById("brk-tag");if(tag)tag.textContent=state.player?(kp+" KO pts"):"Knockouts";
   let html="";
   if(state.player)html+='<div class="brk-sum">Your knockout points: <b>'+kp+'</b>'+(ktot?(' · '+kc+'/'+ktot+' correct'):' · picks open as ties are set')+'</div>';
@@ -2689,12 +2698,17 @@ function renderKnockoutEditor(host,rnd){
       '<input class="input ksel" type="number" min="0" max="20" inputmode="numeric" data-krh="'+m.id+'" value="'+(r&&r.h!=null?r.h:"")+'"'+((t.h&&t.a)?'':' disabled')+' style="max-width:60px;text-align:center">'+
       '<span style="color:var(--faint)">–</span>'+
       '<input class="input ksel" type="number" min="0" max="20" inputmode="numeric" data-kra="'+m.id+'" value="'+(r&&r.a!=null?r.a:"")+'"'+((t.h&&t.a)?'':' disabled')+' style="max-width:60px;text-align:center">'+
-      '<span style="font-size:10px;color:var(--faint)">+'+koBonus(m)+' bonus</span><span class="saved" data-krs="'+m.id+'">'+(r&&r.h!=null?"✓":"")+'</span></div></div>';
+      '<span style="font-size:10px;color:var(--faint)">+'+koBonus(m)+' bonus</span><span class="saved" data-krs="'+m.id+'">'+(r&&r.h!=null?"✓":"")+'</span></div>'+
+      '<div class="krow" style="margin-top:5px;align-items:center;gap:7px"><span style="font-size:10.5px;color:var(--faint);min-width:74px">After ET (120)</span>'+
+      '<input class="input ksel" type="number" min="0" max="20" inputmode="numeric" data-krh2="'+m.id+'" value="'+(r&&r.h2!=null?r.h2:"")+'"'+((t.h&&t.a)?'':' disabled')+' style="max-width:60px;text-align:center">'+
+      '<span style="color:var(--faint)">–</span>'+
+      '<input class="input ksel" type="number" min="0" max="20" inputmode="numeric" data-kra2="'+m.id+'" value="'+(r&&r.a2!=null?r.a2:"")+'"'+((t.h&&t.a)?'':' disabled')+' style="max-width:60px;text-align:center">'+
+      '<span style="font-size:10px;color:var(--faint)">only if ET — bonus hits 90 or 120</span><span class="saved" data-krs2="'+m.id+'">'+(r&&r.h2!=null?"✓":"")+'</span></div></div>';
   });
   host.innerHTML=html;
   host.querySelectorAll('[data-kh],[data-ka]').forEach(s=>s.addEventListener("change",()=>orgSetKTeam(s.dataset.kh||s.dataset.ka)));
   host.querySelectorAll('[data-kw]').forEach(s=>s.addEventListener("change",()=>orgSetKWinner(s.dataset.kw)));
-  host.querySelectorAll('[data-krh],[data-kra]').forEach(s=>s.addEventListener("change",()=>orgSetKScore(s.dataset.krh||s.dataset.kra)));
+  host.querySelectorAll('[data-krh],[data-kra],[data-krh2],[data-kra2]').forEach(s=>s.addEventListener("change",()=>orgSetKScore(s.dataset.krh||s.dataset.kra||s.dataset.krh2||s.dataset.kra2)));
 }
 async function orgSetKTeam(id){
   const h=document.querySelector('[data-kh="'+id+'"]').value||null;
@@ -2718,18 +2732,24 @@ async function orgSetKWinner(id){
   updateChip();renderResultsEditor();
   toast(v?(v+" through — next round updated 🏆"):"Winner cleared");
 }
-/* Organizer enters the 90-min knockout score (for the exact-score bonus); preserves the winner */
+/* Organizer enters the knockout scoreline(s) for the exact-score bonus: the 90-min score
+   plus an optional after-extra-time (120-min) score. A prediction wins the bonus on either.
+   Preserves the winner. */
 async function orgSetKScore(id){
   const hi=document.querySelector('[data-krh="'+id+'"]'),ai=document.querySelector('[data-kra="'+id+'"]');
+  const hi2=document.querySelector('[data-krh2="'+id+'"]'),ai2=document.querySelector('[data-kra2="'+id+'"]');
   if(!hi||!ai)return;
   const cur=state.results[id]||{};
   if(hi.value===""&&ai.value===""){delete cur.h;delete cur.a;}
   else{cur.h=Math.max(0,parseInt(hi.value,10)||0);cur.a=Math.max(0,parseInt(ai.value,10)||0);}
-  if(cur.w==null&&cur.h==null&&cur.a==null)delete state.results[id];else state.results[id]=cur;
+  if(!hi2||!ai2||(hi2.value===""&&ai2.value==="")){delete cur.h2;delete cur.a2;}
+  else{cur.h2=Math.max(0,parseInt(hi2.value,10)||0);cur.a2=Math.max(0,parseInt(ai2.value,10)||0);}
+  if(cur.w==null&&cur.h==null&&cur.a==null&&cur.h2==null&&cur.a2==null)delete state.results[id];else state.results[id]=cur;
   const ok=await orgSet("wc:results",state.results);
   const m=document.querySelector('[data-krs="'+id+'"]');if(m)m.textContent=(cur.h!=null?"✓":"");
+  const m2=document.querySelector('[data-krs2="'+id+'"]');if(m2)m2.textContent=(cur.h2!=null?"✓":"");
   updateChip();
-  toast(ok?"90-min score saved · bonus live ✓":"⚠ Save failed — retry");
+  toast(ok?"Score saved · bonus live ✓":"⚠ Save failed — retry");
 }
 /* Which team a feeder tie sends forward: its winner ("W") or its loser ("L", third-place) */
 function feedTeam(fid,take){

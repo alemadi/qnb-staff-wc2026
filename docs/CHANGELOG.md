@@ -5,6 +5,28 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-06-28 — Feature: knockout exact-score bonus hits on 90 **or** 120 min
+
+**Commits:** this commit (app `index.html` + this changelog).
+
+**What:** the knockout exact-score bonus was judged on the **90-minute scoreline only**. It now hits if a player's predicted score matches the **90-minute score OR the after-extra-time (120-minute) score**. Players still enter a single predicted score; matching either recorded scoreline wins the round's bonus. This is fairer for ties that go to extra time: someone who nailed the 90-min result keeps the bonus even if the ET scoreline differs, and someone who predicted the ET result also earns it.
+
+**What changed** (frontend only, `index.html`):
+- New `koScoreHit(p,r)` helper: true when the prediction equals the result's `h/a` (90 min) **or** its `h2/a2` (120 min, present only when recorded). Number-coerces the player's score, so string inputs match.
+- Routed all four knockout scoreline checks through it: `scoreFor` (leaderboard points + exact count), `koMatchCard` finished card, `brkTie` status line, and `renderBracket` KO tally. Group-match exact checks (`gScorePts`, consensus, reveal) are unchanged.
+- Organizer editor (`renderResultsEditor`): added an **"After ET (120)"** score row per tie beside the existing "90-min score" row, writing `h2/a2`. `orgSetKScore` now persists both pairs and clears `h2/a2` when blank; the result record is dropped only when winner and both score pairs are empty.
+- Labels: player score field now reads **"90 or 120-min score"**; rules/points panel notes the bonus hits on 90 or 120 min.
+
+**Data model:** knockout results may now carry an optional second scoreline `h2/a2` (after extra time) alongside `h/a` (90 min) and `w` (winner), via the existing `orgSet`/`wc:results` path. Ties decided in 90 leave `h2/a2` empty and behave exactly as before. Predictions are unchanged (still a single `h/a`).
+
+**Verified:** extracted `koScoreHit` truth table (node) — 90-only pred matches/misses; ET result matches on 90 (1–1) and on 120 (2–1) but not 0–0; partial/empty preds miss; string scores coerce. `node --check` on the full extracted script clean. Group scoring paths untouched.
+
+**DB:** none. New `h2/a2` keys ride the existing results JSON.
+
+**Rollback:** `git revert <this commit>` (frontend-only; no DB/state migration). Any `h2/a2` already saved is simply ignored after revert.
+
+---
+
 ## 2026-06-28 11:22 (Doha) — Feature: knockout exact-score bonus (scaled by round)
 
 **Commits:** this commit (app `index.html` + this changelog).
