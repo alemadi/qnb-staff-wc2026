@@ -92,6 +92,7 @@ ko as (
   from preds pr
   join matches m on m.id = pr.id
   where m.rw is not null
+    and m.id ~ '^k[0-9]+$'                      -- guard: only k<digits> reach substring(...)::int (mirrors JS /^k[0-9]+$/)
     and (pr.pw is not null or pr.ph is not null)
 ),
 -- gaps-and-islands: number each exact hit within its maximal consecutive run.
@@ -165,8 +166,8 @@ select
   coalesce(p.j->>'dept','')                      as dept,
   ( coalesce(s.base,0)
     + coalesce(sb.streak,0)
-    + case when (select c from champ) is not null
-            and p.j->>'champ' = (select c from champ)
+    + case when nullif((select c from champ),'') is not null
+            and nullif(p.j->>'champ','') = (select c from champ)
        then 25 else 0 end )::int                 as pts,
   coalesce(s.exact,0)::int                       as exact,
   coalesce(s.correct,0)::int                     as correct,

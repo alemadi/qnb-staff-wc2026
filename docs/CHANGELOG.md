@@ -5,6 +5,31 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-06-28 22:15 (Doha) — Review fixes: leaderboard-crash guard, FAQ numbers, empty-champion guard (from a 25-reviewer panel)
+
+**Commits:** this commit (`index.html` + `sql/standings.sql` + this changelog). **Re-deploy the SQL** (see DB).
+
+**Context:** a three-panel review (10 engineers, 10 UX/UI designers, 5 football fans) of the Maximum-Excitement feature. Verdict: **ship-with-fixes** (coders avg 8.1/10, fans excitement 8.2/10, no blocker). Two objective bugs + one safe guard fixed here; design polish and the streak-policy question are tracked as follow-ups.
+
+**Fixed:**
+- **`standings()` leaderboard-crash guard (HIGH):** the `ko` CTE int-cast `substring(m.id from 2)::int` had no `^k[0-9]+$` guard, so a single malformed knockout key in `wc:results` (+ any player's pred for it) would throw and abort the leaderboard for **all 660**. Added `and m.id ~ '^k[0-9]+$'` to the `ko` CTE WHERE (mirrors the JS `/^k[0-9]+$/` filter). Verified: with the guard, a planted `kx` key no longer crashes `standings()`.
+- **Stale FAQ numbers (HIGH):** the main-authored FAQ "Knockouts — how does the score bonus work?" still said the old "+4 … rising to +8" and contradicted the live points table / per-card label. Corrected to **"+3 … rising to +14"** (matches `KO_BONUS`).
+- **Empty-string champion guard:** `standings()` champion predicate now uses `nullif(...)` both sides, so an empty `_champ` awards 0 (matches JS). Prevents a 25-pt card-vs-leaderboard split from a hand-edited backup.
+
+**Verified:** re-extract + `node --check` clean; 4000/4000 JS fuzz parity; real Postgres `standings()` == `scoreFor()` over 400 players (full parity, no regression); new edge test — malformed key + empty champ no longer crash and score correctly (pts 6).
+
+**Follow-ups (not blockers, tracked):** streak skip-to-bridge exploit + runaway-tail cap (a scoring-policy decision), `restoreBackup()` input sanitization, a committed JS↔SQL parity CI harness, a celebratory in-app streak moment, and banner reach/punchiness polish.
+
+**DB (organiser action required):** re-paste `sql/standings.sql` into the Supabase SQL editor and Run (safe, `CREATE OR REPLACE`).
+
+**Rollback (git + SQL):**
+
+    git revert <this-commit-sha>
+    git push -u origin claude/group-stage-prediction-6502w4
+    git show <this-commit-sha>^:sql/standings.sql   # re-paste this previous version into Supabase
+
+---
+
 ## 2026-06-28 18:00 (Doha) — Feature: "Maximum Excitement" knockout scoring (steeper ladder + exact-score bonus + exact-score STREAK + announcement banner)
 
 **Commits:** merge of `origin/main` (adopting its final-score bonus model, bracket tree, "Road to the Final", clarity pill, watch live-knockouts) **plus** this re-application of the Max-Excitement scoring on top. Touches `index.html`, `sql/standings.sql`, this changelog. **Requires an organiser SQL deploy** (see DB).
