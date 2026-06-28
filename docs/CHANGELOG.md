@@ -28,6 +28,8 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 **Reconciliation:** a parallel session independently landed the same scoring correction (`fde663b`) with a different design — a two-field organizer where `h2/a2` *supersedes* `h/a`, and no tooltip or winner clarification. This commit merges over it and consolidates to the single **"Final score"** field, the **ⓘ tooltip**, and the **"extra time & penalties decide it"** winner note (the approach approved for this session), while **preserving that session's unrelated `watch.html`** live-knockout-fixtures feature. The superseded entry is kept below for history.
 
+**Clarity pass (10-judge layman panel + clickable ⓘ):** ran the player-facing copy past ten roleplayed layman personas (avg 4.3/5, 9/10 understood which score to enter). Two consensus fixes applied: (1) the FAQ now covers the **penalties-only case** — a match still level after extra time and settled on penalties keeps that level score (1–1 on pens → predict 1–1); (2) "if the **tie** is level" → "if the **score** is level" in the FAQ (the word "tie" collided with "draw" for non-native readers). Card sub-line tightened to *"after extra time if it's played; penalties don't count."* Separately, the **ⓘ** was restyled from a faint gray outline (didn't read as tappable) to a **solid gold button with a dark "i"** + press/scale feedback, so it clearly looks clickable.
+
 ---
 
 ## 2026-06-28 — Fix: knockout score bonus is the **final** score, not 90 **or** 120
