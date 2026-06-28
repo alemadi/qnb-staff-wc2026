@@ -5,6 +5,29 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-06-28 10:51 (Doha) — Arab Teams filter: hide finished matches (live + upcoming only)
+
+**Commits:** this commit (app `index.html` + this changelog).
+
+**Why:** With the group stage over, the **Arab Teams** quick-filter was dominated by dead weight — every finished Arab group match (Morocco, Egypt, Saudi Arabia, Algeria, …) still rendered as a receipt card, burying the only thing that view is for: the Arab teams *still in it*. Reported as "remove all the finished matches for the Arab Teams bubbles."
+
+**What changed** (frontend only, `index.html`): one predicate in `fixturesFor`. The `arab` branch now excludes finished matches:
+
+    if(filter==="arab")return (ARAB.has(v.home.n)||ARAB.has(v.away.n))&&!isFinished(m);
+
+Live and not-yet-kicked-off matches still show (a live match isn't `isFinished`). `isFinished` already covers both group (`!!result`) and knockout (`result.w && koReady`), so finished R32+ Arab ties drop too. No other filter is touched — finished Arab matches remain reachable via **✓ Completed** and **All 104**.
+
+**Verified (VM-sandbox, real functions copied verbatim):** `fixturesFor("arab")` over a mixed set — finished Arab group games (Morocco, Saudi Arabia, Egypt), a finished non-Arab game, a finished Arab R32 tie (Australia–Egypt), an upcoming Arab R32 tie (Netherlands–Morocco), and an upcoming non-Arab tie — returns only the upcoming Arab tie. The `completed` filter still returns all five finished matches (unchanged). `node --check` on the extracted inline script: clean.
+
+**DB:** none. No kv writes, no SQL, `wc:results` untouched.
+
+**Rollback (git):**
+
+    git revert <this-commit-sha>
+    git push -u origin claude/arab-teams-finished-matches-cjpji8
+
+---
+
 ## 2026-06-28 10:35 (Doha) — Fix: swipe-to-pick showed blank teams (and saved a placeholder) for knockout ties
 
 **Commits:** this commit (app `index.html` + this changelog).
