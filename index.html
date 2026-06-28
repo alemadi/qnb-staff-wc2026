@@ -471,8 +471,14 @@
   .live-tag .pulse{width:6px;height:6px}
   .pulsebar{cursor:pointer}
   .chips-lab{font-size:10px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin-top:12px}
-  .infodot{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:var(--gold);color:#15120a;font-size:10px;font-weight:900;font-style:italic;letter-spacing:0;cursor:pointer;vertical-align:middle;margin-left:6px;text-transform:none;box-shadow:0 1px 3px rgba(0,0,0,.4);-webkit-tap-highlight-color:rgba(180,151,89,.6);transition:transform .12s,filter .12s}
-  .infodot:hover,.infodot:focus,.infodot:active{filter:brightness(1.12);transform:scale(1.12);outline:none}
+  .help-chip{display:inline-flex;align-items:center;gap:6px;margin-top:9px;padding:6px 12px;border:1px solid var(--gold);border-radius:999px;background:rgba(180,151,89,.14);color:var(--gold);font-size:11px;font-weight:800;letter-spacing:.02em;cursor:pointer;-webkit-tap-highlight-color:rgba(180,151,89,.45);transition:background .15s,transform .1s}
+  .help-chip:hover,.help-chip:focus{background:rgba(180,151,89,.26);outline:none}
+  .help-chip:active{transform:scale(.97)}
+  .help-chip .hc-chev{font-weight:900;font-size:13px;line-height:1;transition:transform .18s}
+  .help-chip.open{background:var(--gold);color:#15120a}
+  .help-chip.open .hc-chev{transform:rotate(90deg)}
+  .help-body{margin-top:8px;font-size:11px;line-height:1.55;color:var(--muted);background:rgba(255,255,255,.035);border:1px solid var(--line);border-left:2px solid var(--gold);border-radius:9px;padding:9px 11px}
+  .help-body b{color:var(--gold)}
   .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
   .chipb{font:inherit;font-size:12px;font-weight:800;padding:9px 13px;border-radius:99px;border:1px solid var(--line);background:transparent;color:var(--muted);cursor:pointer;transition:.12s}
   .chipb.sel{background:linear-gradient(115deg,var(--gold-deep),var(--gold));color:#181106;border-color:transparent}
@@ -1150,8 +1156,15 @@ function koBonus(m){return m.tag==="final"?KO_BONUS.final:(m.tag==="third"?KO_BO
 function koScoreHit(p,r){
   return !!(p&&r&&p.h!=null&&p.a!=null&&r.h!=null&&r.a!=null&&Number(p.h)===r.h&&Number(p.a)===r.a);
 }
-/* Tiny inline ⓘ tooltip: hover title on desktop, tap shows the text as a toast on mobile. */
-function koInfo(txt){return '<span class="infodot" role="button" tabindex="0" aria-label="'+esc(txt)+'" title="'+esc(txt)+'" onclick="event.stopPropagation();toast(this.getAttribute(\'aria-label\'))">i</span>';}
+/* Labeled "How the bonus works" pill → toggles an inline explanation panel (the next sibling). */
+function toggleHelp(e,btn){
+  if(e){e.preventDefault();e.stopPropagation();}
+  const body=btn.nextElementSibling;
+  const open=btn.getAttribute("aria-expanded")==="true";
+  btn.setAttribute("aria-expanded",open?"false":"true");
+  btn.classList.toggle("open",!open);
+  if(body&&body.classList.contains("help-body"))body.hidden=open;
+}
 const BRACKET={
   k17:["k1","k4","W"],  k18:["k3","k6","W"],  k19:["k2","k5","W"],  k20:["k7","k8","W"],
   k21:["k12","k11","W"],k22:["k10","k9","W"], k23:["k15","k14","W"],k24:["k13","k16","W"],
@@ -1805,7 +1818,9 @@ function koMatchCard(m,idx){
       '<button class="pick '+(p.w===m.home.n?"sel":"")+'" data-w="'+esc(m.home.n)+'" aria-label="Pick '+esc(m.home.n)+' to go through"><span class="mini">'+m.home.f+'</span></button>'+
       '<button class="pick '+(p.w===m.away.n?"sel":"")+'" data-w="'+esc(m.away.n)+'" aria-label="Pick '+esc(m.away.n)+' to go through"><span class="mini">'+m.away.f+'</span></button></div>'+
       '<div class="kn-note">Pick who goes through — <b>extra time &amp; penalties decide it</b></div>'+
-      '<div class="chips-lab">Final score · +'+koBonus(m)+' bonus · optional'+koInfo('Final score = the score when the match ends — after extra time if it’s played. Penalties don’t change it. Example: a tie that’s 1–1 after 90 min and ends 2–1 in extra time has a final score of 2–1.')+'</div>'+
+      '<div class="chips-lab">Final score · +'+koBonus(m)+' bonus · optional</div>'+
+      '<button type="button" class="help-chip" aria-expanded="false" onclick="toggleHelp(event,this)">ⓘ How the bonus works <span class="hc-chev">›</span></button>'+
+      '<div class="help-body" hidden>Final score = the score when the match ends — <b>after extra time</b> if it’s played; penalties don’t change it. <b>Example:</b> 1–1 after 90 min that ends 2–1 in extra time → the final score is 2–1, so you’d predict 2–1.</div>'+
       '<div class="kn-note" style="font-style:normal;margin-top:5px">Predict the <b style="color:var(--gold)">final score</b> — after extra time if it’s played; penalties don’t count</div>'+
       '<div class="bonus-fields show"><label>'+m.home.f+'</label><input class="scorein" type="number" min="0" max="20" inputmode="numeric" aria-label="'+esc(m.home.n)+' goals" data-ksh="'+m.id+'" value="'+(p.h!=null?p.h:"")+'"><span class="scoredash">–</span><input class="scorein" type="number" min="0" max="20" inputmode="numeric" aria-label="'+esc(m.away.n)+' goals" data-ksa="'+m.id+'" value="'+(p.a!=null?p.a:"")+'"><label>'+m.away.f+'</label></div>'+
       '<div class="lockin'+((lockTs(m)-Date.now()-CLOCK_OFFSET)<7200000?' soon':'')+'" data-lockts="'+lockTs(m)+'">⏳ '+fmtLeft(lockTs(m)-Date.now()-CLOCK_OFFSET)+'</div>';
