@@ -192,6 +192,11 @@
   .chip.ddsel.on ~ .ddcar{color:#181106;opacity:.85}
   .chip.ddsel option{color:var(--cream);background:#15151a}
   .chip.ddsel optgroup{color:var(--faint);background:#15151a;font-weight:800}
+  .kochip .komain{padding-right:32px}
+  .kochip .kopick{position:absolute;top:0;right:0;height:100%;width:32px;margin:0;padding:0;border:0;background:transparent;opacity:0;-webkit-appearance:none;appearance:none;cursor:pointer;font-size:16px}
+  .kochip .komain.on ~ .ddcar{color:#181106;opacity:.85}
+  .kochip .kopick option{color:var(--cream);background:#15151a}
+  .kochip .kopick optgroup{color:var(--faint);background:#15151a;font-weight:800}
 
   .daygroup{margin-top:14px}
   .dayhdr{display:flex;align-items:center;gap:10px;margin:6px 2px 11px}
@@ -1492,24 +1497,35 @@ function defaultRound(){
   const next=FIXTURES.filter(m=>new Date(m.ko).getTime()>now).sort((a,b)=>new Date(a.ko)-new Date(b.ko))[0];
   return next?next.round:"MD1";
 }
+/* current knockout round: earliest KO round still holding an unplayed match (falls back to the last KO round once it's all done) */
+function curKO(){
+  const order=["R32","R16","QF","SF","FINAL"];
+  const present=order.filter(k=>FIXTURES.some(m=>m.round===k));
+  for(const k of present){if(FIXTURES.some(m=>m.round===k&&!isFinished(m)))return k;}
+  return present[present.length-1]||"R32";
+}
 function renderFilters(){
   const host=document.getElementById("filters");
   const doneCount=FIXTURES.filter(isFinished).length;
   const roundKeys=ROUNDS.map(r=>r[0]);
-  const onRound=roundKeys.indexOf(state.filter)>=0;
   let html="";
   html+='<button class="chip '+(state.filter==="today"?"on":"")+'" onclick="setFilter(\'today\')">Today</button>';
   html+='<button class="chip '+(state.filter==="arab"?"on":"")+'" onclick="setFilter(\'arab\')">Arab Teams</button>';
-  const grp=[["Knockouts",["R32","R16","QF","SF","FINAL"]]];
-  let opts='<option value=""'+(onRound?"":" selected")+' disabled hidden>Knockouts</option>';
-  grp.forEach(g=>{
-    const ks=g[1].filter(k=>roundKeys.indexOf(k)>=0);
-    if(!ks.length)return;
-    opts+='<optgroup label="'+g[0]+'">';
-    ks.forEach(k=>{var cnt=FIXTURES.filter(m=>m.round===k).length;opts+='<option value="'+k+'"'+(state.filter===k?" selected":"")+'>'+RLABEL[k]+' \u00b7 '+cnt+'</option>';});
+  /* Knockouts: tapping the chip jumps straight to the current round; the \u25be picks any other round */
+  const koRounds=["R32","R16","QF","SF","FINAL"].filter(k=>roundKeys.indexOf(k)>=0);
+  if(koRounds.length){
+    const onKO=koRounds.indexOf(state.filter)>=0;
+    const target=onKO?state.filter:curKO();
+    const koShort={R32:"R32",R16:"R16",QF:"QF",SF:"SF",FINAL:"Final"};
+    let opts='<option value="" selected disabled hidden></option><optgroup label="Knockouts">';
+    koRounds.forEach(k=>{var cnt=FIXTURES.filter(m=>m.round===k).length;opts+='<option value="'+k+'">'+RLABEL[k]+' \u00b7 '+cnt+'</option>';});
     opts+='</optgroup>';
-  });
-  html+='<span class="rounddd"><select class="chip ddsel'+(onRound?" on":"")+'" aria-label="Filter by round" onchange="if(this.value)setFilter(this.value)">'+opts+'</select><span class="ddcar">\u25be</span></span>';
+    html+='<span class="rounddd kochip">'+
+      '<button type="button" class="chip komain'+(onKO?" on":"")+'" onclick="setFilter(\''+target+'\')" aria-label="Show '+esc(RLABEL[target])+'">Knockouts \u00b7 '+(koShort[target]||target)+'</button>'+
+      '<select class="kopick" aria-label="Choose knockout round" onchange="if(this.value)setFilter(this.value)">'+opts+'</select>'+
+      '<span class="ddcar">\u25be</span>'+
+    '</span>';
+  }
   html+='<button class="chip '+(state.filter==="all"?"on":"")+'" onclick="setFilter(\'all\')">All 104</button>';
   if(doneCount)html+='<button class="chip '+(state.filter==="completed"?"on":"")+'" onclick="setFilter(\'completed\')">\u2713 Completed '+doneCount+'</button>';
   host.innerHTML=html;
@@ -1521,7 +1537,7 @@ function fixturesFor(filter){
   return FIXTURES.filter(m=>{
     const v=m.kn?fxView(m):m;
     if(filter==="qatar")return v.home.n==="Qatar"||v.away.n==="Qatar";
-    if(filter==="arab")return ARAB.has(v.home.n)||ARAB.has(v.away.n);
+    if(filter==="arab")return (ARAB.has(v.home.n)||ARAB.has(v.away.n))&&!isFinished(m);
     if(filter==="today")return dayKey(m.ko)===todayKey;
     if(filter==="completed")return isFinished(m);
     if(filter==="all")return true;

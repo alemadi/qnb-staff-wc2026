@@ -24,22 +24,17 @@ The bonus is judged on the **90-minute score** (extra time & penalties ignored) 
 
 **What changed** (frontend only, `index.html`):
 - `KO_BONUS` + `koBonus(m)` constants/helper.
-- `scoreFor`: knockout branch now adds `koBonus(f)` when the predicted `h/a` equals the result's `h/a` (winner points unchanged; the two are independent). Group scoring untouched.
-- `koMatchCard`: optional 90-min score input (two number fields, reusing the group `.scorein`/`.bonus-fields` styling) labelled with the round's bonus; finished cards show the predicted score and fold the bonus into the points line.
-- `bindMatchEvents` + new `koSaveScore(id)`: saves the score to the prediction's `h/a` (winner pick `w` untouched); the group `.scorein` handler now guards against the knockout inputs.
-- Organizer result entry (`renderKnockoutEditor`): a 90-min score row per tie; new `orgSetKScore(id)` writes `h/a`, and `orgSetKWinner` now **merges** (preserves any score; previously it replaced the whole result with `{w}`).
-- Bracket view: tally and per-tie status include the score bonus.
-- Rules intro + "How do points work?" table updated.
+- `scoreFor`: knockout branch adds `koBonus(f)` when predicted `h/a` equals the result's `h/a` (winner points unchanged; the two are independent). Group scoring untouched.
+- `koMatchCard`: optional 90-min score input (reusing the group `.scorein`/`.bonus-fields` styling); finished cards show the predicted score and fold the bonus into the points line.
+- `bindMatchEvents` + new `koSaveScore(id)`: saves the score to the prediction's `h/a` (winner pick `w` untouched); the group `.scorein` handler guards against the knockout inputs.
+- Organizer entry (`renderKnockoutEditor`): a 90-min score row per tie; new `orgSetKScore(id)`; `orgSetKWinner` now **merges** (preserves any score; previously it replaced the result with `{w}`).
+- Bracket view tally/status and the rules intro + points table updated.
 
-**Score basis:** 90-minute scoreline (label only — switching to full-time incl. ET is a text change; the comparison code is identical). The auto-confirm robot still does group scores only, so knockout scores are organizer-entered.
+**Score basis:** 90-minute scoreline (label only; switching to full-time incl. ET is a text change). Robot stays group-only; knockout scores are organizer-entered.
 
-**Verified (VM-sandbox, real functions):**
-- `scoreFor`: R32 winner+score 8, winner-only 4, score-only 4, both-wrong 0, result-has-no-score 4, Final winner+score 18, QF 12; group result still +3/+2 = 5.
-- `koMatchCard` (unlocked) renders the `data-ksh/ksa` inputs and the "+4 bonus" label; `koSaveScore` writes `h/a`.
-- `orgSetKWinner` preserves an existing score (isolated test: `{h:3,a:2}` → `{h:3,a:2,w:"South Africa"}`).
-- `node --check` clean.
+**Verified (VM-sandbox, real functions):** `scoreFor` R32 winner+score 8 / winner-only 4 / score-only 4 / both-wrong 0 / Final 18 / QF 12; group still +3/+2=5. KO card renders `data-ksh/ksa` + bonus label; `koSaveScore` writes `h/a`; `orgSetKWinner` preserves an existing score. `node --check` clean.
 
-**DB:** none by this commit. Knockout results may now carry `h/a` alongside `w` (written via the existing `orgSet` path when the organizer enters a score).
+**DB:** none. Knockout results may now carry `h/a` alongside `w` via the existing `orgSet` path.
 
 **Rollback (git):**
 
@@ -47,6 +42,57 @@ The bonus is judged on the **90-minute score** (extra time & penalties ignored) 
     git push -u origin claude/group-stage-prediction-6502w4
 
 ---
+
+## 2026-06-28 11:09 (Doha) — Knockouts filter: one tap jumps to the current round (▾ still picks any other)
+
+**Commits:** this commit (app `index.html` + this changelog).
+
+**Why:** The **Knockouts** filter was a bare `<select>` — tapping it only opened a native picker, so reaching the live round (R32 right now) took two interactions and a scroll. Reported as "knockouts bubble should immediately go to the round."
+
+**What changed** (frontend only, `index.html`):
+- New `curKO()` — the current knockout round = the earliest of R32→Final still holding an unplayed match (falls back to the last KO round once everything's done). Auto-advances to R16/QF/SF/Final as each round completes; no deploy needed.
+- `renderFilters` replaces the dropdown-only chip with a **button + caret picker**: the chip reads `Knockouts · R32` and a **single tap jumps straight to that round** (`setFilter`). A small **▾** on the right is a transparent native `<select>` overlay (`.kopick`) covering only the caret zone — tap it to pick any other round. When you're already on a KO round the chip shows that round (e.g. `Knockouts · QF`), highlights gold, and the picker switches you elsewhere.
+- New CSS: `.kochip .komain` (caret padding), `.kochip .kopick` (invisible 32px overlay, `font-size:16px` to stop iOS focus-zoom), and the active-state caret colour. Reuses the existing `.rounddd`/`.ddcar` positioning. The old `.chip.ddsel` rules are now unused but left in place (harmless).
+
+**Verified (VM-sandbox, real `curKO` + the rebuilt `renderFilters` KO block copied verbatim):**
+- R32 in progress, filter not on a round → chip reads `Knockouts · R32`, button wired to `setFilter('R32')`, not highlighted.
+- All 16 R32 finished → `curKO()` advances to **R16**; all rounds finished → **FINAL**.
+- Viewing QF → chip reads `Knockouts · QF`, highlighted, tap re-applies QF; the ▾ picker lists all five rounds with live counts.
+- `node --check` on the extracted inline script: clean.
+
+**DB:** none. No kv writes, no SQL, `wc:results` untouched.
+
+**Rollback (git):**
+
+    git revert <this-commit-sha>
+    git push -u origin claude/arab-teams-finished-matches-cjpji8
+
+---
+
+## 2026-06-28 10:51 (Doha) — Arab Teams filter: hide finished matches (live + upcoming only)
+
+**Commits:** this commit (app `index.html` + this changelog).
+
+**Why:** With the group stage over, the **Arab Teams** quick-filter was dominated by dead weight — every finished Arab group match (Morocco, Egypt, Saudi Arabia, Algeria, …) still rendered as a receipt card, burying the only thing that view is for: the Arab teams *still in it*. Reported as "remove all the finished matches for the Arab Teams bubbles."
+
+**What changed** (frontend only, `index.html`): one predicate in `fixturesFor`. The `arab` branch now excludes finished matches:
+
+    if(filter==="arab")return (ARAB.has(v.home.n)||ARAB.has(v.away.n))&&!isFinished(m);
+
+Live and not-yet-kicked-off matches still show (a live match isn't `isFinished`). `isFinished` already covers both group (`!!result`) and knockout (`result.w && koReady`), so finished R32+ Arab ties drop too. No other filter is touched — finished Arab matches remain reachable via **✓ Completed** and **All 104**.
+
+**Verified (VM-sandbox, real functions copied verbatim):** `fixturesFor("arab")` over a mixed set — finished Arab group games (Morocco, Saudi Arabia, Egypt), a finished non-Arab game, a finished Arab R32 tie (Australia–Egypt), an upcoming Arab R32 tie (Netherlands–Morocco), and an upcoming non-Arab tie — returns only the upcoming Arab tie. The `completed` filter still returns all five finished matches (unchanged). `node --check` on the extracted inline script: clean.
+
+**DB:** none. No kv writes, no SQL, `wc:results` untouched.
+
+**Rollback (git):**
+
+    git revert <this-commit-sha>
+    git push -u origin claude/arab-teams-finished-matches-cjpji8
+
+---
+
+## 2026-06-28 10:35 (Doha) — Fix: swipe-to-pick showed blank teams (and saved a placeholder) for knockout ties
 
 **Commits:** this commit (app `index.html` + this changelog).
 
