@@ -3404,23 +3404,24 @@ function renderSwipeCard(){
     bt.innerHTML='<button class="sw-b sw-done-b" onclick="closeSwipe()">Done</button>';
     confetti();return;
   }
+  const v=fxView(m);
   const win=m.kn?" through":" wins";
   st.innerHTML='<div class="sw-card'+(SW.peek?" peek":"")+'" id="sw-card">'+
     '<div class="sw-tag">'+esc((RLABEL[m.round]||m.round)+" \u00b7 "+fmtWk(m.ko)+" \u00b7 "+fmtTime(m.ko))+'</div>'+
-    '<div class="sw-teams"><div class="sw-t">'+m.home.f+'<b>'+esc(m.home.n)+'</b></div><span class="sw-vs">VS</span><div class="sw-t">'+m.away.f+'<b>'+esc(m.away.n)+'</b></div></div></div>'+
-    '<div class="sw-glow l" id="sw-gl">'+esc(m.home.n+win)+'</div>'+
-    '<div class="sw-glow r" id="sw-gr">'+esc(m.away.n+win)+'</div>';
+    '<div class="sw-teams"><div class="sw-t">'+v.home.f+'<b>'+esc(v.home.n)+'</b></div><span class="sw-vs">VS</span><div class="sw-t">'+v.away.f+'<b>'+esc(v.away.n)+'</b></div></div></div>'+
+    '<div class="sw-glow l" id="sw-gl">'+esc(v.home.n+win)+'</div>'+
+    '<div class="sw-glow r" id="sw-gr">'+esc(v.away.n+win)+'</div>';
   SW.peek=false;
-  lg.innerHTML='\u2190 '+esc(m.home.n+win)+' &nbsp;\u00b7&nbsp; \u2191 '+(m.kn?"skip":"draw")+' &nbsp;\u00b7&nbsp; '+esc(m.away.n+win)+' \u2192';
-  bt.innerHTML='<button class="sw-b" onclick="swipeCommit(\'H\')">'+esc(m.home.n)+'</button>'+
+  lg.innerHTML='\u2190 '+esc(v.home.n+win)+' &nbsp;\u00b7&nbsp; \u2191 '+(m.kn?"skip":"draw")+' &nbsp;\u00b7&nbsp; '+esc(v.away.n+win)+' \u2192';
+  bt.innerHTML='<button class="sw-b" onclick="swipeCommit(\'H\')">'+esc(v.home.n)+'</button>'+
     (m.kn?'<button class="sw-b dim" onclick="swipeSkip()">skip</button>':'<button class="sw-b" onclick="swipeCommit(\'D\')">Draw</button>')+
-    '<button class="sw-b" onclick="swipeCommit(\'A\')">'+esc(m.away.n)+'</button>';
+    '<button class="sw-b" onclick="swipeCommit(\'A\')">'+esc(v.away.n)+'</button>';
   bindSwipeGestures();
 }
 function swipeCommit(dir){
   const m=swCur();if(!m)return;
   const card=document.getElementById("sw-card");
-  if(m.kn){if(dir==="D")return swipeSkip();pickWinner(m.id,dir==="H"?m.home.n:m.away.n);SW.i++;flyOff(card,dir,renderSwipeCard);return;}
+  if(m.kn){if(dir==="D")return swipeSkip();const v=fxView(m);pickWinner(m.id,dir==="H"?v.home.n:v.away.n);SW.i++;flyOff(card,dir,renderSwipeCard);return;}
   pickOutcome(m.id,dir);
   SW.i++;
   flyOff(card,dir,renderSwipeCard);

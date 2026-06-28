@@ -5,7 +5,27 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
-## 2026-06-28 10:19 (Doha) — Fix (major): group letters were in kickoff order, not FIFA's draw order — corrected C↔D, G↔H
+## 2026-06-28 10:35 (Doha) — Fix: swipe-to-pick showed blank teams (and saved a placeholder) for knockout ties
+
+**Commits:** this commit (app `index.html` + this changelog).
+
+**Why:** the swipe deck rendered straight from the raw fixture (`m.home`/`m.away`), which for knockout ties are placeholder labels ("Runners-up A", "Best 3rd · …") with no flags. Once the Round of 32 opened, swipe cards showed blank/placeholder teams, and `swipeCommit` saved `pickWinner(id, m.home.n)` = a placeholder string that could never match a result. (The Matches feed was unaffected — it already resolves via `fxView`.)
+
+**What changed** (frontend only, `index.html`): `renderSwipeCard` and `swipeCommit` now resolve teams through `fxView(m)` (→ `koTeams`, the seeded `kteams`) before display and before saving the pick. Group cards are unaffected (`fxView` returns the fixture unchanged). One added `const v=fxView(m)` in each, with `m.home/m.away` → `v.home/v.away`.
+
+**Verified (VM-sandbox, real functions):**
+- Swipe card for a seeded R32 tie renders the real teams ("South Africa v Canada"), no placeholder text; `swipeCommit('H')` saves the real team ("South Africa"), not a placeholder.
+- Separately confirmed `propagate()` correctly fills R16 from R32 winners (k17 = W(k1) v W(k4), k18 = W(k3) v W(k6)) and preserves the feeder results — no change needed there.
+- `node --check` clean.
+
+**DB:** none.
+
+**Rollback (git):**
+
+    git revert <this-commit-sha>
+    git push -u origin claude/group-stage-prediction-6502w4
+
+---
 
 **Commits:** this commit (app `index.html` + this changelog).
 
