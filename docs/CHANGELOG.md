@@ -5,7 +5,48 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
-## 2026-06-28 10:35 (Doha) — Fix: swipe-to-pick showed blank teams (and saved a placeholder) for knockout ties
+## 2026-06-28 11:22 (Doha) — Feature: knockout exact-score bonus (scaled by round)
+
+**Commits:** this commit (app `index.html` + this changelog).
+
+**What:** knockouts were winner-only. Added an **optional exact-score bonus** for nailing the **90-minute scoreline**, scaled by round, on top of the who-goes-through points:
+
+| Round | Advance | + Score bonus |
+|---|---|---|
+| R32 | +4 | +4 |
+| R16 | +5 | +5 |
+| QF | +6 | +6 |
+| SF | +8 | +7 |
+| Final | +10 | +8 |
+| Third place | +6 | +5 |
+
+The bonus is judged on the **90-minute score** (extra time & penalties ignored) and is **awarded independent of the who-goes-through pick**, so a tie decided on penalties still scores the scoreline cleanly. It's optional — pick who advances as before, then optionally tap a score.
+
+**What changed** (frontend only, `index.html`):
+- `KO_BONUS` + `koBonus(m)` constants/helper.
+- `scoreFor`: knockout branch now adds `koBonus(f)` when the predicted `h/a` equals the result's `h/a` (winner points unchanged; the two are independent). Group scoring untouched.
+- `koMatchCard`: optional 90-min score input (two number fields, reusing the group `.scorein`/`.bonus-fields` styling) labelled with the round's bonus; finished cards show the predicted score and fold the bonus into the points line.
+- `bindMatchEvents` + new `koSaveScore(id)`: saves the score to the prediction's `h/a` (winner pick `w` untouched); the group `.scorein` handler now guards against the knockout inputs.
+- Organizer result entry (`renderKnockoutEditor`): a 90-min score row per tie; new `orgSetKScore(id)` writes `h/a`, and `orgSetKWinner` now **merges** (preserves any score; previously it replaced the whole result with `{w}`).
+- Bracket view: tally and per-tie status include the score bonus.
+- Rules intro + "How do points work?" table updated.
+
+**Score basis:** 90-minute scoreline (label only — switching to full-time incl. ET is a text change; the comparison code is identical). The auto-confirm robot still does group scores only, so knockout scores are organizer-entered.
+
+**Verified (VM-sandbox, real functions):**
+- `scoreFor`: R32 winner+score 8, winner-only 4, score-only 4, both-wrong 0, result-has-no-score 4, Final winner+score 18, QF 12; group result still +3/+2 = 5.
+- `koMatchCard` (unlocked) renders the `data-ksh/ksa` inputs and the "+4 bonus" label; `koSaveScore` writes `h/a`.
+- `orgSetKWinner` preserves an existing score (isolated test: `{h:3,a:2}` → `{h:3,a:2,w:"South Africa"}`).
+- `node --check` clean.
+
+**DB:** none by this commit. Knockout results may now carry `h/a` alongside `w` (written via the existing `orgSet` path when the organizer enters a score).
+
+**Rollback (git):**
+
+    git revert <this-commit-sha>
+    git push -u origin claude/group-stage-prediction-6502w4
+
+---
 
 **Commits:** this commit (app `index.html` + this changelog).
 
