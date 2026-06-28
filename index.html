@@ -1803,7 +1803,8 @@ function koMatchCard(m,idx){
       '<button class="pick '+(p.w===m.away.n?"sel":"")+'" data-w="'+esc(m.away.n)+'" aria-label="Pick '+esc(m.away.n)+' to go through"><span class="mini">'+m.away.f+'</span></button></div>'+
       '<div class="kn-note">Pick who goes through — extra time &amp; penalties count</div>'+
       '<div class="chips-lab">Exact score · +'+koBonus(m)+' bonus · optional</div>'+
-      '<div class="kn-note" style="font-style:normal;margin-top:5px">Predict one scoreline — it wins the bonus if it matches at <b style="color:var(--gold)">90 min</b> or <b style="color:var(--gold)">after extra time</b></div>'+
+      '<div class="kn-note" style="font-style:normal;margin-top:5px">Predict <b>one</b> scoreline — it wins the bonus if it matches at <b style="color:var(--gold)">90 min</b> or <b style="color:var(--gold)">after extra time</b></div>'+
+      '<div class="kn-note" style="margin-top:2px;font-size:9.5px;opacity:.85">e.g. 1–1 at 90 min, then 2–1 in extra time → guessing either 1–1 or 2–1 wins</div>'+
       '<div class="bonus-fields show"><label>'+m.home.f+'</label><input class="scorein" type="number" min="0" max="20" inputmode="numeric" aria-label="'+esc(m.home.n)+' goals" data-ksh="'+m.id+'" value="'+(p.h!=null?p.h:"")+'"><span class="scoredash">–</span><input class="scorein" type="number" min="0" max="20" inputmode="numeric" aria-label="'+esc(m.away.n)+' goals" data-ksa="'+m.id+'" value="'+(p.a!=null?p.a:"")+'"><label>'+m.away.f+'</label></div>'+
       '<div class="lockin'+((lockTs(m)-Date.now()-CLOCK_OFFSET)<7200000?' soon':'')+'" data-lockts="'+lockTs(m)+'">⏳ '+fmtLeft(lockTs(m)-Date.now()-CLOCK_OFFSET)+'</div>';
   }
@@ -3350,7 +3351,8 @@ async function fillConsensus(){
 
 /* ===== how it works · FAQ ===== */
 const FAQ_ITEMS=[
- {q:"How do points work?",a:"Group matches: 3 points for the right result, +2 for the exact score \u2014 5 max. Knockouts pay more each round: Round of 32 = 4 \u00b7 Round of 16 = 5 \u00b7 Quarterfinals = 6 \u00b7 Semifinals = 8 \u00b7 Third place = 6 \u00b7 the Final = 10."},
+ {q:"How do points work?",a:"Group matches: 3 points for the right result, +2 for the exact score \u2014 5 max. Knockouts pay more each round: Round of 32 = 4 \u00b7 Round of 16 = 5 \u00b7 Quarterfinals = 6 \u00b7 Semifinals = 8 \u00b7 Third place = 6 \u00b7 the Final = 10. In knockouts you can also add a predicted score for a bonus on top \u2014 it lands if you match the result at 90 minutes or after extra time (see the next question)."},
+ {q:"Knockouts \u2014 how does the score bonus work?",a:"First you pick who goes through (extra time and penalties count). On top of that, you may add one predicted scoreline for a bonus \u2014 +4 in the Round of 32 rising to +8 in the Final. You earn it if your score matches the result at 90 minutes OR after extra time. Example: a tie is 1\u20131 at 90 minutes, then 2\u20131 after extra time \u2014 predicting either 1\u20131 or 2\u20131 wins the bonus. It\u2019s judged separately from your who-goes-through pick, so you can land one, both, or neither."},
  {q:"When do picks lock?",a:"At kickoff, match by match. Until then edit freely \u2014 changes save as you type."},
  {q:"I got the score right but only received 3 points?",a:"Exact-score points need both number boxes filled before kickoff. If one was empty, only your result pick counted."},
  {q:"When do results and points appear?",a:"Scores post and points update about 30 minutes after the final whistle \u2014 automatically. Next time you open the app, the morning reveal replays how your picks did."},
