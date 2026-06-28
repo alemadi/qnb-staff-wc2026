@@ -884,6 +884,40 @@ function loadSel(){ try{ var v=JSON.parse(localStorage.getItem(LS)); if(Array.is
 function saveSel(){ try{ localStorage.setItem(LS, JSON.stringify(Array.from(sel))); }catch(e){} }
 var sel = new Set(loadSel());
 
+/* Live knockout bracket: pull the seeded teams + results from the same store the
+   predictor uses, so knockout fixtures show their real opponents and nations that
+   are knocked out drop out of the picker and your selection. Degrades quietly to
+   the group-stage view if the bracket isn't seeded yet or the fetch fails. */
+var SB_URL="https://fzybuasvhzhmkbhxbton.supabase.co", SB_KEY="sb_publishable_j513MlmOZHxhiGpII0uSYA_ijs2PpXV";
+var aliveSet=null;
+function sbGet(key){
+  return fetch(SB_URL+"/rest/v1/kv?key=eq."+encodeURIComponent(key)+"&select=value",{headers:{apikey:SB_KEY,Authorization:"Bearer "+SB_KEY}})
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(j){ var v=(j&&j[0]) ? j[0].value : null; if(v==null) return null; try{ return typeof v==="string" ? JSON.parse(v) : v; }catch(e){ return null; } })
+    .catch(function(){ return null; });
+}
+function applyBracket(kteams, results){
+  if(!kteams) return;
+  FIX.forEach(function(m){ if(!m.kn) return; var t=kteams[m.id]; if(t){ if(t.h) m.home=t.h; if(t.a) m.away=t.a; } });
+  var inB=new Set(), lost=new Set();
+  Object.keys(kteams).forEach(function(id){
+    var t=kteams[id]; if(!t) return;
+    if(t.h) inB.add(t.h); if(t.a) inB.add(t.a);
+    var r=results&&results[id];
+    if(r&&r.w){ if(t.h&&t.h!==r.w) lost.add(t.h); if(t.a&&t.a!==r.w) lost.add(t.a); }
+  });
+  if(inB.size){ aliveSet=new Set(); inB.forEach(function(t){ if(!lost.has(t)) aliveSet.add(t); }); }
+}
+function pickerTeams(){ return aliveSet ? TEAMS.filter(function(t){ return aliveSet.has(t); }) : TEAMS; }
+function loadBracket(){
+  Promise.all([sbGet("wc:kteams"), sbGet("wc:results")]).then(function(res){
+    if(!res[0]) return;                                   // bracket not seeded yet — keep the group-stage view
+    applyBracket(res[0], res[1]);
+    if(aliveSet){ Array.from(sel).forEach(function(t){ if(!aliveSet.has(t)) sel.delete(t); }); saveSel(); }
+    renderPicker(); renderMatches();
+  });
+}
+
 function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
 function flag(name){ var c=FL[name]; return c ? '<img class="fl-img" src="https://flagcdn.com/w40/'+c+'.png" srcset="https://flagcdn.com/w80/'+c+'.png 2x" alt="" loading="lazy">' : ''; }
 
@@ -926,7 +960,7 @@ function gcalURL(m){
 
 function myMatches(){
   var now=Date.now();
-  return FIX.filter(function(m){ return !m.kn && (sel.has(m.home)||sel.has(m.away)) && (Date.parse(m.ko)+125*60000) > now; })
+  return FIX.filter(function(m){ return (sel.has(m.home)||sel.has(m.away)) && (Date.parse(m.ko)+125*60000) > now; })
             .sort(function(a,b){ return Date.parse(a.ko)-Date.parse(b.ko); });
 }
 
@@ -940,7 +974,7 @@ var clearBtn = document.getElementById('clearTeams');
 function side(name){ var inner = flag(name)+' '+esc(name); return sel.has(name) ? '<span class="foll">'+inner+'</span>' : inner; }
 
 function renderPicker(){
-  picker.innerHTML = TEAMS.map(function(t){
+  picker.innerHTML = pickerTeams().map(function(t){
     return '<button type="button" class="teamchip'+(sel.has(t)?' on':'')+'" data-team="'+esc(t)+'" aria-pressed="'+sel.has(t)+'">'+flag(t)+'<span>'+esc(t)+'</span></button>';
   }).join('');
   Array.prototype.forEach.call(picker.querySelectorAll('.teamchip'), function(b){
@@ -960,7 +994,7 @@ function renderMatches(){
   }
   if(!list.length){
     grid.innerHTML=''; addAll.style.display='none';
-    note.textContent='No upcoming group-stage matches for your teams. Knockout fixtures (from 28 June) appear here once both teams are confirmed.';
+    note.textContent='No upcoming matches for your teams right now — they may be out of the tournament, or their next knockout tie isn’t set yet.';
     return;
   }
   addAll.style.display = ahead.length ? '' : 'none';
@@ -1002,6 +1036,7 @@ clearBtn.onclick = function(){ sel = new Set(); saveSel(); renderPicker(); rende
 
 renderPicker();
 renderMatches();
+loadBracket();
 setInterval(renderMatches, 60000);                          // keep "Up next / Live now" fresh
 
 })();
