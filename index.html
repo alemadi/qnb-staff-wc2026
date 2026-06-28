@@ -661,6 +661,53 @@
   .brk-st.ok{color:var(--ok)}
   .brk-st.bad{color:var(--bad)}
   .brk-st.dim{color:var(--faint)}
+  /* who's-next caption (quick win) */
+  .brk-next{font-size:9.5px;color:var(--faint);margin-top:6px;padding-top:5px;border-top:1px dashed var(--line);line-height:1.35}
+  .brk-next b{color:var(--muted);font-weight:700}
+  .brk-tm[data-team]{cursor:pointer}
+  /* trace-a-team chip row */
+  #brk-chips{margin-bottom:13px}
+  .brk-chips-lab{font-size:9px;letter-spacing:1.2px;text-transform:uppercase;color:var(--faint);font-weight:800;margin:0 2px 6px}
+  .brk-chips{display:flex;gap:7px;overflow-x:auto;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity;padding-bottom:3px}
+  .brk-chips::-webkit-scrollbar{height:0}
+  .brk-chip{flex:0 0 auto;scroll-snap-align:start;display:inline-flex;align-items:center;gap:6px;background:var(--glass);border:1px solid var(--line);border-radius:999px;padding:5px 12px 5px 8px;font-size:12.5px;font-weight:700;color:var(--cream);cursor:pointer;white-space:nowrap;font-family:inherit}
+  .brk-chip .fl-img{height:13px;width:auto;border-radius:2px}
+  .brk-chip.champ{border-color:var(--gold-deep);color:var(--gold-bright)}
+  .brk-chip.on{background:var(--gold);border-color:var(--gold);color:var(--ink)}
+  .brk-chips-hint{font-size:10.5px;color:var(--faint);font-style:italic;padding:2px}
+  /* path mode — Road to the Final */
+  .pm-on #brk-body,.pm-on #grp-toggle,.pm-on #grp-wrap{opacity:.15;pointer-events:none;filter:saturate(.25)}
+  #road{margin:0 0 16px;animation:roadIn .22s ease both}
+  @keyframes roadIn{from{opacity:0;transform:translateY(-7px)}to{opacity:1;transform:none}}
+  .road-top{display:flex;align-items:center;gap:11px;margin-bottom:12px}
+  .road-back{flex:0 0 auto;background:var(--glass);border:1px solid var(--line);color:var(--cream);border-radius:9px;padding:8px 13px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit}
+  .road-title{display:flex;align-items:center;gap:8px;min-width:0;font-family:var(--font-d);font-size:18px;font-weight:400;letter-spacing:.4px;color:var(--cream)}
+  .road-title .fl-img{height:17px;width:auto;border-radius:2px}
+  .road-title>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .road-title small{font-family:var(--font-b);font-size:9px;letter-spacing:1.3px;text-transform:uppercase;color:var(--faint);font-weight:800}
+  .road-sum{background:var(--glass);border:1px solid var(--line);border-radius:11px;padding:10px 13px;font-size:11.5px;color:var(--muted);line-height:1.7;margin-bottom:14px}
+  .road-sum b{color:var(--gold-bright);font-weight:800}
+  .road-sum .sep{color:var(--faint)}
+  .road-steps{position:relative;padding-left:22px}
+  .road-steps::before{content:"";position:absolute;left:7px;top:8px;bottom:20px;width:2px;background:var(--line)}
+  .road-step{position:relative;background:var(--glass);border:1px solid var(--line);border-radius:13px;padding:11px 13px;margin-bottom:11px}
+  .road-step::before{content:"";position:absolute;left:-19px;top:14px;width:10px;height:10px;border-radius:50%;background:var(--faint);box-shadow:0 0 0 3px var(--ink)}
+  .road-step.win::before{background:var(--ok)}
+  .road-step.out::before{background:var(--bad)}
+  .road-step.pending::before{background:var(--gold-bright)}
+  .road-step.champ{border-color:var(--gold-deep);background:linear-gradient(180deg,rgba(180,151,89,.12),var(--glass))}
+  .road-step.champ::before{background:var(--gold-bright)}
+  .rs-rd{font-size:8.5px;letter-spacing:1.1px;text-transform:uppercase;color:var(--faint);font-weight:800;margin-bottom:5px}
+  .rs-rd b{color:var(--gold-bright);font-family:var(--font-d);font-weight:400;font-size:11px;letter-spacing:0;vertical-align:-.5px}
+  .rs-vs{display:flex;align-items:center;flex-wrap:wrap;gap:7px;font-size:14.5px;font-weight:700;color:var(--cream)}
+  .rs-vs .pre{color:var(--faint);font-size:11px;font-weight:700}
+  .rs-opp{display:inline-flex;align-items:center;gap:6px}
+  .rs-opp .fl-img{height:13px;width:auto;border-radius:2px}
+  .rs-opp.proj .fl-img{outline:1.5px dashed var(--gold-deep);outline-offset:1px}
+  .rs-opp.tbd{color:var(--faint);font-weight:600;font-size:12.5px;font-style:italic}
+  .rs-badge{font-size:7.5px;letter-spacing:.6px;text-transform:uppercase;font-weight:800;color:var(--gold-deep);border:1px solid var(--gold-deep);border-radius:5px;padding:1px 5px}
+  .rs-st{font-size:10.5px;margin-top:7px;color:var(--muted);font-weight:600;line-height:1.4}
+  .rs-st.ok{color:var(--ok)} .rs-st.bad{color:var(--bad)} .rs-st.dim{color:var(--faint)}
 </style>
 </head>
 <body>
@@ -1058,6 +1105,12 @@ const BRACKET={
   k29:["k25","k26","W"],k30:["k27","k28","W"],
   k31:["k29","k30","L"],k32:["k29","k30","W"]
 };
+/* Forward-walk maps derived from BRACKET: CHILD_OF[f] = the tie a feeder's WINNER
+   advances into; SIBLING[f] = the feeder tie that decides the opponent there. The
+   "L" (third-place) edge is skipped so a road follows winners. Plus path-mode state. */
+const CHILD_OF={},SIBLING={};
+for(const _id in BRACKET){const _f=BRACKET[_id];if(_f[2]==="W"){CHILD_OF[_f[0]]=_id;CHILD_OF[_f[1]]=_id;SIBLING[_f[0]]=_f[1];SIBLING[_f[1]]=_f[0];}}
+let pathTeam=null,BRK_WIRED=false;
 function koTeams(m){const a=state.kteams[m.id];return {h:(a&&a.h&&FL[a.h])?T(a.h):null,a:(a&&a.a&&FL[a.a])?T(a.a):null};}
 function koReady(m){const t=koTeams(m);return !!(t.h&&t.a);}
 function fxView(m){if(!m.kn)return m;const t=koTeams(m);return Object.assign({},m,{home:t.h||m.home,away:t.a||m.away});}
@@ -1807,6 +1860,7 @@ function pickWinner(id,team){
   if(!state.player.predictions[id])state.player.predictions[id]={};
   state.player.predictions[id].w=team;
   syncPickRow(id);rewardPick(id);syncProgress();updateChip();updateJump();
+  if(pathTeam&&state.view==="bracket")renderRoad();
   try{navigator.vibrate&&navigator.vibrate(8);}catch(e){}
   sndTick();
   queueSave();
@@ -2161,7 +2215,7 @@ function brkTie(m){
     if(!team)return '<div class="brk-tm tbd"><span class="brk-fl"></span><span class="brk-nm">TBD</span></div>';
     const isWin=win&&win===team.n;
     const cls='brk-tm'+(win?(isWin?' win':' out'):'')+(pk&&pk===team.n?' picked':'');
-    return '<div class="'+cls+'"><span class="brk-fl">'+(team.f||'')+'</span><span class="brk-nm">'+esc(team.n)+'</span>'+(isWin?'<span class="brk-ck">✓</span>':'')+'</div>';
+    return '<div class="'+cls+'" data-team="'+esc(team.n)+'"><span class="brk-fl">'+(team.f||'')+'</span><span class="brk-nm">'+esc(team.n)+'</span>'+(isWin?'<span class="brk-ck">✓</span>':'')+'</div>';
   };
   let st;
   if(win){
@@ -2172,7 +2226,17 @@ function brkTie(m){
   }else{
     st='<div class="brk-st dim">Awaiting teams</div>';
   }
-  return '<div class="brk-tie'+(m.tag==="final"?' final':'')+'"><div class="brk-rp">'+label+'</div>'+row(t.h)+row(t.a)+st+'</div>';
+  return '<div class="brk-tie'+(m.tag==="final"?' final':'')+'"><div class="brk-rp">'+label+'</div>'+row(t.h)+row(t.a)+st+nextHint(m)+'</div>';
+}
+/* "→ winner meets X in the next round" — shown once a tie has both teams. */
+function nextHint(m){
+  const nx=CHILD_OF[m.id];if(!nx||!koReady(m))return "";
+  const nm=FXID[nx],sib=SIBLING[m.id];
+  const rl=nm.tag==="final"?"the Final":("the "+(RLABEL[nm.round]||nm.round));
+  let opp;const ow=feedTeam(sib,"W");
+  if(ow)opp="<b>"+esc(ow)+"</b>";
+  else{const st=koTeams(FXID[sib]);opp=(st.h&&st.a)?("winner of <b>"+esc(st.h.n)+"</b> v <b>"+esc(st.a.n)+"</b>"):"the other tie’s winner";}
+  return '<div class="brk-next">→ winner meets '+opp+' in '+rl+'</div>';
 }
 function renderBracket(){
   const host=document.getElementById("brk-body");if(!host)return;
@@ -2189,12 +2253,142 @@ function renderBracket(){
     html+='</div></div>';
   });
   host.innerHTML=html;
+  ensureChips();wireBracket();
+  if(pathTeam&&!roadFor(pathTeam))pathTeam=null;
+  const _v=document.getElementById("view-bracket");
+  if(pathTeam){_v.classList.add("pm-on");renderRoad();}
+  else{_v.classList.remove("pm-on");const _r=document.getElementById("road");if(_r)_r.remove();}
   renderGroups();
 }
 function toggleGroupTables(){
   const w=document.getElementById("grp-wrap"),b=document.getElementById("grp-toggle");if(!w)return;
   const show=w.style.display==="none";w.style.display=show?"block":"none";
   if(b)b.textContent="Final group tables "+(show?"▴":"▾");
+}
+
+/* ===== "Road to the Final": tap a team to trace its path forward =====
+   Walks the BRACKET feeder map (CHILD_OF / SIBLING) from a team's Round-of-32 tie
+   up to the Final, naming each future opponent. Opponents resolved from official
+   results are CONFIRMED; those inferred from the player's own picks are flagged
+   PROJECTED so a guess never reads as a fact. */
+function shortRound(r){return ({R32:"R32",R16:"R16",QF:"QF",SF:"SF",FINAL:"Final"})[r]||r;}
+function roadFor(name){
+  if(!name)return null;
+  let entry=null;
+  for(const m of FIXTURES){
+    if(!m.kn||m.round!=="R32")continue;
+    const t=koTeams(m);
+    if((t.h&&t.h.n===name)||(t.a&&t.a.n===name)){entry=m;break;}
+  }
+  if(!entry)return null;
+  const chain=[entry];let c=entry.id;
+  while(CHILD_OF[c]){chain.push(FXID[CHILD_OF[c]]);c=CHILD_OF[c];}
+  const steps=[];let projectedAny=false;
+  for(let i=0;i<chain.length;i++){
+    const m=chain[i],tieId=m.id;
+    let oppName=null,oppKind="tbd";
+    if(i===0){
+      const t=koTeams(m),other=(t.h&&t.h.n===name)?t.a:((t.a&&t.a.n===name)?t.h:null);
+      if(other){oppName=other.n;oppKind="confirmed";}
+    }else{
+      const feeder=SIBLING[chain[i-1].id],cw=feedTeam(feeder,"W");
+      if(cw){oppName=cw;oppKind="confirmed";}
+      else{
+        const pp=(state.player&&state.player.predictions[feeder]&&state.player.predictions[feeder].w)||null;
+        if(pp){oppName=pp;oppKind="projected";}
+        else{const ft=koTeams(FXID[feeder]);if(ft.h&&ft.a){oppName="winner of "+ft.h.n+" v "+ft.a.n;oppKind="tbd";}}
+      }
+    }
+    const off=(state.results[tieId]&&state.results[tieId].w)||null;
+    const pick=(state.player&&state.player.predictions[tieId]&&state.player.predictions[tieId].w)||null;
+    let result,official=!!off,isPickOfficial=false;
+    if(off){result=(off===name)?"win":"out";isPickOfficial=(off===name&&pick===name);}
+    else if(pick){result=(pick===name)?"win":"out";}
+    else result="pending";
+    if(oppKind==="projected"||(!official&&result==="win"))projectedAny=true;
+    steps.push({round:m.round,tag:m.tag,pts:koPts(m),oppName:oppName,oppKind:oppKind,result:result,official:official,isPickOfficial:isPickOfficial});
+    if(result!=="win")break;
+  }
+  return {name:name,steps:steps,projectedAny:projectedAny};
+}
+function roadStep(s){
+  const cls="road-step "+(s.result==="win"?(s.tag==="final"?"win champ":"win"):(s.result==="out"?"out":"pending"));
+  const rd=(s.tag==="final"?"🏆 Final":(s.tag==="third"?"3rd place":(RLABEL[s.round]||s.round)))+" · <b>+"+s.pts+"</b>";
+  let opp;
+  if(!s.oppName)opp='<span class="rs-opp tbd">opponent TBD</span>';
+  else if(s.oppKind==="tbd")opp='<span class="rs-opp tbd">'+esc(s.oppName)+'</span>';
+  else{const fl=FL[s.oppName]?T(s.oppName).f:"";opp='<span class="rs-opp'+(s.oppKind==="projected"?" proj":"")+'">'+fl+esc(s.oppName)+'</span>'+(s.oppKind==="projected"?' <span class="rs-badge">projected</span>':'');}
+  let st="",sc="";
+  if(s.official){
+    if(s.result==="win"){sc="ok";st=s.tag==="final"?"🏆 Champion — lifted the trophy":(s.isPickOfficial?"✓ you called it · +"+s.pts:"✓ advanced");}
+    else{sc="bad";st="✗ knocked out here"+(s.round==="SF"?" — into the 3rd-place play-off (+6)":"");}
+  }else if(s.result==="win"){
+    st=(s.tag==="final"?"your pick to lift the trophy":"your pick to advance")+" · +"+s.pts+" on the line";
+  }else if(s.result==="out"){
+    sc="dim";st="you picked "+esc(s.oppName||"the other side")+" to go through here";
+  }else{
+    st="make your pick — +"+s.pts+" on the line";
+  }
+  return '<div class="'+cls+'"><div class="rs-rd">'+rd+'</div><div class="rs-vs"><span class="pre">vs</span> '+opp+'</div><div class="rs-st '+sc+'">'+st+'</div></div>';
+}
+function renderRoad(){
+  if(!pathTeam)return;
+  const view=document.getElementById("view-bracket"),host=document.getElementById("brk-body");if(!view||!host)return;
+  let el=document.getElementById("road");
+  if(!el){el=document.createElement("div");el.id="road";view.insertBefore(el,host);}
+  const road=roadFor(pathTeam);
+  const back='<div class="road-top"><button id="road-exit" class="road-back">← Bracket</button><div class="road-title">'+T(pathTeam).f+'<span>'+esc(pathTeam)+'</span><small>road to the final</small></div></div>';
+  if(!road||!road.steps.length){
+    el.innerHTML=back+'<div class="road-sum">'+esc(pathTeam)+' isn’t in the Round of 32 yet — once the bracket is seeded (or you pick your R32 winners) its road to the final shows up here.</div>';
+    return;
+  }
+  const chain=road.steps.map(function(s){
+    const rl=s.tag==="final"?"Final":(s.tag==="third"?"3rd":shortRound(s.round));
+    const o=(s.oppKind==="tbd"||!s.oppName)?"TBD":esc(s.oppName);
+    return '<b>'+rl+'</b> '+o;
+  }).join(' <span class="sep">›</span> ');
+  let h=back+'<div class="road-sum">'+(road.projectedAny?'If your picks hold — ':'')+chain+'</div><div class="road-steps">';
+  road.steps.forEach(function(s){h+=roadStep(s);});
+  el.innerHTML=h+'</div>';
+}
+function brkChipTeams(){
+  const champ=state.player&&state.player.champ,set=new Set();
+  if(champ)set.add(champ);
+  if(state.player)FIXTURES.forEach(m=>{if(m.kn){const p=state.player.predictions[m.id];if(p&&p.w)set.add(p.w);}});
+  return [...set].sort((a,b)=>{const ca=a===champ?0:1,cb=b===champ?0:1;return (ca-cb)||a.localeCompare(b);});
+}
+function ensureChips(){
+  const view=document.getElementById("view-bracket"),host=document.getElementById("brk-body");if(!view||!host)return;
+  let box=document.getElementById("brk-chips");
+  if(!box){box=document.createElement("div");box.id="brk-chips";view.insertBefore(box,host);}
+  const teams=brkChipTeams(),champ=state.player&&state.player.champ;
+  if(!teams.length){box.innerHTML='<div class="brk-chips-hint">Tap any team in the bracket to trace its road to the final →</div>';return;}
+  let h='<div class="brk-chips-lab">Trace a team’s road — tap a chip or any team</div><div class="brk-chips">';
+  teams.forEach(n=>{h+='<button class="brk-chip'+(n===champ?' champ':'')+(n===pathTeam?' on':'')+'" data-team="'+esc(n)+'">'+T(n).f+'<span>'+esc(n)+'</span>'+(n===champ?' 🏆':'')+'</button>';});
+  box.innerHTML=h+'</div>';
+}
+function enterPath(name){
+  if(!name)return;
+  pathTeam=name;
+  document.getElementById("view-bracket").classList.add("pm-on");
+  ensureChips();renderRoad();
+  const r=document.getElementById("brk-chips")||document.getElementById("road");
+  if(r&&r.scrollIntoView)r.scrollIntoView({block:"start",behavior:(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches)?"auto":"smooth"});
+}
+function exitPath(){
+  pathTeam=null;
+  document.getElementById("view-bracket").classList.remove("pm-on");
+  const r=document.getElementById("road");if(r)r.remove();
+  ensureChips();
+}
+function wireBracket(){
+  if(BRK_WIRED)return;BRK_WIRED=true;
+  const view=document.getElementById("view-bracket");if(!view)return;
+  view.addEventListener("click",function(e){
+    if(e.target.closest("#road-exit")){exitPath();return;}
+    const t=e.target.closest("[data-team]");
+    if(t){const n=t.getAttribute("data-team");if(n){n===pathTeam?exitPath():enterPath(n);}}
+  });
 }
 
 function renderResultsEditor(){
