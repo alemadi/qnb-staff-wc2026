@@ -2426,7 +2426,7 @@ function toggleGroupTables(){
    on the view being visible and never needs a resize recompute. */
 function shortRound(r){return ({R32:"R32",R16:"R16",QF:"QF",SF:"SF",FINAL:"Final"})[r]||r;}
 const RND_COL={R32:0,R16:1,QF:2,SF:3,FINAL:4};
-const RND_HEAD=[["R32","R32","+4"],["R16","R16","+5"],["QF","QF","+6"],["SF","SF","+8"],["FINAL","Final","+10"]];
+const RND_HEAD=[["R32","R32","+"+KO_PTS.R32],["R16","R16","+"+KO_PTS.R16],["QF","QF","+"+KO_PTS.QF],["SF","SF","+"+KO_PTS.SF],["FINAL","Final","+"+KO_PTS.final]];
 function bracketLayout(){
   const ROW=62,CARDH=52,CARDW=152,COLW=172,PADX=10,HEAD=28,PADY=10;
   /* leaf order: DFS the W-feeders from the Final so each parent's two children sit
@@ -3417,7 +3417,7 @@ const FAQ_ITEMS=[
  {q:"When do results and points appear?",a:"Scores post and points update about 30 minutes after the final whistle \u2014 automatically. Next time you open the app, the morning reveal replays how your picks did."},
  {q:"What do the \u25b2\u25bc arrows mean?",a:"Your movement since yesterday\u2019s standings snapshot. Big jumps in week one are normal \u2014 everyone starts level."},
  {q:"What\u2019s a rival?",a:"Pick anyone from the dropdown in your Me tab. During live matches the pulse bar shows both your provisional points, head to head."},
- {q:"How are ties broken?",a:"Full tiebreaker rules will be announced before the knockouts begin \u2014 watch this space."},
+ {q:"How are ties broken?",a:"Tied points are broken by: most predictions made, then most exact scores, then most correct results, then earliest sign-up."},
  {q:"Is my Instagram handle visible to others?",a:"Sign-in only. Other players see your display name and department; handles are never shown on the leaderboard."},
  {q:"Wrong name, lost access, something odd?",a:"Message Internal Communications at internal_comm@qnb.com and we\u2019ll sort it."},
  {q:"Need help or spotted a problem?",a:"Email Internal Communications at internal_comm@qnb.com \u2014 we\u2019ll sort it."},
