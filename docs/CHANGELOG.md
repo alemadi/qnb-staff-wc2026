@@ -54,7 +54,7 @@ All five now mirror `scoreFor` / the group logic: ladder/winner points **plus** 
 
 **Affordance redesign (10 UX-designer panel):** the solid gold "i" dot still tested as a decorative badge, not a control (panel avg ~1.6/5; 8/10 recommended a labeled pill). Replaced it with a proper **labeled pill button on its own line — "ⓘ How the bonus works ›"** — `<button aria-expanded>` with a chevron that rotates and the pill filling solid gold when open. It now **expands the explanation inline** (a bordered `.help-body` panel — persistent and readable) instead of firing a transient toast. This fixes the figure/ground problem (the dot was lost in the gold-on-gold label row), the touch-tooltip failure, and discoverability in one move. Removed `koInfo`/`.infodot`; added `toggleHelp()` + `.help-chip`/`.help-body` styles.
 
-**Wording — make 90 / 120 min explicit:** the "How the bonus works" panel and the FAQ now spell out the times — *"Final score = the score after **90 min** — or after **extra time (120 min)** if it's played; penalties don't change it"* — so it's unambiguous when the score is read.
+**Wording — make 90 / 120 min explicit:** the "How the bonus works" panel and the FAQ now spell out the times — *"Final score = where the match ends: **90 min**, or **120 min** if it went to extra time. Penalties don't count."* — so it's unambiguous when the score is read.
 
 ---
 
