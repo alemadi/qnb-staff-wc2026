@@ -478,6 +478,9 @@
   .help-chip.open{background:var(--gold);color:#15120a}
   .help-chip.open .hc-chev{transform:rotate(90deg)}
   .help-body{margin-top:8px;font-size:11px;line-height:1.55;color:var(--muted);background:rgba(255,255,255,.035);border:1px solid var(--line);border-left:2px solid var(--gold);border-radius:9px;padding:9px 11px}
+  .help-eg{margin-top:8px;padding-top:8px;border-top:1px dashed var(--line)}
+  .help-eg .eg-y{color:var(--lime);font-weight:800}
+  .help-eg .eg-n{color:#ff7b84;font-weight:800}
   .help-body b{color:var(--gold)}
   .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
   .chipb{font:inherit;font-size:12px;font-weight:800;padding:9px 13px;border-radius:99px;border:1px solid var(--line);background:transparent;color:var(--muted);cursor:pointer;transition:.12s}
@@ -1820,7 +1823,7 @@ function koMatchCard(m,idx){
       '<div class="kn-note">Pick who goes through — <b>extra time &amp; penalties decide it</b></div>'+
       '<div class="chips-lab">Final score · +'+koBonus(m)+' bonus · optional</div>'+
       '<button type="button" class="help-chip" aria-expanded="false" onclick="toggleHelp(event,this)">ⓘ How the bonus works <span class="hc-chev">›</span></button>'+
-      '<div class="help-body" hidden>Final score = where the match ends: <b>90 min</b>, or <b>120 min</b> if it went to extra time. Penalties don’t count. <b>Example:</b> 1–1 after 90 min that ends 2–1 in extra time → the final score is 2–1, so you’d predict 2–1.</div>'+
+      '<div class="help-body" hidden>Final score = where the match ends: <b>90 min</b>, or <b>120 min</b> if it went to extra time. Penalties don’t count.<div class="help-eg"><b>Example</b> — a match is <b>1–1 at 90 min</b>, then <b>2–1 after extra time</b>:<br><span class="eg-y">✓ predict 2–1</span> — wins the bonus (that’s the final score)<br><span class="eg-n">✗ 1–1</span> doesn’t win — that was only the 90-min score</div></div>'+
       '<div class="kn-note" style="font-style:normal;margin-top:5px">Predict the <b style="color:var(--gold)">final score</b> — after extra time if it’s played; penalties don’t count</div>'+
       '<div class="bonus-fields show"><label>'+m.home.f+'</label><input class="scorein" type="number" min="0" max="20" inputmode="numeric" aria-label="'+esc(m.home.n)+' goals" data-ksh="'+m.id+'" value="'+(p.h!=null?p.h:"")+'"><span class="scoredash">–</span><input class="scorein" type="number" min="0" max="20" inputmode="numeric" aria-label="'+esc(m.away.n)+' goals" data-ksa="'+m.id+'" value="'+(p.a!=null?p.a:"")+'"><label>'+m.away.f+'</label></div>'+
       '<div class="lockin'+((lockTs(m)-Date.now()-CLOCK_OFFSET)<7200000?' soon':'')+'" data-lockts="'+lockTs(m)+'">⏳ '+fmtLeft(lockTs(m)-Date.now()-CLOCK_OFFSET)+'</div>';
@@ -3362,7 +3365,7 @@ async function fillConsensus(){
 /* ===== how it works · FAQ ===== */
 const FAQ_ITEMS=[
  {q:"How do points work?",a:"Group matches: 3 points for the right result, +2 for the exact score \u2014 5 max. Knockouts pay more each round: Round of 32 = 4 \u00b7 Round of 16 = 5 \u00b7 Quarterfinals = 6 \u00b7 Semifinals = 8 \u00b7 Third place = 6 \u00b7 the Final = 10. In knockouts you can also add a predicted final score for a bonus on top (see the next question)."},
- {q:"Knockouts \u2014 how does the score bonus work?",a:"First you pick who goes through \u2014 extra time and penalties decide who advances. On top of that, you may add one predicted final score for a bonus \u2014 +4 in the Round of 32 rising to +8 in the Final. The final score is where the match ends: the score at 90 minutes, or at 120 minutes if it went to extra time. Penalties don\u2019t change it \u2014 a match still level after extra time and settled on penalties keeps that level score (a 1\u20131 won on penalties stays 1\u20131, so you'd predict 1\u20131). Example: a tie is 1\u20131 after 90 minutes and ends 2\u20131 after extra time \u2014 the final score is 2\u20131, so predicting 2\u20131 wins the bonus (1\u20131 would not). The bonus is judged separately from your who-goes-through pick."},
+ {q:"Knockouts \u2014 how does the score bonus work?",a:"First you pick who goes through \u2014 extra time and penalties decide who advances. On top of that, you may add one predicted final score for a bonus \u2014 +4 in the Round of 32 rising to +8 in the Final. The final score is where the match ends: the score at 90 minutes, or at 120 minutes if it went to extra time. Penalties don\u2019t change it \u2014 a match still level after extra time and settled on penalties keeps that level score (a 1\u20131 won on penalties stays 1\u20131, so you'd predict 1\u20131). Example: a match is 1\u20131 after 90 minutes and ends 2\u20131 after extra time \u2014 the final score is 2\u20131, so predicting 2\u20131 wins the bonus (1\u20131 would not). The bonus is judged separately from your who-goes-through pick."},
  {q:"When do picks lock?",a:"At kickoff, match by match. Until then edit freely \u2014 changes save as you type."},
  {q:"I got the score right but only received 3 points?",a:"Exact-score points need both number boxes filled before kickoff. If one was empty, only your result pick counted."},
  {q:"When do results and points appear?",a:"Scores post and points update about 30 minutes after the final whistle \u2014 automatically. Next time you open the app, the morning reveal replays how your picks did."},

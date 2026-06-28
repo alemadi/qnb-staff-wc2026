@@ -56,6 +56,8 @@ All five now mirror `scoreFor` / the group logic: ladder/winner points **plus** 
 
 **Wording — make 90 / 120 min explicit:** the "How the bonus works" panel and the FAQ now spell out the times — *"Final score = where the match ends: **90 min**, or **120 min** if it went to extra time. Penalties don't count."* — so it's unambiguous when the score is read.
 
+**Clearer example:** the panel example was circular ("…the final score is 2–1, so you'd predict 2–1"). Replaced with a scannable ✓/✗ contrast in its own block — *"a match is 1–1 at 90 min, then 2–1 after extra time: ✓ predict 2–1 wins · ✗ 1–1 doesn't (only the 90-min score)"* — so it shows the actual point (the 90-min draw loses). FAQ example: "tie" → "match".
+
 ---
 
 ## 2026-06-28 — Fix: knockout score bonus is the **final** score, not 90 **or** 120
