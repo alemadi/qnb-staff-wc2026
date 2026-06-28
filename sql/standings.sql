@@ -10,10 +10,12 @@
 --   Knockout ADVANCE (who goes through):
 --          R32 (k1–k16) +3 · R16 (k17–k24) +6 · QF (k25–k28) +9 ·
 --          SF (k29–k30) +14 · third (k31) +8 · final (k32) +22.
---   Knockout EXACT 90-min score bonus (on top of advance):
+--   Knockout EXACT FINAL-score bonus (on top of advance; final score = the
+--          scoreline when the match ends, after extra time if played, penalties
+--          excluded — matches koScoreHit in index.html):
 --          R32 +3 · R16 +4 · QF +6 · SF +9 · third +5 · final +14.
 --   Knockout EXACT-SCORE STREAK (knockouts only, going forward): nailing the
---          exact 90-min score in CONSECUTIVE knockout matches the player
+--          exact FINAL score in CONSECUTIVE knockout matches the player
 --          predicted (chronological order = the numeric part of the k-id)
 --          earns, per match in the run:
 --          1st in a run +0 · 2nd +5 · 3rd +15 · 4th-and-onward +20 each.
@@ -45,7 +47,7 @@ matches as materialized (
            when substring(e.key from 2)::int = 32              then 22  -- final
            else 3                                                       -- R32 (k1..k16)
          end as kadv,
-         -- knockout EXACT 90-min score bonus (mirrors KO_BONUS / koBonus())
+         -- knockout EXACT final-score bonus (mirrors KO_BONUS / koBonus())
          case
            when e.key !~ '^k[0-9]+$' then 0
            when substring(e.key from 2)::int between 17 and 24 then 4   -- R16
