@@ -664,13 +664,13 @@
   /* who's-next caption (quick win) */
   .brk-next{font-size:9.5px;color:var(--faint);margin-top:6px;padding-top:5px;border-top:1px dashed var(--line);line-height:1.35}
   .brk-next b{color:var(--muted);font-weight:700}
-  .brk-tm[data-team]{cursor:pointer}
+  .brk-tm[data-team]{cursor:pointer;padding-top:5px;padding-bottom:5px}
   /* trace-a-team chip row */
   #brk-chips{margin-bottom:13px}
   .brk-chips-lab{font-size:9px;letter-spacing:1.2px;text-transform:uppercase;color:var(--faint);font-weight:800;margin:0 2px 6px}
   .brk-chips{display:flex;gap:7px;overflow-x:auto;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity;padding-bottom:3px}
   .brk-chips::-webkit-scrollbar{height:0}
-  .brk-chip{flex:0 0 auto;scroll-snap-align:start;display:inline-flex;align-items:center;gap:6px;background:var(--glass);border:1px solid var(--line);border-radius:999px;padding:5px 12px 5px 8px;font-size:12.5px;font-weight:700;color:var(--cream);cursor:pointer;white-space:nowrap;font-family:inherit}
+  .brk-chip{flex:0 0 auto;scroll-snap-align:start;display:inline-flex;align-items:center;gap:6px;min-height:34px;background:var(--glass);border:1px solid var(--line);border-radius:999px;padding:5px 12px 5px 8px;font-size:12.5px;font-weight:700;color:var(--cream);cursor:pointer;white-space:nowrap;font-family:inherit}
   .brk-chip .fl-img{height:13px;width:auto;border-radius:2px}
   .brk-chip.champ{border-color:var(--gold-deep);color:var(--gold-bright)}
   .brk-chip.on{background:var(--gold);border-color:var(--gold);color:var(--ink)}
@@ -680,10 +680,10 @@
   #road{margin:0 0 16px;animation:roadIn .22s ease both}
   @keyframes roadIn{from{opacity:0;transform:translateY(-7px)}to{opacity:1;transform:none}}
   .road-top{display:flex;align-items:center;gap:11px;margin-bottom:12px}
-  .road-back{flex:0 0 auto;background:var(--glass);border:1px solid var(--line);color:var(--cream);border-radius:9px;padding:8px 13px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit}
+  .road-back{flex:0 0 auto;min-height:38px;background:var(--glass);border:1px solid var(--line);color:var(--cream);border-radius:9px;padding:8px 13px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit}
   .road-title{display:flex;align-items:center;gap:8px;min-width:0;font-family:var(--font-d);font-size:18px;font-weight:400;letter-spacing:.4px;color:var(--cream)}
   .road-title .fl-img{height:17px;width:auto;border-radius:2px}
-  .road-title>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .road-title>span{min-width:0;flex:0 1 auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .road-title small{font-family:var(--font-b);font-size:9px;letter-spacing:1.3px;text-transform:uppercase;color:var(--faint);font-weight:800}
   .road-sum{background:var(--glass);border:1px solid var(--line);border-radius:11px;padding:10px 13px;font-size:11.5px;color:var(--muted);line-height:1.7;margin-bottom:14px}
   .road-sum b{color:var(--gold-bright);font-weight:800}
@@ -702,6 +702,7 @@
   .rs-vs{display:flex;align-items:center;flex-wrap:wrap;gap:7px;font-size:14.5px;font-weight:700;color:var(--cream)}
   .rs-vs .pre{color:var(--faint);font-size:11px;font-weight:700}
   .rs-opp{display:inline-flex;align-items:center;gap:6px}
+  .rs-opp[data-team]{cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-decoration-color:var(--line);text-underline-offset:3px}
   .rs-opp .fl-img{height:13px;width:auto;border-radius:2px}
   .rs-opp.proj .fl-img{outline:1.5px dashed var(--gold-deep);outline-offset:1px}
   .rs-opp.tbd{color:var(--faint);font-weight:600;font-size:12.5px;font-style:italic}
@@ -1860,7 +1861,7 @@ function pickWinner(id,team){
   if(!state.player.predictions[id])state.player.predictions[id]={};
   state.player.predictions[id].w=team;
   syncPickRow(id);rewardPick(id);syncProgress();updateChip();updateJump();
-  if(pathTeam&&state.view==="bracket")renderRoad();
+  if(pathTeam&&state.view==="bracket"){ensureChips();renderRoad();}
   try{navigator.vibrate&&navigator.vibrate(8);}catch(e){}
   sndTick();
   queueSave();
@@ -2306,7 +2307,7 @@ function roadFor(name){
     else if(pick){result=(pick===name)?"win":"out";}
     else result="pending";
     if(oppKind==="projected"||(!official&&result==="win"))projectedAny=true;
-    steps.push({round:m.round,tag:m.tag,pts:koPts(m),oppName:oppName,oppKind:oppKind,result:result,official:official,isPickOfficial:isPickOfficial});
+    steps.push({round:m.round,tag:m.tag,pts:koPts(m),oppName:oppName,oppKind:oppKind,result:result,official:official,isPickOfficial:isPickOfficial,myPick:pick});
     if(result!=="win")break;
   }
   return {name:name,steps:steps,projectedAny:projectedAny};
@@ -2317,7 +2318,7 @@ function roadStep(s){
   let opp;
   if(!s.oppName)opp='<span class="rs-opp tbd">opponent TBD</span>';
   else if(s.oppKind==="tbd")opp='<span class="rs-opp tbd">'+esc(s.oppName)+'</span>';
-  else{const fl=FL[s.oppName]?T(s.oppName).f:"";opp='<span class="rs-opp'+(s.oppKind==="projected"?" proj":"")+'">'+fl+esc(s.oppName)+'</span>'+(s.oppKind==="projected"?' <span class="rs-badge">projected</span>':'');}
+  else{const real=!!FL[s.oppName],fl=real?T(s.oppName).f:"",dt=real?' data-team="'+esc(s.oppName)+'"':"";opp='<span class="rs-opp'+(s.oppKind==="projected"?" proj":"")+'"'+dt+'>'+fl+esc(s.oppName)+'</span>'+(s.oppKind==="projected"?' <span class="rs-badge">projected</span>':'');}
   let st="",sc="";
   if(s.official){
     if(s.result==="win"){sc="ok";st=s.tag==="final"?"🏆 Champion — lifted the trophy":(s.isPickOfficial?"✓ you called it · +"+s.pts:"✓ advanced");}
@@ -2325,7 +2326,7 @@ function roadStep(s){
   }else if(s.result==="win"){
     st=(s.tag==="final"?"your pick to lift the trophy":"your pick to advance")+" · +"+s.pts+" on the line";
   }else if(s.result==="out"){
-    sc="dim";st="you picked "+esc(s.oppName||"the other side")+" to go through here";
+    sc="dim";st="you picked "+esc(s.myPick||s.oppName||"the other side")+" to go through here";
   }else{
     st="make your pick — +"+s.pts+" on the line";
   }
@@ -2355,7 +2356,7 @@ function brkChipTeams(){
   const champ=state.player&&state.player.champ,set=new Set();
   if(champ)set.add(champ);
   if(state.player)FIXTURES.forEach(m=>{if(m.kn){const p=state.player.predictions[m.id];if(p&&p.w)set.add(p.w);}});
-  return [...set].sort((a,b)=>{const ca=a===champ?0:1,cb=b===champ?0:1;return (ca-cb)||a.localeCompare(b);});
+  return [...set].filter(n=>roadFor(n)).sort((a,b)=>{const ca=a===champ?0:1,cb=b===champ?0:1;return (ca-cb)||a.localeCompare(b);});
 }
 function ensureChips(){
   const view=document.getElementById("view-bracket"),host=document.getElementById("brk-body");if(!view||!host)return;
@@ -2369,6 +2370,7 @@ function ensureChips(){
 }
 function enterPath(name){
   if(!name)return;
+  if(!roadFor(name)){toast(name+"’s road opens once the Round of 32 is set");return;}
   pathTeam=name;
   document.getElementById("view-bracket").classList.add("pm-on");
   ensureChips();renderRoad();
