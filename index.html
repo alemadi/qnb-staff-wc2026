@@ -714,6 +714,39 @@
   .rs-badge{font-size:7.5px;letter-spacing:.6px;text-transform:uppercase;font-weight:800;color:var(--gold-deep);border:1px solid var(--gold-deep);border-radius:5px;padding:1px 5px}
   .rs-st{font-size:10.5px;margin-top:7px;color:var(--muted);font-weight:600;line-height:1.4}
   .rs-st.ok{color:var(--ok)} .rs-st.bad{color:var(--bad)} .rs-st.dim{color:var(--faint)}
+  /* ===== Connected bracket tree ===== */
+  .brk-hint{font-size:10.5px;color:var(--faint);margin:2px 2px 9px;line-height:1.45}
+  .brk-toolbar{display:flex;align-items:center;gap:6px;margin-bottom:9px}
+  .brk-zb{min-width:40px;min-height:34px;background:var(--glass);border:1px solid var(--line);color:var(--cream);border-radius:9px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;line-height:1}
+  .brk-zb:active{background:var(--glass-2)}
+  .brk-selnote{font-size:10.5px;color:var(--gold-bright);font-weight:700;margin-left:4px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .brk-tree-vp{overflow:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);border-radius:14px;background:rgba(0,0,0,.22);max-height:74vh;touch-action:pan-x pan-y}
+  .brk-tree-sizer{position:relative}
+  .brk-tree-canvas{position:relative;transform-origin:0 0}
+  .brk-svg{position:absolute;left:0;top:0;pointer-events:none;overflow:visible}
+  .brk-svg path{fill:none;stroke:var(--line);stroke-width:1.4;transition:stroke .15s,opacity .15s}
+  .brk-svg path.l3{stroke-dasharray:3 4;opacity:.45}
+  .brk-svg path.lit{stroke:var(--gold-bright);stroke-width:2.4}
+  .brk-tree-canvas.tracing .brk-svg path:not(.lit){opacity:.1}
+  .tcol-head{position:absolute;top:5px;font-size:9px;letter-spacing:1px;text-transform:uppercase;font-weight:800;color:var(--faint);text-align:center}
+  .tcol-head b{color:var(--gold);font-family:var(--font-d);font-weight:400;font-size:11px;letter-spacing:0;margin-left:2px;vertical-align:-.5px}
+  .tcard{position:absolute;box-sizing:border-box;overflow:hidden;background:var(--sapphire-deep);border:1px solid var(--line);border-radius:9px;padding:4px 7px;transition:opacity .15s,border-color .15s,box-shadow .15s}
+  .tcard.fin{border-color:var(--gold-deep)}
+  .tcard.third{border-style:dashed;opacity:.9}
+  .tcard.lit{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold),0 4px 16px rgba(0,0,0,.4)}
+  .brk-tree-canvas.tracing .tcard:not(.lit){opacity:.3}
+  .tc-rd{font-size:7px;letter-spacing:.7px;text-transform:uppercase;color:var(--faint);font-weight:800;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tc-tm{display:flex;align-items:center;gap:5px;padding:1.5px 0;font-size:11px;cursor:pointer}
+  .tc-fl{display:inline-flex;width:15px;flex:0 0 auto}
+  .tc-fl .fl-img{height:11px;width:auto;border-radius:1px}
+  .tc-nm{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600;color:var(--cream)}
+  .tc-tm.win .tc-nm{font-weight:800}
+  .tc-tm.out{opacity:.42}
+  .tc-tm.out .tc-nm{text-decoration:line-through}
+  .tc-tm.tbd{opacity:.4}
+  .tc-tm.picked .tc-nm{color:var(--gold-bright)}
+  .tc-ck{color:var(--ok);font-weight:800;font-size:10px;flex:0 0 auto}
+  .tc-tm.litteam .tc-nm{color:var(--gold-bright);font-weight:800}
 </style>
 </head>
 <body>
@@ -1119,7 +1152,7 @@ const BRACKET={
    "L" (third-place) edge is skipped so a road follows winners. Plus path-mode state. */
 const CHILD_OF={},SIBLING={};
 for(const _id in BRACKET){const _f=BRACKET[_id];if(_f[2]==="W"){CHILD_OF[_f[0]]=_id;CHILD_OF[_f[1]]=_id;SIBLING[_f[0]]=_f[1];SIBLING[_f[1]]=_f[0];}}
-let pathTeam=null,BRK_WIRED=false;
+let pathTeam=null,BRK_WIRED=false,treeSel=null,treeZoom=null;
 function koTeams(m){const a=state.kteams[m.id];return {h:(a&&a.h&&FL[a.h])?T(a.h):null,a:(a&&a.a&&FL[a.a])?T(a.a):null};}
 function koReady(m){const t=koTeams(m);return !!(t.h&&t.a);}
 function fxView(m){if(!m.kn)return m;const t=koTeams(m);return Object.assign({},m,{home:t.h||m.home,away:t.a||m.away});}
@@ -1902,7 +1935,7 @@ function pickWinner(id,team){
   if(!state.player.predictions[id])state.player.predictions[id]={};
   state.player.predictions[id].w=team;
   syncPickRow(id);rewardPick(id);syncProgress();updateChip();updateJump();
-  if(pathTeam&&state.view==="bracket"){ensureChips();renderRoad();}
+  if(state.view==="bracket")renderBracket();
   try{navigator.vibrate&&navigator.vibrate(8);}catch(e){}
   sndTick();
   queueSave();
@@ -2288,21 +2321,19 @@ function renderBracket(){
   let kp=0,kc=0,ktot=0;
   if(state.player)FIXTURES.forEach(m=>{if(!m.kn)return;const r=state.results[m.id],p=state.player.predictions[m.id];if(!r||!r.w||!p)return;if(p.w){ktot++;if(p.w===r.w){kc++;kp+=koPts(m);}}if(r.h!=null&&r.a!=null&&p.h!=null&&p.a!=null&&Number(p.h)===r.h&&Number(p.a)===r.a)kp+=koBonus(m);});
   const tag=document.getElementById("brk-tag");if(tag)tag.textContent=state.player?(kp+" KO pts"):"Knockouts";
+  const L=bracketLayout();
+  let cards="";L.nodes.forEach(function(nd){cards+=treeCard(nd,L);});
+  let heads="";RND_HEAD.forEach(function(h,col){heads+='<div class="tcol-head" style="left:'+(L.PADX+col*L.COLW)+'px;width:'+L.CARDW+'px">'+h[1]+' <b>'+h[2]+'</b></div>';});
   let html="";
   if(state.player)html+='<div class="brk-sum">Your knockout points: <b>'+kp+'</b>'+(ktot?(' · '+kc+'/'+ktot+' correct'):' · picks open as ties are set')+'</div>';
-  [["R32","Round of 32"],["R16","Round of 16"],["QF","Quarter-finals"],["SF","Semi-finals"],["FINAL","Final"]].forEach(function(rr){
-    const ties=FIXTURES.filter(m=>m.kn&&m.round===rr[0]);if(!ties.length)return;
-    const worth=rr[0]==="FINAL"?KO_PTS.final:KO_PTS[rr[0]];
-    html+='<div class="brk-round"><div class="brk-rh"><h3>'+rr[1]+'</h3><span class="brk-ln"></span><span class="brk-worth">+'+worth+' pts</span></div><div class="brk-grid">';
-    ties.forEach(m=>html+=brkTie(m));
-    html+='</div></div>';
-  });
+  html+='<div class="brk-hint">Tap any team to light its route to the final · swipe to pan · zoom with － / ＋</div>';
+  html+='<div class="brk-toolbar"><button class="brk-zb" data-z="out" aria-label="zoom out">－</button><button class="brk-zb" data-z="fit">Fit</button><button class="brk-zb" data-z="in" aria-label="zoom in">＋</button><span class="brk-selnote" id="brk-selnote"></span></div>';
+  html+='<div class="brk-tree-vp" id="brk-vp"><div class="brk-tree-sizer" id="brk-sizer"><div class="brk-tree-canvas" id="brk-canvas" style="width:'+L.width+'px;height:'+L.height+'px">'
+    +'<svg class="brk-svg" width="'+L.width+'" height="'+L.height+'">'+treeConnectors(L)+'</svg>'+heads+cards+'</div></div></div>';
   host.innerHTML=html;
-  ensureChips();wireBracket();
-  if(pathTeam&&!roadFor(pathTeam))pathTeam=null;
-  const _v=document.getElementById("view-bracket");
-  if(pathTeam){_v.classList.add("pm-on");renderRoad();}
-  else{_v.classList.remove("pm-on");const _r=document.getElementById("road");if(_r)_r.remove();}
+  wireBracket();
+  applyZoom(treeZoom);
+  highlightTree();
   renderGroups();
 }
 function toggleGroupTables(){
@@ -2311,129 +2342,112 @@ function toggleGroupTables(){
   if(b)b.textContent="Final group tables "+(show?"▴":"▾");
 }
 
-/* ===== "Road to the Final": tap a team to trace its path forward =====
-   Walks the BRACKET feeder map (CHILD_OF / SIBLING) from a team's Round-of-32 tie
-   up to the Final, naming each future opponent. Opponents resolved from official
-   results are CONFIRMED; those inferred from the player's own picks are flagged
-   PROJECTED so a guess never reads as a fact. */
+/* ===== Connected bracket tree =====
+   A real tournament tree: R32→Final as columns, with SVG elbow connectors joining
+   each pair of feeder ties (from the BRACKET map) to the tie their winners advance
+   into. Tap any team to light its route forward to the Final. Layout is computed
+   purely from the bracket structure (no element measurement), so it never depends
+   on the view being visible and never needs a resize recompute. */
 function shortRound(r){return ({R32:"R32",R16:"R16",QF:"QF",SF:"SF",FINAL:"Final"})[r]||r;}
-function roadFor(name){
-  if(!name)return null;
+const RND_COL={R32:0,R16:1,QF:2,SF:3,FINAL:4};
+const RND_HEAD=[["R32","R32","+4"],["R16","R16","+5"],["QF","QF","+6"],["SF","SF","+8"],["FINAL","Final","+10"]];
+function bracketLayout(){
+  const ROW=62,CARDH=52,CARDW=152,COLW=172,PADX=10,HEAD=28,PADY=10;
+  /* leaf order: DFS the W-feeders from the Final so each parent's two children sit
+     adjacent — gives a non-crossing top-to-bottom order for the 16 R32 ties. */
+  const order=[];(function rec(id){const f=BRACKET[id];if(!f||f[2]!=="W"){order.push(id);return;}rec(f[0]);rec(f[1]);})("k32");
+  const idx={};order.forEach((id,i)=>idx[id]=i);
+  const cy={};
+  function yOf(id){if(id in cy)return cy[id];const f=BRACKET[id];let y;if(!f||f[2]!=="W")y=HEAD+PADY+idx[id]*ROW+CARDH/2;else y=(yOf(f[0])+yOf(f[1]))/2;return cy[id]=y;}
+  const pos={},nodes=[];
+  FIXTURES.forEach(function(m){if(!m.kn||m.id==="k31")return;const col=RND_COL[m.round];if(col==null)return;const x=PADX+col*COLW,ccy=yOf(m.id);pos[m.id]={x:x,cy:ccy};nodes.push({m:m,x:x,y:ccy-CARDH/2,col:col});});
+  const k31=FXID["k31"];if(k31){const ty=yOf("k32")+ROW*1.7;pos.k31={x:PADX+4*COLW,cy:ty+CARDH/2};nodes.push({m:k31,x:PADX+4*COLW,y:ty,col:4,third:true});}
+  const width=PADX*2+4*COLW+CARDW,height=HEAD+PADY*2+16*ROW;
+  return {nodes:nodes,pos:pos,width:width,height:height,ROW:ROW,CARDH:CARDH,CARDW:CARDW,COLW:COLW,PADX:PADX,HEAD:HEAD};
+}
+function treeConnectors(L){
+  let p="";
+  for(const id in BRACKET){
+    const f=BRACKET[id],take=f[2],parent=L.pos[id];if(!parent)continue;
+    [f[0],f[1]].forEach(function(fid){
+      const fp=L.pos[fid];if(!fp)return;
+      const fx=fp.x+L.CARDW,fy=fp.cy,px=parent.x,py=parent.cy,mx=Math.round((fx+px)/2);
+      const d="M"+fx+" "+fy+"H"+mx+"V"+py+"H"+px;
+      p+='<path d="'+d+'"'+(take==="L"?' class="l3"':' data-edge="'+fid+'>'+id+'"')+'></path>';
+    });
+  }
+  return p;
+}
+function treeCard(nd,L){
+  const m=nd.m,t=koTeams(m),res=state.results[m.id],win=(res&&res.w)?res.w:null;
+  const pk=(state.player&&state.player.predictions[m.id]&&state.player.predictions[m.id].w)||null;
+  function row(team){
+    if(!team)return '<div class="tc-tm tbd"><span class="tc-fl"></span><span class="tc-nm">TBD</span></div>';
+    const isWin=win&&win===team.n,cls='tc-tm'+(win?(isWin?' win':' out'):'')+(pk&&pk===team.n?' picked':'');
+    return '<div class="'+cls+'" data-team="'+esc(team.n)+'"><span class="tc-fl">'+(team.f||'')+'</span><span class="tc-nm">'+esc(team.n)+'</span>'+(isWin?'<span class="tc-ck">✓</span>':'')+'</div>';
+  }
+  const lab=m.tag==="final"?"🏆 FINAL":(m.tag==="third"?"3RD PLACE":shortRound(m.round));
+  return '<div class="tcard'+(m.tag==="final"?' fin':'')+(nd.third?' third':'')+'" data-tie="'+m.id+'" style="left:'+nd.x+'px;top:'+nd.y+'px;width:'+L.CARDW+'px;height:'+L.CARDH+'px"><div class="tc-rd">'+lab+'</div>'+row(t.h)+row(t.a)+'</div>';
+}
+/* The ordered tie ids a team passes through, stopping where it's knocked out
+   (by official result, or — past the live front — by the player's own pick). */
+function teamChain(name){
+  if(!name)return [];
   let entry=null;
-  for(const m of FIXTURES){
-    if(!m.kn||m.round!=="R32")continue;
-    const t=koTeams(m);
-    if((t.h&&t.h.n===name)||(t.a&&t.a.n===name)){entry=m;break;}
+  for(const m of FIXTURES){if(!m.kn||m.round!=="R32")continue;const t=koTeams(m);if((t.h&&t.h.n===name)||(t.a&&t.a.n===name)){entry=m;break;}}
+  if(!entry)return [];
+  const ids=[];let cur=entry.id;
+  while(cur){
+    const off=(state.results[cur]&&state.results[cur].w)||null;
+    const pick=(state.player&&state.player.predictions[cur]&&state.player.predictions[cur].w)||null;
+    const res=off?(off===name?"win":"out"):(pick?(pick===name?"win":"out"):"pending");
+    ids.push(cur);
+    if(res!=="win")break;
+    cur=CHILD_OF[cur];
   }
-  if(!entry)return null;
-  const chain=[entry];let c=entry.id;
-  while(CHILD_OF[c]){chain.push(FXID[CHILD_OF[c]]);c=CHILD_OF[c];}
-  const steps=[];let projectedAny=false;
-  for(let i=0;i<chain.length;i++){
-    const m=chain[i],tieId=m.id;
-    let oppName=null,oppKind="tbd";
-    if(i===0){
-      const t=koTeams(m),other=(t.h&&t.h.n===name)?t.a:((t.a&&t.a.n===name)?t.h:null);
-      if(other){oppName=other.n;oppKind="confirmed";}
-    }else{
-      const feeder=SIBLING[chain[i-1].id],cw=feedTeam(feeder,"W");
-      if(cw){oppName=cw;oppKind="confirmed";}
-      else{
-        const pp=(state.player&&state.player.predictions[feeder]&&state.player.predictions[feeder].w)||null;
-        if(pp){oppName=pp;oppKind="projected";}
-        else{const ft=koTeams(FXID[feeder]);if(ft.h&&ft.a){oppName="winner of "+ft.h.n+" v "+ft.a.n;oppKind="tbd";}}
-      }
-    }
-    const off=(state.results[tieId]&&state.results[tieId].w)||null;
-    const pick=(state.player&&state.player.predictions[tieId]&&state.player.predictions[tieId].w)||null;
-    let result,official=!!off,isPickOfficial=false;
-    if(off){result=(off===name)?"win":"out";isPickOfficial=(off===name&&pick===name);}
-    else if(pick){result=(pick===name)?"win":"out";}
-    else result="pending";
-    if(oppKind==="projected"||(!official&&result==="win"))projectedAny=true;
-    steps.push({round:m.round,tag:m.tag,pts:koPts(m),oppName:oppName,oppKind:oppKind,result:result,official:official,isPickOfficial:isPickOfficial,myPick:pick});
-    if(result!=="win")break;
-  }
-  return {name:name,steps:steps,projectedAny:projectedAny};
+  return ids;
 }
-function roadStep(s){
-  const cls="road-step "+(s.result==="win"?(s.tag==="final"?"win champ":"win"):(s.result==="out"?"out":"pending"));
-  const rd=(s.tag==="final"?"🏆 Final":(s.tag==="third"?"3rd place":(RLABEL[s.round]||s.round)))+" · <b>+"+s.pts+"</b>";
-  let opp;
-  if(!s.oppName)opp='<span class="rs-opp tbd">opponent TBD</span>';
-  else if(s.oppKind==="tbd")opp='<span class="rs-opp tbd">'+esc(s.oppName)+'</span>';
-  else{const real=!!FL[s.oppName],fl=real?T(s.oppName).f:"",dt=real?' data-team="'+esc(s.oppName)+'"':"";opp='<span class="rs-opp'+(s.oppKind==="projected"?" proj":"")+'"'+dt+'>'+fl+esc(s.oppName)+'</span>'+(s.oppKind==="projected"?' <span class="rs-badge">projected</span>':'');}
-  let st="",sc="";
-  if(s.official){
-    if(s.result==="win"){sc="ok";st=s.tag==="final"?"🏆 Champion — lifted the trophy":(s.isPickOfficial?"✓ you called it · +"+s.pts:"✓ advanced");}
-    else{sc="bad";st="✗ knocked out here"+(s.round==="SF"?" — into the 3rd-place play-off (+6)":"");}
-  }else if(s.result==="win"){
-    st=(s.tag==="final"?"your pick to lift the trophy":"your pick to advance")+" · +"+s.pts+" on the line";
-  }else if(s.result==="out"){
-    sc="dim";st="you picked "+esc(s.myPick||s.oppName||"the other side")+" to go through here";
-  }else{
-    st="make your pick — +"+s.pts+" on the line";
-  }
-  return '<div class="'+cls+'"><div class="rs-rd">'+rd+'</div><div class="rs-vs"><span class="pre">vs</span> '+opp+'</div><div class="rs-st '+sc+'">'+st+'</div></div>';
+function highlightTree(){
+  const canvas=document.getElementById("brk-canvas");if(!canvas)return;
+  canvas.classList.toggle("tracing",!!treeSel);
+  canvas.querySelectorAll(".tcard.lit").forEach(e=>e.classList.remove("lit"));
+  canvas.querySelectorAll(".tc-tm.litteam").forEach(e=>e.classList.remove("litteam"));
+  canvas.querySelectorAll(".brk-svg path.lit").forEach(e=>e.classList.remove("lit"));
+  const note=document.getElementById("brk-selnote");
+  if(!treeSel){if(note)note.textContent="";return;}
+  const ids=teamChain(treeSel);
+  if(!ids.length){if(note)note.textContent=treeSel+" — not in the bracket yet";treeSel=null;canvas.classList.remove("tracing");return;}
+  ids.forEach(function(tid,i){
+    const card=canvas.querySelector('.tcard[data-tie="'+tid+'"]');
+    if(card){card.classList.add("lit");card.querySelectorAll(".tc-tm").forEach(function(tm){if(tm.getAttribute("data-team")===treeSel)tm.classList.add("litteam");});}
+    if(i<ids.length-1){const edge=canvas.querySelector('.brk-svg path[data-edge="'+tid+'>'+ids[i+1]+'"]');if(edge)edge.classList.add("lit");}
+  });
+  if(note){
+    const lastId=ids[ids.length-1],lr=(state.results[lastId]&&state.results[lastId].w)||null,lp=(state.player&&state.player.predictions[lastId]&&state.player.predictions[lastId].w)||null,lround=shortRound(FXID[lastId].round),decided=lr||lp;
+    let txt;
+    if(lastId==="k32")txt=lr===treeSel?" — Champion 🏆":(lr?" — runner-up":" — in the Final 🏆");
+    else if(decided&&decided!==treeSel)txt=" — out at "+lround;
+    else txt=" — in the "+lround;
+    note.textContent=treeSel+txt;}
 }
-function renderRoad(){
-  if(!pathTeam)return;
-  const view=document.getElementById("view-bracket"),host=document.getElementById("brk-body");if(!view||!host)return;
-  let el=document.getElementById("road");
-  if(!el){el=document.createElement("div");el.id="road";view.insertBefore(el,host);}
-  const road=roadFor(pathTeam);
-  const back='<div class="road-top"><button id="road-exit" class="road-back">← Bracket</button><div class="road-title">'+T(pathTeam).f+'<span>'+esc(pathTeam)+'</span><small>road to the final</small></div></div>';
-  if(!road||!road.steps.length){
-    el.innerHTML=back+'<div class="road-sum">'+esc(pathTeam)+' isn’t in the Round of 32 yet — once the bracket is seeded (or you pick your R32 winners) its road to the final shows up here.</div>';
-    return;
-  }
-  const chain=road.steps.map(function(s){
-    const rl=s.tag==="final"?"Final":(s.tag==="third"?"3rd":shortRound(s.round));
-    const o=(s.oppKind==="tbd"||!s.oppName)?"TBD":esc(s.oppName);
-    return '<b>'+rl+'</b> '+o;
-  }).join(' <span class="sep">›</span> ');
-  let h=back+'<div class="road-sum">'+(road.projectedAny?'If your picks hold — ':'')+chain+'</div><div class="road-steps">';
-  road.steps.forEach(function(s){h+=roadStep(s);});
-  el.innerHTML=h+'</div>';
-}
-function brkChipTeams(){
-  const champ=state.player&&state.player.champ,set=new Set();
-  if(champ)set.add(champ);
-  if(state.player)FIXTURES.forEach(m=>{if(m.kn){const p=state.player.predictions[m.id];if(p&&p.w)set.add(p.w);}});
-  return [...set].filter(n=>roadFor(n)).sort((a,b)=>{const ca=a===champ?0:1,cb=b===champ?0:1;return (ca-cb)||a.localeCompare(b);});
-}
-function ensureChips(){
-  const view=document.getElementById("view-bracket"),host=document.getElementById("brk-body");if(!view||!host)return;
-  let box=document.getElementById("brk-chips");
-  if(!box){box=document.createElement("div");box.id="brk-chips";view.insertBefore(box,host);}
-  const teams=brkChipTeams(),champ=state.player&&state.player.champ;
-  if(!teams.length){box.innerHTML='<div class="brk-chips-hint">Tap any team in the bracket to trace its road to the final →</div>';return;}
-  let h='<div class="brk-chips-lab">Trace a team’s road — tap a chip or any team</div><div class="brk-chips">';
-  teams.forEach(n=>{h+='<button class="brk-chip'+(n===champ?' champ':'')+(n===pathTeam?' on':'')+'" data-team="'+esc(n)+'">'+T(n).f+'<span>'+esc(n)+'</span>'+(n===champ?' 🏆':'')+'</button>';});
-  box.innerHTML=h+'</div>';
-}
-function enterPath(name){
-  if(!name)return;
-  if(!roadFor(name)){toast(name+"’s road opens once the Round of 32 is set");return;}
-  pathTeam=name;
-  document.getElementById("view-bracket").classList.add("pm-on");
-  ensureChips();renderRoad();
-  const r=document.getElementById("brk-chips")||document.getElementById("road");
-  if(r&&r.scrollIntoView)r.scrollIntoView({block:"start",behavior:(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches)?"auto":"smooth"});
-}
-function exitPath(){
-  pathTeam=null;
-  document.getElementById("view-bracket").classList.remove("pm-on");
-  const r=document.getElementById("road");if(r)r.remove();
-  ensureChips();
+function applyZoom(z){
+  const vp=document.getElementById("brk-vp"),sizer=document.getElementById("brk-sizer"),canvas=document.getElementById("brk-canvas");
+  if(!vp||!canvas||!sizer)return;
+  const cw=canvas.offsetWidth||850,ch=canvas.offsetHeight||1040;
+  if(z==null){const avail=vp.clientWidth-2;z=avail>0?Math.max(.34,Math.min(1,avail/cw)):.5;}
+  treeZoom=z;
+  canvas.style.transform="scale("+z+")";
+  sizer.style.width=Math.round(cw*z)+"px";sizer.style.height=Math.round(ch*z)+"px";
 }
 function wireBracket(){
   if(BRK_WIRED)return;BRK_WIRED=true;
   const view=document.getElementById("view-bracket");if(!view)return;
   view.addEventListener("click",function(e){
-    if(e.target.closest("#road-exit")){exitPath();return;}
-    const t=e.target.closest("[data-team]");
-    if(t){const n=t.getAttribute("data-team");if(n){n===pathTeam?exitPath():enterPath(n);}}
+    const zb=e.target.closest(".brk-zb");
+    if(zb){const k=zb.getAttribute("data-z");if(k==="fit")applyZoom(null);else if(k==="in")applyZoom(Math.min(1.25,(treeZoom||.6)*1.28));else applyZoom(Math.max(.3,(treeZoom||.6)*.8));return;}
+    const tm=e.target.closest(".tc-tm[data-team]");
+    if(tm){const n=tm.getAttribute("data-team");treeSel=(treeSel===n)?null:n;highlightTree();return;}
+    if(e.target.closest("#brk-canvas")&&!e.target.closest(".tcard")){treeSel=null;highlightTree();return;}
   });
 }
 
