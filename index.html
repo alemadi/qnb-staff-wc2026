@@ -2252,13 +2252,90 @@ async function exportPicksCSV(){
 }
 /* ===== Knockout bracket: organizer editor + auto-propagation ===== */
 function teamOpts(sel){return '<option value="">— TBD —</option>'+Object.keys(FL).sort().map(t=>'<option value="'+esc(t)+'"'+(sel===t?' selected':'')+'>'+esc(t)+'</option>').join("");}
+
+/* ===== Round-of-32 auto-seed from final group standings (organizer, confirmed) =====
+   Once every group has played all six matches, this fills the 16 R32 ties from
+   the live standings. Group winners and runners-up are taken straight from
+   computeGroupTable() — the same tables the Groups tab shows — so they need no
+   checking. The eight best third-placed teams are ranked (Pts, GD, GF, then
+   group letter) and matched into the "Best 3rd · …" slots, honouring each
+   slot's candidate groups. A combination of qualifying thirds can satisfy more
+   than one valid matching, and the official allocation table picks a specific
+   one, so every third-placed tie is flagged ⚠ for the organizer to verify
+   before it goes wide. Nothing is fully automatic: the organizer triggers the
+   fill, reviews, and can change any tie afterward. */
+let R32_FLAGGED=new Set();
+function grpComplete(g){return computeGroupTable(g).reduce((n,r)=>n+r.P,0)/2===6;}
+function groupStageComplete(){return GROUPS.every(grpComplete);}
+function standingsByLetter(){
+  const map={};
+  GROUPS.forEach(g=>{const rows=computeGroupTable(g);
+    map[g.letter]={W:rows[0]&&rows[0].team,RU:rows[1]&&rows[1].team,third:rows[2]||null};});
+  return map;
+}
+/* Parse a knockout slot label into {winner|runner-up|third} + the group(s) it draws from */
+function r32Spec(name){
+  if(/^Winners /.test(name))return {t:"W",g:name.slice(-1)};
+  if(/^Runners-up /.test(name))return {t:"RU",g:name.slice(-1)};
+  const m=name.match(/Best 3rd[^A-L]*([A-L\/]+)/);
+  return m?{t:"3",cands:m[1].split("/").filter(Boolean)}:null;
+}
+function bestThirds(byL){
+  const arr=Object.keys(byL).map(L=>{const r=byL[L].third;return r?{L:L,team:r.team,Pts:r.Pts,GD:r.GD,GF:r.GF}:null;}).filter(Boolean);
+  arr.sort((a,b)=>b.Pts-a.Pts||b.GD-a.GD||b.GF-a.GF||a.L.localeCompare(b.L));
+  return arr.slice(0,8);
+}
+/* Bipartite perfect matching: assign the qualifying third groups to their slots,
+   most-constrained slot first, backtracking. Returns {slotKey:groupLetter} or null. */
+function matchThirds(slots,Qset){
+  const order=slots.map(s=>({key:s.key,c:s.cands.filter(x=>Qset.has(x))})).sort((a,b)=>a.c.length-b.c.length);
+  const used={},out={};
+  (function bt(i){
+    if(i===order.length)return true;
+    for(const L of order[i].c){if(used[L])continue;used[L]=1;out[order[i].key]=L;if(bt(i+1))return true;used[L]=0;delete out[order[i].key];}
+    return false;
+  })(0);
+  return Object.keys(out).length===slots.length?out:null;
+}
+async function autofillR32(){
+  if(!state.org){toast("Unlock the organizer panel first");return;}
+  if(!groupStageComplete()){toast("Group stage isn't complete — record all 72 group results first");return;}
+  const byL=standingsByLetter(),thirds=bestThirds(byL),Qset=new Set(thirds.map(t=>t.L)),tTeam={};
+  thirds.forEach(t=>tTeam[t.L]=t.team);
+  const r32=FIXTURES.filter(m=>m.round==="R32"&&m.kn),slots=[];
+  r32.forEach(m=>[["h",m.home.n],["a",m.away.n]].forEach(function(pair){var sp=r32Spec(pair[1]);if(sp&&sp.t==="3")slots.push({key:m.id+":"+pair[0],cands:sp.cands});}));
+  const match=matchThirds(slots,Qset);
+  if(!match){toast("Couldn't match the third-placed teams to their slots — fill them manually");return;}
+  if(!confirm("Auto-fill all "+r32.length+" Round-of-32 ties from the final group standings?\n\n• Winners & runners-up come straight from the standings.\n• The 8 third-placed slots are best-matched and marked ⚠ — verify each against the official bracket.\n\nThis opens the Round of 32 for predictions. You can change any tie afterward."))return;
+  const flagged=[];
+  r32.forEach(m=>{
+    const resolve=(sd,nm)=>{const sp=r32Spec(nm);if(!sp)return null;
+      if(sp.t==="W")return byL[sp.g]?byL[sp.g].W:null;
+      if(sp.t==="RU")return byL[sp.g]?byL[sp.g].RU:null;
+      const L=match[m.id+":"+sd];if(L){flagged.push(m.id);return tTeam[L];}return null;};
+    const h=resolve("h",m.home.n),a=resolve("a",m.away.n);
+    if(h&&a)state.kteams[m.id]={h:h,a:a};
+  });
+  R32_FLAGGED=new Set(flagged);
+  await orgSet("wc:kteams",state.kteams);
+  await propagate();
+  updateChip();renderResultsEditor();
+  toast("✓ Round of 32 filled · verify the ⚠ third-placed ties — predictions are now open");
+}
 function renderKnockoutEditor(host,rnd){
   const list=FIXTURES.filter(m=>m.round===rnd&&m.kn);
-  let html='<div class="org-note" style="margin-top:0">Set <b>both teams</b> to open a tie for predictions. After full time (or penalties), pick the <b>winner</b> — the next round\u2019s slots fill in automatically. Changing a feeder\u2019s winner re-flows the bracket and clears any result that no longer fits.</div>';
+  let html="";
+  if(rnd==="R32"){
+    const done=groupStageComplete();
+    html+='<button class="btn btn-primary btn-sm" style="margin:0 0 8px" onclick="autofillR32()"'+(done?"":" disabled")+'>✨ Auto-fill R32 from final standings</button>'+
+      '<div class="org-note" style="margin-top:0">'+(done?'Winners &amp; runners-up come straight from the standings; the 8 third-placed slots are best-matched and marked <b>⚠</b> — verify each against the official bracket. Opens the Round of 32 for predictions.':'Available once all 72 group results are in — the group standings must be final.')+'</div>';
+  }
+  html+='<div class="org-note" style="margin-top:0">Set <b>both teams</b> to open a tie for predictions. After full time (or penalties), pick the <b>winner</b> — the next round\u2019s slots fill in automatically. Changing a feeder\u2019s winner re-flows the bracket and clears any result that no longer fits.</div>';
   list.forEach(m=>{
     const t=state.kteams[m.id]||{},r=state.results[m.id];
     const auto=BRACKET[m.id]?'<span style="color:var(--faint)"> · auto-fills from '+BRACKET[m.id][0].toUpperCase()+'/'+BRACKET[m.id][1].toUpperCase()+(BRACKET[m.id][2]==="L"?" losers":"")+'</span>':'';
-    html+='<div class="kres"><div class="rt">'+m.id.toUpperCase()+' · '+(m.tag==="final"?"Final":(m.tag==="third"?"3rd place":RLABEL[m.round]))+' · '+fmtDay(m.ko)+' <span style="color:var(--faint)">('+esc(m.home.n)+' v '+esc(m.away.n)+')</span>'+auto+'</div>'+
+    const flag=(rnd==="R32"&&R32_FLAGGED.has(m.id))?' <span style="color:var(--gold);font-weight:800">⚠ verify 3rd</span>':'';
+    html+='<div class="kres"><div class="rt">'+m.id.toUpperCase()+' · '+(m.tag==="final"?"Final":(m.tag==="third"?"3rd place":RLABEL[m.round]))+' · '+fmtDay(m.ko)+' <span style="color:var(--faint)">('+esc(m.home.n)+' v '+esc(m.away.n)+')</span>'+auto+flag+'</div>'+
       '<div class="krow"><select class="input ksel" data-kh="'+m.id+'">'+teamOpts(t.h)+'</select>'+
       '<select class="input ksel" data-ka="'+m.id+'">'+teamOpts(t.a)+'</select>'+
       '<select class="input ksel kwin" data-kw="'+m.id+'"'+((t.h&&t.a)?'':' disabled')+'><option value="">Winner…</option>'+

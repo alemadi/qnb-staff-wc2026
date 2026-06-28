@@ -5,7 +5,44 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
-## 2026-06-13 04:55 (Doha) — Fix: robot couldn't confirm m3 (ESPN name "Bosnia-Herzegovina" unaliased)
+## 2026-06-28 09:06 (Doha) — Fix: nothing to predict between rounds — add organizer "Auto-fill R32 from final standings"
+
+**Commits:** this commit (app `index.html` + this changelog).
+
+**Why:** With all 72 group matches kicked off and recorded (`wc:results` had all 72; `wc:kteams` was empty `[]`), the group stage was correctly locked but the Round of 32 had never been seeded. R32 ties (`k1`–`k16`) have no `BRACKET` auto-fill entry — unlike R16→Final, they must be seeded by hand — so all 16 ties showed placeholder slots ("Runners-up A", "Best 3rd · …") and **no one could predict anything**: group stage over, knockouts not open. Reported as "people cannot predict the group stage."
+
+**What changed** (frontend only, `index.html`):
+- New organizer action **"✨ Auto-fill R32 from final standings"** at the top of the knockout editor (Organizer tools → round = Round of 32). Disabled until all 12 groups have played their 6 matches each.
+- Seeding engine reuses the existing `computeGroupTable()` (the same tables the Groups tab shows):
+  - **Group winners & runners-up** resolve directly from the standings into their `Winners X` / `Runners-up X` slots — deterministic, no verification needed.
+  - **Eight best third-placed teams** are ranked (Pts, GD, GF, then group letter) and matched into the `Best 3rd · …` slots via a constrained bipartite perfect matching (`matchThirds`, most-constrained-slot-first backtracking) that honours each slot's candidate groups.
+- Because a given set of qualifying thirds can satisfy more than one valid matching while FIFA's official allocation table fixes a specific one, **every third-placed tie is flagged `⚠ verify 3rd`** in the editor. The organizer reviews and can change any tie with the existing dropdowns before/after. Winners/runners-up are not flagged.
+- On confirm: writes `state.kteams` for all 16 ties, persists via `orgSet("wc:kteams", …)` (organizer-authenticated RPC, unchanged), runs `propagate()`, and re-renders — which opens R32 for predictions for all players.
+- No change to lock logic (predictions still lock at kickoff, server-clock enforced), scoring, the robot, results, or any player data. Group matches remain locked — by design.
+
+**New functions:** `R32_FLAGGED`, `grpComplete`, `groupStageComplete`, `standingsByLetter`, `r32Spec`, `bestThirds`, `matchThirds`, `autofillR32`; `renderKnockoutEditor` gains the R32 button + per-tie `⚠` flag.
+
+**Verified:**
+- `node --check` on the extracted inline script: clean.
+- End-to-end in a VM sandbox driving the *real* `autofillR32()` against the live `wc:results` (660 players' tournament): all 16 ties filled, 32 distinct real-nation qualifiers, 8 ties flagged (`k3,k6,k7,k8,k9,k10,k13,k16`), `wc:kteams` persisted with 16 entries.
+- Guard: with one group result missing, `groupStageComplete()` is false and the action refuses to write (toast: "Group stage isn't complete …"); button renders disabled.
+- The eight winner-vs-third slots (1A,1B,1D,1E,1G,1I,1K,1L) and their candidate sets were cross-checked against the official 2026 Round-of-32 allocation structure.
+
+**DB:** none by this commit. At runtime the organizer's click writes `wc:kteams` (16 R32 ties) through the existing `orgSet` path — the same write the manual editor already performs, one tie at a time.
+
+**Rollback (git):**
+
+    git revert <this-commit-sha>
+    git push -u origin claude/group-stage-prediction-6502w4
+
+**Rollback (DB, only if R32 was auto-filled and you want it cleared):**
+
+    -- via organizer panel: clear each R32 tie's two dropdowns, or
+    -- update kv set value='{}', updated_at=now() where key='wc:kteams';
+    -- (clears ALL knockout seeding, not just R32 — use the panel for a partial undo)
+
+---
+
 
 **Commits:** `8d8802f` (sql/robot.sql + changelog) and a follow-up SHA-correction commit (this one).
 
