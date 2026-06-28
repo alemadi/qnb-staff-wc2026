@@ -2090,7 +2090,17 @@ const GROUPS=(function(){
     while(stack.length){const x=stack.pop();if(seen.has(x))continue;seen.add(x);comp.push(x);adj[x].forEach(y=>{if(!seen.has(y))stack.push(y);});}
     out.push(comp);
   });
-  return out.map((teams,i)=>({letter:String.fromCharCode(65+i),set:new Set(teams),teams}));
+  /* Official FIFA group letters. Fixture/kickoff order does NOT match the official
+     A–L draw labelling (USA's group is official D not C; Brazil's is C; Belgium G;
+     Spain H — i.e. C↔D and G↔H are swapped vs appearance order), so derive each
+     group's letter from its pot-1 seed rather than the order it appears in the
+     fixtures. Getting this wrong mislabels the Groups tab and feeds the wrong teams
+     into the knockout template ("1C vs 2F", "3rd[A/B/C/D/F]", …). */
+  const SEED_LETTER={Mexico:"A",Canada:"B",Brazil:"C",USA:"D",Germany:"E",Netherlands:"F",Belgium:"G",Spain:"H",France:"I",Argentina:"J",Colombia:"K",England:"L"};
+  return out.map(function(teams){
+    let letter="?";for(let n=0;n<teams.length;n++){if(SEED_LETTER[teams[n]]){letter=SEED_LETTER[teams[n]];break;}}
+    return {letter:letter,set:new Set(teams),teams:teams};
+  }).sort(function(a,b){return a.letter<b.letter?-1:(a.letter>b.letter?1:0);});
 })();
 function grpDone(r){return !!(r&&r.h!=null&&r.a!=null&&isFinite(Number(r.h))&&isFinite(Number(r.a)));}
 function computeGroupTable(g){
