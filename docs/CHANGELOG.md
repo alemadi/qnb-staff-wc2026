@@ -17,6 +17,11 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 - Organizer editor (`renderResultsEditor`): added an **"After ET (120)"** score row per tie beside the existing "90-min score" row, writing `h2/a2`. `orgSetKScore` now persists both pairs and clears `h2/a2` when blank; the result record is dropped only when winner and both score pairs are empty.
 - Labels: player score field now reads **"90 or 120-min score"**; rules/points panel notes the bonus hits on 90 or 120 min.
 
+**Clarity follow-up (player-facing copy):** the on-card label "90 or 120-min score" read like a choice ("which one do I enter?"). Reworded so players understand they predict **one** scoreline that wins on either:
+- Knockout pick card: header is now **"Exact score · +N bonus · optional"** with a plain sub-line — *"Predict one scoreline — it wins the bonus if it matches at **90 min** or **after extra time**"* (the two times highlighted in gold).
+- Rules/points panel: knockout header now spells out *"+ optional exact score (matches at 90 min or after extra time)"*; the Round-of-32 row reads *"+4 exact score"* (the per-round detail lives in the header, matching the other rows).
+- Terms paragraph already updated to *"the 90-minute or after-extra-time (120-minute) score"*.
+
 **Data model:** knockout results may now carry an optional second scoreline `h2/a2` (after extra time) alongside `h/a` (90 min) and `w` (winner), via the existing `orgSet`/`wc:results` path. Ties decided in 90 leave `h2/a2` empty and behave exactly as before. Predictions are unchanged (still a single `h/a`).
 
 **Verified:** extracted `koScoreHit` truth table (node) — 90-only pred matches/misses; ET result matches on 90 (1–1) and on 120 (2–1) but not 0–0; partial/empty preds miss; string scores coerce. `node --check` on the full extracted script clean. Group scoring paths untouched.

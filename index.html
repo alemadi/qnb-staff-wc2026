@@ -836,8 +836,8 @@
         <div class="pgrp">Group stage · 11–27 June · predict the result</div>
         <div class="prow"><span>Correct result (win / draw / loss)</span><b>+3</b></div>
         <div class="prow"><span>Exact score — bonus on top <span class="pfaint">(perfect call = 5)</span></span><b>+2</b></div>
-        <div class="pgrp">Knockouts · from 28 June · who goes through <span style="text-transform:none">(ET &amp; penalties count)</span> + optional score, bonus on 90 or 120 min</div>
-        <div class="prow"><span>Round of 32 <span class="pfaint">· +4 exact 90/120-min score</span></span><b>+4</b></div>
+        <div class="pgrp">Knockouts · from 28 June · who goes through <span style="text-transform:none">(ET &amp; penalties count)</span> + optional exact score <span style="text-transform:none">(matches at 90 min or after extra time)</span></div>
+        <div class="prow"><span>Round of 32 <span class="pfaint">· +4 exact score</span></span><b>+4</b></div>
         <div class="prow"><span>Round of 16 <span class="pfaint">· +5 score</span></span><b>+5</b></div>
         <div class="prow"><span>Quarter-final <span class="pfaint">· +6 score</span></span><b>+6</b></div>
         <div class="prow"><span>Semi-final <span class="pfaint">· +7 score</span></span><b>+8</b></div>
@@ -1769,7 +1769,8 @@ function koMatchCard(m,idx){
       '<button class="pick '+(p.w===m.home.n?"sel":"")+'" data-w="'+esc(m.home.n)+'" aria-label="Pick '+esc(m.home.n)+' to go through"><span class="mini">'+m.home.f+'</span></button>'+
       '<button class="pick '+(p.w===m.away.n?"sel":"")+'" data-w="'+esc(m.away.n)+'" aria-label="Pick '+esc(m.away.n)+' to go through"><span class="mini">'+m.away.f+'</span></button></div>'+
       '<div class="kn-note">Pick who goes through — extra time &amp; penalties count</div>'+
-      '<div class="chips-lab">90 or 120-min score · +'+koBonus(m)+' bonus · optional</div>'+
+      '<div class="chips-lab">Exact score · +'+koBonus(m)+' bonus · optional</div>'+
+      '<div class="kn-note" style="font-style:normal;margin-top:5px">Predict one scoreline — it wins the bonus if it matches at <b style="color:var(--gold)">90 min</b> or <b style="color:var(--gold)">after extra time</b></div>'+
       '<div class="bonus-fields show"><label>'+m.home.f+'</label><input class="scorein" type="number" min="0" max="20" inputmode="numeric" aria-label="'+esc(m.home.n)+' goals" data-ksh="'+m.id+'" value="'+(p.h!=null?p.h:"")+'"><span class="scoredash">–</span><input class="scorein" type="number" min="0" max="20" inputmode="numeric" aria-label="'+esc(m.away.n)+' goals" data-ksa="'+m.id+'" value="'+(p.a!=null?p.a:"")+'"><label>'+m.away.f+'</label></div>'+
       '<div class="lockin'+((lockTs(m)-Date.now()-CLOCK_OFFSET)<7200000?' soon':'')+'" data-lockts="'+lockTs(m)+'">⏳ '+fmtLeft(lockTs(m)-Date.now()-CLOCK_OFFSET)+'</div>';
   }
