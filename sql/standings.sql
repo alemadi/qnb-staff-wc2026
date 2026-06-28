@@ -16,7 +16,7 @@
 --          exact 90-min score in CONSECUTIVE knockout matches the player
 --          predicted (chronological order = the numeric part of the k-id)
 --          earns, per match in the run:
---          1st in a run +0 · 2nd +5 · 3rd +15 · 4th-and-onward +25 each.
+--          1st in a run +0 · 2nd +5 · 3rd +15 · 4th-and-onward +20 each.
 --          Any non-exact predicted knockout match resets the run.
 --   Champion: +25 when wc:results._champ matches the pick.
 -- ============================================================================
@@ -112,7 +112,7 @@ streak_bonus as (
                 when pos_in_run = 1 then 0    -- first exact of a run: no bonus
                 when pos_in_run = 2 then 5    -- 2-in-a-row
                 when pos_in_run = 3 then 15   -- 3-in-a-row
-                else 25                       -- 4th and onward, each
+                else 20                       -- 4th and onward, each
               end ) as streak
   from ko_streak
   group by pslug
