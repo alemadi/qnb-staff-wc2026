@@ -5,6 +5,32 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-06-28 11:09 (Doha) — Knockouts filter: one tap jumps to the current round (▾ still picks any other)
+
+**Commits:** this commit (app `index.html` + this changelog).
+
+**Why:** The **Knockouts** filter was a bare `<select>` — tapping it only opened a native picker, so reaching the live round (R32 right now) took two interactions and a scroll. Reported as "knockouts bubble should immediately go to the round."
+
+**What changed** (frontend only, `index.html`):
+- New `curKO()` — the current knockout round = the earliest of R32→Final still holding an unplayed match (falls back to the last KO round once everything's done). Auto-advances to R16/QF/SF/Final as each round completes; no deploy needed.
+- `renderFilters` replaces the dropdown-only chip with a **button + caret picker**: the chip reads `Knockouts · R32` and a **single tap jumps straight to that round** (`setFilter`). A small **▾** on the right is a transparent native `<select>` overlay (`.kopick`) covering only the caret zone — tap it to pick any other round. When you're already on a KO round the chip shows that round (e.g. `Knockouts · QF`), highlights gold, and the picker switches you elsewhere.
+- New CSS: `.kochip .komain` (caret padding), `.kochip .kopick` (invisible 32px overlay, `font-size:16px` to stop iOS focus-zoom), and the active-state caret colour. Reuses the existing `.rounddd`/`.ddcar` positioning. The old `.chip.ddsel` rules are now unused but left in place (harmless).
+
+**Verified (VM-sandbox, real `curKO` + the rebuilt `renderFilters` KO block copied verbatim):**
+- R32 in progress, filter not on a round → chip reads `Knockouts · R32`, button wired to `setFilter('R32')`, not highlighted.
+- All 16 R32 finished → `curKO()` advances to **R16**; all rounds finished → **FINAL**.
+- Viewing QF → chip reads `Knockouts · QF`, highlighted, tap re-applies QF; the ▾ picker lists all five rounds with live counts.
+- `node --check` on the extracted inline script: clean.
+
+**DB:** none. No kv writes, no SQL, `wc:results` untouched.
+
+**Rollback (git):**
+
+    git revert <this-commit-sha>
+    git push -u origin claude/arab-teams-finished-matches-cjpji8
+
+---
+
 ## 2026-06-28 10:51 (Doha) — Arab Teams filter: hide finished matches (live + upcoming only)
 
 **Commits:** this commit (app `index.html` + this changelog).
