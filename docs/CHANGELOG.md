@@ -5,6 +5,32 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-06-28 20:30 (Doha) — Fix: knockout exact-score bonus was only in the JS scorer, not the leaderboard (and not in any preview)
+
+**Commits:** this commit (`sql/standings.sql` + `index.html` + this changelog).
+
+**Why (correctness bug):** the **knockout exact-score bonus** added on 2026-06-28 (`KO_BONUS`, `koBonus()`) was wired into `scoreFor()` (`index.html:1424`) and the Bracket tally only. **Every other place that scores knockouts was missed** — most importantly the **server-side `standings()` RPC**, which `fetchStandings()` *prefers* as the live leaderboard (`index.html:1262-1268`). Result: once knockouts begin, a player who nails a 90-min KO scoreline would earn the bonus on their **Me** card / **Bracket** (JS `scoreFor`) but **not** on the **ranked leaderboard** (SQL) — the board would silently under-score and mis-rank them (up to +8 on a Final). The SQL header still claimed it "mirrors scoreFor() exactly." Found via a full scoring-logic audit. **Currently latent:** live DB has 0 knockout results, so no player has been affected yet — fixed ahead of the knockout stage.
+
+**What changed:**
+- **`sql/standings.sql`** (the live leaderboard): added a `kbonus` column to the `matches` CTE mirroring `KO_BONUS` by tie id (k1–16 +4 · k17–24 +5 · k25–28 +6 · k29–30 +7 · k31 +5 · k32 +8 — note SF/third/final differ from the advance ladder). The knockout `base` now adds the bonus when `pr.ph=m.rh and pr.pa=m.ra`, **independent** of the winner pick; the `exact` column now counts KO scoreline hits too. Group scoring, champion, and `correct` are unchanged. Header comment updated.
+- **`index.html`** (six display surfaces brought into line with `scoreFor`, all knockout-only): `rvVerdict` (reveal verdict / "today's stakes" / streak + perfect-day badges, `:3376`), the day-banner "up to +N" pot (`:3603`), `stakeText` "+N on the line" float (`:1853`), `consensus()` per-day `ptsBy`/"day top scorer" (`:3232`), `ppPtsHTML` organizer per-match "Pts" audit column (`:2516`), `provFor` live "as it stands" stakes (`:3559`). Each now adds `koBonus` for a matching 90-min scoreline. FAQ "How do points work?" updated to describe the optional KO score bonus (the visible points table already did).
+
+**Verified:**
+- `node --check` on the extracted inline script: clean.
+- VM-sandbox over the **real** `scoreFor`/`rvVerdict` (extracted verbatim): final winner+exact = **18** (10+8), wrong-winner+exact = **8** (bonus independent of winner), winner-only = **10**, SF winner+exact = **15** (8+7), R32 = **8** (4+4), group exact = **5**, KO no-pick = **0** — all as expected; `rvVerdict` now shows "◎ +18 / ◎ +8 / ✓ +10 / ✗ +0".
+- **SQL, read-only against the live DB** (no write): the rewritten function returns **byte-identical** output to the current `standings()` on today's data (7 players, 0 differing rows) — group stage untouched/no regression. A synthetic-data run of the new scoring reproduced the same seven knockout cases above (18 / 8 / 10 / 15 / 8 / 5 / 0).
+
+**DB:** **YES — `sql/standings.sql` must be re-run once in Supabase** (`create or replace function`, idempotent, no data change). The app keeps working until then via the client-side `scoreFor` fallback, but the *server* leaderboard won't award KO bonuses until the function is replaced. Recommended order: (1) snapshot is unnecessary (no data write, function-only), (2) paste the file into the SQL editor and Run, (3) `select * from standings() order by pts desc limit 10;` to sanity-check.
+
+**Not included (separately noted in the audit, left for a follow-up decision):** the knockout-result-without-winner branch classification, the home/away-swap guard, symmetric numeric coercion, and the `cmpSt` tie-break ordering (volume-before-accuracy) — none affect group-stage scoring and none are urgent.
+
+**Rollback (git):**
+
+    git revert <this-commit-sha>
+    git push -u origin claude/scoring-system-logic-u1nyiq
+
+**Rollback (DB, only if the function was re-run and you want the old behaviour back):** check out the previous `sql/standings.sql` and re-run it in Supabase — it is a pure `create or replace function`, so re-running the prior version fully restores the winner-only knockout scoring. No data is touched either way.
+
 ## 2026-06-28 11:22 (Doha) — Feature: knockout exact-score bonus (scaled by round)
 
 **Commits:** this commit (app `index.html` + this changelog).

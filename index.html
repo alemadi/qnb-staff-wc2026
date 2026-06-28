@@ -1850,9 +1850,10 @@ function queueSave(){saveChain=saveChain.then(()=>persistPlayer());}
 function stakeText(id){
   try{
     const m=(typeof FIXTURES!=="undefined")?FIXTURES.find(x=>x.id===id):null;
-    if(m&&m.kn)return "+"+koPts(m)+" on the line";
     const P=(state.player.predictions||{})[id]||{};
-    return (P.h!=null&&P.a!=null)?"+5 on the line \u26a1":"+3 on the line";
+    const scored=P.h!=null&&P.a!=null;
+    if(m&&m.kn)return "+"+(koPts(m)+(scored?koBonus(m):0))+" on the line"+(scored?" \u26a1":"");
+    return scored?"+5 on the line \u26a1":"+3 on the line";
   }catch(e){return "+3 on the line";}
 }
 function rewardPick(id){
@@ -2513,8 +2514,11 @@ function ppPtsHTML(m,pk,r){
   const dash='<span style="color:var(--faint)">—</span>';
   if(!r)return dash;
   if(m.kn){
-    if(r.w==null||!pk||!pk.w)return dash;
-    return pk.w===r.w?'<span style="color:var(--lime)">✓ +'+koPts(m)+'</span>':'<span style="color:#ff7b84">✗ +0</span>';
+    if(r.w==null||!pk||(!pk.w&&pk.h==null))return dash;
+    const base=pk.w===r.w?koPts(m):0;
+    const bonus=(r.h!=null&&r.a!=null&&pk.h!=null&&pk.a!=null&&Number(pk.h)===r.h&&Number(pk.a)===r.a)?koBonus(m):0;
+    const tot=base+bonus;
+    return tot>0?'<span style="color:var(--lime)">'+(bonus?'◎':'✓')+' +'+tot+'</span>':'<span style="color:#ff7b84">✗ +0</span>';
   }
   if(r.h==null||!pk||!pk.o)return dash;
   const ro=r.h>r.a?"H":(r.h<r.a?"A":"D");
@@ -3225,7 +3229,7 @@ function consensus(){
         if(dn){const e=dd[dn]||(dd[dn]={hit:0,tot:0});e.tot++;if(hit)e.hit++;}
         const dh=dayHit[dk]||(dayHit[dk]={hit:0,tot:0});dh.tot++;if(hit)dh.hit++;
         let vp=0;
-        if(f.kn){if(hit)vp=koPts(f);}
+        if(f.kn){if(hit)vp=koPts(f);if(v.h!=null&&v.a!=null&&Number(v.h)===r.h&&Number(v.a)===r.a)vp+=koBonus(f);}
         else{if(hit)vp=3;if(v.h!=null&&v.a!=null&&Number(v.h)===r.h&&Number(v.a)===r.a)vp+=2;}
         if(vp)ptsBy[dk]=(ptsBy[dk]||0)+vp;
         if(hit&&resPct[f.id]!=null&&resPct[f.id]<=30)up++;});
@@ -3315,7 +3319,7 @@ async function fillConsensus(){
 
 /* ===== how it works · FAQ ===== */
 const FAQ_ITEMS=[
- {q:"How do points work?",a:"Group matches: 3 points for the right result, +2 for the exact score \u2014 5 max. Knockouts pay more each round: Round of 32 = 4 \u00b7 Round of 16 = 5 \u00b7 Quarterfinals = 6 \u00b7 Semifinals = 8 \u00b7 Third place = 6 \u00b7 the Final = 10."},
+ {q:"How do points work?",a:"Group matches: 3 points for the right result, +2 for the exact score \u2014 5 max. Knockouts pay more each round for picking who goes through: Round of 32 = 4 \u00b7 Round of 16 = 5 \u00b7 Quarterfinals = 6 \u00b7 Semifinals = 8 \u00b7 Third place = 6 \u00b7 the Final = 10. Plus an optional bonus for nailing the 90-minute scoreline \u2014 counted on its own, even if your pick to advance is wrong: Round of 32 +4 \u00b7 Round of 16 +5 \u00b7 Quarterfinals +6 \u00b7 Semifinals +7 \u00b7 Third place +5 \u00b7 the Final +8."},
  {q:"When do picks lock?",a:"At kickoff, match by match. Until then edit freely \u2014 changes save as you type."},
  {q:"I got the score right but only received 3 points?",a:"Exact-score points need both number boxes filled before kickoff. If one was empty, only your result pick counted."},
  {q:"When do results and points appear?",a:"Scores post and points update about 30 minutes after the final whistle \u2014 automatically. Next time you open the app, the morning reveal replays how your picks did."},
@@ -3372,7 +3376,10 @@ let LB_PREV={};
 /* ===== the reveal ritual ===== */
 function rvVerdict(m,p,r){
   if(m.kn){const ok=p.w&&r.w&&p.w===r.w;
-    return ok?{pts:koPts(m),cls:"hit",label:"\u2713 +"+koPts(m)}:{pts:0,cls:"miss",label:"\u2717 +0"};}
+    const sc=r.h!=null&&r.a!=null&&p.h!=null&&p.a!=null&&Number(p.h)===r.h&&Number(p.a)===r.a;
+    const pts=(ok?koPts(m):0)+(sc?koBonus(m):0);
+    if(pts<=0)return{pts:0,cls:"miss",label:"\u2717 +0"};
+    return{pts:pts,cls:(ok&&sc)?"exact":"hit",label:(sc?"\u25ce ":"\u2713 ")+"+"+pts};}
   const ro=r.h>r.a?"H":r.h<r.a?"A":"D";
   const ex=p.h!=null&&p.a!=null&&Number(p.h)===r.h&&Number(p.a)===r.a;
   const oc=p.o===ro;const pts=(oc?3:0)+(ex?2:0);
@@ -3550,7 +3557,8 @@ function provFor(m,le,preds){
   if(le==null||le.hs==null||le.as==null)return null;
   if(m.kn){const mv=fxView(m);
     const lead=le.hs>le.as?mv.home.n:le.hs<le.as?mv.away.n:null;
-    return {pts:(lead&&p.w===lead)?koPts(m):0};}
+    const sc=(p.h!=null&&p.a!=null&&Number(p.h)===le.hs&&Number(p.a)===le.as)?koBonus(m):0;
+    return {pts:((lead&&p.w===lead)?koPts(m):0)+sc};}
   const ro=le.hs>le.as?"H":le.hs<le.as?"A":"D";
   return {pts:(p.o===ro?3:0)+((p.h!=null&&p.a!=null&&Number(p.h)===le.hs&&Number(p.a)===le.as)?2:0)};
 }
@@ -3592,7 +3600,7 @@ function renderDayBanner(){
     const r=state.results[m.id],p=state.player.predictions[m.id];
     const settled=m.kn?(r&&r.w!=null):(r&&r.h!=null);
     if(settled)got+=rvVerdict(m,p,r).pts;
-    else{left++;pot+=m.kn?koPts(m):((p.h!=null&&p.a!=null)?5:3);}
+    else{left++;pot+=m.kn?(koPts(m)+((p.h!=null&&p.a!=null)?koBonus(m):0)):((p.h!=null&&p.a!=null)?5:3);}
   });
   if(left>0&&got===0)el.innerHTML='Today: up to <b>+'+pot+'</b> riding on your '+left+' pick'+(left===1?'':'s');
   else if(left>0)el.innerHTML='Today so far: <b>+'+got+'</b> \u00b7 '+left+' still to play <small>up to +'+(got+pot)+' possible</small>';
