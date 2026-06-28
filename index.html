@@ -1156,8 +1156,9 @@ const ROUNDS=[["MD1","Matchday 1"],["MD2","Matchday 2"],["MD3","Matchday 3"],["R
 const RLABEL=Object.fromEntries(ROUNDS);
 RLABEL["FINAL"]="Final"; 
 
-/* ===== Knockout stage (v2): winner-only picks, points ladder, bracket auto-fill =====
-   Points: R32 +4 · R16 +5 · QF +6 · SF +8 · third place +6 · Final +10. No exact-score bonus.
+/* ===== Knockout stage (v2): winner pick + optional final-score bonus + streak, bracket auto-fill =====
+   Advance points: R32 +3 · R16 +6 · QF +9 · SF +14 · third place +8 · Final +22 (see KO_PTS).
+   Exact final-score bonus on top (KO_BONUS) and an exact-score streak (koStreakBonus).
    BRACKET maps each tie to its two feeder ties. Verified against the official FIFA schedule
    (matches 73–104) on 11 Jun 2026 — note file ids run in KICKOFF order, not FIFA match order
    (e.g. k17 = FIFA M90 = W73 v W75 = winners of k1 & k4). "W" = winners advance into this
