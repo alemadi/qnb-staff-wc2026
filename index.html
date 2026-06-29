@@ -144,7 +144,6 @@
   @media (prefers-reduced-motion: reduce){.xbanner,.xbanner .xb-ic,.streakflash,.streakflash .sf-fire{animation:none}}
   /* points-table streak rows: gold but normal size (the growing-font "ladder" overflowed/overlapped) */
   .ptable .pgrp.fire{color:var(--gold-bright)}
-  .ptable .prow.sk b{color:var(--gold-bright)}
 
   .view{display:none;animation:rise .45s both}
   .view.active{display:block}
@@ -167,7 +166,7 @@
   .ptable{display:none;margin-top:8px;border-top:1px solid var(--line-2);padding-top:4px;text-align:left}
   .ptable.show{display:block}
   .ptable .pgrp{font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);font-weight:800;margin:10px 0 3px}
-  .ptable .prow{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:12px;color:var(--cream);padding:3px 0}
+  .ptable .prow{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:12px;color:var(--cream);padding:5px 0;line-height:1.35}
   .ptable .prow b{color:var(--gold-bright);font-family:var(--font-d);font-size:14px;white-space:nowrap}
   .ptable .pfaint{color:var(--faint);font-size:10.5px}
   /* Prizes — departure board */
@@ -933,9 +932,9 @@
         <div class="prow"><span>Third-place match <span class="pfaint">· +5 exact score</span></span><b>+8</b></div>
         <div class="prow"><span>Final <span class="pfaint">· +14 exact score</span></span><b>+22</b></div>
         <div class="pgrp fire">🔥 Exact-score streak · knockouts only · stacks on top of the exact-score bonus</div>
-        <div class="prow sk sk1"><span>2 exact scores in a row <span class="pfaint">(one-time)</span></span><b>+5</b></div>
-        <div class="prow sk sk2"><span>3 in a row <span class="pfaint">(one-time)</span></span><b>+15</b></div>
-        <div class="prow sk sk3"><span>4th in a row and every one after <span class="pfaint">(each)</span></span><b>+20</b></div>
+        <div class="prow"><span>2 exact scores in a row <span class="pfaint">(one-time)</span></span><b>+5</b></div>
+        <div class="prow"><span>3 in a row <span class="pfaint">(one-time)</span></span><b>+15</b></div>
+        <div class="prow"><span>4th in a row and every one after <span class="pfaint">(each)</span></span><b>+20</b></div>
         <div class="prow"><span class="pfaint">One miss in a game you predicted resets the streak.</span></div>
         <div class="pgrp">Champion</div>
         <div class="prow"><span>Picked the World Champion <span class="pfaint">(locked 18 June, 7:00 PM Doha)</span></span><b>+25</b></div>

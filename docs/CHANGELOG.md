@@ -5,6 +5,16 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-06-29 (Doha) — Fix: points-table streak rows were squashed by a CSS class collision
+
+**Commits:** this commit (`index.html` + changelog). Frontend/CSS only.
+
+**What:** the new streak rows used `class="prow sk …"`, but `.sk` is the pre-existing **skeleton-loader** class (shimmer animation + `height:14px`) — so the three streak rows were squeezed to 14px with a shimmer band (caught in a screenshot). Removed the colliding `sk`/`sk1`/`sk2`/`sk3` classes (the bold numbers are already gold via the base `.ptable .prow b` rule) and bumped `.ptable .prow` padding 3px→5px with `line-height:1.35` for comfortable, uniform spacing. The streak rows now render like every other row. `node --check` clean.
+
+**Rollback:** `git revert <this-commit-sha>` (frontend-only).
+
+---
+
 ## 2026-06-29 (Doha) — Clarity & declutter pass (11-lens reader swarm + synthesis + critic)
 
 **Commits:** this commit (`index.html` + changelog). Frontend/copy only — no scoring or DB change; `node --check` clean and 4000/4000 JS↔SQL fuzz parity unchanged.
