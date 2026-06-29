@@ -5,6 +5,23 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-06-29 (Doha) — Points table no longer slams shut while you scroll it (frontend only)
+
+**Commits:** this commit (`index.html` + changelog). Frontend only — no DB/scoring/sync/lock change.
+
+**Why:** opening "How do points work?" on the Matches screen and scrolling down to read it felt broken — the panel jerked, the table snapped shut mid-scroll, and the page jumped. Root cause: the points table (`#ptable`) lives *inside* the sticky `.progress` panel. As you scrolled, the `IntersectionObserver` on `#prog-sent` flipped the panel to `.mini`, and both `.progress.mini .ptable{display:none}` **and** an explicit JS line force-closed the open table. Combined with the panel being `position:sticky` (so the tall open table first pinned to the top), you got the "unnatural movement + closes suddenly" behaviour. Reading a long table requires scrolling, which is exactly what triggered the collapse — so the feature fought the user.
+
+**What changed (`index.html`):**
+- **Observer no longer collapses or force-closes while the table is open.** Refactored the sticky-collapse IIFE: it now tracks `stuck` and calls a shared `window.__progSync()` that applies `.mini` only when `stuck && !pointsTableOpen`. Removed the JS block that yanked `.show` off `#ptable` and reset the button text on stick.
+- **Open table scrolls naturally instead of pinning.** New CSS `.progress.pts-open{position:relative;top:auto}` — while the table is open the panel drops out of sticky so it scrolls away with the page like normal content (you can only open the table when the panel is full/at rest, since `.ptbtn` is hidden in `.mini`, so there's no jump on open).
+- **`togglePts()`** now toggles `pts-open` on `.progress` alongside `#ptable.show` and calls `__progSync()` so the mini state re-resolves cleanly on close.
+
+**Verified:** headless Chromium (390×740) — opening the table sets `#ptable.show` + `.progress.pts-open` with computed `position:relative`; closing restores `position:sticky`; no page errors from the change.
+
+**Rollback:** `git revert <this commit>` — frontend-only; an isolated CSS rule plus two small JS edits (observer IIFE + `togglePts`).
+
+---
+
 ## 2026-06-29 (Doha) — Departures-board deepening (the 40 UX + 40 gaming expert-lens fold-in)
 
 **Commits:** this commit (`index.html` + changelog). Frontend only — no DB/scoring/sync/lock change.

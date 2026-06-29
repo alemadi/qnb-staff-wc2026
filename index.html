@@ -642,6 +642,7 @@
   .progress.mini .top{margin:0;flex:0 0 auto;display:flex;gap:7px;font-size:12px}
   .progress.mini .bar{flex:1;height:5px;min-width:40px}
   .progress.mini .rules,.progress.mini .ptbtn,.progress.mini .ptable{display:none}
+  .progress.pts-open{position:relative;top:auto} /* points table open: scroll it naturally, never pin or collapse */
   .progress.mini .qpbtn{width:auto;margin:0;padding:7px 12px;font-size:12px;border-radius:99px;flex:0 0 auto}
   .progress.mini .qp-full{display:none}
   .cons{display:none;margin-top:9px;font-size:11px;color:var(--muted);text-align:center;letter-spacing:.2px;line-height:1.6}
@@ -1717,7 +1718,7 @@ function toast(msg,type){const t=document.getElementById("toast");
   const k=type||(/^(✓|✅|🎉|🎯|🏆|🔥|⚡)/.test(msg)?"success":/^(⚠|🟠)/.test(msg)?"warning":/^(✗|❌|⛔|🚫)/.test(msg)?"error":"info");
   t.textContent=msg;t.className="show "+k;clearTimeout(toastT);
   toastT=setTimeout(()=>t.classList.remove("show"),({success:1900,warning:3200,error:3600,info:2200})[k]||2200);}
-function togglePts(btn){const t=document.getElementById("ptable");const on=t.classList.toggle("show");btn.textContent=on?"How do points work? ▴":"How do points work? ▾";}
+function togglePts(btn){const t=document.getElementById("ptable");const on=t.classList.toggle("show");btn.textContent=on?"How do points work? ▴":"How do points work? ▾";const p=document.querySelector(".progress");if(p)p.classList.toggle("pts-open",on);if(window.__progSync)window.__progSync();}
 /* One-time dismissible announcement banner (knockout streak news). Bump the key to re-show a new banner. */
 /* The streak announcement now STAYS for a while: it shows every visit (to joined players) through the
    knockouts, until BANNER_UNTIL. A ✕ only hides it for ~8h (it returns next visit); opening the
@@ -4142,16 +4143,20 @@ function liveTick(){
   if(active)fetchLive();
 }
 
-/* collapse the progress panel to a slim bar once it sticks */
+/* collapse the progress panel to a slim bar once it sticks \u2014 but never while the points table
+   is open, so reading it (which means scrolling) can't slam it shut or jump the page */
 (function(){
   const s=document.getElementById("prog-sent"),p=document.querySelector(".progress");
   if(!s||!p||!window.IntersectionObserver)return;
+  let stuck=false;
+  window.__progSync=function(){
+    const t=document.getElementById("ptable");
+    const open=t&&t.classList.contains("show");
+    p.classList.toggle("mini",stuck&&!open);
+  };
   new IntersectionObserver(function(en){
-    const e=en[0];const st=!e.isIntersecting&&e.boundingClientRect.top<0;
-    if(st===p.classList.contains("mini"))return;
-    p.classList.toggle("mini",st);
-    if(st){const t=document.getElementById("ptable");
-      if(t&&t.classList.contains("show")){t.classList.remove("show");const b=p.querySelector(".ptbtn");if(b)b.textContent="How do points work? \u25be";}}
+    const e=en[0];stuck=!e.isIntersecting&&e.boundingClientRect.top<0;
+    window.__progSync();
   },{threshold:0}).observe(s);
 })();
 
