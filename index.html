@@ -115,15 +115,39 @@
   .cd-unit span{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--faint)}
   .pulse{width:7px;height:7px;border-radius:50%;background:var(--magenta-2);box-shadow:0 0 0 0 rgba(239,51,64,.6);animation:pulse 1.8s infinite}
   @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(239,51,64,.55)}70%{box-shadow:0 0 0 9px rgba(239,51,64,0)}100%{box-shadow:0 0 0 0 rgba(239,51,64,0)}}
-  .xbanner{display:flex;align-items:flex-start;gap:10px;margin-top:14px;padding:11px 13px;border-radius:14px;
-    border:1px solid var(--gold);background:linear-gradient(96deg,rgba(180,151,89,.18),rgba(227,211,163,.08));
-    font-size:12.5px;line-height:1.45;color:var(--cream);position:relative}
-  .xbanner .xb-ic{font-size:18px;line-height:1.2;flex:none}
-  .xbanner .xb-tx{flex:1}
-  .xbanner .xb-tx b{color:var(--gold-bright)}
-  .xbanner .xb-tx a{color:var(--gold-bright);font-weight:800;white-space:nowrap}
-  .xbanner .xb-x{flex:none;background:transparent;border:0;color:var(--muted);font-size:15px;cursor:pointer;padding:2px 4px;line-height:1;margin:-2px -3px 0 0}
-  .xbanner .xb-x:hover{color:var(--cream)}
+  .xbanner{display:flex;align-items:flex-start;gap:11px;margin-top:14px;padding:12px 38px 12px 14px;border-radius:15px;
+    border:1px solid var(--gold);background:linear-gradient(96deg,rgba(180,151,89,.22),rgba(227,211,163,.07));
+    font-size:12.5px;line-height:1.5;color:var(--cream);position:relative;overflow:hidden;animation:xbrise .5s both}
+  @keyframes xbrise{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+  .xbanner .xb-ic{font-size:20px;line-height:1.1;flex:none;animation:xbflame 2.2s ease-in-out infinite;transform-origin:50% 80%}
+  @keyframes xbflame{0%,100%{transform:scale(1) rotate(-3deg);filter:brightness(1)}50%{transform:scale(1.13) rotate(3deg);filter:brightness(1.28)}}
+  .xbanner .xb-tx{flex:1;min-width:0}
+  .xbanner .xb-h{font-family:var(--font-d);letter-spacing:.4px;font-size:15.5px;color:var(--gold-bright);line-height:1.08;display:block;margin-bottom:3px}
+  .xbanner .xb-sub{color:var(--cream)}
+  .xbanner .xb-quiet{color:var(--muted);font-size:11px}
+  .xbanner .xb-chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 7px}
+  .xbanner .xb-chip{font-family:var(--font-d);font-size:14px;letter-spacing:.3px;color:#15120a;background:linear-gradient(170deg,var(--gold-bright),var(--gold));border-radius:8px;padding:4px 9px 3px;line-height:1.05;text-align:center}
+  .xbanner .xb-chip small{font-family:var(--font-b);font-weight:800;font-size:8.5px;opacity:.72;display:block;letter-spacing:.4px}
+  .xbanner a.xb-cta{display:inline-block;margin-top:1px;color:var(--gold-bright);font-weight:800;white-space:nowrap;text-decoration:none}
+  .xbanner .xb-x{position:absolute;top:6px;right:6px;width:30px;height:30px;display:grid;place-items:center;background:transparent;border:0;color:var(--muted);font-size:16px;cursor:pointer;border-radius:8px}
+  .xbanner .xb-x:hover{color:var(--cream);background:rgba(255,255,255,.07)}
+  /* celebratory exact-score streak moment */
+  .streakflash{position:fixed;inset:0;z-index:10000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;pointer-events:none;
+    background:radial-gradient(closest-side,rgba(20,16,8,.55),rgba(6,6,9,0) 72%);animation:sfin .25s both}
+  .streakflash.out{animation:sfout .4s both}
+  @keyframes sfin{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:none}}
+  @keyframes sfout{to{opacity:0;transform:scale(1.06)}}
+  .streakflash .sf-fire{font-size:64px;line-height:1;animation:xbflame 1s ease-in-out infinite}
+  .streakflash .sf-x{font-family:var(--font-d);font-size:40px;letter-spacing:1px;color:var(--gold-bright)}
+  .streakflash .sf-pts{font-family:var(--font-d);font-size:64px;line-height:1;background:linear-gradient(var(--gold-bright),var(--gold-deep));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .streakflash .sf-sub{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
+  @media (prefers-reduced-motion: reduce){.xbanner,.xbanner .xb-ic,.streakflash,.streakflash .sf-fire{animation:none}}
+  /* points-table streak ladder (ascending = the snowball) */
+  .ptable .pgrp.fire{color:var(--gold-bright)}
+  .ptable .prow.sk b{color:var(--gold-bright);font-family:var(--font-d);letter-spacing:.5px}
+  .ptable .prow.sk1 b{font-size:14px}
+  .ptable .prow.sk2 b{font-size:17px}
+  .ptable .prow.sk3 b{font-size:20px}
 
   .view{display:none;animation:rise .45s both}
   .view.active{display:block}
@@ -790,10 +814,16 @@
     </div>
   </header>
 
-  <div class="xbanner" id="xbanner" style="display:none">
-    <div class="xb-ic">🔥</div>
-    <div class="xb-tx"><b>New for the knockouts — Exact-Score Streaks.</b> Nail the exact final score in back-to-back knockout games and it snowballs: 2 in a row +5 · 3 → +15 · 4+ → +20 each. Going forward only — your group points &amp; champion pick don’t change. <a href="javascript:void 0" onclick="openFaq();return false">How it works ›</a></div>
-    <button class="xb-x" onclick="dismissBanner()" aria-label="Dismiss">✕</button>
+  <div class="xbanner" id="xbanner" style="display:none" role="status" aria-label="New: knockout exact-score streaks">
+    <div class="xb-ic" aria-hidden="true">🔥</div>
+    <div class="xb-tx">
+      <b class="xb-h">Knockout scores now SNOWBALL</b>
+      <span class="xb-sub">Nail the exact final score in <b>back-to-back</b> knockout games and the bonus stacks — fast:</span>
+      <div class="xb-chips" aria-hidden="true"><span class="xb-chip">+5<small>2 IN A ROW</small></span><span class="xb-chip">+15<small>3 IN A ROW</small></span><span class="xb-chip">+20<small>4+ EACH</small></span></div>
+      <span class="xb-quiet">Knockouts only, going forward — your group points &amp; champion pick don’t change.</span><br>
+      <a class="xb-cta" href="javascript:void 0" onclick="openFaq('streak');bannerSeen();return false">See how streaks work ›</a>
+    </div>
+    <button class="xb-x" onclick="dismissBanner()" aria-label="Dismiss announcement">✕</button>
   </div>
 
   <!-- SIGN IN -->
@@ -889,7 +919,7 @@
       <div class="top"><span>Predictions<span id="champ-tok" role="button" onclick="go('me')"></span></span><span><b id="pred-count">0</b> / <span id="pred-total">72</span></span></div>
       <div class="bar"><i id="pred-bar" style="width:0%"></i></div>
       <button id="qpbtn" class="qpbtn" style="display:none" onclick="openSwipe()">⚡ <span class="qp-full">Swipe to pick · </span><span id="qp-left">0</span><span class="qp-full"> left</span></button>
-      <div class="rules"><b>+3</b> result &nbsp;·&nbsp; <b>+2</b> exact bonus &nbsp;·&nbsp; knockouts <b>+3→+22</b> &nbsp;·&nbsp; 🔥 exact-score <b>streak</b> bonus &nbsp;·&nbsp; 🏆 champion <b>+25</b> &nbsp;·&nbsp; ties break on <b>most predictions</b></div>
+      <div class="rules"><b>+3</b> result &nbsp;·&nbsp; <b>+2</b> exact bonus &nbsp;·&nbsp; knockouts <b>+3→+22</b> &nbsp;·&nbsp; 🔥 exact-score streak <b>+5→+20</b> &nbsp;·&nbsp; 🏆 champion <b>+25</b> &nbsp;·&nbsp; ties break on <b>most predictions</b></div>
       <button class="ptbtn" onclick="togglePts(this)">How do points work? ▾</button>
       <div class="ptable" id="ptable">
         <div class="pgrp">Group stage · 11–27 June · predict the result</div>
@@ -902,10 +932,10 @@
         <div class="prow"><span>Semi-final <span class="pfaint">· +9 score</span></span><b>+14</b></div>
         <div class="prow"><span>Third-place match <span class="pfaint">· +5 score</span></span><b>+8</b></div>
         <div class="prow"><span>Final <span class="pfaint">· +14 score</span></span><b>+22</b></div>
-        <div class="pgrp">🔥 Exact-score streak · knockouts only · going forward</div>
-        <div class="prow"><span>Exact final score in 2 knockout games in a row</span><b>+5</b></div>
-        <div class="prow"><span>3 in a row <span class="pfaint">(this game)</span></span><b>+15</b></div>
-        <div class="prow"><span>4+ in a row <span class="pfaint">(each game after, on top of the score bonus)</span></span><b>+20</b></div>
+        <div class="pgrp fire">🔥 Exact-score streak · knockouts only · going forward · it snowballs</div>
+        <div class="prow sk sk1"><span>Exact final score in 2 knockout games in a row</span><b>+5</b></div>
+        <div class="prow sk sk2"><span>3 in a row <span class="pfaint">(this game)</span></span><b>+15</b></div>
+        <div class="prow sk sk3"><span>4+ in a row <span class="pfaint">(each game after, on top of the score bonus)</span></span><b>+20</b></div>
         <div class="pgrp">Champion</div>
         <div class="prow"><span>Called the World Champion <span class="pfaint">(locks 18 June, 7 PM Doha)</span></span><b>+25</b></div>
       </div>
@@ -1201,6 +1231,49 @@ function koStreakBonus(preds,results){
     else run=0;
   }
   return bonus;
+}
+/* Exact-score streak helpers (display only — scoring lives in koStreakBonus/scoreFor + the SQL).
+   koStreakRunAt: position-in-run (consecutive exact hits) ENDING at a given knockout id, else 0.
+   koStreakCurrent: the player's live run ending at the latest engaged+settled knockout (0 if broken). */
+function koEngagedSettledKIds(preds,results){
+  const ids=[];
+  for(const k in results){
+    if(k.charAt(0)==="_"||!/^k[0-9]+$/.test(k))continue;
+    const r=results[k];if(!r||r.w==null)continue;
+    const p=preds[k];if(!p||(!p.w&&p.h==null))continue;
+    ids.push(k);
+  }
+  ids.sort((a,b)=>(+a.slice(1))-(+b.slice(1)));
+  return ids;
+}
+function koStreakRunAt(preds,results,id){
+  if(!preds||!results||!/^k[0-9]+$/.test(id))return 0;
+  const ids=koEngagedSettledKIds(preds,results);let run=0;
+  for(const k of ids){run=koScoreHit(preds[k],results[k])?run+1:0;if(k===id)return run;}
+  return 0;
+}
+function koStreakCurrent(preds,results){
+  if(!preds||!results)return 0;
+  const ids=koEngagedSettledKIds(preds,results);let run=0;
+  for(const k of ids)run=koScoreHit(preds[k],results[k])?run+1:0;
+  return run;
+}
+function streakBonusAt(run){return run<=1?0:(run===2?5:(run===3?15:20));}
+/* Celebratory in-app moment when an exact-score run extends (knockouts). Accessible + reduced-motion safe. */
+function streakMoment(run){
+  if(run<2)return;
+  try{
+    const rm=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const el=document.createElement("div");
+    el.className="streakflash";el.setAttribute("role","status");
+    el.innerHTML='<div class="sf-fire" aria-hidden="true">🔥</div><div class="sf-x">STREAK ×'+run+'</div><div class="sf-pts">+'+streakBonusAt(run)+'</div><div class="sf-sub">exact scores in a row</div>';
+    document.body.appendChild(el);
+    if(!rm){confettiBurst();if(run>=4)setTimeout(confettiBurst,170);}
+    try{navigator.vibrate&&navigator.vibrate([10,40,10,40,10,55]);}catch(e){}
+    try{sndExact&&sndExact();}catch(e){}
+    setTimeout(function(){el.classList.add("out");},1500);
+    setTimeout(function(){el.remove();},1950);
+  }catch(e){}
 }
 /* Labeled "How the bonus works" pill → toggles an inline explanation panel (the next sibling). */
 function toggleHelp(e,btn){
@@ -1544,9 +1617,18 @@ let toastT;
 function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("show"),2200);}
 function togglePts(btn){const t=document.getElementById("ptable");const on=t.classList.toggle("show");btn.textContent=on?"How do points work? ▴":"How do points work? ▾";}
 /* One-time dismissible announcement banner (knockout streak news). Bump the key to re-show a new banner. */
-const BANNER_KEY="wc:banner:streak-v1";
-function setupBanner(){const b=document.getElementById("xbanner");if(!b)return;let done=false;try{done=localStorage.getItem(BANNER_KEY)==="1";}catch(e){}if(!done)b.style.display="flex";}
-function dismissBanner(){const b=document.getElementById("xbanner");if(b)b.style.display="none";try{localStorage.setItem(BANNER_KEY,"1");}catch(e){}}
+const BANNER_KEY="wc:banner:streak-v1";      // value: "seen" (engaged → never again) | a dismissal timestamp (snoozed)
+const BANNER_SNOOZE=48*3600*1000;            // a reflexive ✕ only snoozes for 48h, so reach isn't lost on one tap
+function setupBanner(){
+  const b=document.getElementById("xbanner");if(!b)return;
+  if(!state.player)return;                   // only show to joined players — don't burn the one-time reach on the sign-in screen
+  let v=null;try{v=localStorage.getItem(BANNER_KEY);}catch(e){}
+  if(v==="seen")return;                       // engaged with it (opened the explainer) → don't show again
+  if(v){const t=parseInt(v,10);if(t&&(Date.now()-t)<BANNER_SNOOZE)return;}  // still within snooze window
+  b.style.display="flex";
+}
+function dismissBanner(){const b=document.getElementById("xbanner");if(b)b.style.display="none";try{localStorage.setItem(BANNER_KEY,String(Date.now()));}catch(e){}}  // soft dismiss = snooze
+function bannerSeen(){const b=document.getElementById("xbanner");if(b)b.style.display="none";try{localStorage.setItem(BANNER_KEY,"seen");}catch(e){}}  // engaged → permanent
 
 function go(view){
   if((view==="matches"||view==="me")&&!state.player){toast("Join the pool to make picks \u26bd");view="join";}
@@ -1638,6 +1720,7 @@ async function joinNow(){
   updateChip();
   state.filter=defaultRound();
   go("matches");
+  setupBanner();   // now that they're a player, surface the streak announcement
 }
 async function signOut(){
   if(!confirm("Sign out? Your predictions stay saved — sign back in with the same handle to resume."))return;
@@ -1871,7 +1954,7 @@ function koMatchCard(m,idx){
       '<div class="kn-note">Pick who goes through — <b>extra time &amp; penalties decide it</b></div>'+
       '<div class="chips-lab">Final score · +'+koBonus(m)+' bonus · optional</div>'+
       '<button type="button" class="help-chip" aria-expanded="false" onclick="toggleHelp(event,this)">ⓘ How the bonus works <span class="hc-chev">›</span></button>'+
-      '<div class="help-body" hidden>Final score = where the match ends: <b>90 min</b>, or <b>120 min</b> if it went to extra time. Penalties don’t count.<div class="help-eg"><b>Example</b> — a match is <b>1–1 at 90 min</b>, then <b>2–1 after extra time</b>:<br><span class="eg-y">✓ predict 2–1</span> — wins the bonus (that’s the final score)<br><span class="eg-n">✗ 1–1</span> doesn’t win — that was only the 90-min score</div></div>'+
+      '<div class="help-body" hidden>Final score = where the match ends: <b>90 min</b>, or <b>120 min</b> if it went to extra time. Penalties don’t count.<div class="help-eg"><b>Example</b> — a match is <b>1–1 at 90 min</b>, then <b>2–1 after extra time</b>:<br><span class="eg-y">✓ predict 2–1</span> — wins the bonus (that’s the final score)<br><span class="eg-n">✗ 1–1</span> doesn’t win — that was only the 90-min score</div><div class="help-eg" style="margin-top:6px">🔥 <b>Streak</b> — nail this <b>and</b> your last knockout score, back-to-back: <span class="eg-y">+5</span> → <span class="eg-y">+15</span> → <span class="eg-y">+20</span> each.</div></div>'+
       '<div class="kn-note" style="font-style:normal;margin-top:5px">Predict the <b style="color:var(--gold)">final score</b> — after extra time if it’s played; penalties don’t count</div>'+
       '<div class="bonus-fields show"><label>'+m.home.f+'</label><input class="scorein" type="number" min="0" max="20" inputmode="numeric" aria-label="'+esc(m.home.n)+' goals" data-ksh="'+m.id+'" value="'+(p.h!=null?p.h:"")+'"><span class="scoredash">–</span><input class="scorein" type="number" min="0" max="20" inputmode="numeric" aria-label="'+esc(m.away.n)+' goals" data-ksa="'+m.id+'" value="'+(p.a!=null?p.a:"")+'"><label>'+m.away.f+'</label></div>'+
       '<div class="lockin'+((lockTs(m)-Date.now()-CLOCK_OFFSET)<7200000?' soon':'')+'" data-lockts="'+lockTs(m)+'">⏳ '+fmtLeft(lockTs(m)-Date.now()-CLOCK_OFFSET)+'</div>';
@@ -2141,7 +2224,7 @@ function startLbTicker(rows){
     if(avg>0&&(!bd||avg>bd.avg))bd={d:d,avg:avg};}
   if(bd)facts.push('\ud83c\udfe2 Sharpest department: <b>'+esc(bd.d)+'</b> \u2014 '+bd.avg.toFixed(1)+' pts avg');
   if(CONFIGURED)consensus().then(function(c){
-    if(c.best&&c.best.streak>=3)facts.push('\ud83d\udd25 Hot hand: <b>'+esc((c.best.name||"").split(" ")[0])+'</b> \u2014 '+c.best.streak+' in a row');
+    if(c.best&&c.best.streak>=3)facts.push('\ud83d\udd25 Hot hand: <b>'+esc((c.best.name||"").split(" ")[0])+'</b> \u2014 '+c.best.streak+' correct in a row');
     if(c.bestUpset&&c.bestUpset.n>=2)facts.push('\ud83d\udde1 Upset hunter: <b>'+esc(c.bestUpset.name)+'</b> \u2014 '+c.bestUpset.n+' shocks called');
     if(c.perfectN>=1)facts.push('\ud83d\udd2e <b>'+c.perfectN+'</b> colleague'+(c.perfectN===1?'':'s')+' still perfect \u2014 not a single miss');
   }).catch(function(){});
@@ -2171,7 +2254,9 @@ async function renderMe(){
   try{
     const settled=FIXTURES.filter(function(f){const r=state.results[f.id];if(!r)return false;if(f.kn?r.w==null:r.h==null)return false;const q=state.player.predictions[f.id]||{};return !!(q.o||q.w);}).sort(function(a,b){return new Date(a.ko)-new Date(b.ko);});
     let stk=0;for(let i=settled.length-1;i>=0;i--){const f=settled[i];if(rvVerdict(f,state.player.predictions[f.id]||{},state.results[f.id]).pts>0)stk++;else break;}
-    if(stk>=3)badges.unshift({g:true,t:"\ud83d\udd25 "+stk+" streak"});
+    if(stk>=3)badges.unshift({g:true,t:"\ud83d\udd25 "+stk+" correct in a row"});
+    const exr=koStreakCurrent(state.player.predictions,state.results);
+    if(exr>=2)badges.unshift({g:true,t:"\ud83d\udd25 Exact-streak \u00d7"+exr});
     const byDay={};settled.forEach(function(f){const k=dayKey(f.ko);(byDay[k]=byDay[k]||[]).push(f);});
     for(const k in byDay){const a=byDay[k];if(a.length>=2&&a.every(function(f){return rvVerdict(f,state.player.predictions[f.id]||{},state.results[f.id]).pts>0;})){badges.unshift({g:true,t:"\ud83d\udc8e Perfect day"});break;}}
     const qa=FIXTURES.filter(function(f){return !f.kn&&(f.home.n==="Qatar"||f.away.n==="Qatar");});
@@ -3112,7 +3197,8 @@ async function shareCard(){
       x.strokeStyle="rgba(244,238,227,.14)";x.lineWidth=2;roundRect(x,cx-125,930,250,170,22);x.stroke();
       x.fillStyle="#e3d3a3";x.font="400 84px Anton,'Arial Narrow',sans-serif";x.fillText(String(p[0]),cx,1018);
       x.fillStyle="rgba(244,238,227,.5)";x.font="700 22px 'Hanken Grotesk',sans-serif";x.fillText(p[1],cx,1066);});
-    const flin=shareFunLine();
+    const exr=koStreakCurrent(state.player.predictions,state.results);
+    const flin=exr>=2?("On a "+exr+"-game exact streak 🔥"):shareFunLine();
     if(flin){x.fillStyle="rgba(227,211,163,.85)";x.font="600 28px 'Hanken Grotesk',sans-serif";
       x.fillText("\u2728 "+flin+" \u2728",W/2,1158);}
     x.fillStyle="#b49759";x.font="700 30px 'Hanken Grotesk',sans-serif";
@@ -3433,7 +3519,15 @@ function renderFaq(open){
     return '<div class="faq-item'+(i===open?' open':'')+'"><button class="faq-q" onclick="toggleFaq('+i+')">'+esc(it.q)+'<b>\u25be</b></button><div class="faq-a">'+esc(it.a)+'</div></div>';
   }).join("");
 }
-function openFaq(){renderFaq(-1);document.getElementById("faqov").style.display="flex";document.body.style.overflow="hidden";}
+function openFaq(which){
+  let idx=-1;
+  if(typeof which==="number")idx=which;
+  else if(which==="streak")idx=FAQ_ITEMS.findIndex(function(it){return it.q.indexOf("streak bonus")>=0;});
+  else if(typeof which==="string")idx=FAQ_ITEMS.findIndex(function(it){return it.q.indexOf(which)>=0;});
+  renderFaq(idx);
+  document.getElementById("faqov").style.display="flex";document.body.style.overflow="hidden";
+  if(idx>=0){try{const el=document.querySelectorAll("#faq-list .faq-item")[idx];if(el&&el.scrollIntoView)el.scrollIntoView({block:"center"});}catch(e){}}
+}
 function closeFaq(){document.getElementById("faqov").style.display="none";document.body.style.overflow="";}
 function toggleFaq(i){
   const it=document.querySelectorAll("#faq-list .faq-item")[i];
@@ -3557,6 +3651,7 @@ function revealFlip(){
     if(v.cls==="exact"){navigator.vibrate&&navigator.vibrate([10,40,10,40,30]);sndExact();}
     else if(v.cls==="hit"){navigator.vibrate&&navigator.vibrate([15,60,15]);sndCorrect();}
   }catch(e){}
+  if(m.kn&&v.cls==="exact"){const sr=koStreakRunAt(state.player.predictions,state.results,m.id);if(sr>=2)setTimeout(function(){streakMoment(sr);},RV.quick?250:450);}
   markRevealed(m.id);
   RV.timer=setTimeout(function(){RV.i++;renderRevealCard();},RV.quick?900:1500);
 }
@@ -3618,7 +3713,7 @@ function revealOfficeLines(){
   if(lastDay&&CONS.dayHit&&CONS.dayHit[lastDay]&&CONS.dayHit[lastDay].tot>=10)
     out.push('\ud83d\udcca The office hit '+Math.round(CONS.dayHit[lastDay].hit/CONS.dayHit[lastDay].tot*100)+'% of the day\u2019s calls');
   if(CONS.best&&CONS.best.streak>=3)
-    out.push('\ud83d\udd25 Longest streak: '+esc((CONS.best.name||"").split(" ")[0])+' \u2014 '+CONS.best.streak+' in a row');
+    out.push('\ud83d\udd25 Longest run: '+esc((CONS.best.name||"").split(" ")[0])+' \u2014 '+CONS.best.streak+' correct in a row');
   /* department of the day: best hit rate on the last revealed matchday */
   if(lastDay&&CONS.deptByDay&&CONS.deptByDay[lastDay]){
     const dd=CONS.deptByDay[lastDay];let bd=null;

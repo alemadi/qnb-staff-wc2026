@@ -5,6 +5,26 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-06-29 03:14 (Doha) — Design pass: streak announcement + celebratory moment (from the 10 UX/UI designer panel)
+
+**Commits:** this commit (`index.html` + this changelog). **Frontend only — no DB, no scoring change** (display surfaces only; `scoreFor`/`standings()` untouched; 4000/4000 parity re-verified).
+
+**What:** implemented the design panel's solutions (they scored the prior version 6.0/10, punchiness 4.6). All additive.
+- **Redesigned banner** — Anton hook headline "Knockout scores now SNOWBALL", the bonuses as gold **chips** (+5 / +15 / +20 with "2/3/4+ in a row" labels), tightened copy, demoted reassurance to a quiet line, a deep-link CTA, a **rise** entrance + a flame **flicker** (both `prefers-reduced-motion` safe), and a larger 30×30 ✕ with `role="status"`.
+- **Banner reach fixes** — `setupBanner()` now only shows to **joined players** (no longer burns the one-time exposure on the sign-in screen) and re-runs after join; a reflexive ✕ now **snoozes 48h** instead of silencing forever; opening the explainer marks it permanently seen (`bannerSeen()`).
+- **Deep-link FAQ** — `openFaq('streak')` opens the FAQ scrolled to and expanding the streak answer.
+- **Celebratory streak MOMENT** — when an exact-score run extends to 2/3/4+ during the reveal, a full-screen "🔥 STREAK ×N · +N" flash fires with escalating confetti/haptics (reduced-motion safe, `role="status"`). New display helpers `koStreakRunAt` / `koStreakCurrent` / `streakBonusAt` / `streakMoment` (mirror the engine; unit-tested).
+- **Me-tab badge** — "🔥 Exact-streak ×N" when a player is on a live run.
+- **Shareable streak** — the share card's feature line leads with "On a N-game exact streak 🔥" when applicable.
+- **Naming clash resolved** — the pre-existing correct-results streak is relabelled ("N correct in a row" / "Hot hand … correct in a row" / "Longest run") so it doesn't collide with the new exact-score streak.
+- **Points table** — the 🔥 streak rows render as an ascending ladder (numbers grow) to show the snowball; the rules one-liner now quantifies it (**+5→+20**); the per-knockout-card "How the bonus works" pill gains a streak line.
+
+**Verified:** `node --check` clean; 4000/4000 JS↔SQL fuzz parity unchanged (display-only); streak display helpers unit-tested (3-in-a-row, miss-reset, gap, tier bonuses); banner re-rendered in headless Chromium.
+
+**Rollback:** `git revert <this-commit-sha>` (frontend-only; no DB/state change).
+
+---
+
 ## 2026-06-28 22:15 (Doha) — Review fixes: leaderboard-crash guard, FAQ numbers, empty-champion guard (from a 25-reviewer panel)
 
 **Commits:** this commit (`index.html` + `sql/standings.sql` + this changelog). **Re-deploy the SQL** (see DB).
