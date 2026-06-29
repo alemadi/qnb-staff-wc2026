@@ -5,6 +5,14 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-06-29 (Doha) — Discoverability: the always-visible rules line now links to the streak explainer
+
+**Commits:** this commit (`index.html` + changelog). Frontend only.
+
+**Why:** the streak announcement banner is intentionally one-time (snoozes on ✕, marked seen once the explainer is opened), so after it's gone a user asked "where did the snowball explanation go?" The explanation still lived in the points table, the FAQ, and the rules line — but none were an obvious tap. **Fix:** the "🔥 exact-score streak +5→+20" item in the always-visible rules line (above the match list) is now a tappable link that opens the streak FAQ entry (`openFaq('streak')`), styled with a dotted gold underline so it reads as interactive. The streak explainer is now permanently one tap away, regardless of banner state. `node --check` clean.
+
+---
+
 ## 2026-06-29 (Doha) — 🚀 DEPLOYED to production (app → main/Pages + standings() → Supabase)
 
 **What:** the Maximum-Excitement feature is now LIVE. App pushed to `main` (GitHub Pages, staffchallenge26.com) and the new `standings()` applied to Supabase project `fzybuasvhzhmkbhxbton` via `CREATE OR REPLACE` (migration `max_excitement_standings`).

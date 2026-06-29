@@ -163,6 +163,8 @@
   .bar{height:7px;border-radius:6px;background:rgba(0,0,0,.28);overflow:hidden}
   .bar>i{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,var(--gold-deep),var(--gold));transition:width .5s cubic-bezier(.2,.8,.2,1)}
   .rules{font-size:11px;color:var(--muted);margin-top:9px;line-height:1.5}
+  .rules .rules-streak{color:var(--gold-bright);text-decoration:none;border-bottom:1px dotted var(--gold);white-space:nowrap}
+  .rules .rules-streak b{color:var(--gold-bright)}
   .rules b{color:var(--cream);font-weight:700}
   .ptbtn{display:block;margin:8px auto 0;background:none;border:none;color:var(--gold);font-size:11px;font-weight:800;letter-spacing:.4px;cursor:pointer;font-family:inherit;padding:4px 8px}
   .ptable{display:none;margin-top:8px;border-top:1px solid var(--line-2);padding-top:4px;text-align:left}
@@ -919,7 +921,7 @@
       <div class="top"><span>Predictions<span id="champ-tok" role="button" onclick="go('me')"></span></span><span><b id="pred-count">0</b> / <span id="pred-total">72</span></span></div>
       <div class="bar"><i id="pred-bar" style="width:0%"></i></div>
       <button id="qpbtn" class="qpbtn" style="display:none" onclick="openSwipe()">⚡ <span class="qp-full">Swipe to pick · </span><span id="qp-left">0</span><span class="qp-full"> left</span></button>
-      <div class="rules"><b>+3</b> result &nbsp;·&nbsp; <b>+2</b> exact bonus &nbsp;·&nbsp; knockouts <b>+3→+22</b> &nbsp;·&nbsp; 🔥 exact-score streak <b>+5→+20</b> &nbsp;·&nbsp; 🏆 champion <b>+25</b> &nbsp;·&nbsp; ties break on <b>most predictions</b></div>
+      <div class="rules"><b>+3</b> result &nbsp;·&nbsp; <b>+2</b> exact bonus &nbsp;·&nbsp; knockouts <b>+3→+22</b> &nbsp;·&nbsp; <a href="javascript:void 0" onclick="openFaq('streak');return false" class="rules-streak">🔥 exact-score streak <b>+5→+20</b></a> &nbsp;·&nbsp; 🏆 champion <b>+25</b> &nbsp;·&nbsp; ties break on <b>most predictions</b></div>
       <button class="ptbtn" onclick="togglePts(this)">How do points work? ▾</button>
       <div class="ptable" id="ptable">
         <div class="pgrp">Group stage · 11–27 June · predict the result</div>
