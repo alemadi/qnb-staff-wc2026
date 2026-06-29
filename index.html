@@ -3690,7 +3690,7 @@ async function welcomeDelta(){
   }catch(e){}
 }
 
-/* ===== Department leagues \u2014 tribal competition between QNB divisions =====
+/* ===== Department leagues \u2014 tribal competition between divisions =====
    Aggregates the slim standings (fetchStandings, ~60B/player) by department \u2014
    no blob pull, scales to thousands. Ranked by AVERAGE points per player so a
    146-strong desk can't win on volume alone (fair per-capita). A squad needs
@@ -4040,13 +4040,13 @@ async function shareSquad(){
     x.fillStyle="#b49759";x.font="700 30px 'Hanken Grotesk',sans-serif";
     x.fillText("Back your desk → staffchallenge26.com",W/2,1178);
     x.fillStyle="rgba(244,238,227,.35)";x.font="600 22px 'Hanken Grotesk',sans-serif";
-    x.fillText("QNB Staff World Cup 2026 · 11 June – 19 July",W/2,1240);
+    x.fillText("Staff World Cup 2026 · 11 June – 19 July",W/2,1240);
     c.toBlob(async b=>{
       if(!b){toast("Couldn’t build the card");return;}
       if(!(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches)){confettiBurst();try{navigator.vibrate&&navigator.vibrate([80,60,80]);}catch(e){}}
       const f=new File([b],"squad-card.png",{type:"image/png"});
       if(navigator.canShare&&navigator.canShare({files:[f]})){
-        try{await navigator.share({files:[f],title:"Staff Challenge",text:myDept+" in the QNB Staff World Cup — back your desk: https://staffchallenge26.com"});return;}catch(e){if(e&&e.name==="AbortError")return;}
+        try{await navigator.share({files:[f],title:"Staff Challenge",text:myDept+" in the Staff World Cup — back your desk: https://staffchallenge26.com"});return;}catch(e){if(e&&e.name==="AbortError")return;}
       }
       const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="squad-card.png";a.click();
       setTimeout(()=>URL.revokeObjectURL(a.href),4000);toast("Squad card saved — rally the desk 📤");
@@ -4091,7 +4091,7 @@ async function shareBrag(o){
     x.fillStyle="#b49759";x.font="700 30px 'Hanken Grotesk',sans-serif";
     x.fillText("Think you can beat me? → staffchallenge26.com",W/2,1204);
     x.fillStyle="rgba(244,238,227,.35)";x.font="600 22px 'Hanken Grotesk',sans-serif";
-    x.fillText("QNB Staff World Cup 2026 · 11 June – 19 July",W/2,1254);
+    x.fillText("Staff World Cup 2026 · 11 June – 19 July",W/2,1254);
     c.toBlob(async b=>{
       if(!b){toast("Couldn’t build the card");return;}
       if(!(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches)){confettiBurst();try{navigator.vibrate&&navigator.vibrate([80,60,80]);}catch(e){}}
