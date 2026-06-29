@@ -1044,6 +1044,27 @@
 
   .delta-pop .dx{font-size:11.5px;color:var(--gold-bright);margin-top:6px;font-weight:700;border-top:1px solid var(--line);padding-top:6px}
   .delta-pop .dx b{color:var(--cream)}
+
+  /* Department leagues — "Your Squad" block + dept-row highlight + windowed-table rank */
+  .dept-row .youtag{margin-left:7px}
+  .me-squad{background:linear-gradient(120deg,rgba(180,151,89,.12),transparent 72%),var(--glass);border:1px solid rgba(180,151,89,.32);border-radius:15px;padding:13px 14px;margin-bottom:4px}
+  .me-squad .sq-top{display:flex;align-items:center;gap:12px}
+  .me-squad .sq-badge{width:46px;height:46px;flex:none;border-radius:13px;overflow:hidden}
+  .me-squad .sq-id{min-width:0;flex:1}
+  .me-squad .sq-rank{font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--gold)}
+  .me-squad .sq-name{font-size:16px;font-weight:800;color:var(--cream);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .me-squad .sq-sub{font-size:11px;color:var(--muted);margin-top:1px}
+  .me-squad .sq-share{flex:none;background:var(--glass);border:1px solid var(--line);color:var(--gb);border-radius:11px;width:40px;height:40px;font-size:17px;cursor:pointer;transition:.15s}
+  .me-squad .sq-share:hover{border-color:var(--gold);transform:translateY(-1px)}
+  .me-squad .sq-you{font-size:12.5px;color:var(--cream);margin-top:11px;padding-top:10px;border-top:1px solid var(--line)}
+  .me-squad .sq-you b{color:var(--gb)}
+  .me-squad .sq-derby{margin-top:9px;display:grid;gap:5px}
+  .me-squad .sq-derby .row{display:flex;gap:8px;align-items:flex-start;font-size:12px;color:var(--muted)}
+  .me-squad .sq-derby .row b{color:var(--cream)}
+  .me-squad .sq-derby .ar{color:var(--gold);font-size:11px;flex:none;width:14px;text-align:center}
+  .me-squad .sq-derby .up .ar{color:var(--ok)}
+  .room-row .pp-n .rr{display:inline-block;min-width:22px;font-style:normal;font-weight:800;color:var(--faint);font-size:11px;margin-right:6px}
+  .room-row.mine .pp-n .rr{color:var(--gold)}
 </style>
 </head>
 <body>
@@ -2636,6 +2657,35 @@ function meBestWorst(){
   return html+'</div>';
 }
 /* Manufactured rivalry for the majority who never set one: who's hunting you. */
+/* "Your Squad" — your department's standing in the league + your contribution
+   rank inside it + the derby gaps. Built on the slim standings already in hand. */
+function meSquad(st){
+  if(!state.player||state.demo||!st||!st.length)return "";
+  const myDept=deptKey(state.player.dept);
+  const lg=deptLeague(st);
+  const idx=lg.ranked.findIndex(function(x){return x.d===myDept;});
+  if(idx<0)return "";                                   /* squad too small to rank */
+  const me=lg.ranked[idx],N=lg.ranked.length;
+  const mates=st.filter(function(r){return deptKey(r.dept)===myDept;}).slice().sort(cmpSt);
+  let myInDept=0;mates.forEach(function(r,i){if(r.slug===state.meSlug&&!myInDept)myInDept=i+1;});
+  const pctTop=(myInDept&&mates.length)?Math.max(1,Math.round(myInDept/mates.length*100)):0;
+  const avg=Math.round(me.avg*10)/10;
+  const rankTag=idx<3?["🥇","🥈","🥉"][idx]:('#'+(idx+1));
+  const above=idx>0?lg.ranked[idx-1]:null,below=idx<N-1?lg.ranked[idx+1]:null;
+  let derby='';
+  if(above){const g=Math.round((above.avg-me.avg)*10)/10;
+    derby+='<div class="row up"><span class="ar">▲</span><div><b>'+esc(above.d)+'</b> is '+(g>0?('<b>'+g+'</b> avg ahead — overtake them for '+ord(idx)):'level — edge ahead for '+ord(idx))+'</div></div>';}
+  else derby+='<div class="row up"><span class="ar">🏆</span><div><b>Top squad in the bank</b> — defend it</div></div>';
+  if(below){const g=Math.round((me.avg-below.avg)*10)/10;
+    derby+='<div class="row dn"><span class="ar">▼</span><div><b>'+esc(below.d)+'</b> is '+(g>0?('<b>'+g+'</b> avg behind'):'level — pull clear')+'</div></div>';}
+  return '<div class="me-seclbl">Your squad</div><div class="me-squad">'+
+    '<div class="sq-top"><div class="avatar deptbadge sq-badge">'+deptAvatarFill(myDept)+'</div>'+
+    '<div class="sq-id"><div class="sq-rank">'+rankTag+' of '+N+' squads</div><div class="sq-name">'+esc(myDept)+'</div>'+
+    '<div class="sq-sub">'+me.n+' players · '+avg+' avg · Σ '+me.sum+' pts</div></div>'+
+    '<button class="sq-share" onclick="shareSquad()" title="Share your squad card" aria-label="Share your squad card">📤</button></div>'+
+    (myInDept?('<div class="sq-you">You’re <b>#'+myInDept+'</b> of '+mates.length+' in '+esc(myDept)+(pctTop<=20?' — top <b>'+pctTop+'%</b> of your squad 🔑':'')+'</div>'):'')+
+    '<div class="sq-derby">'+derby+'</div></div>';
+}
 function meNeighbours(st,awaiting){
   if(awaiting||!st||!st.length||state.demo)return "";
   const idx=st.findIndex(function(r){return r.slug===state.meSlug;});
@@ -2744,6 +2794,7 @@ async function renderMe(){
     meChampLine()+
     '<div id="champ-bets-slot">'+champBetsLine()+'</div>'+
     meNeighbours(st,awaiting)+
+    meSquad(st)+
     '<div class="me-seclbl">Achievements</div><div class="badges">'+badges.slice(0,5).map(b=>'<div class="badge '+(b.g?"gold":"")+'">'+b.t+'</div>').join("")+'</div>'+
     '<div class="me-fun" id="me-fun"'+(fun.length?'':' style="display:none"')+'>'+fun.map(function(t){return '<div>'+t+'</div>';}).join("")+'</div>'+
     meBestWorst()+
@@ -3598,19 +3649,39 @@ async function welcomeDelta(){
   }catch(e){}
 }
 
-async function renderDept(body){
-  const rows=await fetchStandings();
+/* ===== Department leagues \u2014 tribal competition between QNB divisions =====
+   Aggregates the slim standings (fetchStandings, ~60B/player) by department \u2014
+   no blob pull, scales to thousands. Ranked by AVERAGE points per player so a
+   146-strong desk can't win on volume alone (fair per-capita). A squad needs
+   DEPT_MIN players to be ranked \u2014 keeps a stray 1-person 'department' from
+   topping the table and is the small-N floor. Shared by the Departments
+   leaderboard and the "Your squad" block so both always agree. */
+const DEPT_MIN=5;
+function deptKey(d){return ((d||"").trim())||"Unassigned";}
+function deptLeague(rows){
   const map={};
-  rows.forEach(r=>{const d=((r.dept||"").trim())||"Unassigned";(map[d]=map[d]||[]).push(r.pts);});
+  (rows||[]).forEach(r=>{const d=deptKey(r.dept);(map[d]=map[d]||[]).push(r.pts|0);});
   const deps=Object.keys(map).map(d=>{const a=map[d];const sum=a.reduce((p,q)=>p+q,0);
     return{d:d,n:a.length,sum:sum,avg:a.length?sum/a.length:0};});
-  deps.sort((a,b)=>b.avg-a.avg||b.sum-a.sum||a.d.localeCompare(b.d));
-  let html='<div class="dept-note">Ranked by average points per player \u00b7 ties broken by total points</div>';
-  deps.forEach((x,i)=>{
-    html+='<div class="lb-row" style="animation-delay:'+Math.min(i*0.03,0.4)+'s"><div class="rank">'+(i+1)+'</div>'+
+  const ranked=deps.filter(x=>x.n>=DEPT_MIN).sort((a,b)=>b.avg-a.avg||b.sum-a.sum||a.d.localeCompare(b.d));
+  ranked.forEach((x,i)=>x.rank=i+1);
+  const small=deps.filter(x=>x.n<DEPT_MIN).sort((a,b)=>b.avg-a.avg||a.d.localeCompare(b.d));
+  return {ranked:ranked,small:small};
+}
+async function renderDept(body){
+  const rows=await fetchStandings();
+  const lg=deptLeague(rows);
+  if(!lg.ranked.length){body.innerHTML='<div class="empty"><div class="ic">\ud83c\udfe2</div><b>No squads ranked yet</b><span>Departments join the league once they have '+DEPT_MIN+'+ players.</span></div>';return;}
+  const myDept=state.player?deptKey(state.player.dept):null;
+  const med=["\ud83e\udd47","\ud83e\udd48","\ud83e\udd49"];
+  let html='<div class="dept-note">\ud83c\udfe2 <b>Department leagues</b> \u2014 your squad vs the rest of the bank. Ranked by <b>average points per player</b> (fair across squad sizes); ties broken by total. Squads need '+DEPT_MIN+'+ players to rank.</div>';
+  lg.ranked.forEach((x,i)=>{
+    const mine=x.d===myDept;
+    html+='<div class="lb-row dept-row'+(mine?' me':'')+'" style="animation-delay:'+Math.min(i*0.03,0.4)+'s"><div class="rank">'+(i<3?med[i]:(i+1))+'</div>'+
       '<div class="avatar deptbadge">'+deptAvatarFill(x.d)+'</div>'+
-      '<div class="lb-info"><div class="n">'+esc(x.d)+'</div><div class="d">'+x.n+' player'+(x.n===1?"":"s")+' \u00b7 \u03a3 '+x.sum+' pts</div></div>'+
+      '<div class="lb-info"><div class="n">'+esc(x.d)+(mine?'<span class="youtag">YOUR SQUAD</span>':'')+'</div><div class="d">'+x.n+' players \u00b7 \u03a3 '+x.sum+' pts</div></div>'+
       '<div class="lb-pts"><b>'+(Math.round(x.avg*10)/10)+'</b><span>avg</span></div></div>';});
+  if(lg.small.length)html+='<div class="dept-note" style="margin-top:12px">Not yet ranked (under '+DEPT_MIN+' players): '+lg.small.map(x=>esc(x.d)+' ('+x.n+')').join(' \u00b7 ')+'</div>';
   body.innerHTML=html;
 }
 
@@ -3622,7 +3693,7 @@ async function renderDept(body){
    suspense (the office split) appears at kickoff and the payoff (who nailed it) lands
    at full time — a colleague's pick is never visible before it sealed. @ig is never
    rendered here; every aggregate rides consensus()'s existing tot<5 / tot<8 k-anon floor. */
-let ROOM_SEL=null;
+let ROOM_SEL=null,ROOM_SHOWALL=false;
 function roomMatches(){return ppEligible();} /* (m.kn?koReady(m):true) && (lockedM(m)||results) */
 function roomSettled(m){const r=state.results[m.id];return !!(r&&(m.kn?r.w!=null:r.h!=null));}
 async function renderRoom(body){
@@ -3641,29 +3712,81 @@ async function renderRoom(body){
     '<select class="input org-pick room-sel" id="room-match" aria-label="Choose a match">'+opts+'</select>'+
     '<div id="room-body"><div class="org-note">Loading the room…</div></div>';
   const sel=document.getElementById("room-match");
-  if(sel)sel.addEventListener("change",function(e){ROOM_SEL=e.target.value;renderRoomBody();});
+  if(sel)sel.addEventListener("change",function(e){ROOM_SEL=e.target.value;ROOM_SHOWALL=false;renderRoomBody();});
   await renderRoomBody();
+}
+function roomShowAll(){ROOM_SHOWALL=true;renderRoomBody();}
+/* Local office split for ONE eligible match, computed from the single ppPlayers
+   pull (no second consensus() fetch) — same tot<5 (group) / tot<8 (knockout)
+   k-anon floor and upset note as consText. Aggregate only; names never appear
+   here (the per-player table below is gated on settled). */
+function roomConsensus(m,players,myPk){
+  const mv=fxView(m),res=state.results[m.id];
+  const seg=function(nm,pc,mine){return '<b'+(mine?' class="cmine"':'')+'>'+esc(nm)+' '+pc+'%'+(mine?' (you)':'')+'</b>';};
+  if(m.kn){
+    let hN=0,aN=0;
+    players.forEach(function(p){const v=(p.predictions||{})[m.id];if(!v||!v.w)return;if(v.w===mv.home.n)hN++;else if(v.w===mv.away.n)aN++;});
+    const tot=hN+aN;if(tot<8)return "";
+    const hp=Math.round(hN/tot*100);
+    let line='🏟 '+tot+' colleagues called it: '+seg(mv.home.n,hp,myPk&&myPk.w===mv.home.n)+' · '+seg(mv.away.n,100-hp,myPk&&myPk.w===mv.away.n);
+    if(res&&res.w){const rN=res.w===mv.home.n?hN:(res.w===mv.away.n?aN:0),rp=Math.round(rN/tot*100);
+      if(rp<=25)line+='<span class="c2">🧨 Upset — only '+rp+'% of the office saw it coming</span>';}
+    return line;
+  }
+  let H=0,D=0,A=0;
+  players.forEach(function(p){const v=(p.predictions||{})[m.id];if(!v||!v.o)return;if(v.o==="H")H++;else if(v.o==="D")D++;else if(v.o==="A")A++;});
+  const tot=H+D+A;if(tot<5)return "";
+  let line='🏟 '+tot+' colleagues called it: '+seg(mv.home.n,Math.round(H/tot*100),myPk&&myPk.o==="H")+' · '+seg("Draw",Math.round(D/tot*100),myPk&&myPk.o==="D")+' · '+seg(mv.away.n,Math.round(A/tot*100),myPk&&myPk.o==="A");
+  if(res&&res.h!=null){const ro=res.h>res.a?"H":(res.h<res.a?"A":"D"),rp=Math.round((ro==="H"?H:(ro==="D"?D:A))/tot*100);
+    if(rp<=25)line+='<span class="c2">🧨 Upset — only '+rp+'% of the office called it</span>';}
+  return line;
+}
+/* Windowed table — at 670 players a settled knockout can have 600+ rows. Show the
+   top scorers + your row + your immediate neighbours, with a one-tap "show all". */
+function roomTable(rows,mv,m){
+  const N=rows.length,TOP=20;
+  let idxs;
+  if(ROOM_SHOWALL||N<=TOP+6){idxs=rows.map(function(_,i){return i;});}
+  else{
+    const set={};for(let i=0;i<TOP;i++)set[i]=1;
+    let meI=-1;for(let i=0;i<N;i++){if(rows[i].p.slug===state.meSlug){meI=i;break;}}
+    if(meI>=0){[meI-1,meI,meI+1].forEach(function(i){if(i>=0&&i<N)set[i]=1;});}
+    idxs=Object.keys(set).map(Number).sort(function(a,b){return a-b;});
+  }
+  let html='<div class="pp-head"><span>Player</span><span>Pick</span><span>Exact</span><span>Pts</span></div>';
+  let prev=-1;
+  idxs.forEach(function(i){
+    if(i>prev+1)html+='<div class="lb-gap">⋯</div>';
+    prev=i;
+    const x=rows[i],me=x.p.slug===state.meSlug;
+    html+='<div class="pp-row room-row '+x.cls+(me?' mine':'')+'"><span class="pp-n"><i class="rr">'+(i+1)+'</i>'+esc(x.p.name||x.p.slug)+(me?'<span class="youtag">YOU</span>':'')+'<small>'+esc(x.p.dept||"")+'</small></span>'+
+      '<span class="pp-p">'+esc(ppPickLabel(mv,m.kn,x.pk)||"—")+'</span>'+
+      '<span class="pp-e">'+ppExactHTML(x.pk)+'</span>'+
+      '<span class="pp-s '+(x.pts>0?'win':'zero')+'">'+(x.pts>0?'+'+x.pts:'+0')+'</span></div>';
+  });
+  if(!ROOM_SHOWALL&&N>TOP+6)html+='<button class="lb-more" onclick="roomShowAll()">Show all '+N+' players</button>';
+  return html;
 }
 async function renderRoomBody(){
   const host=document.getElementById("room-body");if(!host)return;
   const m=FIXBYID[ROOM_SEL];if(!m){host.innerHTML="";return;}
   if(!roomMatches().some(x=>x.id===m.id)){host.innerHTML='<div class="org-note">This match hasn’t kicked off yet.</div>';return;} /* hard seal guard */
   const mv=fxView(m),settled=roomSettled(m),r=state.results[m.id]||null;
-  if(CONFIGURED&&!state.demo&&!CONS.map){try{await consensus();}catch(e){}}   /* lazy, cached 10min */
   const myPk=(state.player&&state.player.predictions||{})[m.id]||null;
+  host.innerHTML='<div class="org-note">Loading the room…</div>';
+  const players=(CONFIGURED&&!state.demo)?await ppPlayers():[];   /* ONE ~1MB pull, 60s cache, never on a timer */
   let html='';
   if(settled){
     html+='<div class="room-res"><span class="rh">FULL TIME</span><b>'+esc(mv.home.n)+' '+(r.h!=null?r.h:'')+'–'+(r.a!=null?r.a:'')+' '+esc(mv.away.n)+'</b>'+(m.kn&&r.w?'<span class="rw">'+esc(r.w)+' advance</span>':'')+'</div>';
   }else{
     html+='<div class="room-res live"><span class="rh">SEALED · awaiting result</span><b>'+esc(mv.home.n)+' v '+esc(mv.away.n)+'</b></div>';
   }
-  const cline=(typeof consText==="function")?consText(m,myPk):"";   /* aggregate; safe pre-result via the tot<5/8 floor */
+  const cline=roomConsensus(m,players,myPk);   /* aggregate from the single pull; safe pre-result via the tot<5/8 floor */
   if(cline)html+='<div class="room-cons">'+cline+'</div>';
   if(!settled){
     html+='<div class="org-note">🔒 Who picked what unlocks at the final whistle. The office split above is live — the names land after full time.</div>';
     host.innerHTML=html;return;
   }
-  const players=await ppPlayers();   /* 60s cache, NO force, never on a timer */
   const rows=players.map(p=>({p:p,pk:(p.predictions||{})[m.id]}))
     .filter(x=>x.pk&&(x.pk.o||x.pk.w))
     .map(x=>{const vd=rvVerdict(m,x.pk,r);return {p:x.p,pk:x.pk,pts:vd.pts,cls:vd.cls};})
@@ -3672,14 +3795,7 @@ async function renderRoomBody(){
   const hero=roomHero(m,r,rows);if(hero)html+=hero;
   const scored=rows.filter(x=>x.pts>0).length,exactN=rows.filter(x=>x.cls==="exact").length;
   html+='<div class="room-tally"><b>'+scored+'</b> of '+rows.length+' scored'+(exactN?' · <b>'+exactN+'</b> nailed the exact score 🎯':'')+'</div>';
-  html+='<div class="pp-head"><span>Player</span><span>Pick</span><span>Exact</span><span>Pts</span></div>';
-  rows.forEach(x=>{
-    const me=x.p.slug===state.meSlug;
-    html+='<div class="pp-row room-row '+x.cls+(me?' mine':'')+'"><span class="pp-n">'+esc(x.p.name||x.p.slug)+(me?'<span class="youtag">YOU</span>':'')+'<small>'+esc(x.p.dept||"")+'</small></span>'+
-      '<span class="pp-p">'+esc(ppPickLabel(mv,m.kn,x.pk)||"—")+'</span>'+
-      '<span class="pp-e">'+ppExactHTML(x.pk)+'</span>'+
-      '<span class="pp-s '+(x.pts>0?'win':'zero')+'">'+(x.pts>0?'+'+x.pts:'+0')+'</span></div>';
-  });
+  html+=roomTable(rows,mv,m);
   host.innerHTML=html;
 }
 /* HERO of the match: a correct call that few in the room made (celebratory, winners only —
@@ -3825,6 +3941,74 @@ async function shareCard(){
       setTimeout(()=>URL.revokeObjectURL(a.href),4000);toast("Card saved \u2014 share it on the group \ud83d\udce4");
     },"image/png");
   }catch(e){toast("Couldn\u2019t build the card");}
+}
+function wrapText(x,text,cx,y,maxW,lh,maxLines){
+  const words=String(text).split(/\s+/);let line="";const lines=[];
+  words.forEach(function(w){const t=line?line+" "+w:w;if(x.measureText(t).width>maxW&&line){lines.push(line);line=w;}else line=t;});
+  if(line)lines.push(line);
+  const use=lines.slice(0,maxLines||2);
+  const startY=y-((use.length-1)*lh)/2;
+  use.forEach(function(ln,i){x.fillText(ln,cx,startY+i*lh);});
+  return use.length;
+}
+/* Dept-pride share card — the rally artifact for the desk's WhatsApp group.
+   Reuses the same canvas kit / palette as shareCard(). Aggregate-only (dept
+   rank + avg + size) — no individual is named, so it is inherently seal-safe. */
+async function shareSquad(){
+  try{
+    if(!state.player){toast("Sign in first");return;}
+    const myDept=deptKey(state.player.dept);
+    const st=(await fetchStandings()).slice().sort(cmpSt);
+    const lg=deptLeague(st);
+    const idx=lg.ranked.findIndex(function(x){return x.d===myDept;});
+    if(idx<0){toast("Your squad needs "+DEPT_MIN+"+ players to rank");return;}
+    const me=lg.ranked[idx],N=lg.ranked.length;
+    try{if(document.fonts&&document.fonts.load)await Promise.all([
+      document.fonts.load("400 200px Anton"),document.fonts.load("800 44px 'Hanken Grotesk'")]);}catch(e){}
+    const W=1080,H=1350,c=document.createElement("canvas");c.width=W;c.height=H;
+    const x=c.getContext&&c.getContext("2d");
+    if(!x){toast("Sharing isn’t supported in this browser");return;}
+    x.fillStyle="#0a0a0c";x.fillRect(0,0,W,H);
+    let g=x.createRadialGradient(W/2,210,40,W/2,210,800);
+    g.addColorStop(0,"rgba(180,151,89,.30)");g.addColorStop(1,"rgba(180,151,89,0)");
+    x.fillStyle=g;x.fillRect(0,0,W,H);
+    x.fillStyle="#ef3340";x.fillRect(0,0,W/3,12);x.fillStyle="#2ea84f";x.fillRect(W/3,0,W/3,12);x.fillStyle="#2d6fe0";x.fillRect(W/3*2,0,W/3+2,12);
+    x.textAlign="center";
+    x.fillStyle="#b49759";x.font="800 32px 'Hanken Grotesk',sans-serif";
+    x.fillText("S T A F F   C H A L L E N G E   ·   W C 2 6",W/2,96);
+    x.fillStyle="rgba(244,238,227,.55)";x.font="700 27px 'Hanken Grotesk',sans-serif";
+    x.fillText("D E P A R T M E N T   L E A G U E",W/2,148);
+    x.fillStyle="#f4eee3";x.font="800 60px 'Hanken Grotesk',sans-serif";
+    wrapText(x,myDept,W/2,250,W-150,66,2);
+    const grd=x.createLinearGradient(0,360,0,720);grd.addColorStop(0,"#e3d3a3");grd.addColorStop(.55,"#b49759");grd.addColorStop(1,"#8a734a");
+    x.fillStyle=grd;x.font="400 300px Anton,'Arial Narrow',sans-serif";
+    x.fillText("#"+(idx+1),W/2,720);
+    x.fillStyle="rgba(244,238,227,.5)";x.font="700 28px 'Hanken Grotesk',sans-serif";
+    x.fillText("OF "+N+" DEPARTMENTS",W/2,772);
+    const stats=[[Math.round(me.avg*10)/10,"AVG PTS"],[me.n,"PLAYERS"],[me.sum,"TOTAL PTS"]];
+    stats.forEach((p,i)=>{const cx=W/2+(i-1)*300;
+      x.fillStyle="rgba(0,0,0,.4)";roundRect(x,cx-125,858,250,170,22);x.fill();
+      x.strokeStyle="rgba(244,238,227,.14)";x.lineWidth=2;roundRect(x,cx-125,858,250,170,22);x.stroke();
+      x.fillStyle="#e3d3a3";x.font="400 76px Anton,'Arial Narrow',sans-serif";x.fillText(String(p[0]),cx,946);
+      x.fillStyle="rgba(244,238,227,.5)";x.font="700 22px 'Hanken Grotesk',sans-serif";x.fillText(p[1],cx,994);});
+    const line=idx===0?"Top squad in the bank 🏆":("Chasing "+lg.ranked[idx-1].d);
+    x.fillStyle="rgba(227,211,163,.85)";x.font="600 30px 'Hanken Grotesk',sans-serif";
+    x.fillText("✨ "+line+" ✨",W/2,1108);
+    x.fillStyle="#b49759";x.font="700 30px 'Hanken Grotesk',sans-serif";
+    x.fillText("Back your desk → staffchallenge26.com",W/2,1178);
+    x.fillStyle="rgba(244,238,227,.35)";x.font="600 22px 'Hanken Grotesk',sans-serif";
+    x.fillText("QNB Staff World Cup 2026 · 11 June – 19 July",W/2,1240);
+    c.toBlob(async b=>{
+      if(!b){toast("Couldn’t build the card");return;}
+      if(!(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches)){confettiBurst();try{navigator.vibrate&&navigator.vibrate([80,60,80]);}catch(e){}}
+      const f=new File([b],"squad-card.png",{type:"image/png"});
+      if(navigator.canShare&&navigator.canShare({files:[f]})){
+        try{await navigator.share({files:[f],title:"Staff Challenge",text:myDept+" in the QNB Staff World Cup — back your desk: https://staffchallenge26.com"});return;}catch(e){if(e&&e.name==="AbortError")return;}
+      }
+      const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="squad-card.png";a.click();
+      setTimeout(()=>URL.revokeObjectURL(a.href),4000);toast("Squad card saved — rally the desk 📤");
+    },"image/png");
+  }catch(e){toast("Couldn’t build the card");}
 }
 function roundRect(x,a,b,w,h,r){x.beginPath();x.moveTo(a+r,b);x.arcTo(a+w,b,a+w,b+h,r);x.arcTo(a+w,b+h,a,b+h,r);x.arcTo(a,b+h,a,b,r);x.arcTo(a,b,a+w,b,r);x.closePath();}
 function drawCardTrophy(x,cx,cy,s){

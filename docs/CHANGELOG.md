@@ -5,6 +5,27 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-06-29 (Doha) — Department leagues (tribal competition) + The Room scaled for 670 players
+
+**Commits:** this commit (`index.html` + changelog). **Frontend only — no DB / scoring / sync / lock-logic change.** Seal-safe throughout. New state: none (all derived from the existing standings/blobs).
+
+**Why:** the pool has grown to **~670 players across 12 real departments** (Retail Banking 146, Group Risk 78, Group Operations 74, Group IT 73, … down to Asset & Wealth 10). That flips two earlier calls: (1) department leagues — cut by the original swarm only because at ~12 players each "department" was one person — are now a genuine tribal lever, and (2) "The Room" (shipped earlier today) now pulls every player's blob, so a settled knockout would render 600+ rows and it was making a second ~1.15 MB aggregate pull. This commit turns the passive Departments tab into an active league and hardens The Room for scale.
+
+**What changed — `index.html`:**
+- **Department leagues (`deptLeague` + reworked `renderDept`)** — a shared aggregator ranks departments by **average points per player** (fair across 10-vs-146-strong squads; ties by total). A `DEPT_MIN=5` floor keeps a stray 1-player "department" from topping the table (and is the small-N floor). The Departments leaderboard now medals the top 3, **highlights your own squad**, and lists sub-threshold squads separately. Built on the slim `standings()` RPC (~60 B/player) — no blob pull, scales to thousands.
+- **"Your Squad" block on the Me card (`meSquad`)** — your department's rank of N, **your contribution rank inside it** ("You're #4 of 78 in Group Risk · top 5%"), and the **derby**: the avg-points gap to the squad directly above ("3.1 avg behind Group IT — overtake them for 2nd") and below. Reuses the slim standings already fetched by `renderMe`.
+- **Dept-pride share card (`shareSquad` + `wrapText`)** — a one-tap canvas card (same kit/palette as `shareCard`) crowning your department's rank/avg/size for the desk's WhatsApp group. **Aggregate-only — no individual is named**, so it's inherently seal-safe; confetti/vibrate gated behind the reduced-motion check.
+- **The Room scaled for 670 (`renderRoomBody` rewrite + `roomConsensus`/`roomTable`/`ROOM_SHOWALL`)** — (a) the office split is now computed **locally from the single `ppPlayers()` pull** via `roomConsensus()` (preserving the exact tot<5 group / tot<8 knockout k-anon floors and the upset note), **removing the second ~1.15 MB `consensus()` fetch**; (b) the settled per-player board is **windowed** — top ~20 by points + your row + your immediate neighbours, with a "Show all N players" expander — instead of dumping 600+ rows. Rank prefix added; `ROOM_SHOWALL` resets when you change match.
+- CSS: `.me-squad`/`.sq-*`, dept-row highlight, windowed-table rank prefix — appended to the existing social-pack block, palette-locked, no new motion.
+
+**Seal-safety:** department leagues read only the slim `standings()` aggregate (no picks). The Room's per-player NAME table is still gated strictly on `roomSettled`; `roomConsensus` shows only floored aggregates pre-result (never names); no other player's `@ig` is rendered on the dept board, squad block, share card, or Room table.
+
+**Verified:** `node --check` clean. Headless Chromium with a **671-player / 13-department fixture** — **29/29** checks: dept ranking (avg-desc, ≥5 floor excludes the 1-player bucket, my squad highlighted, medals, sub-threshold note), the squad block (rank-of-12, contribution rank, derby), `shareSquad` builds a card without throwing, and The Room at scale — **exactly one `ppPlayers` pull, zero second `consensus()` pull**, the table windowed to ~22 rows with a working "Show all 671" expander, the BLOCKER seal test (locked-but-unsettled match shows the aggregate split but **zero names**), no `@ig` anywhere, and no page errors. Screenshot confirms the league board.
+
+**Rollback:** `git revert <this commit>` — frontend-only; isolated helpers (`deptLeague`/`meSquad`/`shareSquad`/`roomConsensus`/`roomTable`) plus a reworked `renderDept`/`renderRoomBody` and one appended CSS block.
+
+---
+
 ## 2026-06-29 (Doha) — Social pack: "The Room", rival head-to-head, "you passed X", the room's title bets
 
 **Commits:** this commit (`index.html` + changelog). **Frontend only — no DB / scoring / sync / lock-logic change.** Every new surface reads only data the app already has and is strictly seal-safe (no pick is shown before its match seals; the champ aggregate is gated on `champLocked()`). All new state is localStorage-only.
