@@ -2931,14 +2931,11 @@ function renderPulse(){
     if(le)fillStakes(m,le);
     return;
   }
-  const next=FIXTURES.filter(m=>new Date(m.ko).getTime()>now).sort((a,b)=>new Date(a.ko)-new Date(b.ko))[0];
-  if(!next){el.style.display="none";return;}
-  const ms=new Date(next.ko).getTime()-now;
-  const h=Math.floor(ms/36e5),mn=Math.floor(ms%36e5/6e4);
-  const qat=(next.home.n==="Qatar"||next.away.n==="Qatar");
-  const when=h>=48?("on "+fmtDay(next.ko)):(h>0?(h+"h "+mn+"m"):(mn+"m"));
-  el.innerHTML='<span class="pb-dot idle"></span>Next kickoff \u00b7 <b>'+esc(next.home.n)+' v '+esc(next.away.n)+'</b> \u00b7 in '+when+(qat?" \ud83c\uddf6\ud83c\udde6":"");
-  el.className="pulsebar"+(qat?" qatar":"");el.style.display="flex";
+  /* No live match: the header countdown (#countdown) already shows "Next kickoff" for
+     this same fixture. The Matches view (the pulse bar's only home) is reachable only
+     when signed in, and the header countdown is always visible in that state, so render
+     nothing here to avoid the duplicate "Next kickoff" label. */
+  el.style.display="none";
 }
 
 function confetti(){

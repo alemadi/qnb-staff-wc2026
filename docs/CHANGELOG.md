@@ -5,6 +5,31 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-06-29 — Fix: "Next kickoff" was shown twice (header countdown + pulse bar)
+
+**Commits:** this commit (app `index.html` + this changelog).
+
+**Why:** the upcoming match was rendered by two independent widgets that both labelled it **"Next kickoff"**, so when signed in on the **Matches** tab with no live game, the same fixture appeared twice — once in the header countdown and again in the pulse bar directly below it:
+
+- **`tickCountdown()`** → header `#countdown` (persistent across views): *"Next kickoff"* + teams + a live ticking clock (days/hrs/min/sec).
+- **`renderPulse()`** → `#pulsebar` (Matches view only): in its no-live branch it printed *"Next kickoff · A v B · in 3h 20m"*.
+
+Both computed the identical target — the first fixture with `ko > now` — so the label and match always matched.
+
+**What changed** (frontend only, `index.html`):
+- `renderPulse()` no-live branch now **hides the pulse bar** (`el.style.display="none"`) and returns, instead of rendering its own "Next kickoff" line. The header countdown is the single source of truth for the pre-match countdown.
+- The pulse bar still renders its **LIVE/FT scoreboard** when a match is in progress (that state is distinct from the header and is unchanged).
+
+**Why this is safe:** the pulse bar lives inside `#view-matches`, and `go("matches")` redirects to the join screen unless `state.player` is set. The header countdown is made visible (`display:flex`) on sign-in and on load whenever signed in. So the pulse bar's no-live branch can only run when the user is signed in — exactly the state in which the header countdown is already on screen showing the same fixture. Hiding it removes no information the user can't see in the header.
+
+**Verified:** the no-live branch now sets `display:none` and returns before any "Next kickoff" markup; the LIVE/FT branch returns earlier and is untouched. `node --check` clean on the extracted script.
+
+**DB:** none (frontend-only).
+
+**Rollback:** `git revert <this commit>` restores the pulse bar's "Next kickoff · A v B · in …" idle line. Frontend-only; no DB/state change.
+
+---
+
 ## 2026-06-28 — Scoring audit + fix: KO bonus was missing from 5 secondary point displays
 
 **Commits:** this commit (app `index.html` + this changelog).
