@@ -26,6 +26,50 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-06-29 (Doha) — Streak banner now STICKS (pins to the top, collapses to a slim strip)
+
+**Commits:** this commit (`index.html` + changelog). **Frontend only — no DB, no scoring change.**
+
+**Why:** the streak announcement banner scrolled away as soon as you moved down the page. Make it *stick* so it stays in view. But the full card is **~241px tall** (a third of a phone screen), so pinning it whole would permanently bury the match list and collide with the existing two-tier sticky headers (filter chips + progress panel). So it pins **and collapses**.
+
+**What changed (display only):**
+- **`.xbanner` is now `position:sticky`** (`top: safe-area + 4px`, `z-index:35`, gained a `backdrop-filter:blur` + a near-opaque base so content scrolls cleanly beneath it).
+- **Collapses to a slim one-line strip on scroll** — a new `.xbanner.mini` state shows just `🔥 · heading · "How it works ›" · ✕` (~34px). Driven by an `IntersectionObserver` on a 1px `#xb-sent` sentinel, mirroring the existing progress-panel pattern. A `#xb-spacer` below the banner grows by exactly the height it sheds so the views underneath **don't lurch upward** when it snaps (same spacer trick the progress panel uses).
+- **The in-view sticky bars tuck below the pinned strip** — `setupBanner()` measures the collapsed height into `--xb-h`; `body.xb-on .filters` / `.progress` add it to their `top` so the three tiers (strip → filters → progress) stack without overlap. When the banner is hidden/dismissed/snoozed (`hideBanner()`), `xb-on` is removed and the bars revert to their original offsets — non-banner behaviour is byte-for-byte unchanged.
+- A short `.xb-cta2` ("How it works ›") was added for the collapsed strip; the long CTA, chips, sub and quiet line are hidden when mini.
+
+**Verified:** extracted inline script `node --check` clean; loaded in headless Chromium (390×740) with **zero page errors**; scroll-tested — banner pins at `top:4` and collapses to a 34px strip, spacer grows to 207px (no list jump), filters/progress retuck to 41px/96px below it and revert on scroll-back; rendered the full card, the collapsed strip, and the full strip→filters→progress stack over a populated list (no overlap). Reduced-motion already covered by the global transition kill-switch.
+
+**Rollback:** `git revert <this-commit-sha>` (frontend-only).
+
+---
+
+## 2026-06-29 (Doha) — Restore the agreed knockout ladder (PR #19), keep the 🔥 streak
+
+**Commits:** this commit (`index.html` + `sql/standings.sql` + changelog). **Staged on branch only — NOT yet deployed live.** Going live needs both halves to ship together (see below).
+
+**Why:** an organiser-reported discrepancy — "the player only gained 3 points, not 4" for a correct Round-of-32 pick (k1, Canada 0–1). Investigation: the agreed knockout ladder is **PR #19** ("knockout exact-score bonus, scaled by round", merged 28 Jun 08:26 — R32 +4/+4, R16 +5/+5, QF +6/+6, SF +8/+7, third +6/+5, Final +10/+8). Later that day the *"Maximum Excitement"* commit (`3a37ced`) overwrote it with a steeper ladder (R32 dropped to +3/+3; later rounds inflated to R16 +6 / QF +9 / SF +14 / Final +22) **and** added the exact-score streak. That steeper ladder is what went live on the site and in the Supabase `standings()` function — so a correct R32 pick really did score +3, not the agreed +4. This restores the agreed ladder while **keeping the streak** the organiser wanted.
+
+**Restored ladder (agreed):**
+- **Advance (`KO_PTS`):** R32 +4 · R16 +5 · QF +6 · SF +8 · third +6 · Final +10
+- **Exact bonus (`KO_BONUS`):** R32 +4 · R16 +5 · QF +6 · SF +7 · third +5 · Final +8
+- **🔥 streak (unchanged):** 2nd +5 · 3rd +15 · 4th-and-on +20 each
+- Group (+3/+2) and Champion (+25) untouched.
+
+**What changed:**
+- `index.html` — `KO_PTS` / `KO_BONUS` constants back to the agreed values; the points-table rows, rules one-liners, the long rules paragraph, the two FAQ entries, and the ladder code-comment updated to match. `RND_HEAD` derives from `KO_PTS`, so the bracket headers follow automatically. The streak (`koStreakBonus`) is untouched.
+- `sql/standings.sql` — the `kadv` / `kbonus` CASE ladders and the header comment restored to the agreed values; the streak CTEs (`ko` / `ko_streak` / `streak_bonus`) are untouched.
+
+**Verified:** `node --check` clean on the inline script; app `KO_PTS`/`KO_BONUS` and the SQL `kadv`/`kbonus` ladders match tier-for-tier. Only **k1** is settled, so the live re-score is small (every correct-Canada pick +1 on advance; every nailed 0–1 +1 on the bonus).
+
+**Go-live (both required, close together — or cards and leaderboard disagree):**
+1. Merge this branch to `main` (GitHub Pages serves the agreed-ladder app).
+2. Paste `sql/standings.sql` into the Supabase SQL editor on project `fzybuasvhzhmkbhxbton` and Run (`CREATE OR REPLACE`, signature unchanged, grant re-applied).
+
+**Rollback:** `git revert <this commit>` restores the steeper "Maximum Excitement" app ladder; to revert the DB, re-run the previous `standings()` (the steeper version: kadv R16 6/QF 9/SF 14/third 8/final 22/R32 3, kbonus R16 4/QF 6/SF 9/third 5/final 14/R32 3, streak unchanged).
+
+---
+
 ## 2026-06-29 (Doha) — Two features: "Road to the Maldives" progression + cinematic reveal
 
 **Commits:** this commit (`index.html` + changelog). Frontend only — no DB/scoring/sync/lock change. Both features are read-only/presentational on top of existing data.

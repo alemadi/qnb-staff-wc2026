@@ -4,16 +4,16 @@
 -- Safe to re-run any time (CREATE OR REPLACE) — no DROP, signature unchanged,
 -- grant re-applied at the bottom.
 --
--- Scoring mirrors scoreFor() in index.html exactly ("Maximum Excitement"):
+-- Scoring mirrors scoreFor() in index.html exactly (agreed ladder + exact-score streak):
 --   Group (UNCHANGED): +3 correct outcome (requires an outcome pick),
 --          +2 exact-score bonus (also gated on the outcome pick).
 --   Knockout ADVANCE (who goes through):
---          R32 (k1–k16) +3 · R16 (k17–k24) +6 · QF (k25–k28) +9 ·
---          SF (k29–k30) +14 · third (k31) +8 · final (k32) +22.
+--          R32 (k1–k16) +4 · R16 (k17–k24) +5 · QF (k25–k28) +6 ·
+--          SF (k29–k30) +8 · third (k31) +6 · final (k32) +10.
 --   Knockout EXACT FINAL-score bonus (on top of advance; final score = the
 --          scoreline when the match ends, after extra time if played, penalties
 --          excluded — matches koScoreHit in index.html):
---          R32 +3 · R16 +4 · QF +6 · SF +9 · third +5 · final +14.
+--          R32 +4 · R16 +5 · QF +6 · SF +7 · third +5 · final +8.
 --   Knockout EXACT-SCORE STREAK (knockouts only, going forward): nailing the
 --          exact FINAL score in CONSECUTIVE knockout matches the player
 --          predicted (chronological order = the numeric part of the k-id)
@@ -40,22 +40,22 @@ matches as materialized (
          -- knockout ADVANCE points (mirrors KO_PTS / koPts() in index.html)
          case
            when e.key !~ '^k[0-9]+$' then 0
-           when substring(e.key from 2)::int between 17 and 24 then 6   -- R16
-           when substring(e.key from 2)::int between 25 and 28 then 9   -- QF
-           when substring(e.key from 2)::int in (29,30)        then 14  -- SF
-           when substring(e.key from 2)::int = 31              then 8   -- third
-           when substring(e.key from 2)::int = 32              then 22  -- final
-           else 3                                                       -- R32 (k1..k16)
+           when substring(e.key from 2)::int between 17 and 24 then 5   -- R16
+           when substring(e.key from 2)::int between 25 and 28 then 6   -- QF
+           when substring(e.key from 2)::int in (29,30)        then 8   -- SF
+           when substring(e.key from 2)::int = 31              then 6   -- third
+           when substring(e.key from 2)::int = 32              then 10  -- final
+           else 4                                                       -- R32 (k1..k16)
          end as kadv,
          -- knockout EXACT final-score bonus (mirrors KO_BONUS / koBonus())
          case
            when e.key !~ '^k[0-9]+$' then 0
-           when substring(e.key from 2)::int between 17 and 24 then 4   -- R16
+           when substring(e.key from 2)::int between 17 and 24 then 5   -- R16
            when substring(e.key from 2)::int between 25 and 28 then 6   -- QF
-           when substring(e.key from 2)::int in (29,30)        then 9   -- SF
+           when substring(e.key from 2)::int in (29,30)        then 7   -- SF
            when substring(e.key from 2)::int = 31              then 5   -- third
-           when substring(e.key from 2)::int = 32              then 14  -- final
-           else 3                                                       -- R32
+           when substring(e.key from 2)::int = 32              then 8   -- final
+           else 4                                                       -- R32
          end as kbonus
   from results_row, jsonb_each(results_row.r) e
   where left(e.key,1) <> '_'
