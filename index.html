@@ -885,6 +885,47 @@
   .input:focus-visible,.scorein:focus-visible{outline:2px solid var(--gold-bright);outline-offset:2px}
   .btn-primary:focus-visible{outline:3px solid var(--gold-bright);outline-offset:2px}
   .faq-link:focus-visible,.sw-b:focus-visible,.ptbtn:focus-visible,.sharebtn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+  /* ===================================================================
+     "ROAD TO THE MALDIVES" — progression hook tying points → the prize.
+     =================================================================== */
+  .rtm{margin:15px 0 2px;background:linear-gradient(135deg,rgba(180,151,89,.13),rgba(180,151,89,.03));border:1px solid rgba(180,151,89,.4);border-radius:16px;padding:13px 15px 14px;text-align:left}
+  .rtm.lead{border-color:var(--gold);background:linear-gradient(135deg,rgba(180,151,89,.20),rgba(180,151,89,.05));box-shadow:0 0 22px -10px rgba(180,151,89,.5)}
+  .rtm-hd{font-size:9.5px;letter-spacing:2.4px;text-transform:uppercase;color:var(--gold);font-weight:800}
+  .rtm-track{position:relative;height:22px;margin:13px 4px 11px}
+  .rtm-track::before{content:"";position:absolute;left:0;right:13px;top:50%;transform:translateY(-50%);height:2px;background:repeating-linear-gradient(90deg,rgba(227,211,163,.4) 0 7px,transparent 7px 13px)}
+  .rtm-fill{position:absolute;left:0;top:50%;transform:translateY(-50%);height:2px;border-radius:2px;background:linear-gradient(90deg,var(--gold-deep),var(--gold-bright));transition:width .9s cubic-bezier(.2,.8,.2,1)}
+  .rtm-plane{position:absolute;top:50%;transform:translate(-50%,-50%);font-size:15px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.55));transition:left .9s cubic-bezier(.2,.8,.2,1)}
+  .rtm-dest{position:absolute;right:-5px;top:50%;transform:translateY(-50%);font-size:16px}
+  .rtm-line{font-size:12.5px;font-weight:700;color:var(--cream);line-height:1.45}
+  .rtm-line b{color:var(--gold-bright);font-family:var(--font-d);font-weight:400;font-size:15.5px;letter-spacing:.02em;vertical-align:-1px}
+  .rtm-next{font-size:11.5px;font-weight:600;color:var(--muted);margin-top:4px}
+  .rtm-next b{color:var(--lime);font-weight:800}
+  /* leaderboard strip — compact version of the same gap */
+  .rtm-strip{display:flex;align-items:center;gap:8px;background:linear-gradient(120deg,rgba(180,151,89,.13),rgba(180,151,89,.03));border:1px solid rgba(180,151,89,.35);border-radius:12px;padding:9px 13px;margin:0 0 12px;font-size:12px;font-weight:700;color:var(--cream)}
+  .rtm-strip .pl{font-size:15px}
+  .rtm-strip b{color:var(--gold-bright)}
+  .rtm-strip .nx{color:var(--muted);font-weight:600;margin-left:auto;text-align:right}
+  .rtm-strip .nx b{color:var(--lime)}
+
+  /* ===================================================================
+     CINEMATIC REVEAL — true 3D card flip + stamp impact. (Reduced-motion
+     users bypass the card entirely via revealSummary, but guarded anyway.)
+     =================================================================== */
+  .rv-card{background:none;border:none;padding:0;border-radius:24px;perspective:1300px;min-height:312px}
+  .rv-flip{position:relative;width:100%;min-height:312px;transform-style:preserve-3d;transition:transform .78s cubic-bezier(.45,.05,.2,1)}
+  .rv-card.flipped .rv-flip{transform:rotateY(180deg)}
+  .rv-face{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;backface-visibility:hidden;-webkit-backface-visibility:hidden;background:#15151a;border:1px solid rgba(180,151,89,.5);border-radius:24px;padding:26px 22px;text-align:center}
+  .rv-back{transform:rotateY(180deg)}
+  .rv-tap{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin-top:22px}
+  .rv-card.flipped .rv-res{transition-delay:.5s}
+  .rv-card.flipped .rv-stamp{animation:stampIn .55s cubic-bezier(.34,1.7,.5,1) .58s both}
+  @keyframes stampIn{0%{opacity:0;transform:scale(2.1) rotate(9deg)}60%{opacity:1;transform:scale(.92) rotate(-3deg)}100%{opacity:1;transform:scale(1) rotate(0)}}
+  .rv-quick .rv-flip{transition-duration:.42s}
+  .rv-quick.rv-card.flipped .rv-stamp{animation-delay:.32s}
+  .rv-big.pop{animation:rvbigpop .6s cubic-bezier(.34,1.7,.5,1)}
+  @keyframes rvbigpop{0%{transform:scale(.6);opacity:0}55%{transform:scale(1.12)}100%{transform:scale(1);opacity:1}}
+  @media(prefers-reduced-motion:reduce){.rv-flip{transition:none}.rv-card.flipped .rv-stamp{animation:none}.rv-big.pop{animation:none}}
 </style>
 </head>
 <body>
@@ -2301,6 +2342,7 @@ async function renderLeaderboard(){
     ord.forEach((r,i)=>{html+='<div class="pod '+cls[i]+'" style="animation-delay:'+(i*0.08)+'s"><div class="medal">'+med[i]+'</div><div class="avatar av">'+avatarFill(r.name)+'</div><div class="pname">'+esc(r.name)+'</div><div class="stand"><div class="ppts">'+r.pts+'<small> PTS</small></div></div></div>';});
     html+='</div>';
   }
+  if(state.player&&!state.demo)html+=rtmStrip(roadGap(rows));
   html+='<div class="lb-tick" id="lb-tick" style="display:none"></div>';
   const lim=Math.min(rows.length,LB_SHOWN);
   for(let i=0;i<lim;i++)html+=lbRowHTML(rows[i],i,PT);
@@ -2359,6 +2401,45 @@ function startLbTicker(rows){
   TICK_T=setInterval(function(){if(facts.length>1)show();},6000);
 }
 
+/* ===== Road to the Maldives — progression toward 1st place (the prize) =====
+   Read-only: derives rank/points gaps from the already-sorted standings. */
+function ord(n){const s=["th","st","nd","rd"],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0]);}
+function roadGap(rows){
+  if(!rows||!rows.length||!state.meSlug)return null;
+  let i=-1;for(let k=0;k<rows.length;k++){if(rows[k].slug===state.meSlug){i=k;break;}}
+  if(i<0)return null;
+  const me=rows[i],leader=rows[0];
+  const g={rank:i+1,total:rows.length,allZero:!(leader.pts>0),leader:i===0};
+  if(i===0){const second=rows[1]||null;g.leadOver=second?(me.pts-second.pts):null;g.nextName=second?second.name:null;}
+  else{const above=rows[i-1];g.ptsToFirst=Math.max(0,leader.pts-me.pts);g.ptsToNext=Math.max(0,above.pts-me.pts);g.nextName=above.name;}
+  return g;
+}
+function rtmPlanePct(g){
+  if(g.leader)return 100;
+  if(g.total<2)return 6;
+  const frac=(g.total-g.rank)/(g.total-1);          /* rank 1 → 1.0, last → 0 */
+  return Math.max(4,Math.min(Math.round(frac*100),88));
+}
+function rtmTrack(pct,plane){return '<div class="rtm-track"><i class="rtm-fill" style="width:'+pct+'%"></i><span class="rtm-plane" style="left:'+plane+'%">✈️</span><span class="rtm-dest">🏝️</span></div>';}
+function rtmPanel(g){
+  if(!g)return "";
+  if(g.allZero)return '<div class="rtm"><div class="rtm-hd">✈️ Road to the Maldives</div>'+rtmTrack(4,4)+
+    '<div class="rtm-line">The board’s still level — every point from here is a step toward the islands.</div></div>';
+  if(g.leader)return '<div class="rtm lead"><div class="rtm-hd">🏝️ You’re top of the board</div>'+rtmTrack(100,92)+
+    '<div class="rtm-line">The Maldives is <b>yours to lose</b>. Defend it.</div>'+
+    (g.leadOver!=null&&g.nextName?'<div class="rtm-next">'+(g.leadOver>0?('<b>+'+g.leadOver+'</b> clear of '+esc(g.nextName)):('level on points with '+esc(g.nextName)+' — stay sharp'))+'</div>':'')+'</div>';
+  const pct=rtmPlanePct(g);
+  const line='You’re <b>'+ord(g.rank)+'</b> of '+g.total+' · '+(g.ptsToFirst>0?('<b>'+g.ptsToFirst+'</b> pts from the Maldives ✈️'):'level on points with 1st — split on tiebreakers');
+  const next=g.ptsToNext>0?('Just <b>'+g.ptsToNext+'</b> pt'+(g.ptsToNext===1?'':'s')+' behind '+esc(g.nextName)+' — pass them next ↑')
+                          :('Level with '+esc(g.nextName)+' — break the tie to climb ↑');
+  return '<div class="rtm"><div class="rtm-hd">✈️ Road to the Maldives</div>'+rtmTrack(pct,pct)+
+    '<div class="rtm-line">'+line+'</div><div class="rtm-next">'+next+'</div></div>';
+}
+function rtmStrip(g){
+  if(!g||g.allZero)return "";
+  if(g.leader)return '<div class="rtm-strip"><span class="pl">🏝️</span><span>You lead — the Maldives is <b>yours to lose</b></span>'+(g.leadOver!=null&&g.nextName?'<span class="nx"><b>+'+g.leadOver+'</b> on '+esc(g.nextName)+'</span>':'')+'</div>';
+  return '<div class="rtm-strip"><span class="pl">✈️</span><span><b>'+g.ptsToFirst+'</b> pts from the Maldives · '+ord(g.rank)+'</span>'+(g.ptsToNext>0?('<span class="nx">↑ <b>'+g.ptsToNext+'</b> to pass '+esc(g.nextName)+'</span>'):('<span class="nx">level with '+esc(g.nextName)+'</span>'))+'</div>';
+}
 async function renderMe(){
   if(!state.player){go("join");return;}
   if(CONFIGURED&&!state.demo)consensus().catch(function(){});
@@ -2404,6 +2485,7 @@ async function renderMe(){
     '<div class="role">'+esc(state.player.dept)+'</div>'+(state.player.ig?'<div class="mail">@'+esc(state.player.ig)+'</div>':'')+
     '<div class="me-stat"><div class="s"><b>'+s.pts+'</b><span>Points</span></div><div class="s"><b>'+(awaiting?"—":("#"+myRank))+'</b><span>Rank'+(total?(" of "+total):"")+'</span></div><div class="s"><b>'+pc+'</b><span>Predicted</span></div></div>'+
     '<div class="me-break">'+(awaiting?'You\u2019ve locked in <b>'+pc+'/'+predTotal()+'</b> picks. Points appear here once matches kick off.':'<b>'+s.correct+'</b> correct results &nbsp;·&nbsp; <b>'+s.exact+'</b> exact scores &nbsp;·&nbsp; <b>'+s.scored+'</b> matches scored')+'</div>'+
+    rtmPanel(roadGap(st))+
     meChampLine()+
     '<div class="badges">'+badges.slice(0,5).map(b=>'<div class="badge '+(b.g?"gold":"")+'">'+b.t+'</div>').join("")+'</div>'+
     '<div class="me-fun" id="me-fun"'+(fun.length?'':' style="display:none"')+'>'+fun.map(function(t){return '<div>'+t+'</div>';}).join("")+'</div>'+
@@ -3728,6 +3810,10 @@ function sndTick(force){if(!sndOn()&&!force)return;try{tone(1200,0,.04);}catch(e
 function sndCorrect(){if(!sndOn())return;try{tone(600,0,.07);tone(900,.08,.1);}catch(e){}}
 function sndExact(){if(!sndOn())return;try{tone(800,0,.06);tone(1200,.07,.06);tone(1600,.14,.14);tone(2400,.3,.06,.03);}catch(e){}}
 function sndStreak(run){if(!sndOn())return;try{tone(800,0,.07);if(run>=2)tone(1100,.06,.07);if(run>=3)tone(1400,.12,.08);if(run>=4)tone(2000,.20,.06,.03);}catch(e){}} /* climbs with the streak length */
+/* reveal-ritual audio layer */
+function sndFlip(){if(!sndOn())return;try{tone(300,0,.05,.04);tone(210,.04,.07,.035);}catch(e){}}      /* card whoosh */
+function sndMiss(){if(!sndOn())return;try{tone(300,0,.16,.04);tone(214,.10,.18,.03);}catch(e){}}        /* soft descending 'aw' */
+function sndFinale(){if(!sndOn())return;try{tone(523,0,.13);tone(659,.10,.13);tone(784,.20,.13);tone(1047,.32,.30,.05);}catch(e){}} /* C-E-G-C flourish */
 function odo(el,from,to,ms){
   if(!el)return;
   const rm=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -3804,10 +3890,18 @@ function renderRevealCard(){
   const res=m.kn?(r.w+" through"):(mv.home.n+" "+r.h+"\u2013"+r.a+" "+mv.away.n);
   document.getElementById("rv-stage").innerHTML=
     '<div class="rv-card'+(RV.quick?' rv-quick':'')+'" id="rv-card" onclick="revealFlip()">'+
-    '<div class="rv-lab">'+esc(RLABEL[m.round]||m.round)+'</div>'+
-    '<div class="rv-sec">YOUR PICK</div><div class="rv-pick">'+esc(pick)+'</div>'+
-    '<div class="rv-sec">RESULT \u00b7 tap</div>'+
-    '<div class="rv-res">'+esc(res)+'</div><div class="rv-stamp" id="rv-stamp"></div><div class="rv-cons" id="rv-cons"></div></div>';
+      '<div class="rv-flip">'+
+        '<div class="rv-face rv-front">'+
+          '<div class="rv-lab">'+esc(RLABEL[m.round]||m.round)+'</div>'+
+          '<div class="rv-sec">YOUR PICK</div><div class="rv-pick">'+esc(pick)+'</div>'+
+          '<div class="rv-tap">tap to reveal \u21bb</div>'+
+        '</div>'+
+        '<div class="rv-face rv-back">'+
+          '<div class="rv-lab">'+esc(RLABEL[m.round]||m.round)+'</div>'+
+          '<div class="rv-sec">RESULT</div>'+
+          '<div class="rv-res">'+esc(res)+'</div><div class="rv-stamp" id="rv-stamp"></div><div class="rv-cons" id="rv-cons"></div>'+
+        '</div>'+
+      '</div></div>';
   document.getElementById("rv-foot").innerHTML="";
   clearTimeout(RV.timer);RV.timer=setTimeout(revealFlip,RV.quick?700:1400);
 }
@@ -3815,6 +3909,7 @@ function revealFlip(){
   const card=document.getElementById("rv-card");
   if(!card||card.classList.contains("flipped"))return;
   clearTimeout(RV.timer);
+  try{sndFlip();}catch(e){} /* card-whoosh as it turns */
   const m=RV.q[RV.i],p=state.player.predictions[m.id]||{},r=state.results[m.id];
   const v=rvVerdict(m,p,r);
   card.classList.add("flipped",v.cls+"fx");
@@ -3829,6 +3924,7 @@ function revealFlip(){
   try{
     if(v.cls==="exact"){navigator.vibrate&&navigator.vibrate([10,40,10,40,30]);sndExact();}
     else if(v.cls==="hit"){navigator.vibrate&&navigator.vibrate([15,60,15]);sndCorrect();}
+    else{navigator.vibrate&&navigator.vibrate(18);sndMiss();}
   }catch(e){}
   if(sr>=2)setTimeout(function(){streakMoment(sr);},RV.quick?250:450);
   markRevealed(m.id);
@@ -3848,14 +3944,16 @@ async function revealFinale(){
   }catch(e){}
   document.getElementById("rv-stage").innerHTML=
     '<div class="rv-done"><div class="rv-sec">THIS REVEAL</div>'+
-    '<div class="rv-big">+'+RV.total+'</div>'+
+    '<div class="rv-big pop">+<span id="rv-bign">'+RV.total+'</span></div>'+
     (dr>0?'<div class="rv-climb">\u25b2 '+dr+' place'+(dr===1?"":"s")+(rank?' \u00b7 now #'+rank:'')+'</div>'
         :(rank?'<div class="rv-sub">#'+rank+' overall</div>':''))+'<div class="rv-of" id="rv-of"></div></div>';
   fillRevealOffice();
+  try{var _bn=document.getElementById("rv-bign");if(_bn){_bn.textContent="0";odo(_bn,0,RV.total,750);}}catch(e){} /* count up the reveal total */
+  try{sndFinale();}catch(e){} /* triumphant flourish */
   document.getElementById("rv-foot").innerHTML=
     '<button class="sw-b" onclick="shareCard()">Share this</button>'+
     '<button class="sw-b sw-done-b" onclick="closeReveal()">Done</button>';
-  if(dr>0)confetti();
+  if(dr>0||RV.total>0)confetti();
 }
 function revealOfficeLines(){
   if(state.demo||!CONS.map)return [];

@@ -5,6 +5,29 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-06-29 (Doha) — Two features: "Road to the Maldives" progression + cinematic reveal
+
+**Commits:** this commit (`index.html` + changelog). Frontend only — no DB/scoring/sync/lock change. Both features are read-only/presentational on top of existing data.
+
+**Why:** two depth features (vs the earlier breadth polish) to add a genuine progression hook and upgrade the daily dopamine moment.
+
+**1 — "Road to the Maldives" progression meta.** Ties every point to the grand prize (the Maldives = 1st). New read-only helpers `roadGap(rows)` / `rtmPanel()` / `rtmStrip()` derive rank + points gaps from the already-sorted standings:
+- **Me card** — a gold-framed panel with an airline-style flight path: a ✈️ plane positioned by rank-percentile travelling toward the 🏝️ island, plus *"You're 3rd of 12 · 14 pts from the Maldives ✈️ / Just 3 pts behind Layla M. — pass them next ↑."*
+- **Leaderboard** — a compact strip (`✈️ N pts from the Maldives · ↑ M to pass <name>`), shown for the signed-in, non-demo viewer.
+- States handled: leader ("the Maldives is yours to lose — defend it"), level-board (early tournament), and points-tie ("level — break the tie to climb"). Hidden gracefully when there are no standings. The plane/fill transitions are reduced-motion-gated by the global reset.
+
+**2 — Cinematic reveal ritual.** The per-match reveal card now performs a **true 3D flip** instead of a static fade:
+- `renderRevealCard()` restructured into a two-face flip card (`.rv-flip` with `.rv-front` = YOUR PICK / `.rv-back` = RESULT). The `#rv-stamp` / `#rv-cons` IDs are unchanged, so `revealFlip()`'s logic is untouched. The verdict stamp now **slams in** (`stampIn` — scale-down impact) as the card lands.
+- **Layered audio** (all gated by the existing Sounds toggle): `sndFlip()` whoosh as the card turns, a new `sndMiss()` soft tone for a wrong call (previously silent), and `sndFinale()` (C–E–G–C flourish) on the summary screen.
+- **Finale flourish:** the "THIS REVEAL +N" total now **counts up** (odometer) with a pop, and confetti fires on any positive reveal (not only on a rank climb).
+- **Reduced-motion:** RM users already bypass the card entirely (they get `revealSummary()`), and the flip/stamp/pop are additionally guarded — they get the result with no motion.
+
+**Verified:** `node --check` clean. Headless Chromium drove the real flows — the Me-card Road panel (plane near the island for a 3rd-place mock), the reveal front→flip (back face shows "Mexico 2–0 South Africa · ◎ EXACT! +5", odometer +5), and the finale (count-up + confetti) — plus a unit-check of `roadGap()`/`rtmStrip()`. No page errors.
+
+**Rollback:** `git revert <this commit>` — frontend-only. The reveal change is structural (two-face card) but self-contained to `renderRevealCard` + the appended CSS; reverting restores the prior single-card fade.
+
+---
+
 ## 2026-06-29 (Doha) — Departures-board deepening (the 40 UX + 40 gaming expert-lens fold-in)
 
 **Commits:** this commit (`index.html` + changelog). Frontend only — no DB/scoring/sync/lock change.
