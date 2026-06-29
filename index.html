@@ -131,8 +131,12 @@
   .xbanner .xb-chip{font-family:var(--font-d);font-size:14px;letter-spacing:.3px;color:#15120a;background:linear-gradient(170deg,var(--gold-bright),var(--gold));border-radius:8px;padding:4px 9px 3px;line-height:1.05;text-align:center}
   .xbanner .xb-chip small{font-family:var(--font-b);font-weight:800;font-size:8.5px;opacity:.72;display:block;letter-spacing:.4px}
   .xbanner a.xb-cta{display:inline-block;margin-top:1px;color:var(--gold-bright);font-weight:800;white-space:nowrap;text-decoration:none}
-  .xbanner .xb-x{position:absolute;top:6px;right:6px;width:30px;height:30px;display:grid;place-items:center;background:transparent;border:0;color:var(--muted);font-size:16px;cursor:pointer;border-radius:8px}
-  .xbanner .xb-x:hover{color:var(--cream);background:rgba(255,255,255,.07)}
+  .xbanner .xb-min{position:absolute;top:6px;right:6px;width:30px;height:30px;display:grid;place-items:center;background:transparent;border:0;color:var(--muted);font-size:13px;line-height:1;cursor:pointer;border-radius:8px}
+  .xbanner .xb-min:hover{color:var(--cream);background:rgba(255,255,255,.07)}
+  .xbanner .xb-min .xb-exp{display:none}          /* full → show the collapse glyph (▴) */
+  .xbanner.mini .xb-min{top:50%;transform:translateY(-50%)}  /* center it in the slim strip */
+  .xbanner.mini .xb-min .xb-col{display:none}     /* strip → show the expand glyph (▾) */
+  .xbanner.mini .xb-min .xb-exp{display:inline}
   .xbanner .xb-cta2{display:none}
   /* collapsed (stuck) state: a slim one-line strip so the pinned banner never eats the screen */
   .xbanner.mini{align-items:center;padding:7px 38px 7px 13px;gap:9px;border-radius:12px}
@@ -1025,7 +1029,7 @@
       <a class="xb-cta" href="javascript:void 0" onclick="openFaq('streak');return false">See how the streak works ›</a>
       <a class="xb-cta2" href="javascript:void 0" onclick="openFaq('streak');return false">How it works ›</a>
     </div>
-    <button class="xb-x" onclick="dismissBanner()" aria-label="Dismiss announcement">✕</button>
+    <button class="xb-min" onclick="toggleBanner()" aria-label="Shrink announcement"><span class="xb-col" aria-hidden="true">▴</span><span class="xb-exp" aria-hidden="true">▾</span></button>
   </div>
   <div id="xb-spacer" aria-hidden="true"></div>
 
@@ -1828,29 +1832,37 @@ function toast(msg,type){const t=document.getElementById("toast");
   t.textContent=msg;t.className="show "+k;clearTimeout(toastT);
   toastT=setTimeout(()=>t.classList.remove("show"),({success:1900,warning:3200,error:3600,info:2200})[k]||2200);}
 function togglePts(btn){const t=document.getElementById("ptable");const on=t.classList.toggle("show");btn.textContent=on?"How do points work? ▴":"How do points work? ▾";const p=document.querySelector(".progress");if(p)p.classList.toggle("pts-open",on);if(window.__progSync)window.__progSync();}
-/* One-time dismissible announcement banner (knockout streak news). Bump the key to re-show a new banner. */
-/* The streak announcement now STAYS for a while: it shows every visit (to joined players) through the
-   knockouts, until BANNER_UNTIL. A ✕ only hides it for ~8h (it returns next visit); opening the
-   explainer no longer kills it. Bump BANNER_KEY to re-show it to everyone after a logic change. */
-const BANNER_KEY="wc:banner:streak-v2";
-const BANNER_SNOOZE=8*3600*1000;             // ✕ = brief snooze only, so it keeps coming back
+/* Persistent announcement banner (knockout streak news). It can't be dismissed — only shrunk. */
+/* It shows every visit (to joined players) until BANNER_UNTIL. There is no ✕: instead a chevron
+   shrinks the full card to a slim one-line strip and back, and it also auto-shrinks on scroll so it
+   never hogs the screen. The collapse choice is remembered in BANNER_MIN_KEY. A ?banner / #banner
+   URL force-shows it (ignores the joined gate) for verification on any device. */
+const BANNER_MIN_KEY="wc:banner:min";         // remembers the user's shrink choice (persists across visits)
 const BANNER_UNTIL=Date.parse("2026-07-15T00:00:00+03:00");  // keep showing through the knockouts; then it retires itself
+let bannerMin=false;                          // user shrank it to the strip (independent of the scroll auto-shrink)
 function hideBanner(){const b=document.getElementById("xbanner");if(b){b.style.display="none";b.classList.remove("mini");}document.body.classList.remove("xb-on");const sp=document.getElementById("xb-spacer");if(sp)sp.style.height="0px";}
+function bannerForced(){try{return /(^|[?&#])banner\b/i.test(location.search+location.hash);}catch(e){return false;}}  // ?banner / #banner = force-show for verification (ignores the joined gate)
 function setupBanner(){
   const b=document.getElementById("xbanner");if(!b)return;
-  if(!state.player)return hideBanner();        // joined players only (not the sign-in screen)
-  if(BANNER_UNTIL&&Date.now()>BANNER_UNTIL)return hideBanner();  // announcement window has ended
-  let v=null;try{v=localStorage.getItem(BANNER_KEY);}catch(e){}
-  if(v){const t=parseInt(v,10);if(t&&(Date.now()-t)<BANNER_SNOOZE)return hideBanner();}  // recently ✕'d → brief snooze
-  b.style.display="flex";                      // otherwise show it every visit
-  b.classList.remove("mini");                  // it opens full at the top, then collapses to a slim strip on scroll
+  const force=bannerForced();
+  if(!force){                                   // normal gating (a ?banner / #banner link skips it)
+    if(!state.player)return hideBanner();        // joined players only (not the sign-in screen)
+    if(BANNER_UNTIL&&Date.now()>BANNER_UNTIL)return hideBanner();  // announcement window has ended
+  }
+  try{bannerMin=localStorage.getItem(BANNER_MIN_KEY)==="1";}catch(e){bannerMin=false;}  // restore shrink choice
+  b.style.display="flex";                      // always show it (no dismiss); it can only be shrunk
   document.body.classList.add("xb-on");
   // measure the collapsed height so the sticky filter/progress bars tuck just below the pinned strip
   b.classList.add("mini");const mh=b.offsetHeight;b.classList.remove("mini");
   document.documentElement.style.setProperty("--xb-h",mh+"px");
-  if(window.__xbSync)window.__xbSync();         // apply the right state for the current scroll position
+  if(window.__xbSync)window.__xbSync();         // apply full/strip for the current scroll + shrink choice
 }
-function dismissBanner(){hideBanner();try{localStorage.setItem(BANNER_KEY,String(Date.now()));}catch(e){}}  // ✕ = ~8h snooze; it returns
+function toggleBanner(){
+  const b=document.getElementById("xbanner");if(!b)return;
+  bannerMin=!b.classList.contains("mini");      // showing full → shrink; showing strip → expand
+  try{localStorage.setItem(BANNER_MIN_KEY,bannerMin?"1":"0");}catch(e){}
+  if(window.__xbSync)window.__xbSync();
+}
 
 function go(view){
   if((view==="matches"||view==="me")&&!state.player){toast("Join the pool to make picks \u26bd");view="join";}
@@ -4474,9 +4486,11 @@ function liveTick(){
   },{threshold:0}).observe(s);
 })();
 
-/* Collapse the sticky streak banner to a slim strip once it pins, so the full 240px card never eats
-   the screen. Same spacer trick as the progress panel: when it snaps to mini, a spacer below grows by
-   exactly the height it sheds, so the views under it don't lurch upward. */
+/* Shrink the sticky streak banner to a slim strip — either when the user taps the chevron (bannerMin)
+   or automatically once it pins on scroll (stuck) — so the full 240px card never eats the screen.
+   Spacer trick (only while pinned): when it snaps to the strip mid-scroll, a spacer below grows by
+   exactly the height it sheds, so the views under it don't lurch. At the top a manual shrink reclaims
+   the space normally (no spacer). */
 (function(){
   const s=document.getElementById("xb-sent"),b=document.getElementById("xbanner"),
         sp=document.getElementById("xb-spacer");
@@ -4484,15 +4498,16 @@ function liveTick(){
   let stuck=false;
   window.__xbSync=function(){
     const shown=b.style.display!=="none";
-    const want=stuck&&shown;                       /* collapse only while it's actually pinned & visible */
+    const want=shown&&(bannerMin||stuck);          /* strip if the user shrank it OR it's pinned on scroll */
     const is=b.classList.contains("mini");
+    const btn=b.querySelector(".xb-min");if(btn)btn.setAttribute("aria-label",want?"Expand announcement":"Shrink announcement");
     if(want===is){if(!shown&&sp)sp.style.height="0px";return;}
     if(sp){
       const before=b.offsetHeight;
       const tr=b.style.transition;b.style.transition="none";   /* measure settled height, not a mid-ease frame */
       b.classList.toggle("mini",want);
       const after=b.offsetHeight;                  /* forced reflow → final collapsed/expanded layout */
-      sp.style.height=want?Math.max(0,before-after)+"px":"0px";  /* reserve exactly the reclaimed space */
+      sp.style.height=(want&&stuck)?Math.max(0,before-after)+"px":"0px";  /* compensate only while pinned */
       void b.offsetWidth;b.style.transition=tr;
     }else{
       b.classList.toggle("mini",want);

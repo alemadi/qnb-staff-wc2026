@@ -5,6 +5,22 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-06-29 (Doha) — Banner: no more ✕ — it's shrinkable instead (+ `?banner` verify flag)
+
+**Commits:** this commit (`index.html` + changelog). **Frontend only — no DB, no scoring change.**
+
+**Why:** the dismiss ✕ snoozed the banner for ~8h, so it kept *vanishing* — the organiser couldn't find it. Replaced "dismiss" with "shrink": the announcement is now **persistent and can only be collapsed, never closed**.
+- **Removed the ✕ / `dismissBanner` / 8h-snooze entirely.** The banner shows on every visit (to joined players) until `BANNER_UNTIL` (2026-07-15). Players previously snoozed now see it again.
+- **Added a shrink/expand chevron** (`toggleBanner()`) where the ✕ was: ▴ collapses the full card to the slim one-line strip, ▾ expands it back. The choice is remembered in `localStorage` (`wc:banner:min`) across visits.
+- **Auto-shrink on scroll still applies** — displayed-as-strip = `bannerMin || stuck`. The jump-compensating spacer now only kicks in while the banner is *pinned* (scroll-collapse); a manual shrink at the top reclaims its space normally (no phantom gap), and a manual-shrink-then-scroll adds no spurious spacer.
+- **`?banner` / `#banner` URL flag** (`bannerForced()`) force-shows it regardless of the joined gate, so it can be verified signed-out on any device.
+
+**Verify:** `https://staffchallenge26.com/?banner` shows it immediately. `node --check` clean; headless Chromium **20/20** — no ✕/`dismissBanner` anywhere; manual shrink↔expand with glyph swap + persistence; auto-shrink on scroll with spacer; manual-mini-then-scroll has no phantom jump; remembered-shrink starts collapsed; `?banner` force-shows signed-out; not-joined+no-flag still hidden.
+
+**Rollback:** `git revert <this-commit-sha>` (frontend-only).
+
+---
+
 ## 2026-06-29 (Doha) — "Me" page facelift + daily-engagement modules (frontend only)
 
 **Commits:** this commit (`index.html` + changelog). Frontend only — **no DB / scoring / sync / lock-logic change**. Nothing here reads or writes another player's sealed picks; every settled/reveal gate is strictly post-full-time, and all new state is localStorage-only (`wc:rivalnudge`, reuse of `wc:revealed`).
