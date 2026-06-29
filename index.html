@@ -1094,6 +1094,16 @@
   .room-brag{margin:2px auto 12px;display:flex}
   .nb-brag{margin-left:auto;flex:none;width:32px;height:32px;border-radius:9px;background:var(--glass);border:1px solid var(--line);color:var(--gold-bright);font-size:14px;cursor:pointer;transition:.15s}
   .nb-brag:hover{border-color:var(--gold);transform:translateY(-1px)}
+
+  /* Office Honours — title chips */
+  .title-chip{display:inline-flex;align-items:center;gap:3px;margin-left:6px;font-size:9px;font-weight:800;letter-spacing:.02em;color:#181106;background:linear-gradient(115deg,var(--gd),var(--gold));border-radius:6px;padding:1px 6px;vertical-align:middle}
+  .title-chip i{font-style:normal}
+  @media(max-width:430px){.lb-row .title-chip i{display:none}}
+  .title-chip.big{font-size:11px;padding:3px 9px;margin:0}
+  .me-honours{background:linear-gradient(120deg,rgba(180,151,89,.10),transparent 72%);border:1px solid rgba(180,151,89,.3);border-radius:13px;padding:11px 13px;margin-bottom:4px}
+  .me-honours .me-titles{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:7px}
+  .me-race{font-size:12px;color:var(--muted);line-height:1.5}
+  .me-race b{color:var(--gb)}
 </style>
 </head>
 <body>
@@ -2561,9 +2571,67 @@ function moveHTML(d){
   if(d<0)return '<div class="rmove down">\u25bc'+(-d)+'</div>';
   return '<div class="rmove flat">\u2013</div>';
 }
+/* ===== Office Honours — earned titles shown next to a name =====
+   Derived from the slim standings (Frontrunner/Oracle/Climber/Squad Captain) +
+   the already-computed consensus() leaders (Trailblazer/Hot Hand/Perfectionist).
+   No new data pull. Most players hold none; the scarcity is the point. */
+const TITLE_DEFS=[
+  {key:'frontrunner',emoji:'👑',label:'Frontrunner'},
+  {key:'oracle',emoji:'🔮',label:'Oracle'},
+  {key:'trailblazer',emoji:'🧭',label:'Trailblazer'},
+  {key:'hothand',emoji:'🔥',label:'Hot Hand'},
+  {key:'perfectionist',emoji:'💎',label:'Perfectionist'},
+  {key:'captain',emoji:'⭐',label:'Squad Captain'},
+  {key:'climber',emoji:'🚀',label:'Climber'}
+];
+let LB_HONOURS={};      /* slug -> {emoji,label,key} (top title only, by priority) */
+let HONOURS_FULL=null;  /* full holder map for the Me title-race line */
+function computeHonours(rows){
+  const holders={};
+  const assign=function(key,slug,name,value,runnerUp){if(slug)holders[key]={slug:slug,name:name,value:value,runnerUp:runnerUp};};
+  const list=(rows||[]).slice();
+  if(list.length){
+    const sorted=list.slice().sort(function(a,b){return cmpSt(a,b);});
+    const top=sorted[0];
+    if(top&&top.pts>0)assign('frontrunner',top.slug,top.name,top.pts);
+    const byExact=list.filter(function(r){return r.exact>0;}).sort(function(a,b){return b.exact-a.exact||b.pts-a.pts;});
+    if(byExact[0])assign('oracle',byExact[0].slug,byExact[0].name,byExact[0].exact,byExact[1]?byExact[1].exact:0);
+    let cl=null;list.forEach(function(r){if(r.dRank>0&&(!cl||r.dRank>cl.dRank))cl=r;});
+    if(cl)assign('climber',cl.slug,cl.name,cl.dRank);
+    const byDept={};list.forEach(function(r){const d=((r.dept||'').trim());if(!d)return;(byDept[d]=byDept[d]||[]).push(r);});
+    Object.keys(byDept).forEach(function(d){const a=byDept[d];if(a.length<3)return;a.sort(function(x,y){return cmpSt(x,y);});if(a[0]&&a[0].pts>0)holders['captain_'+d]={slug:a[0].slug,name:a[0].name,value:a[0].pts,_title:'captain'};});
+  }
+  try{if(CONS){
+    if(CONS.bestUpset&&CONS.bestUpset.slug&&CONS.bestUpset.n>=2)assign('trailblazer',CONS.bestUpset.slug,CONS.bestUpset.name,CONS.bestUpset.n);
+    if(CONS.best&&CONS.best.slug&&CONS.best.streak>=3)assign('hothand',CONS.best.slug,CONS.best.name,CONS.best.streak);
+    if(CONS.bestPerfect&&CONS.bestPerfect.slug&&CONS.bestPerfect.n>=1)assign('perfectionist',CONS.bestPerfect.slug,CONS.bestPerfect.name,CONS.bestPerfect.n);
+  }}catch(e){}
+  HONOURS_FULL=holders;
+  const order=['frontrunner','oracle','trailblazer','hothand','perfectionist','climber'];
+  const map={};
+  order.forEach(function(key){const h=holders[key];if(h&&!map[h.slug]){const def=TITLE_DEFS.find(function(t){return t.key===key;});map[h.slug]={emoji:def.emoji,label:def.label,key:key};}});
+  Object.keys(holders).forEach(function(k){if(k.indexOf('captain_')!==0)return;const h=holders[k];if(!map[h.slug])map[h.slug]={emoji:'⭐',label:'Squad Captain',key:'captain'};});
+  LB_HONOURS=map;return map;
+}
+function titleChip(slug){const t=LB_HONOURS[slug];return t?'<span class="title-chip" title="'+esc(t.label)+'">'+t.emoji+'<i>'+esc(t.label)+'</i></span>':'';}
+function meHonours(s){
+  if(!state.player||state.demo)return "";
+  const full=HONOURS_FULL||{};
+  const mine=[];
+  Object.keys(full).forEach(function(k){const h=full[k];if(h.slug!==state.meSlug)return;const key=h._title||k;const def=TITLE_DEFS.find(function(t){return t.key===key;});if(def&&mine.indexOf(def)<0)mine.push(def);});
+  let inner='';
+  if(mine.length)inner+='<div class="me-titles">'+mine.map(function(d){return '<span class="title-chip big">'+d.emoji+'<i>'+esc(d.label)+'</i></span>';}).join('')+'</div>';
+  const orc=full.oracle;
+  if(orc){
+    if(orc.slug===state.meSlug)inner+='<div class="me-race">🔮 You hold the <b>Oracle</b> — '+orc.value+' exact'+(orc.value===1?'':'s')+(orc.runnerUp!=null&&orc.value>orc.runnerUp?' ('+(orc.value-orc.runnerUp)+' clear)':'')+'</div>';
+    else{const gap=orc.value-((s&&s.exact)||0);
+      inner+='<div class="me-race">🔮 '+(gap>0?('<b>'+gap+'</b> exact score'+(gap===1?'':'s')+' behind '+esc(orc.name)+' for the <b>Oracle</b>'):('Level with '+esc(orc.name)+' for the <b>Oracle</b> — break the tie to claim it'))+'</div>';}
+  }
+  return inner?('<div class="me-seclbl">Office honours</div><div class="me-honours">'+inner+'</div>'):'';
+}
 function lbRowHTML(r,i,PT){
   return '<div class="lb-row '+(r.me?"me":"")+'" style="animation-delay:'+Math.min(i*0.03,0.5)+'s"><div class="rank">'+r.rank+'</div>'+moveHTML(r.dRank)+'<div class="avatar">'+avatarFill(r.name)+'</div>'+
-    '<div class="lb-info"><div class="n">'+esc(r.name)+(r.me?'<span class="youtag">YOU</span>':'')+(r.rv?'<span class="rivtag">\ud83c\udfaf RIVAL</span>':'')+(r.demo?'<span class="demotag">demo</span>':'')+'</div><div class="d">'+esc(r.dept||"")+'</div>'+
+    '<div class="lb-info"><div class="n">'+esc(r.name)+(r.me?'<span class="youtag">YOU</span>':'')+titleChip(r.slug)+(r.rv?'<span class="rivtag">\ud83c\udfaf RIVAL</span>':'')+(r.demo?'<span class="demotag">demo</span>':'')+'</div><div class="d">'+esc(r.dept||"")+'</div>'+
     '<div class="lb-stats"><span>◎ <b>'+r.exact+'</b> exact</span><span>✓ <b>'+r.correct+'</b> correct</span><span>'+r.predicted+'/'+PT+' picked</span></div></div>'+
     '<div class="lb-pts"><b>'+'<span class="ptsn" data-pslug="'+r.slug+'">'+r.pts+'</span>'+'</b><span>pts</span></div></div>';
 }
@@ -2595,6 +2663,8 @@ async function renderLeaderboard(){
     if(snap&&snap.ranks)rows.forEach(r=>{const pr=snap.ranks[r.slug];r.dRank=(pr!=null)?(pr-r.rank):null;});
   }
   if(!rows.length){body.innerHTML='<div class="empty"><div class="ic">🏆</div><b>No predictions yet</b><span>Be the first to lock in your picks under “Matches”.</span></div>'+ffInline();return;}
+  computeHonours(rows);
+  if(CONFIGURED&&!state.demo&&!CONS.map){consensus().then(function(){if(state.view==="leaderboard"&&LB_MODE==="people")renderLeaderboard();}).catch(function(){});}
   const PT=predTotal();
   let html="";
   if(rows.length>=3){
@@ -2842,6 +2912,7 @@ async function renderMe(){
   const st=(await fetchStandings()).slice().sort(cmpSt);
   let myRank="—",total=st.length;
   st.forEach((r,i)=>{if(r.slug===state.meSlug&&myRank==="—")myRank=i+1;});
+  computeHonours(st);
   const badges=[];
   if(pc>=predTotal())badges.push({g:true,t:"⚡ All-In · "+pc+"/"+predTotal()});
   if(s.exact>=1)badges.push({g:true,t:"🎯 Sharpshooter"});
@@ -2881,6 +2952,7 @@ async function renderMe(){
     '<div class="avatar av">'+avatarFill(state.player.name)+'</div><h3>'+esc(state.player.name)+'</h3>'+
     '<div class="role">'+esc(state.player.dept)+'</div>'+(state.player.ig?'<div class="mail">@'+esc(state.player.ig)+'</div>':'')+
     rankPill+
+    '<div id="me-honours-slot">'+meHonours(s)+'</div>'+
     meScarcity()+
     '<div class="me-stat"><div class="s hero"><b>'+s.pts+'</b><span>Points</span></div><div class="s"><b>'+(awaiting?"—":("#"+myRank))+'</b><span>Rank'+(total?(" of "+total):"")+'</span></div><div class="s"><b>'+pc+'</b><span>Predicted</span></div></div>'+
     '<div class="me-break">'+(awaiting?'You\u2019ve locked in <b>'+pc+'/'+predTotal()+'</b> picks. Points appear here once matches kick off.':'<b>'+s.correct+'</b> correct results &nbsp;·&nbsp; <b>'+s.exact+'</b> exact scores &nbsp;·&nbsp; <b>'+s.scored+'</b> matches scored')+'</div>'+
@@ -2898,6 +2970,7 @@ async function renderMe(){
   updateMeBadge();
   if(CONFIGURED&&!state.demo)consensus().then(function(c){
     try{const cbs=document.getElementById("champ-bets-slot");if(cbs&&!cbs.innerHTML)cbs.innerHTML=champBetsLine();}catch(e){}
+    try{computeHonours(st);const hs=document.getElementById("me-honours-slot");if(hs)hs.innerHTML=meHonours(s);}catch(e){}
     const f=document.getElementById("me-fun");if(!f||!c.map||f.dataset.agree)return;
     const now=Date.now()+CLOCK_OFFSET;let agree=0,n=0;
     FIXTURES.forEach(function(m){
@@ -4419,7 +4492,8 @@ function consensus(){
     const map={};let champN=0;const cm={};
     const done=FIXTURES.filter(function(f){const r=state.results[f.id];return r&&(f.kn?r.w!=null:r.h!=null);})
       .sort(function(a,b){return new Date(a.ko)-new Date(b.ko);});
-    let best={name:"",streak:0,hits:0};const pday={};
+    let best={name:"",streak:0,hits:0,slug:""};const pday={};
+    let bestPerfect={name:"",slug:"",n:0};
     let officeHits=0,officeTot=0,perfectN=0;
     players.forEach(function(p){
       if(!p)return;
@@ -4439,10 +4513,12 @@ function consensus(){
         seq.push(!!hit);if(hit)hits++;
         const k=dayKey(f.ko);(byDay[k]=byDay[k]||[]).push(!!hit);});
       let stk=0;for(let i=seq.length-1;i>=0;i--){if(seq[i])stk++;else break;}
-      if(stk>best.streak||(stk===best.streak&&hits>best.hits))best={name:p.name||p.slug||"",streak:stk,hits:hits};
+      if(stk>best.streak||(stk===best.streak&&hits>best.hits))best={name:p.name||p.slug||"",streak:stk,hits:hits,slug:p.slug||""};
       officeHits+=hits;officeTot+=seq.length;
       if(seq.length>=3&&hits===seq.length)perfectN++;
-      for(const k in byDay){const a=byDay[k];if(a.length>=2&&a.every(function(x){return x;}))pday[k]=(pday[k]||0)+1;}
+      let myPerfect=0;
+      for(const k in byDay){const a=byDay[k];if(a.length>=2&&a.every(function(x){return x;})){pday[k]=(pday[k]||0)+1;myPerfect++;}}
+      if(myPerfect>bestPerfect.n)bestPerfect={name:p.name||p.slug||"",slug:p.slug||"",n:myPerfect};
     });
     /* second pass (needs the finished map): upset hunters + department form by day */
     const resPct={};
@@ -4468,7 +4544,7 @@ function consensus(){
         else{if(hit)vp=3;if(v.h!=null&&v.a!=null&&Number(v.h)===r.h&&Number(v.a)===r.a)vp+=2;}
         if(vp)ptsBy[dk]=(ptsBy[dk]||0)+vp;
         if(hit&&resPct[f.id]!=null&&resPct[f.id]<=30)up++;});
-      if(up>bestUp.n)bestUp={name:p.name||p.slug||"",n:up};
+      if(up>bestUp.n)bestUp={name:p.name||p.slug||"",n:up,slug:p.slug||""};
       for(const k in ptsBy){const cur=dayTop[k];
         if(!cur||ptsBy[k]>cur.pts)dayTop[k]={name:p.name||p.slug||"",slug:p.slug||"",pts:ptsBy[k]};}
       if(mp&&p.slug!==state.meSlug){let nn=0;
@@ -4477,7 +4553,7 @@ function consensus(){
           if(m.kn){if(a.w&&a.w===bq.w)nn++;}
           else{if(a.o&&a.o===bq.o)nn++;}}
         if(nn>twin.n)twin={name:p.name||p.slug||"",slug:p.slug||"",n:nn};}});
-    CONS={t:Date.now(),map:map,n:players.length,champN:champN,champMap:cm,best:best,perfectByDay:pday,bestUpset:bestUp,deptByDay:deptDay,dayTop:dayTop,dayHit:dayHit,twin:twin,perfectN:perfectN,officeHit:{h:officeHits,t:officeTot},busy:null};
+    CONS={t:Date.now(),map:map,n:players.length,champN:champN,champMap:cm,best:best,bestPerfect:bestPerfect,perfectByDay:pday,bestUpset:bestUp,deptByDay:deptDay,dayTop:dayTop,dayHit:dayHit,twin:twin,perfectN:perfectN,officeHit:{h:officeHits,t:officeTot},busy:null};
     return CONS;
   })();
   return CONS.busy;

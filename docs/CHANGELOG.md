@@ -5,6 +5,28 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-06-29 (Doha) — Office Honours: earned titles beside every name
+
+**Commits:** this commit (`index.html` + changelog). **Frontend only — no DB / scoring / sync / lock-logic change.** Seal-safe; no new state.
+
+**Why:** persistent, visible status is what makes the social loop compound — and several of the brag cards become the *trophies* for these titles. Each title is earned from data the app already computes; most players hold none, which is what makes one worth chasing.
+
+**What changed — `index.html`:**
+- **Honours engine (`computeHonours` + `TITLE_DEFS` + `titleChip`)** — assigns the current holder of each title and renders a gold chip next to their name. Seven titles:
+  - 👑 **Frontrunner** (rank 1) · 🔮 **Oracle** (most exact scores) · 🚀 **Climber** (biggest rank jump) · ⭐ **Squad Captain** (top of each ≥3-player department) — from the slim standings.
+  - 🧭 **Trailblazer** (most upsets called — the renamed, gambling-free "Gambler") · 🔥 **Hot Hand** (longest current correct streak) · 💎 **Perfectionist** (most perfect match-nights) — from the existing `consensus()` leaders.
+- **`consensus()` now carries `slug`** on its `best`/`bestUpset` leaders and computes a per-player **`bestPerfect`** (perfect-day count) — small additive change so titles can be attributed to the right player.
+- **Leaderboard rows** show the holder's top title (priority order; one chip per name; label collapses to emoji-only on ≤430px). **Me card** gets an "Office honours" panel with your title(s) + a **title-race line** ("4 exact scores behind Bilal for the Oracle").
+- Titles from `consensus()` fill in once it warms (a one-shot re-render on first load); the slim-standings titles show immediately. CSS: `.title-chip` / `.me-honours` / `.me-race`.
+
+**Seal-safety:** titles derive only from the slim standings aggregate and the already-settled `consensus()` leaders — no raw picks, no `@ig`. The renamed Trailblazer removes the gambling connotation (fitting the QNB/Qatar context).
+
+**Verified:** `node --check` clean. Headless Chromium — **15/15** checks: each title assigned to the correct holder (Frontrunner/Oracle/Trailblazer/Hot Hand/Climber/Squad Captain/Perfectionist), an untitled player gets no chip, the chip renders in `lbRowHTML`, the leaderboard list shows chips (crown on #1), and the Me card shows your title + the correct title-race gap; zero page errors. Screenshot confirms.
+
+**Rollback:** `git revert <this commit>` — frontend-only; the honours helpers, the small `consensus()` slug/`bestPerfect` additions, two render hooks (`lbRowHTML` + `renderMe`), and one CSS block.
+
+---
+
 ## 2026-06-29 (Doha) — Five more brag cards: a "Brag-worthy" strip on the Me card
 
 **Commits:** this commit (`index.html` + changelog). **Frontend only — no DB / scoring / sync / lock-logic change.** Seal-safe.
