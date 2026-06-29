@@ -5,6 +5,20 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-06-29 — Copy: drop the tie-break clause from the Departments leaderboard note
+
+**Commits:** this commit (app `index.html` + this changelog). Frontend display only — no scoring/DB change.
+
+**What:** the Departments leaderboard `dept-note` read *"Ranked by average points per player · ties broken by total points"*. Removed the *"· ties broken by total points"* clause; the note now reads *"Ranked by average points per player"*. The department sort itself is unchanged (still `avg`, then total `sum` as the tiebreaker, then name) — only the on-screen note wording is trimmed.
+
+**Scope:** only the Departments-tab note. The FAQ "How are ties broken?" answer and the rules/terms tie-break wording (player/prize tiebreakers) are left as-is.
+
+**Verified:** `node --check` clean on the extracted script; the only `dept-note` string in `renderDept()` now omits the tie-break clause.
+
+**Rollback:** `git revert <this commit>` restores the *"· ties broken by total points"* clause. Frontend-only; no DB/state change.
+
+---
+
 ## 2026-06-29 — Fix: "Next kickoff" was shown twice (header countdown + pulse bar)
 
 **Commits:** this commit (app `index.html` + this changelog).

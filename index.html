@@ -3120,7 +3120,7 @@ async function renderDept(body){
   const deps=Object.keys(map).map(d=>{const a=map[d];const sum=a.reduce((p,q)=>p+q,0);
     return{d:d,n:a.length,sum:sum,avg:a.length?sum/a.length:0};});
   deps.sort((a,b)=>b.avg-a.avg||b.sum-a.sum||a.d.localeCompare(b.d));
-  let html='<div class="dept-note">Ranked by average points per player \u00b7 ties broken by total points</div>';
+  let html='<div class="dept-note">Ranked by average points per player</div>';
   deps.forEach((x,i)=>{
     html+='<div class="lb-row" style="animation-delay:'+Math.min(i*0.03,0.4)+'s"><div class="rank">'+(i+1)+'</div>'+
       '<div class="avatar deptbadge">'+deptAvatarFill(x.d)+'</div>'+
