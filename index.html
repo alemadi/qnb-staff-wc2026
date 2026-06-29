@@ -3671,14 +3671,15 @@ function renderPulse(){
     if(live.length>1&&!PULSE_ROT)PULSE_ROT=setInterval(pulseRotate,8000);
     if(live.length<=1&&PULSE_ROT){clearInterval(PULSE_ROT);PULSE_ROT=null;window.__pulseIdx=0;}
     const m=live[(window.__pulseIdx||0)%live.length];
-    const le=(typeof liveFor==="function")?liveFor(m):null;
-    const min=Math.max(1,Math.min(120,Math.floor((now-new Date(m.ko).getTime())/60000)));
+    const v=fxView(m); /* resolve knockout slot labels ("Winners C") to real teams before display + feed matching */
+    const le=(typeof liveFor==="function")?liveFor(v):null;
+    const min=Math.max(1,Math.min(120,Math.floor((now-new Date(v.ko).getTime())/60000)));
     const sc=(le&&le.hs!=null&&le.state!=="pre")?('<b>'+le.hs+'\u2013'+le.as+'</b>'):'v';
     const done=!!(le&&le.done);
     const ck=done?'FT':((le&&le.state==="in"&&le.clock)?le.clock:(min+'\u2032'));
-    el.innerHTML='<span class="pb-dot'+(done?' idle':(min>=80?' final-push':''))+'"></span><b>'+(done?'FT':'LIVE')+'</b>&nbsp;'+(m.home.f?m.home.f+' ':'')+esc(m.home.n)+' '+sc+' '+esc(m.away.n)+(m.away.f?' '+m.away.f:'')+(done?'':' \u00b7 '+esc(ck))+(live.length>1?'<span class="pb-more">+'+(live.length-1)+' more live</span>':'')+'<div class="pb-stakes" id="pbstk" style="display:none"></div>';
+    el.innerHTML='<span class="pb-dot'+(done?' idle':(min>=80?' final-push':''))+'"></span><b>'+(done?'FT':'LIVE')+'</b>&nbsp;'+(v.home.f?v.home.f+' ':'')+esc(v.home.n)+' '+sc+' '+esc(v.away.n)+(v.away.f?' '+v.away.f:'')+(done?'':' \u00b7 '+esc(ck))+(live.length>1?'<span class="pb-more">+'+(live.length-1)+' more live</span>':'')+'<div class="pb-stakes" id="pbstk" style="display:none"></div>';
     el.className="pulsebar live";el.style.display="flex";
-    if(le)fillStakes(m,le);
+    if(le)fillStakes(v,le);
     return;
   }
   /* No live match: the header countdown (#countdown) already shows "Next kickoff" for
