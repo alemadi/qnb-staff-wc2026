@@ -1088,6 +1088,9 @@
   .wn-ok:hover{filter:brightness(1.06)}
 
   /* Brag / callout card triggers */
+  .me-brags{display:flex;flex-wrap:wrap;gap:8px}
+  .brag-chip{font:inherit;font-size:12px;font-weight:700;color:var(--gb);background:linear-gradient(120deg,rgba(180,151,89,.16),var(--glass));border:1px solid rgba(180,151,89,.4);border-radius:99px;padding:8px 13px;cursor:pointer;transition:.15s}
+  .brag-chip:hover{border-color:var(--gold);transform:translateY(-1px)}
   .room-brag{margin:2px auto 12px;display:flex}
   .nb-brag{margin-left:auto;flex:none;width:32px;height:32px;border-radius:9px;background:var(--glass);border:1px solid var(--line);color:var(--gold-bright);font-size:14px;cursor:pointer;transition:.15s}
   .nb-brag:hover{border-color:var(--gold);transform:translateY(-1px)}
@@ -2835,6 +2838,7 @@ async function renderMe(){
     '<div class="me-seclbl">Achievements</div><div class="badges">'+badges.slice(0,5).map(b=>'<div class="badge '+(b.g?"gold":"")+'">'+b.t+'</div>').join("")+'</div>'+
     '<div class="me-fun" id="me-fun"'+(fun.length?'':' style="display:none"')+'>'+fun.map(function(t){return '<div>'+t+'</div>';}).join("")+'</div>'+
     meBestWorst()+
+    meBrags(st)+
     await rivalHTML(s,st);
   updateMeBadge();
   if(CONFIGURED&&!state.demo)consensus().then(function(c){
@@ -4076,7 +4080,9 @@ async function shareBrag(o){
     x.fillStyle=grdH;x.font="400 88px Anton,'Arial Narrow',sans-serif";
     wrapText(x,o.badge,W/2,316,W-110,86,2);
     const grd=x.createLinearGradient(0,430,0,760);grd.addColorStop(0,"#e3d3a3");grd.addColorStop(.55,"#b49759");grd.addColorStop(1,"#8a734a");
-    x.fillStyle=grd;x.font="400 250px Anton,'Arial Narrow',sans-serif";x.fillText(String(o.big),W/2,748);
+    x.fillStyle=grd;let bf=250;x.font="400 "+bf+"px Anton,'Arial Narrow',sans-serif";
+    while(x.measureText(String(o.big)).width>W-120&&bf>84){bf-=12;x.font="400 "+bf+"px Anton,'Arial Narrow',sans-serif";}
+    x.fillText(String(o.big),W/2,748);
     if(o.bigLabel){x.fillStyle="rgba(244,238,227,.5)";x.font="700 28px 'Hanken Grotesk',sans-serif";x.fillText(o.bigLabel,W/2,798);}
     if(o.line1){x.fillStyle="#f4eee3";x.font="700 34px 'Hanken Grotesk',sans-serif";wrapText(x,o.line1,W/2,888,W-140,42,2);}
     if(o.line2){x.fillStyle="rgba(227,211,163,.85)";x.font="600 28px 'Hanken Grotesk',sans-serif";x.fillText(o.line2,W/2,980);}
@@ -4141,6 +4147,72 @@ async function bragChase(){
       accent:idx===0?[180,151,89]:[138,21,56],file:"catch-me",
       shareText:"I’m #"+(idx+1)+" in Staff Challenge 26 — catch me"});
   }catch(e){toast("Couldn’t build the card");}
+}
+/* The earned-card strip on the Me card — only the cards you currently QUALIFY for
+   show up. Each is a thin caller of shareBrag(), all from data already in hand. */
+function mePerfectDay(){
+  if(!state.player)return null;
+  const pr=state.player.predictions||{};
+  const settled=FIXTURES.filter(function(f){const r=state.results[f.id];if(!r)return false;if(f.kn?r.w==null:r.h==null)return false;const q=pr[f.id]||{};return !!(q.o||q.w);});
+  const byDay={};settled.forEach(function(f){(byDay[dayKey(f.ko)]=byDay[dayKey(f.ko)]||[]).push(f);});
+  let best=null;
+  Object.keys(byDay).forEach(function(k){const a=byDay[k];
+    if(a.length>=2&&a.every(function(f){return rvVerdict(f,pr[f.id]||{},state.results[f.id]).pts>0;})){
+      if(!best||new Date(a[0].ko)>new Date(byDay[best][0].ko))best=k;}});
+  if(!best)return null;
+  const a=byDay[best],pts=a.reduce(function(s,f){return s+rvVerdict(f,pr[f.id]||{},state.results[f.id]).pts;},0);
+  return {day:best,matches:a,pts:pts};
+}
+function bragStreak(){
+  const n=koStreakCurrent(state.player.predictions,state.results);
+  if(n<2){toast("Get an exact-score streak going first 🔥");return;}
+  shareBrag({emoji:"🔥",badge:"ON FIRE",big:"×"+n,bigLabel:"EXACT IN A ROW",line1:n+" exact scores, back to back",line2:"Knockout streak stacking",accent:[180,151,89],file:"on-fire",shareText:"I'm on a "+n+"-game exact-score streak in Staff Challenge 26"});
+}
+function bragPerfectDay(){
+  const pd=mePerfectDay();
+  if(!pd){toast("No perfect day yet — nail every pick on one night 💎");return;}
+  shareBrag({emoji:"💎",badge:"PERFECT DAY",big:"+"+pd.pts,bigLabel:pd.matches.length+" OF "+pd.matches.length+" NAILED",line1:"Every pick scored on "+fmtWk(pd.matches[0].ko),line2:"Not one miss all night",accent:[180,151,89],file:"perfect-day",shareText:"Perfect match-night in Staff Challenge 26 — every pick scored"});
+}
+async function bragSquadMVP(){
+  try{
+    const st=(await fetchStandings()).slice().sort(cmpSt);
+    const myDept=deptKey(state.player.dept);
+    const mates=st.filter(function(r){return deptKey(r.dept)===myDept;}).slice().sort(cmpSt);
+    let rank=0;mates.forEach(function(r,i){if(r.slug===state.meSlug&&!rank)rank=i+1;});
+    if(rank!==1){toast(rank?("You're #"+rank+" in "+myDept+" — climb to #1 ⭐"):"No squad yet");return;}
+    shareBrag({emoji:"⭐",badge:"SQUAD MVP",big:"#1",bigLabel:"IN "+myDept.toUpperCase(),line1:"Top scorer of my department",line2:mates.length+" colleagues, one leader",accent:[138,21,56],file:"squad-mvp",shareText:"Top scorer in "+myDept+" — Staff Challenge 26"});
+  }catch(e){toast("Couldn’t build the card");}
+}
+function bragChampion(){
+  if(!champLocked()){toast("Champion cards unlock once the pick locks 🏆");return;}
+  const champ=state.player&&state.player.champ;
+  if(!champ){toast("You haven’t picked a champion");return;}
+  let n=0;try{if(CONS&&CONS.champMap)n=CONS.champMap[champ]||0;}catch(e){}
+  shareBrag({emoji:"🏆",badge:"MY CHAMPION",big:champ,bigLabel:"MY WINNER PICK",line1:"Sealed since the group stage",line2:(n>=3?("Only "+n+" of us are backing them"):"Calling it early"),accent:[180,151,89],file:"my-champion",shareText:"My World Cup champion pick: "+champ+" — Staff Challenge 26"});
+}
+async function bragMaldives(){
+  try{
+    const st=(await fetchStandings()).slice().sort(cmpSt);
+    const g=roadGap(st);
+    if(!g){toast("Lock some picks to hit the board ✈️");return;}
+    const o=g.leader
+      ?{emoji:"🏝️",badge:"TOP OF THE BOARD",big:"#1",bigLabel:"OF "+g.total,line1:"The Maldives is mine to lose",line2:(g.leadOver!=null&&g.leadOver>0?("+"+g.leadOver+" clear of 2nd"):"Holding the lead"),accent:[180,151,89]}
+      :{emoji:"✈️",badge:"ROAD TO THE MALDIVES",big:"#"+g.rank,bigLabel:"OF "+g.total,line1:(g.ptsToFirst>0?(g.ptsToFirst+" pts from the islands"):"Level on points with 1st"),line2:"The Maldives is in sight",accent:[180,151,89]};
+    o.file="road-to-maldives";o.shareText="I'm "+(g.leader?"top of":("#"+g.rank+" in"))+" Staff Challenge 26 — chasing the Maldives";
+    shareBrag(o);
+  }catch(e){toast("Couldn’t build the card");}
+}
+function meBrags(st){
+  if(!state.player||state.demo)return "";
+  const chips=[];
+  try{const n=koStreakCurrent(state.player.predictions,state.results);if(n>=2)chips.push('<button class="brag-chip" onclick="bragStreak()">🔥 On fire ×'+n+'</button>');}catch(e){}
+  if(mePerfectDay())chips.push('<button class="brag-chip" onclick="bragPerfectDay()">💎 Perfect day</button>');
+  if(st&&st.length){const myDept=deptKey(state.player.dept);const mates=st.filter(function(r){return deptKey(r.dept)===myDept;}).slice().sort(cmpSt);
+    if(mates.length>=3&&mates[0]&&mates[0].slug===state.meSlug)chips.push('<button class="brag-chip" onclick="bragSquadMVP()">⭐ Squad MVP</button>');}
+  if(champLocked()&&state.player.champ)chips.push('<button class="brag-chip" onclick="bragChampion()">🏆 My champion</button>');
+  if(st&&st.findIndex(function(r){return r.slug===state.meSlug;})>=0)chips.push('<button class="brag-chip" onclick="bragMaldives()">✈️ Road to Maldives</button>');
+  if(!chips.length)return "";
+  return '<div class="me-seclbl">Brag-worthy 📤</div><div class="me-brags">'+chips.join("")+'</div>';
 }
 function roundRect(x,a,b,w,h,r){x.beginPath();x.moveTo(a+r,b);x.arcTo(a+w,b,a+w,b+h,r);x.arcTo(a+w,b+h,a,b+h,r);x.arcTo(a,b+h,a,b,r);x.arcTo(a,b,a+w,b,r);x.closePath();}
 function drawCardTrophy(x,cx,cy,s){

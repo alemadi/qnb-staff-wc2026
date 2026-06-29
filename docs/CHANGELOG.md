@@ -5,6 +5,31 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-06-29 (Doha) — Five more brag cards: a "Brag-worthy" strip on the Me card
+
+**Commits:** this commit (`index.html` + changelog). **Frontend only — no DB / scoring / sync / lock-logic change.** Seal-safe.
+
+**Why:** extend the shipped card engine with five more shareables, surfaced where players see their own achievements — a dynamic strip on the Me card that shows **only the cards you've actually earned**.
+
+**What changed — `index.html`:**
+- **`meBrags(st)` — an earned-card strip** on the Me card ("Brag-worthy 📤"), rendering a chip only when the player qualifies:
+  - **🔥 On Fire** — exact-score streak ≥2 (`koStreakCurrent`).
+  - **💎 Perfect Day** — every pick scored on one match-night (`mePerfectDay()` over settled picks).
+  - **⭐ Squad MVP** — you're #1 in your department (from the slim standings, dept size ≥3).
+  - **🏆 My Champion** — gated on `champLocked()`; your winner pick + how many back it (`CONS.champMap`).
+  - **✈️ Road to the Maldives** — your rank + points from 1st (`roadGap()`), or "Top of the board" if you lead.
+- Each chip is a thin caller of the existing **`shareBrag()`** builder; all derive from data already in hand and refuse gracefully (a toast) if you tap one you don't qualify for.
+- **`shareBrag` big-text auto-fit** — the focal value now shrinks to fit (84–250px), so a champion team name or any long value never overflows the card.
+- CSS: `.me-brags` / `.brag-chip` — appended to the social-pack block.
+
+**Seal-safety:** all five read only your own picks/results or the public standings aggregate. No other player's pick or `@ig` is rendered. My Champion stays blocked until `champLocked()`.
+
+**Verified:** `node --check` clean. Headless Chromium — **13/13** checks: the auto-fit builds a long-name card without throwing; the strip shows all five when earned and is empty for a fresh unranked player; each card emits the right badge/value (On Fire ×N, Perfect Day, Squad MVP #1, My Champion = team, Road to the Maldives #rank, Top of the Board when leading); Squad MVP refuses when you're not #1; zero page errors. Screenshot confirms the strip.
+
+**Rollback:** `git revert <this commit>` — frontend-only; the `brag*`/`mePerfectDay`/`meBrags` helpers, one `renderMe` mount line, the `shareBrag` auto-fit tweak, and one CSS block.
+
+---
+
 ## 2026-06-29 (Doha) — Brag / callout cards (CALLED IT · Lone Wolf · Catch Me)
 
 **Commits:** this commit (`index.html` + changelog). **Frontend only — no DB / scoring / sync / lock-logic change.** Seal-safe.
