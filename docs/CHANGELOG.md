@@ -5,6 +5,38 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-06-29 (Doha) — "Sexier + more fun" polish pass + WC2026 fun facts (frontend only)
+
+**Commits:** this commit (`index.html`, `watch.html`, changelog). **No DB / scoring / sync / lock-logic change** — every change is presentational or additive UI feedback.
+
+**Why:** an audit was run with two large multi-agent sweeps — (1) 40 UX/UI + 40 gaming-engineer "expert lens" personas, and (2) an exhaustive per-component sweep that put one deep agent on every surface and state of both pages (header, join, matches, bracket, leaderboard, me, overlays, systems, and the whole Watch page), each checking it through *both* "make it sexier" and "make it more fun" lenses plus a completeness critic. Findings were de-duplicated into a single cohesive, low-risk, premium-tasteful pass. A load-bearing safety catch from the audit: `index.html` has a global reduced-motion kill-switch but `watch.html` does **not**, so every new `watch.html` animation ships its own `@media(prefers-reduced-motion:reduce)` guard.
+
+**What changed — `index.html`:**
+- One consolidated, commented CSS block at the end of `<style>` (all new rules last, so they layer cleanly; all motion auto-gated by the existing reduced-motion reset, infinite loops also carry an explicit fallback).
+- **Toasts** now colour by intent (success/warning/error/info) from an emoji/`type` hint, and the element gained `role="status"` + `aria-live="polite"` (screen-reader feedback). `toast(msg)` is unchanged for existing callers — the `type` arg is optional.
+- **Bottom nav**: keyboard `:focus-visible` gold ring, `aria-current="page"` on the active tab (set in `showView`), active-tab glow, hover-lift on inactive tabs, press-scale.
+- **User chip**: gold hover wash + lift + press, light haptic on press.
+- **Header points** (`#chip-pts`) pop on a live change (compared to prior value; never on first paint).
+- **Matches**: a pulsing live beacon on the section count tag when any fixture is live; settled-match result lines slide in with win/lose colour glow and a points-pill pop; live pulse-bar dot escalates in the final 10 minutes.
+- **Leaderboard**: gentle gold champion halo on the #1 podium avatar; me-card badge shelf cascades in (rows & podium already staggered, left as-is).
+- **Game feel**: mid-journey milestone toasts + haptic at 25 / 50 / 75 % of picks (the 100 % celebration already existed); reduced-motion users now get a static glow payoff on completion instead of nothing; generating the share card now fires confetti + a pride haptic.
+- **Join form a11y**: real `<label for=…>` associations + `aria-required` on the required fields.
+- **Demo mode**: a persistent dashed-gold `DEMO` chip (fixed, top-right) so organizer demo data is never mistaken for the live board.
+- **Footer**: reframed as a glass panel with the signature gold hairline.
+- **Fun facts** 🌍: a new rotating "Did you know?" engine — 30 curated, accurate World Cup 2026 / host-venue / history / Arab-Gulf / app facts — sprinkled on the join screen, the bottom of the matches list ("Tournament trivia"), the matches & leaderboard empty states, and the results-reveal summary. It complements (does not duplicate) the existing data-driven leaderboard ticker; reduced-motion shows a static fact.
+
+**What changed — `watch.html`:**
+- Its own scoped `@media(prefers-reduced-motion:reduce)` guards for all new motion (no global reset on this page).
+- Hero stat chips and fan-zone rows cascade in; the map "Near me" button has a finite 3-cycle attention glow and the located-you marker pops on success.
+- "Remind me" now shows a 2-second "✓ Added to calendar" confirmation (the ICS download is otherwise silent/invisible on mobile).
+- Footer reframed to match the app (glass panel + gold hairline) for cross-page cohesion.
+
+**Verified:** `node --check` clean on the extracted inline JS of both pages; headless Chromium render of join, matches (incl. the trivia card), and the Watch page — no page errors, layout intact, fun facts and footer render as designed. All facts are real-world-accurate or clearly playful (no false factual claim on a bank's app).
+
+**Rollback:** `git revert <this commit>` — frontend-only, no DB/state change. Each feature is an isolated, additive block (the consolidated CSS section, the `WC_FACTS`/`mountFact` block, and small wiring edits) and can also be removed individually.
+
+---
+
 ## 2026-06-29 (Doha) — Discoverability: the always-visible rules line now links to the streak explainer
 
 **Commits:** this commit (`index.html` + changelog). Frontend only.

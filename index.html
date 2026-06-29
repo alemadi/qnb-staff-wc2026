@@ -793,6 +793,69 @@
   .tc-tm.picked .tc-nm{color:var(--gold-bright)}
   .tc-ck{color:var(--ok);font-weight:800;font-size:10px;flex:0 0 auto}
   .tc-tm.litteam .tc-nm{color:var(--gold-bright);font-weight:800}
+
+  /* ===================================================================
+     SEXIER + FUNNER pass — additive polish (frontend-only, premium).
+     Every animation here is auto-gated by the global reduced-motion
+     reset at the top of this stylesheet; infinite loops also carry an
+     explicit prefers-reduced-motion fallback. Nothing below touches
+     scoring, sync, or lock logic.
+     =================================================================== */
+  /* toast — colour by intent (element also gets role/aria-live) */
+  #toast.success{background:linear-gradient(100deg,rgba(61,220,151,.16),var(--sapphire));border-color:rgba(61,220,151,.45)}
+  #toast.error{background:linear-gradient(100deg,rgba(239,51,64,.20),var(--grape));border-color:var(--bad)}
+  #toast.warning{background:linear-gradient(100deg,rgba(180,151,89,.18),var(--grape));border-color:var(--gold)}
+  #toast.info{background:linear-gradient(100deg,var(--grape),var(--sapphire));border-color:var(--gold)}
+  /* bottom nav — keyboard focus ring + active glow + hover lift + press */
+  .navbtn:focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-radius:8px}
+  .navbtn.on::before{box-shadow:0 0 8px rgba(227,211,163,.5),inset 0 0 4px rgba(227,211,163,.3)}
+  .navbtn.on{text-shadow:0 0 12px rgba(227,211,163,.22)}
+  .navbtn:active{transform:scale(.95)}
+  @media(hover:hover){.navbtn:not(.on):hover{transform:translateY(-2px);color:var(--gold)}.navbtn:not(.on):hover svg{filter:drop-shadow(0 0 4px rgba(180,151,89,.3))}}
+  /* userchip — living identity card */
+  .userchip{transition:transform .2s cubic-bezier(.34,1.56,.64,1),border-color .2s,background .2s,box-shadow .2s}
+  .userchip:hover{border-color:transparent;background:linear-gradient(115deg,rgba(180,151,89,.15),rgba(180,151,89,.07));transform:translateY(-2px);box-shadow:0 4px 14px rgba(180,151,89,.2),0 0 1px var(--gold)}
+  .userchip:active{transform:scale(.97);transition-duration:.05s}
+  /* header points — pop on a live change */
+  @keyframes pts-pop{0%{transform:scale(1)}40%{transform:scale(1.13);color:var(--gold-bright)}100%{transform:scale(1)}}
+  #chip-pts.pop{animation:pts-pop .5s cubic-bezier(.34,.5,.66,1.34);display:inline-block}
+  /* matches header — live beacon (reuses the app's pulse idiom) */
+  .sec-title .tag.live-now{position:relative;padding-right:16px}
+  .sec-title .tag.live-now::after{content:"";position:absolute;right:5px;top:50%;width:6px;height:6px;border-radius:50%;background:var(--magenta-2);transform:translateY(-50%);box-shadow:0 0 0 0 rgba(239,51,64,.6);animation:pulse 1.8s infinite}
+  /* settled match — the per-card 'moment of truth' on the list */
+  @keyframes resultslide{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
+  .result-line.win,.result-line.lose{animation:resultslide .4s cubic-bezier(.34,1.6,.5,1) both}
+  .result-line.win{text-shadow:0 0 8px rgba(61,220,151,.3)}
+  .result-line.lose{text-shadow:0 0 8px rgba(255,107,107,.2)}
+  @keyframes resultpop{0%{transform:scale(.85);opacity:0}50%{transform:scale(1.12)}100%{transform:scale(1);opacity:1}}
+  .result-line.win .pts{animation:resultpop .5s cubic-bezier(.34,1.8,.5,1) both;box-shadow:0 0 12px -4px rgba(180,151,89,.35)}
+  /* leaderboard — a gentle champion halo on #1 */
+  @keyframes goldRingPulse{0%,100%{box-shadow:0 0 0 2px var(--gold),0 8px 26px -8px rgba(180,151,89,.8)}50%{box-shadow:0 0 0 6px rgba(180,151,89,.3),0 0 18px -4px rgba(180,151,89,1)}}
+  .pod.first .av{animation:goldRingPulse 2.8s ease-in-out infinite}
+  @media(prefers-reduced-motion:reduce){.pod.first .av{animation:none}}
+  /* me-card — badge shelf cascades in (rows & podium already stagger) */
+  @keyframes badgeIn{from{opacity:0;transform:scale(.85) translateY(8px)}to{opacity:1;transform:none}}
+  .badges .badge{animation:badgeIn .4s cubic-bezier(.34,.8,.64,1) backwards}
+  .badges .badge:nth-child(1){animation-delay:.05s}.badges .badge:nth-child(2){animation-delay:.10s}.badges .badge:nth-child(3){animation-delay:.15s}.badges .badge:nth-child(4){animation-delay:.20s}.badges .badge:nth-child(5){animation-delay:.25s}
+  /* live pulse-bar — final-minute escalation */
+  @keyframes pbpulse-urgent{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(1.3)}}
+  .pb-dot.final-push{animation:pbpulse-urgent .8s ease-in-out infinite;filter:drop-shadow(0 0 4px rgba(239,51,64,.8));width:10px;height:10px}
+  @media(prefers-reduced-motion:reduce){.pb-dot.final-push{animation:none}}
+  /* reduced-motion users still get a completion payoff (static glow) */
+  #pred-bar.done-instant{box-shadow:0 0 22px rgba(180,151,89,.5) inset;filter:brightness(1.12)}
+  /* footer — framed glass close with the signature gold hairline */
+  footer.app{position:relative;background:rgba(255,255,255,.03);border:1px solid rgba(244,238,227,.10);border-radius:16px;margin:10px;padding:18px 13px 12px;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+  footer.app::before{content:"";position:absolute;top:0;left:10%;right:10%;height:1px;background:linear-gradient(90deg,transparent,var(--gold-deep) 20%,var(--gold-bright) 50%,var(--gold-deep) 80%,transparent);opacity:.6}
+  /* persistent DEMO sandbox marker (shown only in organizer demo mode) */
+  #demo-badge{display:none;position:fixed;top:calc(env(safe-area-inset-top,0px) + 8px);right:12px;z-index:49;background:rgba(180,151,89,.16);border:1px dashed var(--gold);padding:4px 9px;border-radius:6px;font-size:10px;color:var(--gold);font-weight:800;letter-spacing:.04em;pointer-events:none}
+  #demo-badge.on{display:block}
+  /* fun facts — rotating 'Did you know?' (complements the data ticker) */
+  .ff{background:linear-gradient(120deg,rgba(180,151,89,.10),rgba(180,151,89,.03));border:1px solid rgba(180,151,89,.28);border-radius:14px;padding:10px 13px;line-height:1.5;color:var(--cream);opacity:0;transform:translateY(4px);transition:opacity .35s,transform .35s}
+  .ff.show{opacity:1;transform:none}
+  .ff .ff-lab{display:block;font-size:9px;letter-spacing:1.8px;text-transform:uppercase;color:var(--gold);font-weight:800;margin-bottom:3px}
+  .ff .ff-tx{font-size:12px;font-weight:600}
+  .ff.ff-join{margin:2px 0 16px}
+  @media(prefers-reduced-motion:reduce){.ff{opacity:1;transform:none;transition:none}}
 </style>
 </head>
 <body>
@@ -804,7 +867,7 @@
         <div class="divider"></div>
         <div class="wc"><b>World Cup 26</b><em>predict · climb · win</em></div>
       </div>
-      <div class="userchip" id="userchip" style="display:none" onclick="go('me')">
+      <div class="userchip" id="userchip" style="display:none" onclick="go('me')" onpointerdown="try{navigator.vibrate&&navigator.vibrate(8)}catch(e){}">
         <div class="avatar" id="chip-av">--</div>
         <div class="who"><b id="chip-name">—</b><span id="chip-pts">0 PTS</span></div>
       </div>
@@ -870,15 +933,16 @@
       </div>
       <div class="sso-note">📸&nbsp;<div><b>No passwords, no work email.</b> Your Instagram handle is your identity — use the same handle on any device to pick up where you left off. A pool for QNB colleagues — free to enter, with prizes for the top three.</div></div>
       <div id="cfg-warn" style="display:none;background:rgba(255,107,107,.12);border:1px solid rgba(255,107,107,.4);color:#ff9b9b;border-radius:12px;padding:10px 13px;font-size:11.5px;font-weight:600;margin-bottom:15px">⚠️ Setup needed: database keys aren't configured yet, so picks won't sync. Organizer: paste the Supabase URL + anon key into the file.</div>
-      <label class="fl">Instagram username</label>
-      <input class="input" id="j-ig" type="text" placeholder="@yourhandle" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" inputmode="email" maxlength="64" />
+      <div id="ff-join" class="ff ff-join" aria-live="off"></div>
+      <label class="fl" for="j-ig">Instagram username</label>
+      <input class="input" id="j-ig" type="text" placeholder="@yourhandle" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" inputmode="email" maxlength="64" aria-required="true" />
       <div class="wbnote" id="wbnote" style="display:none"></div>
-      <label class="fl">Display name</label>
+      <label class="fl" for="j-name">Display name</label>
       <input class="input" id="j-name" placeholder="How you want to appear on the board" autocomplete="off" maxlength="40" />
-      <label class="fl">PIN · 4 digits (required — protects your entry)</label>
-      <input class="input" id="j-pin" type="password" inputmode="numeric" placeholder="••••" autocomplete="off" maxlength="4" />
-      <label class="fl">Department</label>
-      <select class="input" id="j-dept">
+      <label class="fl" for="j-pin">PIN · 4 digits (required — protects your entry)</label>
+      <input class="input" id="j-pin" type="password" inputmode="numeric" placeholder="••••" autocomplete="off" maxlength="4" aria-required="true" />
+      <label class="fl" for="j-dept">Department</label>
+      <select class="input" id="j-dept" aria-required="true">
         <option value="">Select your department…</option>
         <option>Group Communications</option><option>Retail Banking</option>
         <option>Corporate &amp; Institutional Banking</option><option>Group Human Capital</option>
@@ -886,7 +950,7 @@
         <option>Group Risk</option><option>Group Finance</option><option>Group Operations</option>
         <option>Asset &amp; Wealth Management</option><option>Group Compliance</option><option>Other</option>
       </select>
-      <label class="fl">Country / QNB market</label>
+      <label class="fl" for="j-country">Country / QNB market</label>
       <select class="input" id="j-country">
         <option>Qatar</option><option>Türkiye</option><option>Egypt</option><option>Saudi Arabia</option>
         <option>Kuwait</option><option>Oman</option><option>UAE</option><option>Lebanon</option>
@@ -1053,7 +1117,8 @@
     <div class="sw-legend" id="sw-legend"></div>
     <div class="sw-btns" id="sw-btns"></div>
   </div>
-  <div id="toast"></div>
+  <div id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+  <div id="demo-badge" aria-hidden="true">DEMO</div>
 
 <script>
 /* ===== Matchday — World Cup 2026 staff pool · full 104-match build · v2: knockout predictions · WC26 official theme (black/gold + host tricolor) ===== */
@@ -1616,7 +1681,10 @@ function scoreFor(preds,results,champ){
 function predCount(){if(!state.player)return 0;let c=0;for(const id in state.player.predictions){const p=state.player.predictions[id];if(p.o||p.w)c++;}return c;}
 
 let toastT;
-function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("show"),2200);}
+function toast(msg,type){const t=document.getElementById("toast");
+  const k=type||(/^(✓|✅|🎉|🎯|🏆|🔥|⚡)/.test(msg)?"success":/^(⚠|🟠)/.test(msg)?"warning":/^(✗|❌|⛔|🚫)/.test(msg)?"error":"info");
+  t.textContent=msg;t.className="show "+k;clearTimeout(toastT);
+  toastT=setTimeout(()=>t.classList.remove("show"),({success:1900,warning:3200,error:3600,info:2200})[k]||2200);}
 function togglePts(btn){const t=document.getElementById("ptable");const on=t.classList.toggle("show");btn.textContent=on?"How do points work? ▴":"How do points work? ▾";}
 /* One-time dismissible announcement banner (knockout streak news). Bump the key to re-show a new banner. */
 const BANNER_KEY="wc:banner:streak-v1";      // value: "seen" (engaged → never again) | a dismissal timestamp (snoozed)
@@ -1639,12 +1707,12 @@ function showView(view){
   document.body.classList.toggle("in",!!state.player);
   document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
   const el=document.getElementById("view-"+view);if(el)el.classList.add("active");
-  ["matches","bracket","leaderboard","me"].forEach(n=>{const b=document.getElementById("nav-"+n);if(b)b.classList.toggle("on",n===view);});
+  ["matches","bracket","leaderboard","me"].forEach(n=>{const b=document.getElementById("nav-"+n);if(b){const a=n===view;b.classList.toggle("on",a);a?b.setAttribute("aria-current","page"):b.removeAttribute("aria-current");}});
   if(view==="matches"){renderFilters();renderMatches();}
   if(view==="bracket")renderBracket();
   if(view==="leaderboard")renderLeaderboard();
   if(view==="me"){renderMe();showOrg();}
-  if(view==="join")rollBoard();
+  if(view==="join"){rollBoard();var _fj=document.getElementById("ff-join");if(_fj)mountFact(_fj,"join");}
   window.scrollTo({top:0,behavior:"smooth"});
 }
 
@@ -1737,7 +1805,9 @@ function updateChip(){
   if(!state.player)return;
   document.getElementById("chip-av").innerHTML=avatarFill(state.player.name);
   document.getElementById("chip-name").textContent=state.player.name;
-  document.getElementById("chip-pts").textContent=scoreFor(state.player.predictions,state.results,state.player.champ).pts+" PTS";
+  const ptsEl=document.getElementById("chip-pts");
+  const nv=scoreFor(state.player.predictions,state.results,state.player.champ).pts+" PTS";
+  if(ptsEl){if(ptsEl.textContent&&ptsEl.textContent!=="0 PTS"&&ptsEl.textContent!==nv){ptsEl.classList.remove("pop");void ptsEl.offsetWidth;ptsEl.classList.add("pop");}ptsEl.textContent=nv;}
 }
 
 function defaultRound(){
@@ -1847,9 +1917,11 @@ function renderMatches(){
   document.getElementById("pred-bar").style.width=(c/tot*100)+"%";
   const list=fixturesFor(state.filter);
   const lblMap={qatar:"Qatar matches",arab:"Arab Teams",today:"Today",completed:"Completed",all:"All rounds"};
-  document.getElementById("match-tag").textContent=(lblMap[state.filter]||RLABEL[state.filter])+" · "+list.length+" match"+(list.length===1?"":"es");
+  const _mtag=document.getElementById("match-tag");
+  _mtag.textContent=(lblMap[state.filter]||RLABEL[state.filter])+" · "+list.length+" match"+(list.length===1?"":"es");
+  _mtag.classList.toggle("live-now",FIXTURES.some(f=>isLive(f))); /* live beacon at the top of the list */
   const host=document.getElementById("match-list");
-  if(!list.length){host.innerHTML='<div class="empty"><div class="ic">📅</div><b>No matches here</b><span>Nothing scheduled for this filter today — try another tab.</span></div>';return;}
+  if(!list.length){host.innerHTML='<div class="empty"><div class="ic">📅</div><b>No matches here</b><span>Nothing scheduled for this filter today — try another tab.</span></div>'+ffInline();return;}
   const nowL=Date.now()+CLOCK_OFFSET;
   const {soon,rest}=locksSoonSplit(list,nowL);
   const groups={},order=[];
@@ -1868,6 +1940,8 @@ function renderMatches(){
     html+='</div>';
   });
   host.innerHTML=html;
+  host.insertAdjacentHTML("beforeend",'<div id="ff-matches" class="ff" style="margin-top:4px"></div>');
+  mountFact(document.getElementById("ff-matches"),"matches",{label:"Tournament trivia"});
   bindMatchEvents();
   updateJump();
   renderDayBanner();
@@ -2039,6 +2113,9 @@ function syncProgress(){
   const te=document.getElementById("pred-total");if(te)te.textContent=tot;
   const bar=document.getElementById("pred-bar");if(bar)bar.style.width=(c/tot*100)+"%";
   if(_lastPredC!=null&&tot>0&&c===tot&&_lastPredC<tot)celebratePicks(c,tot);
+  if(_lastPredC!=null&&tot>0&&c<tot){ /* mid-journey milestones — small beats on the long climb to 104 */
+    const pct=Math.floor(c/tot*100),prev=Math.floor(_lastPredC/tot*100);
+    [25,50,75].forEach(m=>{if(pct>=m&&prev<m){toast("✓ "+m+"% locked in");try{navigator.vibrate&&navigator.vibrate([18,28,18]);}catch(e){}}});}
   _lastPredC=c;
 }
 let saveChain=Promise.resolve();
@@ -2070,6 +2147,7 @@ function celebratePicks(c,tot){
     if(bar){bar.classList.remove("done");void bar.offsetWidth;bar.classList.add("done");}
     toast("\ud83c\udf89 All picks locked in \u00b7 "+c+"/"+tot);
     if(!(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches))confettiBurst();
+    else if(bar)bar.classList.add("done-instant"); /* reduced-motion users get a static glow instead of nothing */
   }catch(e){}
 }
 function confettiBurst(){
@@ -2176,7 +2254,7 @@ async function renderLeaderboard(){
     const snap=await rankSnap();
     if(snap&&snap.ranks)rows.forEach(r=>{const pr=snap.ranks[r.slug];r.dRank=(pr!=null)?(pr-r.rank):null;});
   }
-  if(!rows.length){body.innerHTML='<div class="empty"><div class="ic">🏆</div><b>No predictions yet</b><span>Be the first to lock in your picks under “Matches”.</span></div>';return;}
+  if(!rows.length){body.innerHTML='<div class="empty"><div class="ic">🏆</div><b>No predictions yet</b><span>Be the first to lock in your picks under “Matches”.</span></div>'+ffInline();return;}
   const PT=predTotal();
   let html="";
   if(rows.length>=3){
@@ -2942,6 +3020,7 @@ async function propagate(){
 function toggleDemo(){
   state.demo=!state.demo;
   document.getElementById("demo-switch").classList.toggle("on",state.demo);
+  const db=document.getElementById("demo-badge");if(db)db.classList.toggle("on",state.demo);
   toast(state.demo?"Demo mode ON 🎬":"Demo mode off");
   if(state.view==="leaderboard")renderLeaderboard();
 }
@@ -3061,7 +3140,7 @@ function renderPulse(){
     const sc=(le&&le.hs!=null&&le.state!=="pre")?('<b>'+le.hs+'\u2013'+le.as+'</b>'):'v';
     const done=!!(le&&le.done);
     const ck=done?'FT':((le&&le.state==="in"&&le.clock)?le.clock:(min+'\u2032'));
-    el.innerHTML='<span class="pb-dot'+(done?' idle':'')+'"></span><b>'+(done?'FT':'LIVE')+'</b>&nbsp;'+(m.home.f?m.home.f+' ':'')+esc(m.home.n)+' '+sc+' '+esc(m.away.n)+(m.away.f?' '+m.away.f:'')+(done?'':' \u00b7 '+esc(ck))+(live.length>1?'<span class="pb-more">+'+(live.length-1)+' more live</span>':'')+'<div class="pb-stakes" id="pbstk" style="display:none"></div>';
+    el.innerHTML='<span class="pb-dot'+(done?' idle':(min>=80?' final-push':''))+'"></span><b>'+(done?'FT':'LIVE')+'</b>&nbsp;'+(m.home.f?m.home.f+' ':'')+esc(m.home.n)+' '+sc+' '+esc(m.away.n)+(m.away.f?' '+m.away.f:'')+(done?'':' \u00b7 '+esc(ck))+(live.length>1?'<span class="pb-more">+'+(live.length-1)+' more live</span>':'')+'<div class="pb-stakes" id="pbstk" style="display:none"></div>';
     el.className="pulsebar live";el.style.display="flex";
     if(le)fillStakes(m,le);
     return;
@@ -3206,6 +3285,7 @@ async function shareCard(){
     x.fillText("QNB Staff World Cup 2026 \u00b7 11 June \u2013 19 July",W/2,1266);
     c.toBlob(async b=>{
       if(!b){toast("Couldn\u2019t build the card");return;}
+      if(!(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches)){confettiBurst();try{navigator.vibrate&&navigator.vibrate([80,60,80]);}catch(e){}} /* flex moment \u2014 celebrate the share card */
       const f=new File([b],"matchday-card.png",{type:"image/png"});
       if(navigator.canShare&&navigator.canShare({files:[f]})){
         try{await navigator.share({files:[f],title:"Staff Challenge",text:"My World Cup 26 standing \u2014 come beat me: https://staffchallenge26.com"});return;}catch(e){if(e&&e.name==="AbortError")return;}
@@ -3495,6 +3575,63 @@ async function fillConsensus(){
   }
 }
 
+/* ===== fun facts · rotating WC2026 trivia ("Did you know?") =====
+   Additive + reduced-motion safe. Complements the data-driven leaderboard
+   ticker (startLbTicker) — that one is built from live standings; this one is
+   curated tournament trivia. All facts are real (host/format/history/records)
+   or clearly playful app lines. Nothing here touches scoring or sync. */
+const WC_FACTS=[
+ {t:"World Cup 2026 is the first ever with 48 teams — up from 32.",c:"wc"},
+ {t:"A record 104 matches will be played in 2026 — more than any World Cup before.",c:"wc"},
+ {t:"2026 is the first World Cup co-hosted by three nations: Canada, Mexico and the USA.",c:"wc"},
+ {t:"Matches will be spread across 16 host cities in three countries.",c:"wc"},
+ {t:"2026 introduces a brand-new Round of 32 — an extra knockout round.",c:"wc"},
+ {t:"Two teams from each of the 12 groups advance, plus the eight best third-placed sides.",c:"wc"},
+ {t:"The 2026 final will be played at MetLife Stadium, just outside New York City.",c:"venue"},
+ {t:"Mexico City's Estadio Azteca becomes the first stadium to host games at three World Cups.",c:"venue"},
+ {t:"Mexico becomes the first country to host or co-host the World Cup three times.",c:"venue"},
+ {t:"Canada will stage World Cup matches for the very first time in 2026.",c:"venue"},
+ {t:"The 2026 tournament kicks off in Mexico City, at the iconic Estadio Azteca.",c:"venue"},
+ {t:"Brazil are the most successful World Cup nation, with five titles.",c:"history"},
+ {t:"Only eight different nations have ever won the World Cup.",c:"record"},
+ {t:"Miroslav Klose is the World Cup's all-time top scorer, with 16 goals.",c:"record"},
+ {t:"Pelé is the only player to win three World Cups: 1958, 1962 and 1970.",c:"history"},
+ {t:"The fastest goal in World Cup history took just 11 seconds — Hakan Şükür, 2002.",c:"record"},
+ {t:"Host nations have lifted the trophy six times — home advantage is real.",c:"history"},
+ {t:"Uruguay won the very first World Cup, as hosts, back in 1930.",c:"history"},
+ {t:"The World Cup trophy is solid 18-carat gold and stands about 37 cm tall.",c:"record"},
+ {t:"Qatar hosted the 2022 World Cup — the first ever held in the Arab world.",c:"arab"},
+ {t:"Morocco reached the 2022 semi-finals — the first Arab and African team to do so.",c:"arab"},
+ {t:"Saudi Arabia stunned eventual champions Argentina 2–1 at the 2022 World Cup.",c:"arab"},
+ {t:"Lionel Messi finally lifted the World Cup in Qatar in 2022.",c:"arab"},
+ {t:"Saudi Arabia will host the World Cup in 2034.",c:"arab"},
+ {t:"Back-to-back exact knockout scores make your bonus snowball — fortune favours the bold.",c:"app"},
+ {t:"First place flies to the Maldives. Second and third bank the points. Everyone gets bragging rights.",c:"app"},
+ {t:"There are more possible brackets than you could count in a lifetime — trust your gut.",c:"play"},
+ {t:"Your champion pick is worth +25 — but it locks before a ball is kicked, so choose wisely.",c:"app"},
+ {t:"The World Cup final is the most-watched sporting event on Earth — over a billion tune in.",c:"record"},
+ {t:"Everyone starts level on zero — one perfect matchday can rocket you up the board.",c:"app"}
+];
+const FF_ICON={wc:"🌍",venue:"🏟️",history:"📜",record:"🏆",arab:"⭐",app:"⚽",play:"💡"};
+function ffShuffle(){const a=WC_FACTS.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));const t=a[i];a[i]=a[j];a[j]=t;}return a;}
+let FF_TIMERS={};
+function mountFact(el,key,opts){
+  if(!el||!WC_FACTS.length)return;opts=opts||{};
+  const facts=ffShuffle();let i=0;
+  const lab=opts.label===undefined?"Did you know?":opts.label;
+  const render=function(){const f=facts[i%facts.length];
+    el.innerHTML=(lab?'<span class="ff-lab">'+(FF_ICON[f.c]||"💡")+" "+lab+'</span>':"")+'<span class="ff-tx">'+esc(f.t)+'</span>';};
+  render();el.classList.add("ff");requestAnimationFrame(function(){el.classList.add("show");});
+  if(FF_TIMERS[key])clearInterval(FF_TIMERS[key]);
+  const rm=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if(facts.length>1&&!rm)FF_TIMERS[key]=setInterval(function(){
+    if(!document.body.contains(el)){clearInterval(FF_TIMERS[key]);return;}
+    el.classList.remove("show");setTimeout(function(){i++;render();el.classList.add("show");},240);
+  },opts.ms||8000);
+}
+function ffInline(){const f=ffShuffle()[0];
+  return '<div class="ff show" style="margin-top:14px;text-align:left"><span class="ff-lab">'+(FF_ICON[f.c]||"💡")+' Did you know?</span><span class="ff-tx">'+esc(f.t)+'</span></div>';}
+
 /* ===== how it works · FAQ ===== */
 const FAQ_ITEMS=[
  {q:"How do points work?",a:"Group matches: 3 points for the right result, +2 for the exact score \u2014 5 max. Knockouts pay more each round for calling who goes through: Round of 32 = 3 \u00b7 Round of 16 = 6 \u00b7 Quarterfinals = 9 \u00b7 Semifinals = 14 \u00b7 Third place = 8 \u00b7 the Final = 22. In knockouts you can also add a predicted final score for a bonus on top (+3 in the Round of 32 up to +14 in the Final) \u2014 plus a streak bonus for nailing exact scores in a row (see the next questions)."},
@@ -3741,6 +3878,8 @@ function revealSummary(){
     html+='<div class="rv-row '+v.cls+'"><span>'+esc(mv.home.n+" v "+mv.away.n)+'</span><b>'+esc(v.label)+(sb>0?' 🔥+'+sb:'')+'</b></div>';
   });
   html+='</div>';
+  var _ff=ffShuffle()[0];
+  html+='<div class="ff show" style="margin-top:16px;text-align:left"><span class="ff-lab">'+(FF_ICON[_ff.c]||"💡")+' Did you know?</span><span class="ff-tx">'+esc(_ff.t)+'</span></div>';
   document.getElementById("rv-stage").innerHTML=html;
   RV.total=total;RV.i=RV.q.length;
   odo(document.getElementById("rv-odo"),0,total,500);
