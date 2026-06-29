@@ -8,8 +8,8 @@
 --          bonus (also gated on the outcome pick, matching the JS guard).
 --   Knockout (result has "w"): who-goes-through ladder — k1–k16 +4 · k17–k24 +5 ·
 --          k25–k28 +6 · k29–k30 +8 · k31 third place +6 · k32 final +10.
---   Knockout exact-score bonus (90-min scoreline, ADDED 2026-06-28), awarded
---          INDEPENDENTLY of the who-goes-through pick — k1–k16 +4 · k17–k24 +5 ·
+--   Knockout exact-score bonus (full-time scoreline incl. extra time, ADDED 2026-06-28),
+--          awarded INDEPENDENTLY of the who-goes-through pick — k1–k16 +4 · k17–k24 +5 ·
 --          k25–k28 +6 · k29–k30 +7 · k31 third place +5 · k32 final +8.
 --          (Note SF/third/final differ from the advance ladder, matching KO_BONUS.)
 --          A KO scoreline hit also counts toward the `exact` column, like a group exact.
@@ -79,7 +79,7 @@ scored as (
       when m.rw is not null then                       -- knockout
         ( case when pr.pw = m.rw then m.kpts else 0 end )      -- who-goes-through
         +
-        ( case when pr.ph = m.rh and pr.pa = m.ra            -- 90-min exact-score bonus,
+        ( case when pr.ph = m.rh and pr.pa = m.ra            -- full-time exact-score bonus,
                then m.kbonus else 0 end )                     -- independent of the winner pick
       when coalesce(pr.po,'') = '' then 0              -- group: outcome pick required
       else

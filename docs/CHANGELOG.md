@@ -5,6 +5,30 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-06-29 03:41 (Doha) — Knockout exact-score bonus: basis changed from 90-minute to full-time (incl. extra time)
+
+**Commits:** this commit (`index.html` + `sql/standings.sql` comments + this changelog).
+
+**Why:** Owner decision. The knockout exact-score bonus was labelled "90-minute score" everywhere. Per owner, the bonus should instead be judged on the **full-time score including extra time** (penalty shootouts never count as goals — the recorded score is the score at the end of extra time; penalties only decide who advances). This also aligns with the rules strip's existing line "Results are official FIFA full-time scores."
+
+**What changed — wording/convention only, NO scoring-logic change:**
+- The scorer (`scoreFor` at `index.html:1424`, the SQL `standings()` knockout branch) was already result-driven: it compares each player's predicted score to whatever score the organizer records. "90-minute vs full-time" is purely (a) the label shown to players and (b) the number the organizer enters. No formula changed.
+- Relabelled all user-facing "90-min score" → "full-time score (incl. extra time)": rules strip (`:814`), points table (`:839-840`), knockout pick card (`:1763`), organizer score-entry label + toast (`:2692`, `:2736`), FAQ "How do points work?", and code comments (`:1107`, `:1419`, `:2725`); plus the two comments in `sql/standings.sql`.
+- **Entry convention going forward:** for a tie that goes to extra time, the organizer (or me, when entering results) records the **full-time/end-of-ET score** in the score boxes and sets the **winner** to whoever advanced (which may be via penalties). For matches decided in 90 minutes, full-time = 90-min, so nothing differs.
+
+**Effect on already-played ties:** k1 (South Africa 0–1 Canada) finished in regulation (no extra time), so its recorded score and all 667 players' k1 points are unaffected by this change.
+
+**Heads-up (owner to action):** players made their ~2,276 knockout score picks while the app said "90-minute score." This convention change should be **announced to players** so they know the bonus now follows the full-time (incl. ET) scoreline. No picks were altered.
+
+**Verified:** `node --check` on the extracted inline script clean; grep confirms zero remaining "90-min" references in `index.html`/`sql`. No DB function redeploy required (the change is comment/label only; the deployed `standings()` behaviour is unchanged and already correct).
+
+**DB:** none (the live `standings()` function is unchanged — it never measured minutes).
+
+**Rollback (git):**
+
+    git revert <this-commit-sha>
+    git push -u origin claude/scoring-system-logic-u1nyiq
+
 ## 2026-06-28 20:30 (Doha) — Fix: knockout exact-score bonus was only in the JS scorer, not the leaderboard (and not in any preview)
 
 **Commits:** this commit (`sql/standings.sql` + `index.html` + this changelog).

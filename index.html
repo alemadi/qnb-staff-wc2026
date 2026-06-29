@@ -811,7 +811,7 @@
       <details style="margin-top:16px;font-size:11.5px;color:var(--muted);line-height:1.6">
         <summary style="cursor:pointer;color:var(--gold);font-weight:700">📜 Rules &amp; terms</summary>
         <div style="margin-top:8px">
-        <b>Free to enter — strictly no buy-ins, no side bets.</b> One entry per person; your real Instagram handle is your identity and a 4-digit PIN protects it. Predict every match. <b>Predictions lock at kickoff.</b> Group matches: <b>+3</b> for the correct result, plus a <b>+2</b> bonus if you nail the exact score (a perfect call = 5 points). Knockout matches (from 28 June): just pick who goes through — extra time and penalties count. Each round is worth more: <b>+4</b> Round of 32 → <b>+5</b> Round of 16 → <b>+6</b> quarter-finals → <b>+8</b> semi-finals → <b>+10</b> Final (third-place match <b>+6</b>). Nail the <b>90-minute score</b> for a bonus on top — <b>+4</b> Round of 32 rising to <b>+8</b> Final (third-place <b>+5</b>). Ties open for picks once both teams are confirmed. <b>Champion pick: +25 points</b> — locks on <b>Thursday 18 June, 7:00 PM Doha</b>. Results are official FIFA full-time scores. <b>Prizes:</b> 1st — a Maldives trip for one with 3-night accommodation included; 2nd — 60,000 QNB Life Rewards points; 3rd — 40,000 QNB Life Rewards points. Prize ties resolve by most predictions made, then most exact scores, then most correct results, then earliest sign-up. Pool admins play for bragging rights only and are not prize-eligible. Winners are verified by DM from their Instagram account and an audit of their entry before any award. Tampering with other players' picks or entering predictions after lock by any means leads to removal. The organizer may correct errors and has final say. Your handle, display name, department and country are visible to other players; all data is deleted after the final.
+        <b>Free to enter — strictly no buy-ins, no side bets.</b> One entry per person; your real Instagram handle is your identity and a 4-digit PIN protects it. Predict every match. <b>Predictions lock at kickoff.</b> Group matches: <b>+3</b> for the correct result, plus a <b>+2</b> bonus if you nail the exact score (a perfect call = 5 points). Knockout matches (from 28 June): just pick who goes through — extra time and penalties count. Each round is worth more: <b>+4</b> Round of 32 → <b>+5</b> Round of 16 → <b>+6</b> quarter-finals → <b>+8</b> semi-finals → <b>+10</b> Final (third-place match <b>+6</b>). Nail the <b>full-time score</b> (including extra time) for a bonus on top — <b>+4</b> Round of 32 rising to <b>+8</b> Final (third-place <b>+5</b>). Ties open for picks once both teams are confirmed. <b>Champion pick: +25 points</b> — locks on <b>Thursday 18 June, 7:00 PM Doha</b>. Results are official FIFA full-time scores. <b>Prizes:</b> 1st — a Maldives trip for one with 3-night accommodation included; 2nd — 60,000 QNB Life Rewards points; 3rd — 40,000 QNB Life Rewards points. Prize ties resolve by most predictions made, then most exact scores, then most correct results, then earliest sign-up. Pool admins play for bragging rights only and are not prize-eligible. Winners are verified by DM from their Instagram account and an audit of their entry before any award. Tampering with other players' picks or entering predictions after lock by any means leads to removal. The organizer may correct errors and has final say. Your handle, display name, department and country are visible to other players; all data is deleted after the final.
         </div>
       </details>
       <p class="sub" style="margin:14px 0 0;font-size:11px">Your picks sync to the live shared leaderboard — the same handle on any device resumes your game.</p>
@@ -836,8 +836,8 @@
         <div class="pgrp">Group stage · 11–27 June · predict the result</div>
         <div class="prow"><span>Correct result (win / draw / loss)</span><b>+3</b></div>
         <div class="prow"><span>Exact score — bonus on top <span class="pfaint">(perfect call = 5)</span></span><b>+2</b></div>
-        <div class="pgrp">Knockouts · from 28 June · who goes through <span style="text-transform:none">(ET &amp; penalties count)</span> + optional 90-min score</div>
-        <div class="prow"><span>Round of 32 <span class="pfaint">· +4 exact 90-min score</span></span><b>+4</b></div>
+        <div class="pgrp">Knockouts · from 28 June · who goes through <span style="text-transform:none">(ET &amp; penalties count)</span> + optional full-time score (incl. ET)</div>
+        <div class="prow"><span>Round of 32 <span class="pfaint">· +4 exact full-time score</span></span><b>+4</b></div>
         <div class="prow"><span>Round of 16 <span class="pfaint">· +5 score</span></span><b>+5</b></div>
         <div class="prow"><span>Quarter-final <span class="pfaint">· +6 score</span></span><b>+6</b></div>
         <div class="prow"><span>Semi-final <span class="pfaint">· +7 score</span></span><b>+8</b></div>
@@ -1104,7 +1104,7 @@ RLABEL["FINAL"]="Final";
    tie; "L" = losers (third-place play-off only). */
 const KO_PTS={R32:4,R16:5,QF:6,SF:8,third:6,final:10};
 function koPts(m){return m.tag==="final"?KO_PTS.final:(m.tag==="third"?KO_PTS.third:(KO_PTS[m.round]||4));}
-/* Knockout exact-score bonus (90-min scoreline), scaled by round, on top of the winner points. */
+/* Knockout exact-score bonus (full-time scoreline, incl. extra time), scaled by round, on top of the winner points. */
 const KO_BONUS={R32:4,R16:5,QF:6,SF:7,third:5,final:8};
 function koBonus(m){return m.tag==="final"?KO_BONUS.final:(m.tag==="third"?KO_BONUS.third:(KO_BONUS[m.round]||0));}
 const BRACKET={
@@ -1416,7 +1416,7 @@ function scoreFor(preds,results,champ){
   for(const id in results){
     if(id.charAt(0)==="_")continue;
     const r=results[id],p=preds&&preds[id];
-    if(r&&r.w!=null){ /* knockout: winner points by round ladder + scaled exact-score bonus (90-min) */
+    if(r&&r.w!=null){ /* knockout: winner points by round ladder + scaled exact-score bonus (full-time incl. ET) */
       if(!p||(!p.w&&p.h==null))continue;
       scored++;
       const f=FIXBYID[id];
@@ -1760,7 +1760,7 @@ function koMatchCard(m,idx){
       '<button class="pick '+(p.w===m.home.n?"sel":"")+'" data-w="'+esc(m.home.n)+'" aria-label="Pick '+esc(m.home.n)+' to go through"><span class="mini">'+m.home.f+'</span></button>'+
       '<button class="pick '+(p.w===m.away.n?"sel":"")+'" data-w="'+esc(m.away.n)+'" aria-label="Pick '+esc(m.away.n)+' to go through"><span class="mini">'+m.away.f+'</span></button></div>'+
       '<div class="kn-note">Pick who goes through — extra time &amp; penalties count</div>'+
-      '<div class="chips-lab">90-min score · +'+koBonus(m)+' bonus · optional</div>'+
+      '<div class="chips-lab">Full-time score (incl. ET) · +'+koBonus(m)+' bonus · optional</div>'+
       '<div class="bonus-fields show"><label>'+m.home.f+'</label><input class="scorein" type="number" min="0" max="20" inputmode="numeric" aria-label="'+esc(m.home.n)+' goals" data-ksh="'+m.id+'" value="'+(p.h!=null?p.h:"")+'"><span class="scoredash">–</span><input class="scorein" type="number" min="0" max="20" inputmode="numeric" aria-label="'+esc(m.away.n)+' goals" data-ksa="'+m.id+'" value="'+(p.a!=null?p.a:"")+'"><label>'+m.away.f+'</label></div>'+
       '<div class="lockin'+((lockTs(m)-Date.now()-CLOCK_OFFSET)<7200000?' soon':'')+'" data-lockts="'+lockTs(m)+'">⏳ '+fmtLeft(lockTs(m)-Date.now()-CLOCK_OFFSET)+'</div>';
   }
@@ -2689,7 +2689,7 @@ function renderKnockoutEditor(host,rnd){
       (t.h?'<option value="'+esc(t.h)+'"'+(r&&r.w===t.h?' selected':'')+'>'+esc(t.h)+'</option>':'')+
       (t.a?'<option value="'+esc(t.a)+'"'+(r&&r.w===t.a?' selected':'')+'>'+esc(t.a)+'</option>':'')+
       '</select><span class="saved">'+(r&&r.w?"✓":"")+'</span></div>'+
-      '<div class="krow" style="margin-top:5px;align-items:center;gap:7px"><span style="font-size:10.5px;color:var(--faint);min-width:74px">90-min score</span>'+
+      '<div class="krow" style="margin-top:5px;align-items:center;gap:7px"><span style="font-size:10.5px;color:var(--faint);min-width:74px">Full-time score</span>'+
       '<input class="input ksel" type="number" min="0" max="20" inputmode="numeric" data-krh="'+m.id+'" value="'+(r&&r.h!=null?r.h:"")+'"'+((t.h&&t.a)?'':' disabled')+' style="max-width:60px;text-align:center">'+
       '<span style="color:var(--faint)">–</span>'+
       '<input class="input ksel" type="number" min="0" max="20" inputmode="numeric" data-kra="'+m.id+'" value="'+(r&&r.a!=null?r.a:"")+'"'+((t.h&&t.a)?'':' disabled')+' style="max-width:60px;text-align:center">'+
@@ -2722,7 +2722,7 @@ async function orgSetKWinner(id){
   updateChip();renderResultsEditor();
   toast(v?(v+" through — next round updated 🏆"):"Winner cleared");
 }
-/* Organizer enters the 90-min knockout score (for the exact-score bonus); preserves the winner */
+/* Organizer enters the full-time knockout score incl. extra time (for the exact-score bonus); preserves the winner */
 async function orgSetKScore(id){
   const hi=document.querySelector('[data-krh="'+id+'"]'),ai=document.querySelector('[data-kra="'+id+'"]');
   if(!hi||!ai)return;
@@ -2733,7 +2733,7 @@ async function orgSetKScore(id){
   const ok=await orgSet("wc:results",state.results);
   const m=document.querySelector('[data-krs="'+id+'"]');if(m)m.textContent=(cur.h!=null?"✓":"");
   updateChip();
-  toast(ok?"90-min score saved · bonus live ✓":"⚠ Save failed — retry");
+  toast(ok?"Full-time score saved · bonus live ✓":"⚠ Save failed — retry");
 }
 /* Which team a feeder tie sends forward: its winner ("W") or its loser ("L", third-place) */
 function feedTeam(fid,take){
@@ -3319,7 +3319,7 @@ async function fillConsensus(){
 
 /* ===== how it works · FAQ ===== */
 const FAQ_ITEMS=[
- {q:"How do points work?",a:"Group matches: 3 points for the right result, +2 for the exact score \u2014 5 max. Knockouts pay more each round for picking who goes through: Round of 32 = 4 \u00b7 Round of 16 = 5 \u00b7 Quarterfinals = 6 \u00b7 Semifinals = 8 \u00b7 Third place = 6 \u00b7 the Final = 10. Plus an optional bonus for nailing the 90-minute scoreline \u2014 counted on its own, even if your pick to advance is wrong: Round of 32 +4 \u00b7 Round of 16 +5 \u00b7 Quarterfinals +6 \u00b7 Semifinals +7 \u00b7 Third place +5 \u00b7 the Final +8."},
+ {q:"How do points work?",a:"Group matches: 3 points for the right result, +2 for the exact score \u2014 5 max. Knockouts pay more each round for picking who goes through: Round of 32 = 4 \u00b7 Round of 16 = 5 \u00b7 Quarterfinals = 6 \u00b7 Semifinals = 8 \u00b7 Third place = 6 \u00b7 the Final = 10. Plus an optional bonus for nailing the full-time scoreline (including extra time) \u2014 counted on its own, even if your pick to advance is wrong: Round of 32 +4 \u00b7 Round of 16 +5 \u00b7 Quarterfinals +6 \u00b7 Semifinals +7 \u00b7 Third place +5 \u00b7 the Final +8."},
  {q:"When do picks lock?",a:"At kickoff, match by match. Until then edit freely \u2014 changes save as you type."},
  {q:"I got the score right but only received 3 points?",a:"Exact-score points need both number boxes filled before kickoff. If one was empty, only your result pick counted."},
  {q:"When do results and points appear?",a:"Scores post and points update about 30 minutes after the final whistle \u2014 automatically. Next time you open the app, the morning reveal replays how your picks did."},
