@@ -856,6 +856,39 @@
   .ff .ff-tx{font-size:12px;font-weight:600}
   .ff.ff-join{margin:2px 0 16px}
   @media(prefers-reduced-motion:reduce){.ff{opacity:1;transform:none;transition:none}}
+
+  /* ===================================================================
+     DEPARTURES-BOARD DEEPENING — the 40 UX + 40 gaming "expert-lens" pass,
+     built ON the block above (never duplicating it). Discipline: gold for
+     prestige; Qatar maroon (--qatar) reserved for Qatar matches + lock
+     urgency only; one focal glow per screen; no emoji in the split-flap type.
+     =================================================================== */
+  /* join hero ball — the gravitational anchor of the sign-in screen */
+  .join-hero .ball{font-size:clamp(46px,11vw,64px);position:relative;filter:drop-shadow(0 18px 40px rgba(180,151,89,.30))}
+  .join-hero .ball::before{content:"";position:absolute;inset:-22px;border-radius:50%;border:1.5px solid rgba(227,211,163,.20);animation:ballbreathe 4.5s ease-in-out infinite}
+  @keyframes ballbreathe{0%,100%{transform:scale(1);opacity:.55}50%{transform:scale(1.13);opacity:.22}}
+  @media(prefers-reduced-motion:reduce){.join-hero .ball::before{animation:none;opacity:.38}}
+  /* Maldives prize board — gold-framed showcase (split-flap letters stay the brand) */
+  .dep{border:1.5px solid var(--gold-deep);background:linear-gradient(180deg,rgba(180,151,89,.08),rgba(180,151,89,.015));box-shadow:inset 0 0 0 1px rgba(180,151,89,.15),0 14px 40px rgba(0,0,0,.5),0 0 24px -10px rgba(180,151,89,.18)}
+  .dep-hd b{color:var(--gold-bright)}
+  /* kickoff time as a luxury 'departures' display */
+  .midcol{gap:6px}
+  .kotime{font-family:var(--font-d);font-size:15px;font-weight:400;letter-spacing:.04em;color:var(--gold)}
+  .koday{font-size:10px;color:var(--muted);letter-spacing:.07em;text-transform:uppercase}
+  /* lock countdown — calm gold pill; Qatar maroon only when imminent (<2h) */
+  .lockin{font-size:11.5px;font-weight:800;letter-spacing:.4px;color:var(--gold);background:rgba(180,151,89,.07);padding:6px 12px;border-radius:11px;display:inline-block;opacity:1}
+  .lockin.soon{font-family:var(--font-d);font-size:13px;letter-spacing:.6px;color:var(--bad);background:rgba(138,21,56,.16);border:1px solid rgba(138,21,56,.45);box-shadow:0 0 10px -2px rgba(138,21,56,.4)}
+  /* bracket — 'road to glory' lit paths + Final-card crown */
+  .brk-svg path.lit{stroke:var(--gold-bright);stroke-width:2.6;filter:drop-shadow(0 0 4px rgba(227,211,163,.4))}
+  .tcard.fin{background:linear-gradient(135deg,rgba(138,115,74,.16),rgba(180,151,89,.06));box-shadow:inset 0 0 0 1px rgba(180,151,89,.22)}
+  .tcard.fin .tc-tm.win .tc-nm{color:var(--gold-bright)}
+  /* your own leaderboard row — recessed glass 'this is YOU' */
+  .lb-row.me{background:linear-gradient(100deg,rgba(180,151,89,.10),var(--glass));border:1px solid rgba(180,151,89,.42);box-shadow:inset 0 0 0 1px rgba(180,151,89,.16),inset 0 2px 6px rgba(180,151,89,.06),0 6px 18px -8px rgba(180,151,89,.3)}
+  /* premium focus halo on inputs + keyboard focus rings on CTAs (a11y finish) */
+  .input:focus,.scorein:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(180,151,89,.18),inset 0 0 10px rgba(227,211,163,.08)}
+  .input:focus-visible,.scorein:focus-visible{outline:2px solid var(--gold-bright);outline-offset:2px}
+  .btn-primary:focus-visible{outline:3px solid var(--gold-bright);outline-offset:2px}
+  .faq-link:focus-visible,.sw-b:focus-visible,.ptbtn:focus-visible,.sharebtn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 </style>
 </head>
 <body>
@@ -1013,6 +1046,7 @@
   <!-- BRACKET -->
   <section class="view" id="view-bracket">
     <div class="sec-title"><h2>Bracket</h2><div class="tag" id="brk-tag">Knockouts</div></div>
+    <div id="ff-bracket" class="ff" style="margin:0 2px 6px"></div>
     <div id="brk-body"></div>
     <button class="ptbtn" id="grp-toggle" onclick="toggleGroupTables()" style="margin-top:8px">Final group tables ▾</button>
     <div id="grp-wrap" style="display:none;margin-top:10px">
@@ -1337,7 +1371,7 @@ function streakMoment(run){
     document.body.appendChild(el);
     if(!rm){confettiBurst();if(run>=4)setTimeout(confettiBurst,170);}
     try{navigator.vibrate&&navigator.vibrate([10,40,10,40,10,55]);}catch(e){}
-    try{sndExact&&sndExact();}catch(e){}
+    try{sndStreak(run);}catch(e){} /* escalating fanfare — a 4-streak out-rewards a 2-streak */
     setTimeout(function(){el.classList.add("out");},1500);
     setTimeout(function(){el.remove();},1950);
   }catch(e){}
@@ -1709,7 +1743,7 @@ function showView(view){
   const el=document.getElementById("view-"+view);if(el)el.classList.add("active");
   ["matches","bracket","leaderboard","me"].forEach(n=>{const b=document.getElementById("nav-"+n);if(b){const a=n===view;b.classList.toggle("on",a);a?b.setAttribute("aria-current","page"):b.removeAttribute("aria-current");}});
   if(view==="matches"){renderFilters();renderMatches();}
-  if(view==="bracket")renderBracket();
+  if(view==="bracket"){renderBracket();var _fb=document.getElementById("ff-bracket");if(_fb)mountFact(_fb,"bracket");}
   if(view==="leaderboard")renderLeaderboard();
   if(view==="me"){renderMe();showOrg();}
   if(view==="join"){rollBoard();var _fj=document.getElementById("ff-join");if(_fj)mountFact(_fj,"join");}
@@ -1787,6 +1821,9 @@ async function joinNow(){
   document.getElementById("userchip").style.display="flex";
   document.getElementById("countdown").style.display="flex";
   toast("Welcome, "+name.split(" ")[0]+"! ⚽");
+  if(!(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches)){try{setTimeout(confettiBurst,150);}catch(e){}} /* first dopamine hit — you're in */
+  try{setTimeout(sndExact,200);}catch(e){}
+  try{navigator.vibrate&&navigator.vibrate([100,50,100]);}catch(e){}
   updateChip();
   state.filter=defaultRound();
   go("matches");
@@ -2271,6 +2308,8 @@ async function renderLeaderboard(){
   if(rows.length>lim)html+='<button class="lb-more" onclick="lbMore()">Show more · '+(rows.length-lim)+' below</button>';
   body.innerHTML=html;
   if(!state.player)body.insertAdjacentHTML("beforeend",'<button class="btn btn-primary" style="margin:16px auto 4px;display:flex" onclick="go(\'join\')">Join the pool \u26bd</button>');
+  body.insertAdjacentHTML("beforeend",'<div id="ff-lb" class="ff" style="margin-top:14px"></div>');
+  mountFact(document.getElementById("ff-lb"),"lb");
   rows.forEach(function(r){
     const sp=body.querySelector('.ptsn[data-pslug="'+r.slug+'"]');
     if(sp&&LB_PREV[r.slug]!=null&&LB_PREV[r.slug]!==r.pts)odo(sp,LB_PREV[r.slug],r.pts,600);
@@ -3622,6 +3661,8 @@ function mountFact(el,key,opts){
   const render=function(){const f=facts[i%facts.length];
     el.innerHTML=(lab?'<span class="ff-lab">'+(FF_ICON[f.c]||"💡")+" "+lab+'</span>':"")+'<span class="ff-tx">'+esc(f.t)+'</span>';};
   render();el.classList.add("ff");requestAnimationFrame(function(){el.classList.add("show");});
+  el.style.cursor="pointer";el.title="Tap for another";
+  el.onclick=function(){el.classList.remove("show");setTimeout(function(){i++;render();el.classList.add("show");},200);}; /* tap to flip to the next fact */
   if(FF_TIMERS[key])clearInterval(FF_TIMERS[key]);
   const rm=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
   if(facts.length>1&&!rm)FF_TIMERS[key]=setInterval(function(){
@@ -3687,6 +3728,7 @@ function tone(f,t,d,g){const a=actx();if(!a)return;
 function sndTick(force){if(!sndOn()&&!force)return;try{tone(1200,0,.04);}catch(e){}}
 function sndCorrect(){if(!sndOn())return;try{tone(600,0,.07);tone(900,.08,.1);}catch(e){}}
 function sndExact(){if(!sndOn())return;try{tone(800,0,.06);tone(1200,.07,.06);tone(1600,.14,.14);tone(2400,.3,.06,.03);}catch(e){}}
+function sndStreak(run){if(!sndOn())return;try{tone(800,0,.07);if(run>=2)tone(1100,.06,.07);if(run>=3)tone(1400,.12,.08);if(run>=4)tone(2000,.20,.06,.03);}catch(e){}} /* climbs with the streak length */
 function odo(el,from,to,ms){
   if(!el)return;
   const rm=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;

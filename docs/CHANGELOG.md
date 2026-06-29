@@ -5,6 +5,30 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-06-29 (Doha) — Departures-board deepening (the 40 UX + 40 gaming expert-lens fold-in)
+
+**Commits:** this commit (`index.html` + changelog). Frontend only — no DB/scoring/sync/lock change.
+
+**Why:** the second audit workflow (40 UX/UI + 40 gaming-engineer "expert lens" personas) finished after the first pass shipped; its agents read the already-shipped layer and produced a cohesive set of *complementary* moves (with explicit guardrails: one accent family — gold for prestige, Qatar maroon for Qatar matches + lock-urgency only; one focal glow per screen; no emoji baked into the split-flap typography; WCAG contrast preserved; every animation reduced-motion-gated). This commit folds in the low-risk, high-impact, non-duplicative items. (One guardrail applied with judgment: the optional infinite lock-countdown pulse was dropped to avoid stacking infinite animations on a scrolling list — the static maroon pill already signals urgency.)
+
+**What changed (all CSS unless noted):**
+- **Join hero ball** — depth drop-shadow + a single slow breathing focal ring; it now anchors the sign-in screen.
+- **Maldives "Departures" prize board** — promoted to a gold-framed showcase (gold-deep frame, faint inset wash, soft outer glow); split-flap MALDIVES letters kept emoji-free.
+- **Kickoff time** — rendered as a luxury "departures display" (Anton, scaled, gold) with the day demoted to a quiet caption.
+- **Lock countdown** — calm gold pill by default; switches to Qatar-maroon urgency styling when locking is imminent.
+- **Bracket** — lit (traced) connector paths get a brighter gold stroke + glow; the **Final card** wears a gold gradient + inset gold ring as the "road to glory" crown.
+- **Your own leaderboard row** — recessed into layered glass (inset+outer shadow) so "this is YOU" reads instantly (depth on the me-row only, not all rows).
+- **Focus states** — premium gold focus halo on inputs/score fields + `:focus-visible` rings on the primary CTA, FAQ link, swipe buttons, points & share buttons (keyboard-a11y finish).
+- **Escalating streak audio** (JS) — `sndStreak(run)` climbs with the run length (a 4-streak audibly out-rewards a 2-streak); replaces the single tone in `streakMoment` (no double-fire).
+- **Join celebration** (JS) — successful join/resume now fires confetti + chime + a welcome haptic (reduced-motion-gated visual).
+- **Fun facts** (JS) — the same engine now also appears at the **bottom of the leaderboard** and the **top of the bracket**, and every mounted fact is **tap-to-flip** to the next one.
+
+**Verified:** `node --check` clean; headless render of the deepened join screen (gold-framed prize board + hero glow) and the bracket (top trivia + gold Final card) — no page errors.
+
+**Rollback:** `git revert <this commit>` — frontend-only; the additions are an isolated CSS block plus small wiring edits.
+
+---
+
 ## 2026-06-29 (Doha) — "Sexier + more fun" polish pass + WC2026 fun facts (frontend only)
 
 **Commits:** this commit (`index.html`, `watch.html`, changelog). **No DB / scoring / sync / lock-logic change** — every change is presentational or additive UI feedback.
