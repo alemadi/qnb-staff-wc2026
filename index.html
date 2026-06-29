@@ -636,12 +636,14 @@
   /* ===== UX wave: header fit, slim sticky bar, consensus, welcome-back, swipe score-at-end ===== */
   @media(max-width:439px){body.in .mark .wc,body.in .mark .divider{display:none}}
   #prog-sent{height:1px}
+  #prog-spacer{height:0} /* grows to exactly the height the progress panel sheds on collapse — keeps the list from jumping */
   #view-matches{overflow-anchor:none} /* stop scroll anchoring fighting the sticky collapse (jitter loop) */
   :root{interpolate-size:allow-keywords} /* lets width/height:auto animate in modern browsers; harmless elsewhere */
   .progress.mini{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:13px}
   .progress.mini .top{margin:0;flex:0 0 auto;display:flex;gap:7px;font-size:12px}
   .progress.mini .bar{flex:1;height:5px;min-width:40px}
   .progress.mini .rules,.progress.mini .ptbtn,.progress.mini .ptable{display:none}
+  .progress.pts-open{position:relative;top:auto} /* points table open: scroll it naturally, never pin or collapse */
   .progress.mini .qpbtn{width:auto;margin:0;padding:7px 12px;font-size:12px;border-radius:99px;flex:0 0 auto}
   .progress.mini .qp-full{display:none}
   .cons{display:none;margin-top:9px;font-size:11px;color:var(--muted);text-align:center;letter-spacing:.2px;line-height:1.6}
@@ -1078,6 +1080,7 @@
         <div class="prow"><span>Picked the World Champion <span class="pfaint">(locked 18 June, 7:00 PM Doha)</span></span><b>+25</b></div>
       </div>
     </div>
+    <div id="prog-spacer" aria-hidden="true"></div>
     <div class="filters" id="filters"></div>
     <div id="match-list"></div>
   </section>
@@ -1758,7 +1761,7 @@ function toast(msg,type){const t=document.getElementById("toast");
   const k=type||(/^(✓|✅|🎉|🎯|🏆|🔥|⚡)/.test(msg)?"success":/^(⚠|🟠)/.test(msg)?"warning":/^(✗|❌|⛔|🚫)/.test(msg)?"error":"info");
   t.textContent=msg;t.className="show "+k;clearTimeout(toastT);
   toastT=setTimeout(()=>t.classList.remove("show"),({success:1900,warning:3200,error:3600,info:2200})[k]||2200);}
-function togglePts(btn){const t=document.getElementById("ptable");const on=t.classList.toggle("show");btn.textContent=on?"How do points work? ▴":"How do points work? ▾";}
+function togglePts(btn){const t=document.getElementById("ptable");const on=t.classList.toggle("show");btn.textContent=on?"How do points work? ▴":"How do points work? ▾";const p=document.querySelector(".progress");if(p)p.classList.toggle("pts-open",on);if(window.__progSync)window.__progSync();}
 /* One-time dismissible announcement banner (knockout streak news). Bump the key to re-show a new banner. */
 /* The streak announcement now STAYS for a while: it shows every visit (to joined players) through the
    knockouts, until BANNER_UNTIL. A ✕ only hides it for ~8h (it returns next visit); opening the
@@ -4240,16 +4243,36 @@ function liveTick(){
   if(active)fetchLive();
 }
 
-/* collapse the progress panel to a slim bar once it sticks */
+/* Collapse the progress panel to a slim bar once it sticks. Two rules keep this from feeling broken:
+   (1) never collapse while the points table is open \u2014 reading it means scrolling, which used to slam
+       it shut; (2) when it does collapse, a spacer below it grows by exactly the height the panel
+       gave up, so the match list underneath stays put instead of lurching upward (the "unnatural
+       movement"). The reverse on expand keeps it symmetric. */
 (function(){
-  const s=document.getElementById("prog-sent"),p=document.querySelector(".progress");
+  const s=document.getElementById("prog-sent"),p=document.querySelector(".progress"),
+        sp=document.getElementById("prog-spacer");
   if(!s||!p||!window.IntersectionObserver)return;
+  let stuck=false;
+  window.__progSync=function(){
+    const t=document.getElementById("ptable");
+    const open=t&&t.classList.contains("show");
+    const want=stuck&&!open;                       /* desired mini state */
+    const is=p.classList.contains("mini");
+    if(want===is)return;
+    if(sp){
+      const before=p.offsetHeight;                 /* height it occupies in flow now */
+      const tr=p.style.transition;p.style.transition="none";     /* measure the settled height, not a mid-ease frame */
+      p.classList.toggle("mini",want);
+      const after=p.offsetHeight;                  /* forced reflow → final collapsed/expanded layout */
+      sp.style.height=want?Math.max(0,before-after)+"px":"0px";  /* reserve exactly the reclaimed space */
+      void p.offsetWidth;p.style.transition=tr;    /* commit, then restore so the snap isn't animated backwards */
+    }else{
+      p.classList.toggle("mini",want);
+    }
+  };
   new IntersectionObserver(function(en){
-    const e=en[0];const st=!e.isIntersecting&&e.boundingClientRect.top<0;
-    if(st===p.classList.contains("mini"))return;
-    p.classList.toggle("mini",st);
-    if(st){const t=document.getElementById("ptable");
-      if(t&&t.classList.contains("show")){t.classList.remove("show");const b=p.querySelector(".ptbtn");if(b)b.textContent="How do points work? \u25be";}}
+    const e=en[0];stuck=!e.isIntersecting&&e.boundingClientRect.top<0;
+    window.__progSync();
   },{threshold:0}).observe(s);
 })();
 
