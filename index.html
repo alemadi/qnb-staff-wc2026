@@ -1086,6 +1086,11 @@
   .wn-more{font-size:11.5px;color:var(--muted);margin:4px 0 16px}
   .wn-ok{width:100%;background:linear-gradient(115deg,var(--gold-deep),var(--gold));color:#181106;border:none;border-radius:13px;padding:13px;font:inherit;font-weight:800;font-size:14px;cursor:pointer}
   .wn-ok:hover{filter:brightness(1.06)}
+
+  /* Brag / callout card triggers */
+  .room-brag{margin:2px auto 12px;display:flex}
+  .nb-brag{margin-left:auto;flex:none;width:32px;height:32px;border-radius:9px;background:var(--glass);border:1px solid var(--line);color:var(--gold-bright);font-size:14px;cursor:pointer;transition:.15s}
+  .nb-brag:hover{border-color:var(--gold);transform:translateY(-1px)}
 </style>
 </head>
 <body>
@@ -2726,7 +2731,7 @@ function meNeighbours(st,awaiting){
   if(idx>0){const a=st[idx-1],gap=(a.pts|0)-(me.pts|0);
     rows.push('<div class="row up"><span class="ar">▲</span><div>'+(gap===0?('Level with <b>'+esc(a.name)+'</b> — exact scores split you'):('<b>'+esc(a.name)+'</b>'+(a.dept?' · '+esc(a.dept):'')+' is <b>'+gap+'</b> pt'+(gap===1?'':'s')+' ahead — reel them in'))+'</div></div>');}
   if(idx<st.length-1){const b=st[idx+1],gap=(me.pts|0)-(b.pts|0);
-    rows.push('<div class="row dn"><span class="ar">▼</span><div><b>'+esc(b.name)+'</b>'+(b.dept?' · '+esc(b.dept):'')+' is <b>'+gap+'</b> pt'+(gap===1?'':'s')+' behind'+(gap<=3?' — one result and they’re past you':'')+'</div></div>');}
+    rows.push('<div class="row dn"><span class="ar">▼</span><div><b>'+esc(b.name)+'</b>'+(b.dept?' · '+esc(b.dept):'')+' is <b>'+gap+'</b> pt'+(gap===1?'':'s')+' behind'+(gap<=3?' — one result and they’re past you':'')+'</div><button class="nb-brag" onclick="bragChase()" title="Share a brag card" aria-label="Share a brag card">📤</button></div>');}
   if(!rows.length)return "";
   return '<div class="me-seclbl">Around you</div><div class="me-nb">'+rows.join("")+'</div>';
 }
@@ -3827,6 +3832,8 @@ async function renderRoomBody(){
   const hero=roomHero(m,r,rows);if(hero)html+=hero;
   const scored=rows.filter(x=>x.pts>0).length,exactN=rows.filter(x=>x.cls==="exact").length;
   html+='<div class="room-tally"><b>'+scored+'</b> of '+rows.length+' scored'+(exactN?' · <b>'+exactN+'</b> nailed the exact score 🎯':'')+'</div>';
+  const myVd=(myPk&&(myPk.o||myPk.w))?rvVerdict(m,myPk,r):null;
+  if(myVd&&myVd.pts>0)html+='<button class="btn btn-ghost btn-sm room-brag" onclick="bragCall()">📤 Brag this call</button>';
   html+=roomTable(rows,mv,m);
   host.innerHTML=html;
 }
@@ -4040,6 +4047,99 @@ async function shareSquad(){
       const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="squad-card.png";a.click();
       setTimeout(()=>URL.revokeObjectURL(a.href),4000);toast("Squad card saved — rally the desk 📤");
     },"image/png");
+  }catch(e){toast("Couldn’t build the card");}
+}
+/* ===== Brag / callout cards — virality engine for the group chats =====
+   One parameterized canvas builder (same kit/palette as shareCard). Every card
+   is built from ALREADY-SETTLED results or public standings, so it is seal-safe:
+   it brags about a call you can only make once the match is over, or your public
+   rank. Only ever offered for a call you WON (never a shame card). */
+async function shareBrag(o){
+  try{
+    if(!state.player){toast("Sign in first");return;}
+    try{if(document.fonts&&document.fonts.load)await Promise.all([
+      document.fonts.load("400 200px Anton"),document.fonts.load("800 44px 'Hanken Grotesk'")]);}catch(e){}
+    const W=1080,H=1350,c=document.createElement("canvas");c.width=W;c.height=H;
+    const x=c.getContext&&c.getContext("2d");
+    if(!x){toast("Sharing isn’t supported in this browser");return;}
+    const acc=o.accent||[180,151,89];
+    x.fillStyle="#0a0a0c";x.fillRect(0,0,W,H);
+    let g=x.createRadialGradient(W/2,300,40,W/2,300,840);
+    g.addColorStop(0,"rgba("+acc[0]+","+acc[1]+","+acc[2]+",.34)");g.addColorStop(1,"rgba("+acc[0]+","+acc[1]+","+acc[2]+",0)");
+    x.fillStyle=g;x.fillRect(0,0,W,H);
+    x.fillStyle="#ef3340";x.fillRect(0,0,W/3,12);x.fillStyle="#2ea84f";x.fillRect(W/3,0,W/3,12);x.fillStyle="#2d6fe0";x.fillRect(W/3*2,0,W/3+2,12);
+    x.textAlign="center";
+    x.fillStyle="#b49759";x.font="800 32px 'Hanken Grotesk',sans-serif";
+    x.fillText("S T A F F   C H A L L E N G E   ·   W C 2 6",W/2,96);
+    if(o.emoji){x.fillStyle="#f4eee3";x.font="400 64px 'Hanken Grotesk',sans-serif";x.fillText(o.emoji,W/2,212);}
+    const grdH=x.createLinearGradient(0,250,0,340);grdH.addColorStop(0,"#e3d3a3");grdH.addColorStop(1,"#b49759");
+    x.fillStyle=grdH;x.font="400 88px Anton,'Arial Narrow',sans-serif";
+    wrapText(x,o.badge,W/2,316,W-110,86,2);
+    const grd=x.createLinearGradient(0,430,0,760);grd.addColorStop(0,"#e3d3a3");grd.addColorStop(.55,"#b49759");grd.addColorStop(1,"#8a734a");
+    x.fillStyle=grd;x.font="400 250px Anton,'Arial Narrow',sans-serif";x.fillText(String(o.big),W/2,748);
+    if(o.bigLabel){x.fillStyle="rgba(244,238,227,.5)";x.font="700 28px 'Hanken Grotesk',sans-serif";x.fillText(o.bigLabel,W/2,798);}
+    if(o.line1){x.fillStyle="#f4eee3";x.font="700 34px 'Hanken Grotesk',sans-serif";wrapText(x,o.line1,W/2,888,W-140,42,2);}
+    if(o.line2){x.fillStyle="rgba(227,211,163,.85)";x.font="600 28px 'Hanken Grotesk',sans-serif";x.fillText(o.line2,W/2,980);}
+    x.fillStyle="rgba(244,238,227,.6)";x.font="700 30px 'Hanken Grotesk',sans-serif";
+    x.fillText(state.player.name+(state.player.dept?(" · "+state.player.dept):""),W/2,1138);
+    x.fillStyle="#b49759";x.font="700 30px 'Hanken Grotesk',sans-serif";
+    x.fillText("Think you can beat me? → staffchallenge26.com",W/2,1204);
+    x.fillStyle="rgba(244,238,227,.35)";x.font="600 22px 'Hanken Grotesk',sans-serif";
+    x.fillText("QNB Staff World Cup 2026 · 11 June – 19 July",W/2,1254);
+    c.toBlob(async b=>{
+      if(!b){toast("Couldn’t build the card");return;}
+      if(!(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches)){confettiBurst();try{navigator.vibrate&&navigator.vibrate([80,60,80]);}catch(e){}}
+      const f=new File([b],(o.file||"brag")+".png",{type:"image/png"});
+      if(navigator.canShare&&navigator.canShare({files:[f]})){
+        try{await navigator.share({files:[f],title:"Staff Challenge",text:(o.shareText||"Staff Challenge 26")+" — staffchallenge26.com"});return;}catch(e){if(e&&e.name==="AbortError")return;}
+      }
+      const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=(o.file||"brag")+".png";a.click();
+      setTimeout(()=>URL.revokeObjectURL(a.href),4000);toast("Card saved — drop it in the chat 📤");
+    },"image/png");
+  }catch(e){toast("Couldn’t build the card");}
+}
+/* From The Room: brag the currently-selected SETTLED match. Picks Lone Wolf
+   (rare-correct contrarian) vs CALLED IT automatically; only fires on a win. */
+async function bragCall(){
+  try{
+    const m=FIXBYID[ROOM_SEL];if(!m){return;}
+    const r=state.results[m.id],pk=(state.player&&state.player.predictions||{})[m.id];
+    if(!r||!pk||!(pk.o||pk.w)){toast("No card for this one");return;}
+    if(m.kn?r.w==null:r.h==null){toast("Wait for the final whistle 🙂");return;}
+    const vd=rvVerdict(m,pk,r);
+    if(vd.pts<=0){toast("Brag cards are for the calls you nail 😉");return;}
+    const mv=fxView(m),players=await ppPlayers();
+    let tot=0,gotIt=0;
+    if(m.kn){players.forEach(p=>{const v=(p.predictions||{})[m.id];if(!v||!v.w)return;tot++;if(v.w===r.w)gotIt++;});}
+    else{const ro=r.h>r.a?"H":(r.h<r.a?"A":"D");players.forEach(p=>{const v=(p.predictions||{})[m.id];if(!v||!v.o)return;tot++;if(v.o===ro)gotIt++;});}
+    const pct=tot?Math.round(gotIt/tot*100):100;
+    const matchLbl=mv.home.n+" "+(r.h!=null?r.h:"")+"–"+(r.a!=null?r.a:"")+" "+mv.away.n;
+    const exact=vd.cls==="exact";
+    if(tot>=8&&pct<=30){
+      shareBrag({emoji:"🐺",badge:"LONE WOLF",big:"+"+vd.pts,bigLabel:"POINTS",
+        line1:(gotIt<=1?"The ONLY one in the office who called it":"1 of just "+gotIt+" who called it"),
+        line2:matchLbl,accent:[138,21,56],file:"lone-wolf",shareText:"I called "+matchLbl+" when almost no one did"});
+    }else{
+      shareBrag({emoji:"🎯",badge:"CALLED IT",big:exact?(r.h+"–"+r.a):("+"+vd.pts),bigLabel:exact?"EXACT SCORE":"POINTS",
+        line1:matchLbl,line2:(pct<100?((pct<=50?"Only ":"")+pct+"% of the office got it"):"Right on the money"),
+        accent:[180,151,89],file:"called-it",shareText:"Called "+matchLbl+" in Staff Challenge 26"});
+    }
+  }catch(e){toast("Couldn’t build the card");}
+}
+/* From "Around you": a friendly "catch me" taunt at the colleague chasing you
+   (or the whole field, if you lead). Public standings only — seal-safe. */
+async function bragChase(){
+  try{
+    const st=(await fetchStandings()).slice().sort(cmpSt);
+    let idx=-1;for(let i=0;i<st.length;i++){if(st[i].slug===state.meSlug){idx=i;break;}}
+    if(idx<0){toast("No card yet — lock some picks first");return;}
+    const me=st[idx],below=st[idx+1]||null;
+    shareBrag({emoji:idx===0?"🏝️":"👀",badge:idx===0?"TOP OF THE OFFICE":"CATCH ME IF YOU CAN",
+      big:"#"+(idx+1),bigLabel:"OF "+st.length,
+      line1:me.pts+" pts"+(idx===0?"":""),
+      line2:below?(below.name+" is "+(me.pts-below.pts)+" behind 👀"):"Leading the pack",
+      accent:idx===0?[180,151,89]:[138,21,56],file:"catch-me",
+      shareText:"I’m #"+(idx+1)+" in Staff Challenge 26 — catch me"});
   }catch(e){toast("Couldn’t build the card");}
 }
 function roundRect(x,a,b,w,h,r){x.beginPath();x.moveTo(a+r,b);x.arcTo(a+w,b,a+w,b+h,r);x.arcTo(a+w,b+h,a,b+h,r);x.arcTo(a,b+h,a,b,r);x.arcTo(a,b,a+w,b,r);x.closePath();}

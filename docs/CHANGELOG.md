@@ -5,6 +5,28 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-06-29 (Doha) — Brag / callout cards (CALLED IT · Lone Wolf · Catch Me)
+
+**Commits:** this commit (`index.html` + changelog). **Frontend only — no DB / scoring / sync / lock-logic change.** Seal-safe.
+
+**Why:** the social layer needed a way to *leave the app* and land in the group chats — the virality multiplier across 670 players for the knockouts (R16 this weekend → Final). These one-tap share cards turn the dramatic moments The Room and the leaderboard already surface into screenshot-bait.
+
+**What changed — `index.html`:**
+- **One parameterized canvas builder `shareBrag(o)`** (same kit/palette as `shareCard`/`shareSquad`: radial glow, host tricolor, gold Anton type). Drives all card variants from one tested code path; shares via `navigator.share` with a download fallback; confetti/vibrate gated behind the reduced-motion check.
+- **From The Room — `bragCall()`** on a **settled** match where you scored (button only renders when `rvVerdict(...).pts > 0` — never a shame card). Auto-selects:
+  - **🐺 Lone Wolf** when you were a rare-correct caller (≥8 pickers, ≤30% backed the actual outcome): *"The ONLY one in the office who called it · Brazil 2–1 Argentina"*.
+  - **🎯 CALLED IT** otherwise: the exact scoreline or "+pts", with the office hit-rate (*"Only 18% of the office got it"*).
+- **From "Around you" — `bragChase()`** (📤 on the chaser row): a friendly **👀 Catch Me If You Can** card naming the colleague directly behind you (or **🏝️ Top of the Office** if you lead). Public standings only.
+- CSS: `.room-brag` / `.nb-brag` triggers — appended to the social-pack block.
+
+**Seal-safety:** every card is built from already-**settled** results (`bragCall` refuses pre-result and only fires on a win) or public **standings** (`bragChase`). The office hit-rate uses the same `ppPlayers()` aggregate as The Room (no new read). The card renders your own name/dept; it never lists another player's pick or `@ig` (only the public name + point gap of the colleague directly below you).
+
+**Verified:** `node --check` clean. Headless Chromium — **11/11** checks: `shareBrag` builds a card end-to-end (toBlob → share/download) without throwing; `bragCall` picks CALLED IT (+3) on a normal win, Lone Wolf (+5, "ONLY one") on a rare-correct contrarian, and **refuses to brag a miss**; `bragChase` names the chaser ("Cara is 10 behind") and gives the leader "Top of the Office"; The Room button shows only when you scored and is hidden on a miss; reduced-motion (no throw, no errors); zero page errors. Screenshot confirms the Lone Wolf card.
+
+**Rollback:** `git revert <this commit>` — frontend-only; `shareBrag`/`bragCall`/`bragChase` helpers, two small mount edits (`renderRoomBody` button + the "Around you" row button), one CSS block.
+
+---
+
 ## 2026-06-29 (Doha) — In-app announcement: one-time "What's new" spotlight + NEW breadcrumb
 
 **Commits:** this commit (`index.html` + changelog). **Frontend only — no DB / scoring / sync / lock-logic change.** New state is localStorage-only.
