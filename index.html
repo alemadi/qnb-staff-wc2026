@@ -1104,6 +1104,25 @@
   .me-honours .me-titles{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:7px}
   .me-race{font-size:12px;color:var(--muted);line-height:1.5}
   .me-race b{color:var(--gb)}
+
+  /* Chase board — multi-rival ladder */
+  .rival.chase{display:block}
+  .cb-row{display:flex;align-items:center;gap:9px;padding:6px 2px}
+  .cb-row.me .cb-nm{color:var(--gb);font-weight:800}
+  .cb-nm{flex:0 0 38%;min-width:0;font-size:12px;font-weight:700;color:var(--cream);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .cb-nm small{display:block;font-size:9.5px;color:var(--faint);font-weight:600}
+  .cb-track{flex:1;height:12px;border-radius:6px;background:rgba(255,255,255,.07);overflow:hidden}
+  .cb-track i{display:block;height:100%}
+  .cb-track i.me{background:linear-gradient(90deg,var(--gd),var(--gold))}
+  .cb-track i.them{background:rgba(244,238,227,.32)}
+  .cb-pts{flex:none;font-family:var(--font-d);font-size:15px;color:var(--gb);min-width:34px;text-align:right}
+  .cb-gap{flex:none;min-width:48px;text-align:right;font-size:11px;font-weight:800;color:var(--muted)}
+  .cb-gap.up{color:var(--ok)}
+  .cb-gap.dn{color:var(--bad)}
+  .cb-x{flex:none;background:none;border:none;color:var(--faint);font-size:12px;cursor:pointer;padding:2px 4px;line-height:1}
+  .cb-x:hover{color:var(--bad)}
+  .cb-h2h{margin-top:10px}
+  .cb-h2h-t{font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);text-align:center;margin-bottom:2px}
 </style>
 </head>
 <body>
@@ -2642,7 +2661,7 @@ async function renderLeaderboard(){
   body.innerHTML='<div class="sk-wrap">'+Array(6).fill('<div class="sk-row"><div class="sk r"></div><div class="sk av"></div><div class="sk nm"></div><div class="sk pt"></div></div>').join('')+'</div>';
   const lm=document.getElementById("lbmode");
   if(lm)lm.style.display=state.demo?"none":"flex";
-  const rvSlug=state.demo?null:await getJSON("wc:rival",false);
+  const rvSet=state.demo?null:new Set(getRivals());
   if(LB_MODE==="dept"&&!state.demo){await renderDept(body);return;}
   if(LB_MODE==="room"&&!state.demo){await renderRoom(body);return;}
   let rows=[];
@@ -2654,7 +2673,7 @@ async function renderLeaderboard(){
     }
     DEMO_PLAYERS.forEach(d=>rows.push({name:d.name,dept:d.dept,slug:"demo:"+d.name,pts:d.correct*3+d.exact*2,exact:d.exact,correct:d.correct,predicted:d.predicted,me:false,demo:true}));
   }else{
-    rows=(await fetchStandings()).map(r=>({name:r.name,dept:r.dept,slug:r.slug,pts:r.pts,exact:r.exact,correct:r.correct,predicted:r.predicted,me:r.slug===state.meSlug,rv:!!rvSlug&&r.slug===rvSlug,demo:false}));
+    rows=(await fetchStandings()).map(r=>({name:r.name,dept:r.dept,slug:r.slug,pts:r.pts,exact:r.exact,correct:r.correct,predicted:r.predicted,me:r.slug===state.meSlug,rv:!!rvSet&&rvSet.has(r.slug),demo:false}));
   }
   rows.sort((a,b)=>cmpSt(a,b)||a.name.localeCompare(b.name));
   let rank=0,prevR=null;rows.forEach((r,i)=>{if(prevR===null||cmpSt(r,prevR)!==0){rank=i+1;prevR=r;}r.rank=rank;});
@@ -2999,27 +3018,39 @@ async function renderMe(){
     '<div class="me-set me-faq" onclick="openFaq()"><span>How it works \u00b7 FAQ</span><b>\u203a</b></div>');
 }
 
+/* Chase board — pin up to 5 rivals (localStorage wc:rivals; migrates the old
+   single wc:rival). A 670-person board becomes a handful of personal duels. */
+function getRivals(){
+  try{const a=JSON.parse(localStorage.getItem("wc:rivals")||"null");if(Array.isArray(a))return a.filter(Boolean).slice(0,5);}catch(e){}
+  try{const one=localStorage.getItem("wc:rival");if(one){const v=JSON.parse(one);if(v)return [v];}}catch(e){}
+  return [];
+}
+function setRivals(arr){try{localStorage.setItem("wc:rivals",JSON.stringify((arr||[]).filter(Boolean).slice(0,5)));}catch(e){}}
+function addRival(slug){if(!slug||slug===state.meSlug)return;const a=getRivals();if(a.indexOf(slug)>=0)return;if(a.length>=5){toast("Chase board is full (5) — unpin one first");return;}a.push(slug);setRivals(a);}
+function removeRival(slug){setRivals(getRivals().filter(function(x){return x!==slug;}));renderMe();}
 async function rivalHTML(s,st){
-  const rs=await getJSON("wc:rival",false);
-  let inner;
-  let nudge='';try{if(!localStorage.getItem("wc:rivalnudge"))nudge='<div class="rv-nudge" id="rv-nudge"><span class="tx">🎯 Pick someone to chase — your duel updates every match-night.</span><button class="x" onclick="dismissRivalNudge()" aria-label="Dismiss">✕</button></div>';}catch(e){}
-  const pickHTML=nudge+'<button class="btn btn-ghost btn-sm" style="margin:0 auto" onclick="pickRival()">🎯 Pick a rival</button><div id="rival-slot"></div>';
-  if(rs){
-    const idx=st.findIndex(r=>r.slug===rs);
-    if(idx>=0){
-      const meRow=st.find(r=>r.slug===state.meSlug);
-      const myPts=meRow?meRow.pts:s.pts;
-      const rv=st[idx],diff=myPts-rv.pts;
-      const h2h=await rivalH2H(rs);
-      inner='<div class="rv-t">\ud83c\udfaf Rival watch</div>'+
-        '<div class="rv-line"><b>You '+myPts+'</b><span class="rv-vs">VS</span><b>'+rv.pts+' '+esc(rv.name)+'</b></div>'+
-        '<div class="rv-meter"><i class="me" style="width:'+Math.round(myPts/Math.max(1,myPts+rv.pts)*100)+'%"></i><i class="them" style="width:'+(100-Math.round(myPts/Math.max(1,myPts+rv.pts)*100))+'%"></i></div>'+
-        '<div class="rv-sub">'+(diff>0?("You lead by "+diff+" pt"+(diff===1?"":"s")):(diff<0?(esc(rv.name)+" leads by "+(-diff)+" pt"+(diff===-1?"":"s")):"Dead level"))+' \u00b7 they\u2019re #'+(idx+1)+'</div>'+
-        h2h+
-        '<button class="rv-x" onclick="clearRival()">change rival</button>';
-    }else inner=pickHTML;
-  }else inner=pickHTML;
-  return '<div class="rival">'+inner+'</div>';
+  let nudge='';try{if(!localStorage.getItem("wc:rivalnudge")&&!getRivals().length)nudge='<div class="rv-nudge" id="rv-nudge"><span class="tx">🎯 Pin up to 5 colleagues to chase — your duels update every match-night.</span><button class="x" onclick="dismissRivalNudge()" aria-label="Dismiss">✕</button></div>';}catch(e){}
+  const pinned=getRivals().map(function(slug){return st.find(function(r){return r.slug===slug;});}).filter(Boolean);
+  if(!pinned.length)return '<div class="rival">'+nudge+'<button class="btn btn-ghost btn-sm" style="margin:0 auto" onclick="pickRival()">🎯 Pin a rival to chase</button><div id="rival-slot"></div></div>';
+  const meRow=st.find(function(r){return r.slug===state.meSlug;});
+  const myPts=meRow?meRow.pts:(s?s.pts:0);
+  const rankOf={};st.forEach(function(r,i){if(rankOf[r.slug]==null)rankOf[r.slug]=i+1;});
+  const rivals=pinned.map(function(r){return {r:r,gap:myPts-(r.pts|0),rank:rankOf[r.slug]};}).sort(function(a,b){return Math.abs(a.gap)-Math.abs(b.gap);});
+  const maxPts=Math.max(myPts,...rivals.map(function(x){return x.r.pts|0;}),1);
+  let html='<div class="rv-t">🎯 Chase board</div>';
+  html+='<div class="cb-row me"><span class="cb-nm">You</span><span class="cb-track"><i class="me" style="width:'+Math.round(myPts/maxPts*100)+'%"></i></span><span class="cb-pts">'+myPts+'</span></div>';
+  rivals.forEach(function(x){
+    const w=Math.round((x.r.pts|0)/maxPts*100);
+    html+='<div class="cb-row"><span class="cb-nm">'+esc(x.r.name)+'<small>#'+x.rank+(x.r.dept?' · '+esc(x.r.dept):'')+'</small></span>'+
+      '<span class="cb-track"><i class="them" style="width:'+w+'%"></i></span>'+
+      '<span class="cb-gap '+(x.gap>0?'up':(x.gap<0?'dn':''))+'">'+(x.gap>0?('▲ '+x.gap):(x.gap<0?('▼ '+(-x.gap)):'level'))+'</span>'+
+      '<button class="cb-x" onclick="removeRival(\''+x.r.slug+'\')" title="Unpin" aria-label="Unpin">✕</button></div>';
+  });
+  const closest=rivals[0];
+  const h2h=await rivalH2H(closest.r.slug);
+  if(h2h)html+='<div class="cb-h2h"><div class="cb-h2h-t">vs '+esc(closest.r.name)+'</div>'+h2h+'</div>';
+  html+=(rivals.length<5?'<button class="btn btn-ghost btn-sm" style="margin:10px auto 0" onclick="pickRival()">+ Pin another · '+rivals.length+'/5</button>':'')+'<div id="rival-slot"></div>';
+  return '<div class="rival chase">'+html+'</div>';
 }
 
 async function unlockOrg(){
@@ -4032,17 +4063,19 @@ function champBetsLine(){
 }
 
 async function pickRival(){
-  const st=(await fetchStandings()).filter(r=>r.slug!==state.meSlug).sort((a,b)=>a.name.localeCompare(b.name));
+  const pinned=new Set(getRivals());
+  const st=(await fetchStandings()).filter(function(r){return r.slug!==state.meSlug&&!pinned.has(r.slug);}).sort(function(a,b){return a.name.localeCompare(b.name);});
   const host=document.getElementById("rival-slot");if(!host)return;
-  host.innerHTML='<select class="input rv-pick" id="rv-sel"><option value="">Choose your rival\u2026</option>'+
-    st.map(r=>'<option value="'+esc(r.slug)+'">'+esc(r.name)+(r.dept?(" \u00b7 "+esc(r.dept)):"")+'</option>').join("")+'</select>';
-  document.getElementById("rv-sel").addEventListener("change",async e=>{
+  if(!st.length){toast("No one left to pin");return;}
+  host.innerHTML='<select class="input rv-pick" id="rv-sel"><option value="">Choose someone to chase…</option>'+
+    st.map(function(r){return '<option value="'+esc(r.slug)+'">'+esc(r.name)+(r.dept?(" · "+esc(r.dept)):"")+'</option>';}).join("")+'</select>';
+  document.getElementById("rv-sel").addEventListener("change",async function(e){
     if(!e.target.value)return;
-    await setJSON("wc:rival",e.target.value,false);
-    toast("Rival locked in \ud83c\udfaf");renderMe();
+    addRival(e.target.value);
+    toast("Pinned to your chase board 🎯");renderMe();
   });
 }
-async function clearRival(){lsDel("wc:rival");renderMe();}
+async function clearRival(){lsDel("wc:rival");setRivals([]);renderMe();}
 
 /* one plain-text fun stat for the share card — own picks only, always available */
 function shareFunLine(){

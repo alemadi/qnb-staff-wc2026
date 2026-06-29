@@ -5,6 +5,26 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-06-29 (Doha) — Chase Board: pin up to 5 rivals (multi-rival ladder)
+
+**Commits:** this commit (`index.html` + changelog). **Frontend only — no DB / scoring / sync / lock-logic change.** New state is `localStorage` only (`wc:rivals`).
+
+**Why:** the single "Rival watch" was the most-used social hook, but one rival is a thin duel in a 670-person pool. Letting players pin several colleagues — a teammate, a manager, the person one rank ahead — turns the board into a handful of personal races they check every match-night. This is the multi-rival follow-up to the shipped rival H2H.
+
+**What changed — `index.html`:**
+- **Rival store (`getRivals` / `setRivals` / `addRival` / `removeRival`)** — `localStorage` array `wc:rivals`, capped at 5. **Migrates the old single `wc:rival`** transparently (an existing rival becomes the first pinned entry). `addRival` excludes self and de-dupes; the 6th pin is refused with a toast.
+- **`rivalHTML` rewritten into a Chase Board ladder** — you + up to 5 pinned rivals as gold/grey bars, **sorted by closeness** (smallest point gap first), each row showing rank · department, a coloured gap chip (▲ ahead / ▼ behind / level), and a per-row unpin ✕. The **closest** rival keeps the settled head-to-head card. Footer: **"+ Pin another · N/5"** (hidden at 5).
+- **`pickRival`** now appends to the board (excludes self + already-pinned; toasts when nobody's left); **`clearRival`** clears all. **Leaderboard** `rvSlug` → `rvSet`, so every pinned rival is tagged 🎯 RIVAL (not just one).
+- CSS: `.cb-*` (chase-board rows/track/gap/unpin) + `.rival.chase` — appended to the social-pack block.
+
+**Seal-safety:** the board shows only the **public standings** surface (name · rank · dept · points) — exactly what the leaderboard already shows — for colleagues the player explicitly pinned. The head-to-head reuses the unchanged `rivalH2H`, which counts **only settled matches** where both players hold a sealed pick and reports **aggregate** win/level/loss + a point gap (never an individual unsettled pick, never an `@ig`). No champ surface, no new read. Slugs are quote/slash-stripped (`slug()`), so inlining them into the unpin handler is injection-safe.
+
+**Verified:** `node --check` clean. Headless Chromium — **29/29** checks: migration of the old `wc:rival`; the 5-cap on `setRivals` and `addRival` (6th refused); `addRival` self-exclusion + de-dupe; `removeRival`; the ladder structure (you-row, all rivals, closeness sort, ▲/▼/level gap states, rank, correct unpin slug, H2H on the closest, "Pin another · 3/5"); no "Pin another" at 5; ghost/empty states fall back to the pin CTA; `pickRival` excludes self + pinned; the leaderboard tags exactly the pinned rival; zero page/console errors.
+
+**Rollback:** `git revert <this commit>` — frontend-only; the four `*Rivals` store helpers, the `rivalHTML` rewrite, the `pickRival`/`clearRival`/leaderboard `rvSet` edits, and one CSS block. Players' existing `wc:rival` survives the migration path, so a revert leaves the original single-rival watch working.
+
+---
+
 ## 2026-06-29 (Doha) — Office Honours: earned titles beside every name
 
 **Commits:** this commit (`index.html` + changelog). **Frontend only — no DB / scoring / sync / lock-logic change.** Seal-safe; no new state.
