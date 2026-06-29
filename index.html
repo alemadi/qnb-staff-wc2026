@@ -1620,8 +1620,62 @@ const BRACKET={
 const CHILD_OF={},SIBLING={};
 for(const _id in BRACKET){const _f=BRACKET[_id];if(_f[2]==="W"){CHILD_OF[_f[0]]=_id;CHILD_OF[_f[1]]=_id;SIBLING[_f[0]]=_f[1];SIBLING[_f[1]]=_f[0];}}
 let pathTeam=null,BRK_WIRED=false,treeSel=null,treeZoom=null;
-function koTeams(m){const a=state.kteams[m.id];return {h:(a&&a.h&&FL[a.h])?T(a.h):null,a:(a&&a.a&&FL[a.a])?T(a.a):null};}
+/* Resolve a knockout tie's teams. The organizer's manual override (state.kteams)
+   always wins; any slot it leaves open is auto-derived from the live group
+   standings (R32) or recorded feeder winners (R16+), so a tie shows its real
+   teams as soon as they're decided — no manual "Auto-fill R32" step required. */
+function koTeams(m){
+  const ov=state.kteams[m.id]||{},au=koAutoTeams()[m.id]||{};
+  const hN=(ov.h&&FL[ov.h])?ov.h:((au.h&&FL[au.h])?au.h:null);
+  const aN=(ov.a&&FL[ov.a])?ov.a:((au.a&&FL[au.a])?au.a:null);
+  return {h:hN?T(hN):null,a:aN?T(aN):null};
+}
 function koReady(m){const t=koTeams(m);return !!(t.h&&t.a);}
+/* Teams derived purely from results: final group standings for the R32 (same
+   FIFA allocation the organizer auto-fill uses), then feeder winners onward.
+   Memoised; KO_AUTO is cleared by bustStandings() and at each consumer render. */
+let KO_AUTO=null;
+function koAutoTeams(){
+  if(KO_AUTO)return KO_AUTO;
+  const out={};
+  if(typeof groupStageComplete==="function"&&groupStageComplete()){
+    const byL=standingsByLetter(),thirds=bestThirds(byL);
+    const qKey=thirds.map(t=>t.L).slice().sort().join(""),alloc=R3RD[qKey];
+    const SLOT_ORDER=["1A","1B","1D","1E","1G","1I","1K","1L"];
+    const SLOT_K={"1A":"k7","1B":"k13","1D":"k10","1E":"k3","1G":"k9","1I":"k6","1K":"k16","1L":"k8"};
+    const thirdByTie={};
+    if(alloc){
+      SLOT_ORDER.forEach((slot,i)=>{const gl=alloc.charAt(i);thirdByTie[SLOT_K[slot]]=(byL[gl]&&byL[gl].third)?byL[gl].third.team:null;});
+    }else{
+      const Qset=new Set(thirds.map(t=>t.L)),tTeam={};thirds.forEach(t=>{tTeam[t.L]=t.team;});
+      const slots=[];FIXTURES.forEach(m=>{if(m.round!=="R32"||!m.kn)return;[m.home.n,m.away.n].forEach(nm=>{const sp=r32Spec(nm);if(sp&&sp.t==="3")slots.push({key:m.id,cands:sp.cands});});});
+      const match=matchThirds(slots,Qset);
+      if(match)Object.keys(match).forEach(k=>{thirdByTie[k]=tTeam[match[k]];});
+    }
+    FIXTURES.forEach(m=>{
+      if(m.round!=="R32"||!m.kn)return;
+      const resolve=nm=>{const sp=r32Spec(nm);if(!sp)return null;
+        if(sp.t==="W")return byL[sp.g]?byL[sp.g].W:null;
+        if(sp.t==="RU")return byL[sp.g]?byL[sp.g].RU:null;
+        return thirdByTie[m.id]||null;};
+      const h=resolve(m.home.n),a=resolve(m.away.n);
+      if(h||a)out[m.id]={h:h||null,a:a||null};
+    });
+  }
+  /* R16 → Final: each slot is a feeder tie's winner (or loser, for the 3rd-place
+     match). BRACKET is declared feeders-first, so one forward pass settles it. */
+  const winnerOf=id=>{const r=state.results[id];return (r&&r.w)?r.w:null;};
+  const pairOf=id=>{const ov=state.kteams[id]||{},au=out[id]||{};return {h:ov.h||au.h||null,a:ov.a||au.a||null};};
+  const feed=(fid,take)=>{const w=winnerOf(fid);if(!w)return null;if(take==="W")return w;const t=pairOf(fid);return w===t.h?t.a:(w===t.a?t.h:null);};
+  for(const id in BRACKET){
+    const f=BRACKET[id],th=feed(f[0],f[2]),ta=feed(f[1],f[2]);
+    if(!th&&!ta)continue;
+    const cur=out[id]||(out[id]={});
+    if(th&&!cur.h)cur.h=th;
+    if(ta&&!cur.a)cur.a=ta;
+  }
+  return (KO_AUTO=out);
+}
 function fxView(m){if(!m.kn)return m;const t=koTeams(m);return Object.assign({},m,{home:t.h||m.home,away:t.a||m.away});}
 function predTotal(){let n=GROUP_TOTAL;FIXTURES.forEach(f=>{if(f.kn&&koReady(f))n++;});return n;}
 
@@ -1755,7 +1809,7 @@ async function sbulkJSON(pre){
    Falls back to the classic bulk pull + client scoring if the RPC isn't installed.
    Cached 60s and shared by Leaderboard + Me, busted on any write that can change it. */
 let STAND_CACHE={t:0,rows:null};
-function bustStandings(){STAND_CACHE={t:0,rows:null};}
+function bustStandings(){STAND_CACHE={t:0,rows:null};KO_AUTO=null;}
 async function fetchStandings(){
   if(STAND_CACHE.rows&&Date.now()-STAND_CACHE.t<60000)return STAND_CACHE.rows;
   let rows=null;
@@ -2189,6 +2243,7 @@ function meChampLine(){
 }
 function renderMatches(){
   if(!state.player)return;
+  KO_AUTO=null; /* re-derive knockout teams from the latest standings/results this render */
   renderChampCard();
   const c=predCount(),tot=predTotal();
   document.getElementById("pred-count").textContent=c;
@@ -3041,6 +3096,7 @@ function nextHint(m){
 }
 function renderBracket(){
   const host=document.getElementById("brk-body");if(!host)return;
+  KO_AUTO=null; /* re-derive knockout teams from the latest standings/results this render */
   let kp=0,kc=0,ktot=0;
   if(state.player)FIXTURES.forEach(m=>{if(!m.kn)return;const r=state.results[m.id],p=state.player.predictions[m.id];if(!r||!r.w||!p)return;if(p.w){ktot++;if(p.w===r.w){kc++;kp+=koPts(m);}}if(koScoreHit(p,r))kp+=koBonus(m);});
   const tag=document.getElementById("brk-tag");if(tag)tag.textContent=state.player?(kp+" KO pts"):"Knockouts";
@@ -3608,6 +3664,7 @@ let LB_MODE="people";
 
 function renderPulse(){
   const el=document.getElementById("pulsebar");if(!el)return;
+  KO_AUTO=null; /* re-derive knockout teams from the latest standings/results this tick */
   const now=Date.now()+CLOCK_OFFSET;
   const live=FIXTURES.filter(m=>isLive(m));
   if(live.length){
