@@ -5,6 +5,20 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-06-29 (Doha) — Banner: default to the slim strip + make the shrink obvious
+
+**Commits:** this commit (`index.html` + changelog). **Frontend only — no DB, no scoring change.**
+
+**Why:** the shrink affordance wasn't discoverable — a faint chevron didn't read as "you can collapse this," so the big card just felt intrusive. Two changes make shrinkability obvious:
+- **Defaults to the collapsed strip.** `setupBanner()` now starts `bannerMin=true` when there's no stored choice (`BANNER_MIN_KEY===null`), so the banner opens as the slim one-line strip with an expand chevron — which teaches the toggle and keeps it unobtrusive. An explicit expand/collapse is still remembered and respected.
+- **Obvious toggle.** The chevron is now a visible gold pill button (bordered, `--gold-bright`) instead of a faint glyph, the whole banner has `cursor:pointer`, and **tapping anywhere on it toggles** (`onclick` ignores clicks on `a`/`button`, so "How it works ›" and the chevron still do their own thing). Auto-shrink on scroll, persistence, and the `?banner` flag are unchanged.
+
+**Verify:** `node --check` clean; headless Chromium — default-collapsed + tap-body expand/collapse with persistence confirmed deterministically (3/3), plus chevron-toggle, link-does-not-toggle, auto-shrink-on-scroll, `?banner` force-show, and the not-joined gate all pass; screenshot confirms the default strip with the bordered gold chevron.
+
+**Rollback:** `git revert <this-commit-sha>` (frontend-only).
+
+---
+
 ## 2026-06-29 (Doha) — Banner: no more ✕ — it's shrinkable instead (+ `?banner` verify flag)
 
 **Commits:** this commit (`index.html` + changelog). **Frontend only — no DB, no scoring change.**
