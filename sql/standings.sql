@@ -4,7 +4,7 @@
 -- Safe to re-run any time (CREATE OR REPLACE) — no DROP, signature unchanged,
 -- grant re-applied at the bottom.
 --
--- Scoring mirrors scoreFor() in index.html exactly ("Maximum Excitement"):
+-- Scoring mirrors scoreFor() in index.html exactly (agreed ladder + exact-score streak):
 --   Group (UNCHANGED): +3 correct outcome (requires an outcome pick),
 --          +2 exact-score bonus (also gated on the outcome pick).
 --   Knockout ADVANCE (who goes through):
