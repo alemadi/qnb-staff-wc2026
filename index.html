@@ -356,21 +356,68 @@
   .lb-pts b{font-family:var(--font-d);font-size:24px;background:linear-gradient(var(--gold-bright),var(--gold-deep));-webkit-background-clip:text;background-clip:text;color:transparent;display:block;line-height:1}
   .lb-pts span{font-size:9px;color:var(--faint);letter-spacing:1px;text-transform:uppercase}
 
-  .mecard{background:linear-gradient(135deg,rgba(24,24,28,.85),rgba(10,10,12,.92));border:1px solid var(--line);border-radius:22px;padding:22px 20px;text-align:center;position:relative;overflow:hidden}
-  .mecard::before{content:"";position:absolute;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(180,151,89,.22),transparent 70%);top:-120px;right:-90px}
-  .mecard .av{width:72px;height:72px;font-size:25px;margin:0 auto 12px;position:relative}
-  .mecard h3{font-size:20px;font-weight:800}
-  .mecard .role{font-size:12px;color:var(--gold);margin-top:2px}
+  .mecard{background:linear-gradient(150deg,rgba(28,26,30,.9),rgba(10,10,12,.95));border:1px solid var(--line);border-radius:24px;padding:24px 18px 20px;text-align:center;position:relative;overflow:hidden;box-shadow:0 20px 60px -30px rgba(0,0,0,.8)}
+  .mecard::before{content:"";position:absolute;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(180,151,89,.2),transparent 70%);top:-130px;right:-100px;pointer-events:none}
+  .mecard::after{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:var(--tiles);opacity:.85}
+  .mecard .av{width:78px;height:78px;font-size:26px;margin:0 auto 12px;position:relative;box-shadow:0 0 0 2px rgba(180,151,89,.5),0 8px 26px -8px rgba(180,151,89,.6)}
+  .mecard h3{font-size:21px;font-weight:800;letter-spacing:-.2px}
+  .mecard .role{font-size:12px;color:var(--gold);margin-top:3px;font-weight:700}
   .mecard .mail{font-size:10.5px;color:var(--faint);margin-top:2px}
-  .me-stat{display:flex;justify-content:center;gap:26px;margin:20px 0 6px;position:relative}
-  .me-stat .s{display:flex;flex-direction:column}
-  .me-stat .s b{font-family:var(--font-d);font-size:34px;line-height:1;background:linear-gradient(var(--gold-bright),var(--gold-deep));-webkit-background-clip:text;background-clip:text;color:transparent}
-  .me-stat .s span{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-top:4px}
-  .me-break{font-size:12px;color:var(--muted);margin-top:14px;position:relative}
+  .me-rankpill{display:inline-flex;align-items:center;gap:6px;margin:11px auto 0;padding:4px 13px;border-radius:99px;font-size:11px;font-weight:800;letter-spacing:.3px;border:1px solid var(--gold);background:rgba(180,151,89,.12);color:var(--gold-bright)}
+  .me-stat{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:18px 0 4px;position:relative}
+  .me-stat .s{display:flex;flex-direction:column;align-items:center;gap:3px;padding:12px 6px 11px;background:linear-gradient(180deg,var(--glass-2),rgba(255,255,255,.02));border:1px solid var(--line);border-radius:15px}
+  .me-stat .s.hero{background:linear-gradient(180deg,rgba(180,151,89,.18),rgba(180,151,89,.04));border-color:rgba(180,151,89,.4)}
+  .me-stat .s b{font-family:var(--font-d);font-size:30px;line-height:1;background:linear-gradient(var(--gold-bright),var(--gold-deep));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .me-stat .s span{font-size:9px;letter-spacing:1.3px;text-transform:uppercase;color:var(--muted)}
+  .me-break{font-size:12px;color:var(--muted);margin-top:13px;position:relative}
   .me-break b{color:var(--cream);font-weight:700}
-  .badges{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:16px;position:relative}
+  .me-seclbl{font-size:9.5px;font-weight:800;letter-spacing:.22em;text-transform:uppercase;color:var(--faint);margin:18px 0 2px;position:relative}
+  .badges{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:10px;position:relative}
   .badge{font-size:11px;font-weight:700;padding:6px 12px;border-radius:20px;border:1px solid var(--line);background:var(--glass);display:flex;align-items:center;gap:5px}
   .badge.gold{border-color:var(--gold);color:var(--gold-bright);background:rgba(180,151,89,.1)}
+  /* Me page — daily-engagement modules (matchday rhythm + finite-schedule scarcity) */
+  .me-reveal{display:flex;align-items:center;gap:11px;width:100%;margin:0 0 14px;padding:12px 14px;border-radius:14px;cursor:pointer;text-align:left;position:relative;
+    border:1px solid var(--gold);background:linear-gradient(100deg,rgba(180,151,89,.24),rgba(180,151,89,.06));font:inherit;
+    box-shadow:0 0 0 0 rgba(180,151,89,.5);animation:revealPulse 2.2s infinite}
+  @keyframes revealPulse{0%{box-shadow:0 0 0 0 rgba(180,151,89,.45)}70%{box-shadow:0 0 0 12px rgba(180,151,89,0)}100%{box-shadow:0 0 0 0 rgba(180,151,89,0)}}
+  .me-reveal .ic{font-size:21px}
+  .me-reveal .tx{flex:1;min-width:0}
+  .me-reveal .tx b{display:block;font-size:13px;font-weight:800;color:var(--cream)}
+  .me-reveal .tx span{font-size:11px;color:var(--gold-bright);font-weight:700}
+  .me-reveal .go{font-size:19px;color:var(--gold)}
+  .me-scar{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;margin:14px 0 2px;font-size:11px;font-weight:700;color:var(--muted)}
+  .me-scar b{color:var(--gold-bright);font-weight:800}
+  .me-scar .dot{color:var(--faint)}
+  .me-next{display:flex;align-items:center;gap:9px;margin-top:13px;padding:11px 13px;border-radius:13px;background:var(--glass);border:1px solid var(--line);text-align:left;font-size:12px;color:var(--muted)}
+  .me-next .ic{font-size:15px}
+  .me-next .lbl{color:var(--faint);font-size:9px;letter-spacing:.1em;text-transform:uppercase;font-weight:800}
+  .me-next b{color:var(--cream);font-weight:700}
+  .me-next .cd{color:var(--gold);font-weight:800;font-size:11px}
+  .me-next a.ics{margin-left:auto;color:var(--faint);font-size:15px;text-decoration:none;border:1px solid var(--line);width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .me-next a.ics:hover{border-color:var(--gold);color:var(--gold)}
+  .me-nb{margin-top:11px;display:flex;flex-direction:column;gap:7px}
+  .me-nb .row{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:12px;background:var(--glass);border:1px solid var(--line);font-size:11.5px;color:var(--muted);text-align:left}
+  .me-nb .row .ar{font-weight:900;font-size:14px;flex-shrink:0}
+  .me-nb .row.up .ar{color:var(--ok)}
+  .me-nb .row.dn .ar{color:var(--bad)}
+  .me-nb .row b{color:var(--cream);font-weight:700}
+  .me-bw{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:11px}
+  .me-bw .t{padding:11px 12px;border-radius:13px;border:1px solid var(--line);background:var(--glass);text-align:left}
+  .me-bw .t .k{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);font-weight:800}
+  .me-bw .t .v{font-size:12px;font-weight:800;color:var(--cream);margin-top:4px;line-height:1.3}
+  .me-bw .t .p{font-size:11px;font-weight:800;margin-top:4px}
+  .me-bw .t.best{border-color:rgba(180,151,89,.4);background:rgba(180,151,89,.08)}
+  .me-bw .t.best .p{color:var(--gold-bright)}
+  .me-bw .t.worst .p{color:var(--bad)}
+  .me-bw .t .fl-img{width:14px;height:10px;border-radius:2px;vertical-align:-1px;margin-right:3px}
+  .rv-meter{height:8px;border-radius:99px;margin:9px 0 5px;background:rgba(255,255,255,.08);overflow:hidden;display:flex}
+  .rv-meter i{display:block;height:100%}
+  .rv-meter .me{background:linear-gradient(90deg,var(--gold-deep),var(--gold-bright))}
+  .rv-meter .them{background:rgba(255,255,255,.18)}
+  .rv-nudge{display:flex;align-items:center;gap:9px;margin-bottom:11px;padding:10px 12px;border-radius:12px;border:1px dashed var(--gold);background:rgba(180,151,89,.08);text-align:left}
+  .rv-nudge .tx{flex:1;font-size:11.5px;color:var(--gold-bright);font-weight:700}
+  .rv-nudge .x{background:none;border:none;color:var(--faint);font:inherit;font-size:16px;cursor:pointer;padding:0 2px;line-height:1}
+  .navbadge{position:absolute;top:1px;left:calc(50% + 7px);min-width:15px;height:15px;padding:0 4px;border-radius:99px;background:var(--gold);color:#1a1206;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;line-height:1;box-shadow:0 0 0 2px var(--ink)}
 
   .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;cursor:pointer;font-family:var(--font-b);font-weight:800;font-size:13px;padding:13px 20px;border-radius:14px;transition:.2s;width:100%}
   .btn-primary{background:linear-gradient(125deg,var(--gold-deep),var(--gold));color:#181106;box-shadow:0 8px 24px -8px rgba(180,151,89,.6)}
@@ -1184,7 +1231,7 @@
   <button class="navbtn" id="nav-bracket" onclick="go('bracket')"><svg viewBox="0 0 24 24"><path d="M3 5h4v6h5"/><path d="M3 19h4v-6"/><path d="M12 11h4V7h5"/><path d="M16 11v4h5"/></svg>Bracket</button>
   <button class="navbtn" id="nav-leaderboard" onclick="go('leaderboard')"><svg viewBox="0 0 24 24"><path d="M6 9V4h12v5a6 6 0 0 1-12 0Z"/><path d="M6 5H3v2a3 3 0 0 0 3 3M18 5h3v2a3 3 0 0 1-3 3M9 21h6M12 15v6"/></svg>Leaderboard</button>
   <a class="navbtn" href="/watch.html" style="text-decoration:none"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>Watch</a>
-  <button class="navbtn" id="nav-me" onclick="go('me')"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M5 21a7 7 0 0 1 14 0"/></svg>Me</button>
+  <button class="navbtn" id="nav-me" onclick="go('me')"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M5 21a7 7 0 0 1 14 0"/></svg>Me<i class="navbadge" id="me-badge" style="display:none"></i></button>
 </nav>
 <div id="faqov" class="faqov" style="display:none" role="dialog" aria-modal="true" aria-label="How it works">
     <div class="sw-grab" aria-hidden="true"></div>
@@ -1830,6 +1877,7 @@ function showView(view){
   if(view==="leaderboard")renderLeaderboard();
   if(view==="me"){renderMe();showOrg();}
   if(view==="join"){rollBoard();var _fj=document.getElementById("ff-join");if(_fj)mountFact(_fj,"join");}
+  updateMeBadge();
   window.scrollTo({top:0,behavior:"smooth"});
 }
 
@@ -1928,6 +1976,7 @@ function updateChip(){
   const ptsEl=document.getElementById("chip-pts");
   const nv=scoreFor(state.player.predictions,state.results,state.player.champ).pts+" PTS";
   if(ptsEl){if(ptsEl.textContent&&ptsEl.textContent!=="0 PTS"&&ptsEl.textContent!==nv){ptsEl.classList.remove("pop");void ptsEl.offsetWidth;ptsEl.classList.add("pop");}ptsEl.textContent=nv;}
+  updateMeBadge();
 }
 
 function defaultRound(){
@@ -2447,6 +2496,110 @@ function startLbTicker(rows){
   TICK_T=setInterval(function(){if(facts.length>1)show();},6000);
 }
 
+/* ===== Me page · daily-engagement modules (swarm-designed) =====
+   Every helper reads only data the app already has and never leaks a sealed
+   pick (reveal/settled gates are strictly post-full-time). They turn the Me
+   card into something that reads differently each match-night of the run. */
+function ordinal(n){n=Number(n);if(!isFinite(n))return String(n);const s=["th","st","nd","rd"],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0]);}
+function updateMeBadge(){
+  const el=document.getElementById("me-badge");if(!el)return;
+  let n=0;try{n=revealQueue().length;}catch(e){}
+  if(n>0){el.textContent=n>9?"9+":String(n);el.style.display="";}
+  else el.style.display="none";
+}
+/* Top chip: an unopened reward sits here the morning after every match-night. */
+function meRevealChip(){
+  let n=0;try{n=revealQueue().length;}catch(e){}
+  if(n<=0)return "";
+  return '<button class="me-reveal" onclick="openReveal()" aria-label="Reveal your results"><span class="ic">🎁</span>'+
+    '<span class="tx"><b>'+n+' result'+(n===1?'':'s')+' to reveal</b><span>Tap to see how your picks scored</span></span>'+
+    '<span class="go">›</span></button>';
+}
+/* Finite-schedule scarcity: the calendar itself is the urgency engine. */
+function meScarcity(){
+  if(!state.player||state.demo)return "";
+  const now=Date.now()+CLOCK_OFFSET;
+  const finTs=FIXTURES.filter(function(m){return m.round==="FINAL";}).map(function(m){return new Date(m.ko).getTime();}).sort(function(a,b){return a-b;})[0];
+  if(!finTs)return "";
+  const days=Math.ceil((finTs-now)/86400000);
+  if(days<0)return "";
+  const pr=state.player.predictions||{};
+  let mine=0;FIXTURES.forEach(function(m){const q=pr[m.id];if(q&&(q.o||q.w)&&!isFinished(m))mine++;});
+  const wk=now+7*86400000,nights={};
+  FIXTURES.forEach(function(m){const t=new Date(m.ko).getTime();if(t>=now&&t<=wk&&!isFinished(m))nights[dayKey(m.ko)]=1;});
+  const nN=Object.keys(nights).length;
+  const parts=[];
+  parts.push(days<=0?'🏆 <b>Final today</b>':('🏆 Final in <b>'+days+'</b> day'+(days===1?'':'s')));
+  if(mine>0)parts.push('<b>'+mine+'</b> of your picks still live');
+  if(nN>0)parts.push('<b>'+nN+'</b> match-night'+(nN===1?'':'s')+' this week');
+  if(parts.length<2)return "";
+  return '<div class="me-scar">'+parts.join('<span class="dot">·</span>')+'</div>';
+}
+/* The rest-day return hook: names the exact next time you have skin in the game. */
+function meICS(m,title){
+  function z(s){return new Date(s).toISOString().replace(/[-:]/g,"").replace(/\.\d{3}Z$/,"Z");}
+  const dt=z(m.ko),end=z(new Date(new Date(m.ko).getTime()+2*3600000).toISOString());
+  const ics="BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//StaffChallenge//WC26//EN\r\nBEGIN:VEVENT\r\nUID:"+m.id+"@staffchallenge26\r\nDTSTART:"+dt+"\r\nDTEND:"+end+"\r\nSUMMARY:"+title+" — your pick locks\r\nEND:VEVENT\r\nEND:VCALENDAR";
+  return "data:text/calendar;charset=utf-8,"+encodeURIComponent(ics);
+}
+function meNextPick(){
+  if(!state.player||state.demo)return "";
+  const now=Date.now()+CLOCK_OFFSET,pr=state.player.predictions||{};
+  const cand=FIXTURES.filter(function(m){const q=pr[m.id];return q&&(q.o||q.w)&&!isFinished(m)&&new Date(m.ko).getTime()>now;})
+    .sort(function(a,b){return new Date(a.ko)-new Date(b.ko);});
+  const m=cand[0];if(!m)return "";
+  const v=m.kn?fxView(m):m;
+  const left=lockTs(m)-now;
+  const matchup=esc(v.home.n)+' v '+esc(v.away.n);
+  const cd=left>0?esc(fmtLeft(left)):"locking now";
+  return '<div class="me-next"><span class="ic">⚽</span><div style="min-width:0"><div class="lbl">Your next live pick</div><b>'+matchup+'</b></div><span class="cd">'+cd+'</span>'+
+    '<a class="ics" href="'+meICS(m,matchup)+'" download="pick.ics" title="Add to calendar" aria-label="Add to calendar">🗓</a></div>';
+}
+/* Settled + predicted matches (post-full-time only) — shared by best/worst. */
+function meSettled(){
+  if(!state.player)return [];
+  const pr=state.player.predictions||{};
+  return FIXTURES.filter(function(f){
+    const r=state.results[f.id];if(!r)return false;
+    if(f.kn?r.w==null:r.h==null)return false;
+    const q=pr[f.id]||{};return !!(q.o||q.w);
+  }).sort(function(a,b){return new Date(a.ko)-new Date(b.ko);});
+}
+/* Personal storytelling / share-fuel: your masterstroke + the one that got away. */
+function meBestWorst(){
+  if(!state.player||state.demo)return "";
+  const settled=meSettled();if(settled.length<3)return "";
+  const pr=state.player.predictions||{};
+  let best=null,worst=null;
+  settled.forEach(function(m){
+    const v=rvVerdict(m,pr[m.id]||{},state.results[m.id]);
+    if(best===null||v.pts>best.pts)best={m:m,pts:v.pts};
+    if(worst===null||v.pts<=worst.pts)worst={m:m,pts:v.pts};
+  });
+  if(!best||best.pts<=0)return "";
+  function lbl(m){const v=m.kn?fxView(m):m;const fl=function(t){return FL[t]?flagTag(FL[t]):"";};return fl(v.home.n)+esc(v.home.n)+' v '+fl(v.away.n)+esc(v.away.n);}
+  let html='<div class="me-bw"><div class="t best"><div class="k">⭐ Masterstroke</div><div class="v">'+lbl(best.m)+'</div><div class="p">+'+best.pts+'</div></div>';
+  if(worst&&worst.pts===0&&worst.m.id!==best.m.id)
+    html+='<div class="t worst"><div class="k">😬 The one that got away</div><div class="v">'+lbl(worst.m)+'</div><div class="p">+0</div></div>';
+  else
+    html+='<div class="t"><div class="k">🎯 Sharp run</div><div class="v">Every settled pick has scored</div><div class="p" style="color:var(--ok)">clean sheet</div></div>';
+  return html+'</div>';
+}
+/* Manufactured rivalry for the majority who never set one: who's hunting you. */
+function meNeighbours(st,awaiting){
+  if(awaiting||!st||!st.length||state.demo)return "";
+  const idx=st.findIndex(function(r){return r.slug===state.meSlug;});
+  if(idx<0)return "";
+  const me=st[idx],rows=[];
+  if(idx>0){const a=st[idx-1],gap=(a.pts|0)-(me.pts|0);
+    rows.push('<div class="row up"><span class="ar">▲</span><div>'+(gap===0?('Level with <b>'+esc(a.name)+'</b> — exact scores split you'):('<b>'+esc(a.name)+'</b>'+(a.dept?' · '+esc(a.dept):'')+' is <b>'+gap+'</b> pt'+(gap===1?'':'s')+' ahead — reel them in'))+'</div></div>');}
+  if(idx<st.length-1){const b=st[idx+1],gap=(me.pts|0)-(b.pts|0);
+    rows.push('<div class="row dn"><span class="ar">▼</span><div><b>'+esc(b.name)+'</b>'+(b.dept?' · '+esc(b.dept):'')+' is <b>'+gap+'</b> pt'+(gap===1?'':'s')+' behind'+(gap<=3?' — one result and they’re past you':'')+'</div></div>');}
+  if(!rows.length)return "";
+  return '<div class="me-seclbl">Around you</div><div class="me-nb">'+rows.join("")+'</div>';
+}
+function dismissRivalNudge(){try{localStorage.setItem("wc:rivalnudge","1");}catch(e){}const n=document.getElementById("rv-nudge");if(n)n.remove();}
+
 /* ===== Road to the Maldives — progression toward 1st place (the prize) =====
    Read-only: derives rank/points gaps from the already-sorted standings. */
 function ord(n){const s=["th","st","nd","rd"],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0]);}
@@ -2526,16 +2679,25 @@ async function renderMe(){
     if(tt&&tm[tt]>=3)fun.push('\u2764\ufe0f Most-backed team: <b>'+(FL[tt]?flagTag(FL[tt])+' ':'')+esc(tt)+'</b> \u00d7'+tm[tt]);
   }catch(e){}
   const awaiting=s.scored===0;
+  const medal=(!awaiting&&myRank!=="—"&&myRank<=3)?["🥇","🥈","🥉"][myRank-1]:null;
+  const rankPill=medal?'<div class="me-rankpill">'+medal+' '+ordinal(myRank)+' place'+(total?(' of '+total):'')+'</div>':'';
   document.getElementById("mecard").innerHTML=
+    meRevealChip()+
     '<div class="avatar av">'+avatarFill(state.player.name)+'</div><h3>'+esc(state.player.name)+'</h3>'+
     '<div class="role">'+esc(state.player.dept)+'</div>'+(state.player.ig?'<div class="mail">@'+esc(state.player.ig)+'</div>':'')+
-    '<div class="me-stat"><div class="s"><b>'+s.pts+'</b><span>Points</span></div><div class="s"><b>'+(awaiting?"—":("#"+myRank))+'</b><span>Rank'+(total?(" of "+total):"")+'</span></div><div class="s"><b>'+pc+'</b><span>Predicted</span></div></div>'+
+    rankPill+
+    meScarcity()+
+    '<div class="me-stat"><div class="s hero"><b>'+s.pts+'</b><span>Points</span></div><div class="s"><b>'+(awaiting?"—":("#"+myRank))+'</b><span>Rank'+(total?(" of "+total):"")+'</span></div><div class="s"><b>'+pc+'</b><span>Predicted</span></div></div>'+
     '<div class="me-break">'+(awaiting?'You\u2019ve locked in <b>'+pc+'/'+predTotal()+'</b> picks. Points appear here once matches kick off.':'<b>'+s.correct+'</b> correct results &nbsp;·&nbsp; <b>'+s.exact+'</b> exact scores &nbsp;·&nbsp; <b>'+s.scored+'</b> matches scored')+'</div>'+
     rtmPanel(roadGap(st))+
+    meNextPick()+
     meChampLine()+
-    '<div class="badges">'+badges.slice(0,5).map(b=>'<div class="badge '+(b.g?"gold":"")+'">'+b.t+'</div>').join("")+'</div>'+
+    meNeighbours(st,awaiting)+
+    '<div class="me-seclbl">Achievements</div><div class="badges">'+badges.slice(0,5).map(b=>'<div class="badge '+(b.g?"gold":"")+'">'+b.t+'</div>').join("")+'</div>'+
     '<div class="me-fun" id="me-fun"'+(fun.length?'':' style="display:none"')+'>'+fun.map(function(t){return '<div>'+t+'</div>';}).join("")+'</div>'+
+    meBestWorst()+
     await rivalHTML(s,st);
+  updateMeBadge();
   if(CONFIGURED&&!state.demo)consensus().then(function(c){
     const f=document.getElementById("me-fun");if(!f||!c.map||f.dataset.agree)return;
     const now=Date.now()+CLOCK_OFFSET;let agree=0,n=0;
@@ -2568,6 +2730,8 @@ async function renderMe(){
 async function rivalHTML(s,st){
   const rs=await getJSON("wc:rival",false);
   let inner;
+  let nudge='';try{if(!localStorage.getItem("wc:rivalnudge"))nudge='<div class="rv-nudge" id="rv-nudge"><span class="tx">🎯 Pick someone to chase — your duel updates every match-night.</span><button class="x" onclick="dismissRivalNudge()" aria-label="Dismiss">✕</button></div>';}catch(e){}
+  const pickHTML=nudge+'<button class="btn btn-ghost btn-sm" style="margin:0 auto" onclick="pickRival()">🎯 Pick a rival</button><div id="rival-slot"></div>';
   if(rs){
     const idx=st.findIndex(r=>r.slug===rs);
     if(idx>=0){
@@ -2576,10 +2740,11 @@ async function rivalHTML(s,st){
       const rv=st[idx],diff=myPts-rv.pts;
       inner='<div class="rv-t">\ud83c\udfaf Rival watch</div>'+
         '<div class="rv-line"><b>You '+myPts+'</b><span class="rv-vs">VS</span><b>'+rv.pts+' '+esc(rv.name)+'</b></div>'+
+        '<div class="rv-meter"><i class="me" style="width:'+Math.round(myPts/Math.max(1,myPts+rv.pts)*100)+'%"></i><i class="them" style="width:'+(100-Math.round(myPts/Math.max(1,myPts+rv.pts)*100))+'%"></i></div>'+
         '<div class="rv-sub">'+(diff>0?("You lead by "+diff+" pt"+(diff===1?"":"s")):(diff<0?(esc(rv.name)+" leads by "+(-diff)+" pt"+(diff===-1?"":"s")):"Dead level"))+' \u00b7 they\u2019re #'+(idx+1)+'</div>'+
         '<button class="rv-x" onclick="clearRival()">change rival</button>';
-    }else inner='<button class="btn btn-ghost btn-sm" style="margin:0 auto" onclick="pickRival()">\ud83c\udfaf Pick a rival</button><div id="rival-slot"></div>';
-  }else inner='<button class="btn btn-ghost btn-sm" style="margin:0 auto" onclick="pickRival()">\ud83c\udfaf Pick a rival</button><div id="rival-slot"></div>';
+    }else inner=pickHTML;
+  }else inner=pickHTML;
   return '<div class="rival">'+inner+'</div>';
 }
 
@@ -3925,6 +4090,8 @@ function closeReveal(){
   RV.open=false;clearTimeout(RV.timer);
   document.getElementById("reveal").style.display="none";
   document.body.style.overflow="";
+  updateMeBadge();
+  if(state.view==="me")renderMe();
 }
 function renderRevealCard(){
   const m=RV.q[RV.i];

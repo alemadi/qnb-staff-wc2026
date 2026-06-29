@@ -21,6 +21,27 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-06-29 (Doha) — "Me" page facelift + daily-engagement modules (frontend only)
+
+**Commits:** this commit (`index.html` + changelog). Frontend only — **no DB / scoring / sync / lock-logic change**. Nothing here reads or writes another player's sealed picks; every settled/reveal gate is strictly post-full-time, and all new state is localStorage-only (`wc:rivalnudge`, reuse of `wc:revealed`).
+
+**Why:** a multi-agent ideation swarm (1 grounding pass → 7 specialist lenses → 7 judges → synthesis → adversarial retention critique → finalize; 41 ideas vetted) was run to make the profile page both look better *and* give players a fresh, time-sensitive reason to open it every match-night of the remaining knockouts. The finalized plan's highest-leverage, no-new-infra wins were folded in. The card was also restyled into a premium collectible-style player card within the existing black/gold/host-tricolor system.
+
+**What changed — `index.html`:**
+- **Reveal nudge chip** (JS+CSS) — when `revealQueue()` has settled-but-unopened results, a pulsing gold chip is pinned to the top of `#mecard` that opens the existing animated reveal overlay (`openReveal()`); it vanishes when the queue empties. A matching count **badge on the bottom-nav "Me" button** (`updateMeBadge()` from `showView`/`updateChip`/`closeReveal`) surfaces the unopened reward from any tab. Strictly post-full-time → zero seal-leak.
+- **Finite-schedule scarcity header** (JS) — "🏆 Final in N days · X of your picks still live · Y match-nights this week", derived from `FIXTURES` + the player's own unsettled picks; the calendar itself becomes the urgency engine as the bracket narrows to 19 Jul.
+- **"Your next live pick" line** (JS) — names the soonest unsettled fixture you hold a pick on with a lock countdown and a one-tap **add-to-calendar** `.ics` data-URI; the rest-day return hook so the page is never a dead end.
+- **"Around you" neighbour alerts** (JS) — the single player directly above and below you with the exact point gap ("…is 4 pts behind — one result and they're past you"), manufacturing a rivalry for the majority who never set one. Gated on `scored>0`.
+- **Rival head-to-head meter** (JS+CSS) — the rival watch gains a gold-vs-grey proportional bar, plus a **one-time dismissible "pick someone to chase" nudge** when no rival is set (`wc:rivalnudge`) to seed the social loop while weeks of fixtures remain.
+- **Best / worst call tiles** (JS) — "Masterstroke" (highest-scoring pick) + "The one that got away" (a 0-pt miss), share-fuel storytelling computed from settled picks via `rvVerdict()`. Gated on ≥3 settled.
+- **Visual facelift** (CSS) — `#mecard` gets a host-tricolor top strip + gold-ringed avatar + deeper shadow; the three stats become defined tiles (Points as the gold hero tile); a podium **rank-medal pill** (🥇🥈🥉) for top-3; light "Achievements / Around you" section labels.
+
+**Verified:** `node --check` clean (extracted inline script); headless renders of the **scored** state (reveal chip, scarcity header, next-pick, neighbours, best/worst, rival meter, nav badge) and the **new-player/awaiting** state (graceful empty states, rival nudge, no errors) — no page errors in either.
+
+**Rollback:** `git revert <this commit>` — frontend-only; the additions are one isolated CSS block, a block of `me*` helper functions, and small wiring edits in `renderMe`/`rivalHTML`/`showView`/`updateChip`/`closeReveal`.
+
+---
+
 ## 2026-06-29 (Doha) — Streak banner now STICKS (pins to the top, collapses to a slim strip)
 
 **Commits:** this commit (`index.html` + changelog). **Frontend only — no DB, no scoring change.**
