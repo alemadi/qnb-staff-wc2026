@@ -2089,7 +2089,12 @@ function koMatchCard(m,idx){
   const isQa=m.home.n==="Qatar"||m.away.n==="Qatar";
   const ribbon=isQa?'<div class="ribbon">⭐ Qatar</div>':'';
   let mid;
-  if(win){mid='<div class="midcol"><div class="vs">FT</div><div class="koday">decided</div></div>';}
+  if(win){
+    const hasScore=res&&res.h!=null&&res.a!=null;
+    mid='<div class="midcol">'+(hasScore
+      ?'<div class="final-score">'+res.h+'–'+res.a+'</div><div class="final-tag">Full time</div>'
+      :'<div class="vs">FT</div><div class="koday">decided</div>')+'</div>';
+  }
   else{mid='<div class="midcol"><div class="vs">VS</div><div class="kotime">'+fmtTime(m.ko)+'</div><div class="koday">'+fmtWk(m.ko)+'</div></div>';}
   let picks="";
   if(lk){
