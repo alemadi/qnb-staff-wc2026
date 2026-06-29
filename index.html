@@ -636,6 +636,7 @@
   /* ===== UX wave: header fit, slim sticky bar, consensus, welcome-back, swipe score-at-end ===== */
   @media(max-width:439px){body.in .mark .wc,body.in .mark .divider{display:none}}
   #prog-sent{height:1px}
+  #prog-spacer{height:0} /* grows to exactly the height the progress panel sheds on collapse — keeps the list from jumping */
   #view-matches{overflow-anchor:none} /* stop scroll anchoring fighting the sticky collapse (jitter loop) */
   :root{interpolate-size:allow-keywords} /* lets width/height:auto animate in modern browsers; harmless elsewhere */
   .progress.mini{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:13px}
@@ -1038,6 +1039,7 @@
         <div class="prow"><span>Picked the World Champion <span class="pfaint">(locked 18 June, 7:00 PM Doha)</span></span><b>+25</b></div>
       </div>
     </div>
+    <div id="prog-spacer" aria-hidden="true"></div>
     <div class="filters" id="filters"></div>
     <div id="match-list"></div>
   </section>
@@ -4143,16 +4145,32 @@ function liveTick(){
   if(active)fetchLive();
 }
 
-/* collapse the progress panel to a slim bar once it sticks \u2014 but never while the points table
-   is open, so reading it (which means scrolling) can't slam it shut or jump the page */
+/* Collapse the progress panel to a slim bar once it sticks. Two rules keep this from feeling broken:
+   (1) never collapse while the points table is open \u2014 reading it means scrolling, which used to slam
+       it shut; (2) when it does collapse, a spacer below it grows by exactly the height the panel
+       gave up, so the match list underneath stays put instead of lurching upward (the "unnatural
+       movement"). The reverse on expand keeps it symmetric. */
 (function(){
-  const s=document.getElementById("prog-sent"),p=document.querySelector(".progress");
+  const s=document.getElementById("prog-sent"),p=document.querySelector(".progress"),
+        sp=document.getElementById("prog-spacer");
   if(!s||!p||!window.IntersectionObserver)return;
   let stuck=false;
   window.__progSync=function(){
     const t=document.getElementById("ptable");
     const open=t&&t.classList.contains("show");
-    p.classList.toggle("mini",stuck&&!open);
+    const want=stuck&&!open;                       /* desired mini state */
+    const is=p.classList.contains("mini");
+    if(want===is)return;
+    if(sp){
+      const before=p.offsetHeight;                 /* height it occupies in flow now */
+      const tr=p.style.transition;p.style.transition="none";     /* measure the settled height, not a mid-ease frame */
+      p.classList.toggle("mini",want);
+      const after=p.offsetHeight;                  /* forced reflow → final collapsed/expanded layout */
+      sp.style.height=want?Math.max(0,before-after)+"px":"0px";  /* reserve exactly the reclaimed space */
+      void p.offsetWidth;p.style.transition=tr;    /* commit, then restore so the snap isn't animated backwards */
+    }else{
+      p.classList.toggle("mini",want);
+    }
   };
   new IntersectionObserver(function(en){
     const e=en[0];stuck=!e.isIntersecting&&e.boundingClientRect.top<0;

@@ -5,6 +5,23 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-06-29 (Doha) — Progress panel collapse no longer jumps the match list (frontend only)
+
+**Commits:** this commit (`index.html` + changelog). Frontend only — no DB/scoring/sync/lock change.
+
+**Why:** the previous entry fixed the *expandable* points table but the real "unnatural movement when scrolling down" was the **progress panel itself**. The panel is `position:sticky` and, once you scroll past it, an `IntersectionObserver` collapses it to the slim `.mini` bar — which yanks ~112px out of the layout in a single frame (the `.rules` line + "How do points work?" button go `display:none`). Because scroll anchoring is deliberately off (`overflow-anchor:none`, to avoid an older jitter loop), the browser doesn't compensate, so the whole match list lurched upward the instant the bar shrank, and the points info "closed suddenly." Measured: a 120px scroll moved a reference row 232px at the collapse point — a 112px jump on top of the scroll.
+
+**What changed (`index.html`):**
+- **Compensating spacer.** Added an empty `#prog-spacer` immediately after `.progress`. When the observer collapses (or re-expands) the panel, `window.__progSync()` now measures the panel's height before/after the toggle and sets the spacer to exactly the reclaimed height, so the document's total height — and therefore everything below the panel — stays put. The match list no longer moves at all when the bar collapses or expands.
+- **Exact measurement.** The before/after `offsetHeight` read is taken with the panel's CSS transition momentarily disabled (then restored without animating the snap), so the spacer reserves the *settled* height rather than a mid-ease frame — bringing residual drift from ~9px to 0.
+- Kept the prior fixes: the panel never collapses while the points table is open, and an open table scrolls naturally (`.progress.pts-open` → `position:relative`).
+
+**Verified:** headless Chromium (390×740). Table-closed scroll: `document.scrollHeight` holds constant across the collapse and a reference row tracks the scroll 1:1 (was −112px extra). Round-trip down→up→down: returning to any scroll position lands the reference row on the identical pixel every time (no net drift). Table-open scroll: table stays open, panel scrolls away naturally, no collapse. No page errors.
+
+**Rollback:** `git revert <this commit>` — frontend-only; removes the `#prog-spacer` element + its compensation logic, leaving the prior (table-open) fix intact.
+
+---
+
 ## 2026-06-29 (Doha) — Points table no longer slams shut while you scroll it (frontend only)
 
 **Commits:** this commit (`index.html` + changelog). Frontend only — no DB/scoring/sync/lock change.
