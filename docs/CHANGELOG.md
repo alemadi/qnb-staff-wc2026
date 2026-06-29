@@ -26,6 +26,63 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-06-29 (Doha) — Two features: "Road to the Maldives" progression + cinematic reveal
+
+**Commits:** this commit (`index.html` + changelog). Frontend only — no DB/scoring/sync/lock change. Both features are read-only/presentational on top of existing data.
+
+**Why:** two depth features (vs the earlier breadth polish) to add a genuine progression hook and upgrade the daily dopamine moment.
+
+**1 — "Road to the Maldives" progression meta.** Ties every point to the grand prize (the Maldives = 1st). New read-only helpers `roadGap(rows)` / `rtmPanel()` / `rtmStrip()` derive rank + points gaps from the already-sorted standings:
+- **Me card** — a gold-framed panel with an airline-style flight path: a ✈️ plane positioned by rank-percentile travelling toward the 🏝️ island, plus *"You're 3rd of 12 · 14 pts from the Maldives ✈️ / Just 3 pts behind Layla M. — pass them next ↑."*
+- **Leaderboard** — a compact strip (`✈️ N pts from the Maldives · ↑ M to pass <name>`), shown for the signed-in, non-demo viewer.
+- States handled: leader ("the Maldives is yours to lose — defend it"), level-board (early tournament), and points-tie ("level — break the tie to climb"). Hidden gracefully when there are no standings. The plane/fill transitions are reduced-motion-gated by the global reset.
+
+**2 — Cinematic reveal ritual.** The per-match reveal card now performs a **true 3D flip** instead of a static fade:
+- `renderRevealCard()` restructured into a two-face flip card (`.rv-flip` with `.rv-front` = YOUR PICK / `.rv-back` = RESULT). The `#rv-stamp` / `#rv-cons` IDs are unchanged, so `revealFlip()`'s logic is untouched. The verdict stamp now **slams in** (`stampIn` — scale-down impact) as the card lands.
+- **Layered audio** (all gated by the existing Sounds toggle): `sndFlip()` whoosh as the card turns, a new `sndMiss()` soft tone for a wrong call (previously silent), and `sndFinale()` (C–E–G–C flourish) on the summary screen.
+- **Finale flourish:** the "THIS REVEAL +N" total now **counts up** (odometer) with a pop, and confetti fires on any positive reveal (not only on a rank climb).
+- **Reduced-motion:** RM users already bypass the card entirely (they get `revealSummary()`), and the flip/stamp/pop are additionally guarded — they get the result with no motion.
+
+**Verified:** `node --check` clean. Headless Chromium drove the real flows — the Me-card Road panel (plane near the island for a 3rd-place mock), the reveal front→flip (back face shows "Mexico 2–0 South Africa · ◎ EXACT! +5", odometer +5), and the finale (count-up + confetti) — plus a unit-check of `roadGap()`/`rtmStrip()`. No page errors.
+
+**Rollback:** `git revert <this commit>` — frontend-only. The reveal change is structural (two-face card) but self-contained to `renderRevealCard` + the appended CSS; reverting restores the prior single-card fade.
+
+---
+
+## 2026-06-29 (Doha) — Progress panel collapse no longer jumps the match list (frontend only)
+
+**Commits:** this commit (`index.html` + changelog). Frontend only — no DB/scoring/sync/lock change.
+
+**Why:** the previous entry fixed the *expandable* points table but the real "unnatural movement when scrolling down" was the **progress panel itself**. The panel is `position:sticky` and, once you scroll past it, an `IntersectionObserver` collapses it to the slim `.mini` bar — which yanks ~112px out of the layout in a single frame (the `.rules` line + "How do points work?" button go `display:none`). Because scroll anchoring is deliberately off (`overflow-anchor:none`, to avoid an older jitter loop), the browser doesn't compensate, so the whole match list lurched upward the instant the bar shrank, and the points info "closed suddenly." Measured: a 120px scroll moved a reference row 232px at the collapse point — a 112px jump on top of the scroll.
+
+**What changed (`index.html`):**
+- **Compensating spacer.** Added an empty `#prog-spacer` immediately after `.progress`. When the observer collapses (or re-expands) the panel, `window.__progSync()` now measures the panel's height before/after the toggle and sets the spacer to exactly the reclaimed height, so the document's total height — and therefore everything below the panel — stays put. The match list no longer moves at all when the bar collapses or expands.
+- **Exact measurement.** The before/after `offsetHeight` read is taken with the panel's CSS transition momentarily disabled (then restored without animating the snap), so the spacer reserves the *settled* height rather than a mid-ease frame — bringing residual drift from ~9px to 0.
+- Kept the prior fixes: the panel never collapses while the points table is open, and an open table scrolls naturally (`.progress.pts-open` → `position:relative`).
+
+**Verified:** headless Chromium (390×740). Table-closed scroll: `document.scrollHeight` holds constant across the collapse and a reference row tracks the scroll 1:1 (was −112px extra). Round-trip down→up→down: returning to any scroll position lands the reference row on the identical pixel every time (no net drift). Table-open scroll: table stays open, panel scrolls away naturally, no collapse. No page errors.
+
+**Rollback:** `git revert <this commit>` — frontend-only; removes the `#prog-spacer` element + its compensation logic, leaving the prior (table-open) fix intact.
+
+---
+
+## 2026-06-29 (Doha) — Points table no longer slams shut while you scroll it (frontend only)
+
+**Commits:** this commit (`index.html` + changelog). Frontend only — no DB/scoring/sync/lock change.
+
+**Why:** opening "How do points work?" on the Matches screen and scrolling down to read it felt broken — the panel jerked, the table snapped shut mid-scroll, and the page jumped. Root cause: the points table (`#ptable`) lives *inside* the sticky `.progress` panel. As you scrolled, the `IntersectionObserver` on `#prog-sent` flipped the panel to `.mini`, and both `.progress.mini .ptable{display:none}` **and** an explicit JS line force-closed the open table. Combined with the panel being `position:sticky` (so the tall open table first pinned to the top), you got the "unnatural movement + closes suddenly" behaviour. Reading a long table requires scrolling, which is exactly what triggered the collapse — so the feature fought the user.
+
+**What changed (`index.html`):**
+- **Observer no longer collapses or force-closes while the table is open.** Refactored the sticky-collapse IIFE: it now tracks `stuck` and calls a shared `window.__progSync()` that applies `.mini` only when `stuck && !pointsTableOpen`. Removed the JS block that yanked `.show` off `#ptable` and reset the button text on stick.
+- **Open table scrolls naturally instead of pinning.** New CSS `.progress.pts-open{position:relative;top:auto}` — while the table is open the panel drops out of sticky so it scrolls away with the page like normal content (you can only open the table when the panel is full/at rest, since `.ptbtn` is hidden in `.mini`, so there's no jump on open).
+- **`togglePts()`** now toggles `pts-open` on `.progress` alongside `#ptable.show` and calls `__progSync()` so the mini state re-resolves cleanly on close.
+
+**Verified:** headless Chromium (390×740) — opening the table sets `#ptable.show` + `.progress.pts-open` with computed `position:relative`; closing restores `position:sticky`; no page errors from the change.
+
+**Rollback:** `git revert <this commit>` — frontend-only; an isolated CSS rule plus two small JS edits (observer IIFE + `togglePts`).
+
+---
+
 ## 2026-06-29 (Doha) — Departures-board deepening (the 40 UX + 40 gaming expert-lens fold-in)
 
 **Commits:** this commit (`index.html` + changelog). Frontend only — no DB/scoring/sync/lock change.
