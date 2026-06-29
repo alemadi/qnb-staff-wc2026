@@ -5,6 +5,23 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-06-29 (Doha) — In-app announcement: one-time "What's new" spotlight + NEW breadcrumb
+
+**Commits:** this commit (`index.html` + changelog). **Frontend only — no DB / scoring / sync / lock-logic change.** New state is localStorage-only.
+
+**Why:** the recent additions (The Room, Department leagues, rival H2H, "you passed…") need to reach 670 players **in-app** — there's no all-staff WhatsApp. So this announces them the lightest effective way: a one-time spotlight that drops players straight into each feature, plus a persistent breadcrumb for anyone who opens the app later.
+
+**What changed — `index.html`:**
+- **One-time "What's new" spotlight (`#wnov` + `maybeWhatsNew`/`dismissWhatsNew`/`wnGoRoom`/`wnGoSquad`)** — a centered modal that appears **once per player** (gated on `localStorage 'wc:whatsnew' === WHATSNEW_VER`, so it can be re-shown for a future release by bumping the version). It lists 🏟️ The Room and 🏢 Department leagues, each as a button that **deep-links into the feature** (The Room → leaderboard in room mode; Your Squad → Me card, scrolled to the squad block), plus a one-line note on rival H2H / "you passed…". Dismissed by "Got it" or backdrop tap; never nags again. Priority on boot: results **reveal** > what's-new > the rank-delta pop (`init` now does `if(!openReveal()){if(!maybeWhatsNew())welcomeDelta();}`), so it never stacks on the reveal.
+- **Persistent NEW breadcrumb (`updateNewDots`/`markSeen`/`seenKey`)** — a gold dot on the **Leaderboard** nav button (clears once the leaderboard is opened, via `showView`) and a maroon **"NEW"** pill on the **🏟 The Room** toggle (clears once the toggle is clicked). Self-clearing, `localStorage`-remembered (`wc:seen:lb` / `wc:seen:room`), so late openers still discover the features and nothing lingers as clutter.
+- CSS: `.wnov`/`.wn-*` (modal), `.navnew` (nav dot), `.tnew` (toggle pill) — appended to the social-pack block, palette-locked (gold / cream / Qatar-maroon), no infinite motion.
+
+**Verified:** `node --check` clean. Headless Chromium — **16/16** checks: spotlight shows once and **never again after dismissal** (version recorded), lists both features, both deep-links land on the right view/mode and clear their breadcrumbs, the NEW dots toggle on-when-unseen / off-when-seen and the Room pill is independent of the nav dot, reduced-motion (no throw, no page errors), and zero page errors. Screenshot confirms the spotlight.
+
+**Rollback:** `git revert <this commit>` — frontend-only; removes the `#wnov` markup, the `whatsnew`/`seen` helpers, the two small `showView`/`init`/`lbmode` wiring edits, the two nav/toggle markers, and one CSS block.
+
+---
+
 ## 2026-06-29 (Doha) — Department leagues (tribal competition) + The Room scaled for 670 players
 
 **Commits:** this commit (`index.html` + changelog). **Frontend only — no DB / scoring / sync / lock-logic change.** Seal-safe throughout. New state: none (all derived from the existing standings/blobs).

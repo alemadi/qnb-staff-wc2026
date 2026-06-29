@@ -1065,6 +1065,27 @@
   .me-squad .sq-derby .up .ar{color:var(--ok)}
   .room-row .pp-n .rr{display:inline-block;min-width:22px;font-style:normal;font-weight:800;color:var(--faint);font-size:11px;margin-right:6px}
   .room-row.mine .pp-n .rr{color:var(--gold)}
+
+  /* In-app announcement — "What's new" spotlight + NEW breadcrumb */
+  .navnew{position:absolute;top:5px;right:calc(50% - 17px);width:8px;height:8px;border-radius:50%;background:radial-gradient(circle at 35% 35%,var(--gold-bright),var(--gold));box-shadow:0 0 0 2px rgba(10,10,12,.95),0 0 8px rgba(227,211,163,.7)}
+  .lbmode button .tnew{display:inline-block;margin-left:6px;font-size:8px;font-weight:800;letter-spacing:.08em;background:var(--qatar);color:#fff;border-radius:5px;padding:1px 5px;vertical-align:middle}
+  .lbmode button.on .tnew{background:rgba(0,0,0,.28);color:#fff}
+  .wnov{position:fixed;inset:0;z-index:360;display:flex;align-items:center;justify-content:center;padding:22px;background:rgba(5,5,7,.72);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+  .wn-card{width:100%;max-width:380px;background:linear-gradient(180deg,#16130c,#0c0b08);border:1px solid rgba(180,151,89,.5);border-radius:22px;padding:24px 20px 20px;text-align:center;box-shadow:0 30px 80px -20px rgba(0,0,0,.8),inset 0 0 0 1px rgba(255,255,255,.03)}
+  .wn-spark{font-size:34px;line-height:1}
+  .wn-h{font-family:var(--font-d);font-size:30px;color:var(--gold-bright);letter-spacing:.02em;margin-top:4px}
+  .wn-sub{font-size:12.5px;color:var(--muted);margin:4px 0 16px}
+  .wn-sub b{color:var(--cream)}
+  .wn-item{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--glass);border:1px solid var(--line);border-radius:14px;padding:13px 14px;margin-bottom:10px;cursor:pointer;font:inherit;color:var(--cream);transition:.15s}
+  .wn-item:hover{border-color:var(--gold);transform:translateY(-1px)}
+  .wn-item .wn-ic{font-size:24px;flex:none}
+  .wn-item .wn-tx{flex:1;min-width:0}
+  .wn-item .wn-tx b{display:block;font-size:14.5px;color:var(--cream)}
+  .wn-item .wn-tx span{display:block;font-size:11.5px;color:var(--muted);line-height:1.4;margin-top:2px}
+  .wn-item .wn-go{flex:none;font-size:22px;color:var(--gold);font-weight:700}
+  .wn-more{font-size:11.5px;color:var(--muted);margin:4px 0 16px}
+  .wn-ok{width:100%;background:linear-gradient(115deg,var(--gold-deep),var(--gold));color:#181106;border:none;border-radius:13px;padding:13px;font:inherit;font-weight:800;font-size:14px;cursor:pointer}
+  .wn-ok:hover{filter:brightness(1.06)}
 </style>
 </head>
 <body>
@@ -1245,7 +1266,7 @@
   <!-- LEADERBOARD -->
   <section class="view" id="view-leaderboard">
     <div class="sec-title"><h2>Leaderboard</h2><span class="live tag"><span class="pulse"></span> Live</span></div>
-    <div class="lbmode" id="lbmode"><button type="button" data-m="people" class="on">People</button><button type="button" data-m="dept">Departments</button><button type="button" data-m="room">🏟 The Room</button></div>
+    <div class="lbmode" id="lbmode"><button type="button" data-m="people" class="on">People</button><button type="button" data-m="dept">Departments</button><button type="button" data-m="room">🏟 The Room<i class="tnew" id="room-new" style="display:none">NEW</i></button></div>
     <div class="prize-strip">🥇 <b>Maldives trip</b> · 🥈 60,000 pts · 🥉 40,000 pts<span class="ps-note">QNB Life Rewards · prizes for the top three at the final whistle</span></div>
     <div id="demo-banner" class="demo-banner" style="display:none">🎬 Demo mode — sample players shown for presentation. Nothing here is saved.</div>
     <div id="lb-body"></div>
@@ -1299,7 +1320,7 @@
 <nav class="bottom">
   <button class="navbtn on" id="nav-matches" onclick="go('matches')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3v4M12 17v4M3 12h4M17 12h4M7 7l2.5 2.5M17 7l-2.5 2.5M7 17l2.5-2.5M17 17l-2.5-2.5"/></svg>Matches</button>
   <button class="navbtn" id="nav-bracket" onclick="go('bracket')"><svg viewBox="0 0 24 24"><path d="M3 5h4v6h5"/><path d="M3 19h4v-6"/><path d="M12 11h4V7h5"/><path d="M16 11v4h5"/></svg>Bracket</button>
-  <button class="navbtn" id="nav-leaderboard" onclick="go('leaderboard')"><svg viewBox="0 0 24 24"><path d="M6 9V4h12v5a6 6 0 0 1-12 0Z"/><path d="M6 5H3v2a3 3 0 0 0 3 3M18 5h3v2a3 3 0 0 1-3 3M9 21h6M12 15v6"/></svg>Leaderboard</button>
+  <button class="navbtn" id="nav-leaderboard" onclick="go('leaderboard')"><svg viewBox="0 0 24 24"><path d="M6 9V4h12v5a6 6 0 0 1-12 0Z"/><path d="M6 5H3v2a3 3 0 0 0 3 3M18 5h3v2a3 3 0 0 1-3 3M9 21h6M12 15v6"/></svg>Leaderboard<i class="navnew" id="lb-new" style="display:none" aria-hidden="true"></i></button>
   <a class="navbtn" href="/watch.html" style="text-decoration:none"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>Watch</a>
   <button class="navbtn" id="nav-me" onclick="go('me')"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M5 21a7 7 0 0 1 14 0"/></svg>Me<i class="navbadge" id="me-badge" style="display:none"></i></button>
 </nav>
@@ -1311,6 +1332,17 @@
       <button class="sw-x" onclick="closeFaq()" aria-label="Close">✕</button>
     </div>
     <div class="faq-list" id="faq-list"></div>
+  </div>
+  <div id="wnov" class="wnov" style="display:none" role="dialog" aria-modal="true" aria-label="What's new" onclick="if(event.target===this)dismissWhatsNew()">
+    <div class="wn-card">
+      <div class="wn-spark" aria-hidden="true">✨</div>
+      <div class="wn-h">What’s new</div>
+      <div class="wn-sub">The pool’s <b>670+</b> strong now — so we added a few things.</div>
+      <button class="wn-item" onclick="wnGoRoom()"><span class="wn-ic">🏟️</span><span class="wn-tx"><b>The Room</b><span>See how the whole office called every match — and who nailed it.</span></span><span class="wn-go">›</span></button>
+      <button class="wn-item" onclick="wnGoSquad()"><span class="wn-ic">🏢</span><span class="wn-tx"><b>Department leagues</b><span>Where does your squad rank of 12? Rally your desk.</span></span><span class="wn-go">›</span></button>
+      <div class="wn-more">🎯 Plus rival head-to-head &amp; “you passed…” alerts on your card.</div>
+      <button class="wn-ok" onclick="dismissWhatsNew()">Got it</button>
+    </div>
   </div>
   <div id="reveal" class="reveal" style="display:none" role="dialog" aria-modal="true" aria-label="Results reveal">
     <div class="sw-grab" aria-hidden="true"></div>
@@ -1944,10 +1976,10 @@ function showView(view){
   ["matches","bracket","leaderboard","me"].forEach(n=>{const b=document.getElementById("nav-"+n);if(b){const a=n===view;b.classList.toggle("on",a);a?b.setAttribute("aria-current","page"):b.removeAttribute("aria-current");}});
   if(view==="matches"){renderFilters();renderMatches();}
   if(view==="bracket"){renderBracket();var _fb=document.getElementById("ff-bracket");if(_fb)mountFact(_fb,"bracket");}
-  if(view==="leaderboard")renderLeaderboard();
+  if(view==="leaderboard"){renderLeaderboard();markSeen("lb");}
   if(view==="me"){renderMe();showOrg();}
   if(view==="join"){rollBoard();var _fj=document.getElementById("ff-join");if(_fj)mountFact(_fj,"join");}
-  updateMeBadge();
+  updateMeBadge();updateNewDots();
   window.scrollTo({top:0,behavior:"smooth"});
 }
 
@@ -3562,7 +3594,7 @@ let LB_MODE="people";
 (function(){
   const lm=document.getElementById("lbmode");
   if(lm)lm.querySelectorAll("button").forEach(b=>b.onclick=()=>{LB_MODE=b.dataset.m;
-    lm.querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b));renderLeaderboard();});
+    lm.querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b));if(b.dataset.m==="room")markSeen("room");renderLeaderboard();});
 })();
 
 function renderPulse(){
@@ -4385,6 +4417,45 @@ function toggleFaq(i){
   renderFaq(it&&it.classList.contains("open")?-1:i);
 }
 
+/* ===== In-app announcement — one-time "What's new" spotlight + NEW breadcrumb =====
+   Reaches every player in-app (no external channel). The spotlight shows once
+   per player (localStorage-gated by version), deep-links into each new feature,
+   and never nags. Persistent NEW dots on the Leaderboard nav + The Room toggle
+   catch stragglers and self-clear once the surface is visited. */
+const WHATSNEW_VER="2026-06-29-social";
+function seenKey(k){try{return localStorage.getItem("wc:seen:"+k)==="1";}catch(e){return true;}}
+function markSeen(k){try{localStorage.setItem("wc:seen:"+k,"1");}catch(e){}updateNewDots();}
+function updateNewDots(){
+  const on=!!state.player&&!state.demo;
+  const ld=document.getElementById("lb-new");if(ld)ld.style.display=(on&&!seenKey("lb"))?"":"none";
+  const rn=document.getElementById("room-new");if(rn)rn.style.display=(on&&!seenKey("room"))?"":"none";
+}
+function maybeWhatsNew(){
+  if(!state.player||state.demo)return false;
+  let seen=null;try{seen=localStorage.getItem("wc:whatsnew");}catch(e){}
+  if(seen===WHATSNEW_VER)return false;
+  const ov=document.getElementById("wnov");if(!ov)return false;
+  ov.style.display="flex";document.body.style.overflow="hidden";
+  return true;
+}
+function dismissWhatsNew(){
+  try{localStorage.setItem("wc:whatsnew",WHATSNEW_VER);}catch(e){}
+  const ov=document.getElementById("wnov");if(ov)ov.style.display="none";
+  document.body.style.overflow="";
+}
+function wnGoRoom(){
+  dismissWhatsNew();
+  LB_MODE="room";
+  const lm=document.getElementById("lbmode");if(lm)lm.querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.m==="room"));
+  markSeen("lb");markSeen("room");
+  go("leaderboard");
+}
+function wnGoSquad(){
+  dismissWhatsNew();
+  go("me");
+  setTimeout(function(){const el=document.querySelector(".me-squad");if(el&&el.scrollIntoView)el.scrollIntoView({behavior:"smooth",block:"center"});},350);
+}
+
 /* ===== juice: sounds + odometers ===== */
 function sndOn(){try{return localStorage.getItem("wc:snd")==="1";}catch(e){return false;}}
 function toggleSnd(btn){
@@ -4937,7 +5008,7 @@ function liveTick(){
     document.getElementById("countdown").style.display="flex";
     const h=(location.hash||"").slice(1);
     updateChip();go(["matches","bracket","leaderboard","me"].indexOf(h)>=0?h:"matches");
-    if(!openReveal())welcomeDelta();
+    if(!openReveal()){if(!maybeWhatsNew())welcomeDelta();}
   }else{go("join");}
   setupBanner();
   renderPulse();setInterval(renderPulse,30000);
