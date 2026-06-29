@@ -5,6 +5,24 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-06-29 (Doha) — Streak banner now STICKS (pins to the top, collapses to a slim strip)
+
+**Commits:** this commit (`index.html` + changelog). **Frontend only — no DB, no scoring change.**
+
+**Why:** the streak announcement banner scrolled away as soon as you moved down the page. Make it *stick* so it stays in view. But the full card is **~241px tall** (a third of a phone screen), so pinning it whole would permanently bury the match list and collide with the existing two-tier sticky headers (filter chips + progress panel). So it pins **and collapses**.
+
+**What changed (display only):**
+- **`.xbanner` is now `position:sticky`** (`top: safe-area + 4px`, `z-index:35`, gained a `backdrop-filter:blur` + a near-opaque base so content scrolls cleanly beneath it).
+- **Collapses to a slim one-line strip on scroll** — a new `.xbanner.mini` state shows just `🔥 · heading · "How it works ›" · ✕` (~34px). Driven by an `IntersectionObserver` on a 1px `#xb-sent` sentinel, mirroring the existing progress-panel pattern. A `#xb-spacer` below the banner grows by exactly the height it sheds so the views underneath **don't lurch upward** when it snaps (same spacer trick the progress panel uses).
+- **The in-view sticky bars tuck below the pinned strip** — `setupBanner()` measures the collapsed height into `--xb-h`; `body.xb-on .filters` / `.progress` add it to their `top` so the three tiers (strip → filters → progress) stack without overlap. When the banner is hidden/dismissed/snoozed (`hideBanner()`), `xb-on` is removed and the bars revert to their original offsets — non-banner behaviour is byte-for-byte unchanged.
+- A short `.xb-cta2` ("How it works ›") was added for the collapsed strip; the long CTA, chips, sub and quiet line are hidden when mini.
+
+**Verified:** extracted inline script `node --check` clean; loaded in headless Chromium (390×740) with **zero page errors**; scroll-tested — banner pins at `top:4` and collapses to a 34px strip, spacer grows to 207px (no list jump), filters/progress retuck to 41px/96px below it and revert on scroll-back; rendered the full card, the collapsed strip, and the full strip→filters→progress stack over a populated list (no overlap). Reduced-motion already covered by the global transition kill-switch.
+
+**Rollback:** `git revert <this-commit-sha>` (frontend-only).
+
+---
+
 ## 2026-06-29 (Doha) — Restore the agreed knockout ladder (PR #19), keep the 🔥 streak
 
 **Commits:** this commit (`index.html` + `sql/standings.sql` + changelog). **Staged on branch only — NOT yet deployed live.** Going live needs both halves to ship together (see below).

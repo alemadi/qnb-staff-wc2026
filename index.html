@@ -116,8 +116,10 @@
   .pulse{width:7px;height:7px;border-radius:50%;background:var(--magenta-2);box-shadow:0 0 0 0 rgba(239,51,64,.6);animation:pulse 1.8s infinite}
   @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(239,51,64,.55)}70%{box-shadow:0 0 0 9px rgba(239,51,64,0)}100%{box-shadow:0 0 0 0 rgba(239,51,64,0)}}
   .xbanner{display:flex;align-items:flex-start;gap:11px;margin-top:14px;padding:12px 38px 12px 14px;border-radius:15px;
-    border:1px solid var(--gold);background:linear-gradient(96deg,rgba(180,151,89,.22),rgba(227,211,163,.07));
-    font-size:12.5px;line-height:1.5;color:var(--cream);position:relative;overflow:hidden;animation:xbrise .5s both}
+    border:1px solid var(--gold);background:linear-gradient(96deg,rgba(180,151,89,.22),rgba(227,211,163,.07)),rgba(13,13,17,.86);
+    -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+    font-size:12.5px;line-height:1.5;color:var(--cream);position:sticky;top:calc(env(safe-area-inset-top,0px) + 4px);z-index:35;overflow:hidden;animation:xbrise .5s both;
+    transition:padding .2s ease,gap .2s ease,border-radius .2s ease}
   @keyframes xbrise{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
   .xbanner .xb-ic{font-size:20px;line-height:1.1;flex:none;animation:xbflame 2.2s ease-in-out infinite;transform-origin:50% 80%}
   @keyframes xbflame{0%,100%{transform:scale(1) rotate(-3deg);filter:brightness(1)}50%{transform:scale(1.13) rotate(3deg);filter:brightness(1.28)}}
@@ -131,6 +133,20 @@
   .xbanner a.xb-cta{display:inline-block;margin-top:1px;color:var(--gold-bright);font-weight:800;white-space:nowrap;text-decoration:none}
   .xbanner .xb-x{position:absolute;top:6px;right:6px;width:30px;height:30px;display:grid;place-items:center;background:transparent;border:0;color:var(--muted);font-size:16px;cursor:pointer;border-radius:8px}
   .xbanner .xb-x:hover{color:var(--cream);background:rgba(255,255,255,.07)}
+  .xbanner .xb-cta2{display:none}
+  /* collapsed (stuck) state: a slim one-line strip so the pinned banner never eats the screen */
+  .xbanner.mini{align-items:center;padding:7px 38px 7px 13px;gap:9px;border-radius:12px}
+  .xbanner.mini .xb-ic{font-size:16px}
+  .xbanner.mini .xb-tx{display:flex;align-items:center;gap:10px;flex-wrap:nowrap;overflow:hidden}
+  .xbanner.mini .xb-h{margin-bottom:0;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:0 1 auto}
+  .xbanner.mini .xb-sub,.xbanner.mini .xb-chips,.xbanner.mini .xb-quiet,.xbanner.mini .xb-cta,.xbanner.mini .xb-tx br{display:none}
+  .xbanner.mini .xb-cta2{display:inline-block;margin:0;color:var(--gold-bright);font-weight:800;white-space:nowrap;text-decoration:none;font-size:12px;flex:none}
+  /* sentinel + spacer keep the list from lurching when the banner snaps to its slim form */
+  #xb-sent{height:1px}
+  #xb-spacer{height:0}
+  /* with the banner pinned, the in-view sticky bars tuck just below its collapsed height (--xb-h) */
+  body.xb-on .filters{top:calc(env(safe-area-inset-top,0px) + var(--xb-h,0px) + 7px)}
+  body.xb-on .progress{top:calc(env(safe-area-inset-top,0px) + var(--xb-h,0px) + 62px)}
   /* celebratory exact-score streak moment */
   .streakflash{position:fixed;inset:0;z-index:10000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;pointer-events:none;
     background:radial-gradient(closest-side,rgba(20,16,8,.55),rgba(6,6,9,0) 72%);animation:sfin .25s both}
@@ -951,6 +967,7 @@
     </div>
   </header>
 
+  <div id="xb-sent" aria-hidden="true"></div>
   <div class="xbanner" id="xbanner" style="display:none" role="status" aria-label="New: knockout exact-score streaks">
     <div class="xb-ic" aria-hidden="true">🔥</div>
     <div class="xb-tx">
@@ -959,9 +976,11 @@
       <div class="xb-chips" aria-hidden="true"><span class="xb-chip">+5<small>ON YOUR 2ND</small></span><span class="xb-chip">+15<small>ON YOUR 3RD</small></span><span class="xb-chip">+20<small>4TH ON, EACH</small></span></div>
       <span class="xb-quiet">Knockout games only. Your group points and champion pick (+25) stay the same.</span><br>
       <a class="xb-cta" href="javascript:void 0" onclick="openFaq('streak');return false">See how the streak works ›</a>
+      <a class="xb-cta2" href="javascript:void 0" onclick="openFaq('streak');return false">How it works ›</a>
     </div>
     <button class="xb-x" onclick="dismissBanner()" aria-label="Dismiss announcement">✕</button>
   </div>
+  <div id="xb-spacer" aria-hidden="true"></div>
 
   <!-- SIGN IN -->
   <section class="view" id="view-join">
@@ -1769,15 +1788,22 @@ function togglePts(btn){const t=document.getElementById("ptable");const on=t.cla
 const BANNER_KEY="wc:banner:streak-v2";
 const BANNER_SNOOZE=8*3600*1000;             // ✕ = brief snooze only, so it keeps coming back
 const BANNER_UNTIL=Date.parse("2026-07-15T00:00:00+03:00");  // keep showing through the knockouts; then it retires itself
+function hideBanner(){const b=document.getElementById("xbanner");if(b){b.style.display="none";b.classList.remove("mini");}document.body.classList.remove("xb-on");const sp=document.getElementById("xb-spacer");if(sp)sp.style.height="0px";}
 function setupBanner(){
   const b=document.getElementById("xbanner");if(!b)return;
-  if(!state.player)return;                    // joined players only (not the sign-in screen)
-  if(BANNER_UNTIL&&Date.now()>BANNER_UNTIL)return;  // announcement window has ended
+  if(!state.player)return hideBanner();        // joined players only (not the sign-in screen)
+  if(BANNER_UNTIL&&Date.now()>BANNER_UNTIL)return hideBanner();  // announcement window has ended
   let v=null;try{v=localStorage.getItem(BANNER_KEY);}catch(e){}
-  if(v){const t=parseInt(v,10);if(t&&(Date.now()-t)<BANNER_SNOOZE)return;}  // recently ✕'d → brief snooze
+  if(v){const t=parseInt(v,10);if(t&&(Date.now()-t)<BANNER_SNOOZE)return hideBanner();}  // recently ✕'d → brief snooze
   b.style.display="flex";                      // otherwise show it every visit
+  b.classList.remove("mini");                  // it opens full at the top, then collapses to a slim strip on scroll
+  document.body.classList.add("xb-on");
+  // measure the collapsed height so the sticky filter/progress bars tuck just below the pinned strip
+  b.classList.add("mini");const mh=b.offsetHeight;b.classList.remove("mini");
+  document.documentElement.style.setProperty("--xb-h",mh+"px");
+  if(window.__xbSync)window.__xbSync();         // apply the right state for the current scroll position
 }
-function dismissBanner(){const b=document.getElementById("xbanner");if(b)b.style.display="none";try{localStorage.setItem(BANNER_KEY,String(Date.now()));}catch(e){}}  // ✕ = ~8h snooze; it returns
+function dismissBanner(){hideBanner();try{localStorage.setItem(BANNER_KEY,String(Date.now()));}catch(e){}}  // ✕ = ~8h snooze; it returns
 
 function go(view){
   if((view==="matches"||view==="me")&&!state.player){toast("Join the pool to make picks \u26bd");view="join";}
@@ -4278,6 +4304,36 @@ function liveTick(){
   new IntersectionObserver(function(en){
     const e=en[0];stuck=!e.isIntersecting&&e.boundingClientRect.top<0;
     window.__progSync();
+  },{threshold:0}).observe(s);
+})();
+
+/* Collapse the sticky streak banner to a slim strip once it pins, so the full 240px card never eats
+   the screen. Same spacer trick as the progress panel: when it snaps to mini, a spacer below grows by
+   exactly the height it sheds, so the views under it don't lurch upward. */
+(function(){
+  const s=document.getElementById("xb-sent"),b=document.getElementById("xbanner"),
+        sp=document.getElementById("xb-spacer");
+  if(!s||!b||!window.IntersectionObserver)return;
+  let stuck=false;
+  window.__xbSync=function(){
+    const shown=b.style.display!=="none";
+    const want=stuck&&shown;                       /* collapse only while it's actually pinned & visible */
+    const is=b.classList.contains("mini");
+    if(want===is){if(!shown&&sp)sp.style.height="0px";return;}
+    if(sp){
+      const before=b.offsetHeight;
+      const tr=b.style.transition;b.style.transition="none";   /* measure settled height, not a mid-ease frame */
+      b.classList.toggle("mini",want);
+      const after=b.offsetHeight;                  /* forced reflow → final collapsed/expanded layout */
+      sp.style.height=want?Math.max(0,before-after)+"px":"0px";  /* reserve exactly the reclaimed space */
+      void b.offsetWidth;b.style.transition=tr;
+    }else{
+      b.classList.toggle("mini",want);
+    }
+  };
+  new IntersectionObserver(function(en){
+    const e=en[0];stuck=!e.isIntersecting&&e.boundingClientRect.top<0;
+    window.__xbSync();
   },{threshold:0}).observe(s);
 })();
 
