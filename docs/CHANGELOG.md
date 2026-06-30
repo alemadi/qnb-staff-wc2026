@@ -5,6 +5,30 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-06-30 (Doha) — Robot now auto-confirms KNOCKOUT results (not just groups)
+
+**Commits:** this commit (`sql/robot.sql` + `index.html` org-note copy + changelog). **Live DB change** (functions + one new table redeployed to Supabase). Scoring untouched — `standings()` already scored knockouts; this only fills in the results that feed it.
+
+**Why:** once the group stage ended, scores stopped moving. The auto-confirm robot was hard-wired to the 72 group fixtures only ("Knockouts stay human"), and — second cause — its ESPN poll only fired while a *group* match was in range, so after the groups it went silent entirely. With 670 players and the Round of 32 already underway (only k1 had been entered, by hand), the leaderboard had been frozen since 29 Jun. This makes the robot carry the knockouts too.
+
+**What changed — `sql/robot.sql`:**
+- **`wc_ko_sched`** (new table) — the 32-tie schedule. R32 rows carry group-position specs (`1A` = Winners A, `2B` = Runners-up B, `3` = best-third → away only); R16→final rows carry their two feeder ties + take (`W` winners advance, `L` losers → 3rd-place match). Mirrors `RAW`/`BRACKET` in `index.html`.
+- **`wc_ko_teams(res, ovr)`** (new) — resolves every tie's HOME/AWAY teams in the app's orientation, exactly like `koTeams()`: organizer `wc:kteams` override wins per slot, else auto-derive. R32 home is always a deterministic group Winner/Runner-up (group order = Pts, GD, GF, name — no head-to-head, matching `computeGroupTable`), so the gnarly best-8-thirds allocation is **never reimplemented** — the away best-third is read straight from ESPN. R16→final teams come from feeder winners/losers via a forward pass. **`wc_ko_feed`** helper resolves a feeder's winner (or loser, for 3rd place).
+- **`wc_autoconfirm_tick()`** — added a knockout-confirm pass over the same ESPN payload, after the group pass: for each tie that's past full-time + ~30 min and not already recorded, find the completed ESPN game by its resolved HOME team, then record `{w, h, a}` where **w** = the `winner`-flagged competitor (so penalty-shootout winners are correct even when the score is level), and **h/a** = each side's score *excluding penalties*, oriented to the app's home/away (ESPN's neutral-site home/away is ignored). Organizer entries always win; champion (+25) stays a deliberate organizer action. The ESPN poll now also fires when a **knockout** match is in range, so the robot no longer goes silent after the groups.
+
+**What changed — `index.html`:** organizer note copy only — knockouts now auto-confirm like the groups (winner + after-ET score, penalties excluded), still organizer-overridable. No scoring / sync / lock / state change; seal-safe.
+
+**Verified (against the live DB + real ESPN feed):** `wc_ko_teams` reproduces the bracket exactly — k1 South Africa v Canada, k2 Brazil v Japan, k3 Germany v Paraguay, k4 Netherlands v Morocco — matching `wc:kteams` and ESPN. Replaying the stored k1 payload reproduces the hand-entered `{h:0,a:1,w:Canada}` byte-for-byte. A live cycle auto-confirmed **k2 = `{h:2,a:1,w:Brazil}`** (Brazil 2–1 Japan); `standings()` moved accordingly and the k1→k2 exact-score **streak** bonus paid out (rushdy.fowzer +13 = +4 advance +4 exact +5 streak). In-progress k3 (STATUS_SECOND_HALF) was correctly **skipped**. Synthetic tests pass for a penalty shootout with ESPN orientation flipped (records the 1–1, winner from the flag, our home orientation) and a flipped regulation game; ESPN aliases (`Cote d'Ivoire`→Ivory Coast, `Cape Verde Islands`→Cape Verde) resolve; re-running the tick is idempotent.
+
+**Rollback:**
+- Code: `git revert <this commit>`.
+- Live DB (restore the previous group-only brain):
+  - `drop function if exists wc_ko_teams(jsonb, jsonb); drop function if exists wc_ko_feed(text, text, jsonb, jsonb, jsonb); drop table if exists wc_ko_sched;`
+  - re-run the **previous** `sql/robot.sql` (`git show <prev>:sql/robot.sql`) to restore the prior `wc_autoconfirm_tick()`.
+  - Any knockout result already auto-confirmed stays in `wc:results`; remove a specific one with the organizer screen, or `update kv set value = (value::jsonb - 'k2')::text where key='wc:results';`.
+
+---
+
 ## 2026-06-29 (Doha) — Office Honours: earned titles beside every name
 
 **Commits:** this commit (`index.html` + changelog). **Frontend only — no DB / scoring / sync / lock-logic change.** Seal-safe; no new state.
