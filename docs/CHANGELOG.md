@@ -5,6 +5,18 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-06-30 (Doha) — Show your predicted score on LIVE knockout cards
+
+**Commits:** this commit (`index.html` + changelog). **Frontend only — no DB / scoring / sync / lock-logic change.** Seal-safe; display only.
+
+**Why:** on a live knockout match the card showed only "Picked: Brazil" — your optional final-score prediction was hidden until full time, even though group cards already show it live and the settled knockout card shows it (e.g. "Picked: Canada (1–2)"). The score was always saved; it just wasn't rendered. This closes a display inconsistency.
+
+**What changed — `index.html`:** the knockout card's locked/LIVE branch now appends your predicted scoreline `(h–a)` after the winner pick when you entered one — mirroring the group-card behaviour exactly (`p.w && p.h!=null && p.a!=null`). One line in the knockout `matchCard` render; same faint styling as elsewhere.
+
+**Rollback:** `git revert <this commit>` — frontend-only, one line.
+
+---
+
 ## 2026-06-30 (Doha) — Robot now auto-confirms KNOCKOUT results (not just groups)
 
 **Commits:** this commit (`sql/robot.sql` + `index.html` org-note copy + changelog). **Live DB change** (functions + one new table redeployed to Supabase). Scoring untouched — `standings()` already scored knockouts; this only fills in the results that feed it.

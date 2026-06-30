@@ -2373,7 +2373,7 @@ function koMatchCard(m,idx){
     }else if(win){
       picks='<div class="result-line"><span class="locked-tag">'+esc(win)+' through</span> <span style="color:var(--muted)">No pick</span></div>';
     }else{
-      picks='<div class="result-line">'+(isLive(m)?'<span class="live-pill"><span class="pulse"></span>LIVE</span>':'<span class="locked-tag">Locked</span>')+' <span style="color:var(--muted)">'+esc(lab)+'</span></div>';
+      picks='<div class="result-line">'+(isLive(m)?'<span class="live-pill"><span class="pulse"></span>LIVE</span>':'<span class="locked-tag">Locked</span>')+' <span style="color:var(--muted)">'+esc(lab)+(p.w&&p.h!=null&&p.a!=null?' <span style="color:var(--faint)">('+p.h+'–'+p.a+')</span>':'')+'</span></div>';
     }
     picks+='<div class="cons" data-cons="'+m.id+'"></div>';
   }else{
