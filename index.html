@@ -2346,6 +2346,15 @@ function knockoutCard(m,idx){
     '<div class="kn-note">Teams &amp; predictions confirmed after the group stage</div></div>';
 }
 
+/* Settled-knockout midcol inner HTML — a decided tie shows its final score, or
+   just "FT · decided" when only the winner was recorded. Shared by koMatchCard's
+   first render and liveDecorate so a result syncing mid-session can't leave a
+   stale live score on the card until the next full re-render. */
+function koFinalMid(res){
+  return (res&&res.h!=null&&res.a!=null)
+    ?'<div class="final-score">'+res.h+'–'+res.a+'</div><div class="final-tag">Full time</div>'
+    :'<div class="vs">FT</div><div class="koday">decided</div>';
+}
 /* Knockout tie with both teams confirmed: two-button winner pick, locks at kickoff */
 function koMatchCard(m,idx){
   const p=state.player.predictions[m.id]||{};
@@ -2355,13 +2364,8 @@ function koMatchCard(m,idx){
   const isQa=m.home.n==="Qatar"||m.away.n==="Qatar";
   const ribbon=isQa?'<div class="ribbon">⭐ Qatar</div>':'';
   let mid;
-  if(win){
-    const hasScore=res&&res.h!=null&&res.a!=null;
-    mid='<div class="midcol">'+(hasScore
-      ?'<div class="final-score">'+res.h+'–'+res.a+'</div><div class="final-tag">Full time</div>'
-      :'<div class="vs">FT</div><div class="koday">decided</div>')+'</div>';
-  }
-  else{mid='<div class="midcol"><div class="vs">VS</div><div class="kotime">'+fmtTime(m.ko)+'</div><div class="koday">'+fmtWk(m.ko)+'</div></div>';}
+  if(win){mid='<div class="midcol">'+koFinalMid(res)+'</div>';}
+  else{mid='<div class="midcol" data-mc="'+m.id+'">'+midHTML(m,null)+'</div>';} /* live score + clock decorate here once the tie kicks off */
   let picks="";
   if(lk){
     const lab=p.w?("Picked: "+p.w):"No pick";
@@ -4434,9 +4438,15 @@ function midHTML(m,res){
 }
 function liveDecorate(){
   document.querySelectorAll("[data-mc]").forEach(n=>{
-    const m=FIXTURES.find(x=>x.id===n.dataset.mc);if(!m)return;
-    const res=state.results&&state.results[m.id];
-    const h=midHTML(m,res);if(n.innerHTML!==h)n.innerHTML=h;
+    const raw=FIXTURES.find(x=>x.id===n.dataset.mc);if(!raw)return;
+    const res=state.results&&state.results[raw.id];
+    if(raw.kn){
+      if(res&&res.w){const h=koFinalMid(res);if(n.innerHTML!==h)n.innerHTML=h;return;} /* settled knockout: pin final score even before the next full re-render */
+      const m=(typeof fxView==="function")?fxView(raw):raw; /* resolve slot placeholders to real teams so liveFor matches the feed */
+      const h=midHTML(m,null);if(n.innerHTML!==h)n.innerHTML=h;
+    }else{
+      const h=midHTML(raw,res);if(n.innerHTML!==h)n.innerHTML=h;
+    }
   });
 }
 function locksSoonSplit(list,now){
