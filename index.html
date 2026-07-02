@@ -1386,6 +1386,86 @@
   .dept-cup .dc-stake{font-size:12px;color:var(--muted);text-align:center;line-height:1.5}
   .dept-cup .dc-stake b{color:var(--gold-bright)}
 
+  /* ===================================================================
+     MATCHNIGHT pass — room live (frontend-only, palette-locked,
+     reduced-motion-gated). Live score+clock header and aggregate-only
+     "as it stands" tally in The Room; names stay sealed until full time.
+     Static styling only — the heartbeat rides existing pulses.
+     =================================================================== */
+  .room-res.live #room-live-score{font-family:var(--font-d);font-weight:400;font-size:17px;letter-spacing:.04em;color:var(--gold-bright);vertical-align:-1px}
+  .room-res.live #room-live-clock{color:var(--magenta-2);font-variant-numeric:tabular-nums}
+  .room-asis{font-size:12.5px;line-height:1.55;color:var(--muted);padding:11px 13px;margin:2px 0 8px;border-radius:13px;border:1px solid rgba(180,151,89,.35);background:linear-gradient(110deg,rgba(180,151,89,.10),transparent 75%),var(--glass)}
+  .room-asis .asis-line{color:var(--gold);font-weight:700}
+  .room-asis .asis-line b{color:var(--gold-bright)}
+  .room-asis .asis-line .cash b{color:var(--ok)}
+  .room-asis .asis-line .sweat b{color:var(--bad)}
+  .room-asis .asis-line.ex{color:var(--muted);font-weight:600;margin-top:3px}
+  .room-asis .mine-live{margin-top:6px;padding-top:6px;border-top:1px solid var(--line);color:var(--gold-bright);font-weight:700}
+  .room-asis .mine-live.sweat-me{color:var(--cream)}
+  .room-refresh{display:block;width:100%;margin:0 0 10px;padding:7px 10px;border-radius:10px;border:1px solid var(--line);background:var(--glass);color:var(--faint);font-size:11px;font-weight:700;font-family:var(--font-b);cursor:pointer;transition:color .2s,border-color .2s}
+  .room-refresh:hover{color:var(--gold-bright);border-color:rgba(180,151,89,.4)}
+
+  /* ===================================================================
+     MATCHNIGHT pass — derby, office card, tv mode (frontend-only,
+     palette-locked, reduced-motion-gated). Auto-derby panel + board tag,
+     collective office story button, ?tv kiosk board. Static styling only.
+     =================================================================== */
+  /* F2 — Derby of the Day (slim standings only; mirrors .me-squad language) */
+  .me-derby{background:linear-gradient(120deg,rgba(180,151,89,.14),transparent 70%),var(--glass);border:1px solid rgba(180,151,89,.4);border-radius:15px;padding:12px 14px;margin:14px 0 2px;text-align:left}
+  .me-derby .md-hd{font-size:9.5px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin-bottom:6px}
+  .me-derby .md-vs{font-size:14px;font-weight:800;color:var(--cream)}
+  .me-derby .md-vs b{color:var(--gold-bright)}
+  .me-derby .md-gap{font-size:11.5px;color:var(--muted);margin-top:3px}
+  .me-derby .md-gap b{color:var(--gold-bright);font-family:var(--font-d);font-weight:400;font-size:14px;letter-spacing:.02em}
+  .me-derby .md-stat{font-size:11px;font-weight:700;color:var(--gold);margin-top:7px;padding-top:7px;border-top:1px solid var(--line)}
+  .derbytag{margin-left:6px;font-size:8.5px;font-weight:800;letter-spacing:.5px;color:var(--gold-bright);background:rgba(138,21,56,.28);border:1px solid rgba(138,21,56,.6);padding:1px 6px;border-radius:5px;vertical-align:1px}
+  /* F4 — ?tv kiosk board: hide personal chrome, widen, scale for distance */
+  body.tv{zoom:1.22}
+  body.tv nav.bottom,body.tv footer.app,body.tv .userchip,body.tv #jumpnext,body.tv #xbanner,body.tv #xb-spacer,body.tv .sq-share,body.tv .nb-brag,body.tv .room-brag,body.tv #lb-body .btn-primary,body.tv .lb-more{display:none!important} /* kiosk: no join CTA / expanders a passer-by can strand the screen on */
+  body.tv .wrap{max-width:1100px;padding-bottom:28px}
+  .tv-tag{display:none;position:fixed;top:calc(env(safe-area-inset-top,0px) + 8px);right:12px;z-index:49;background:rgba(180,151,89,.14);border:1px solid var(--gold);border-radius:6px;padding:4px 10px;font-size:10px;font-weight:800;letter-spacing:.14em;color:var(--gold-bright);pointer-events:none}
+  body.tv .tv-tag{display:block}
+
+  /* ===================================================================
+     WAVE B pass — power-ups (dormant until launch) (frontend-only,
+     palette-locked, reduced-motion-gated). ⚡ armband arm row + corner
+     tag, Me power-up kit + shield note, DOUBLED/upset settle chips,
+     Room band markers, points-table power-up group. Static styling
+     only — no new animations, so nothing to RM-guard.
+     =================================================================== */
+  .pu-arm{margin-top:10px;display:flex;flex-direction:column;gap:4px}
+  .pu-armbtn{width:100%;padding:9px 12px;border-radius:11px;border:1px dashed rgba(180,151,89,.5);background:rgba(180,151,89,.07);color:var(--gold-bright);font-family:var(--font-b);font-weight:800;font-size:12px;letter-spacing:.02em;cursor:pointer;transition:background .2s,border-color .2s}
+  .pu-armbtn:hover{background:rgba(180,151,89,.16);border-color:var(--gold)}
+  .pu-armbtn.on{border:1px solid var(--gold);background:linear-gradient(170deg,rgba(227,211,163,.95),rgba(180,151,89,.95));color:#181106}
+  .pu-armnote{font-size:10.5px;color:var(--faint);line-height:1.45}
+  .pu-tag{display:none;position:absolute;top:10px;right:10px;width:24px;height:24px;place-items:center;border-radius:8px;font-size:12px;font-style:normal;background:rgba(180,151,89,.16);border:1px solid rgba(180,151,89,.55);color:var(--gold-bright);pointer-events:none;z-index:1}
+  .match-card.pu-armed .pu-tag{display:grid}
+  .match-card.qatar .pu-tag{top:44px} /* clear the rotated Qatar ribbon */
+  .exact-chip.pu-dbl{background:linear-gradient(115deg,rgba(138,21,56,.92),var(--qatar));color:var(--gold-bright)}
+  .kn-note.pu-upline{font-style:normal;font-weight:700;color:var(--ok);margin-top:5px}
+  .pu-kit{margin:11px 0 2px;padding:12px 15px;border-radius:15px;border:1px solid rgba(180,151,89,.4);background:linear-gradient(120deg,rgba(180,151,89,.10),rgba(180,151,89,.02));text-align:left}
+  .pu-kit .pk-hd{font-size:9.5px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin-bottom:4px;display:flex;align-items:center;gap:8px}
+  .pu-kit .pk-demo{font-style:normal;font-size:8.5px;letter-spacing:.12em;color:var(--gold-bright);background:rgba(138,21,56,.3);border:1px solid rgba(138,21,56,.6);border-radius:5px;padding:1px 6px}
+  .pu-slot{display:flex;align-items:flex-start;gap:9px;padding:6px 0;font-size:11.5px;color:var(--muted);line-height:1.45}
+  .pu-slot+.pu-slot{border-top:1px solid var(--line)}
+  .pu-slot .sl{flex:none;font-family:var(--font-d);font-weight:400;font-size:12px;letter-spacing:.06em;color:var(--gold-bright);background:rgba(180,151,89,.12);border:1px solid rgba(180,151,89,.4);border-radius:7px;padding:3px 8px;min-width:38px;text-align:center}
+  .pu-slot b{color:var(--cream)}
+  .pu-slot.used .sl{background:linear-gradient(170deg,var(--gb),var(--gold));border-color:var(--gold);color:#181106}
+  .pu-slot.armed .sl{border-color:var(--gold);box-shadow:0 0 12px -4px rgba(180,151,89,.7)}
+  .pu-slot.expired .sl{opacity:.4}
+  .pu-slot.expired .tx{color:var(--faint)}
+  .pu-shield{margin-top:6px;padding-top:8px;border-top:1px dashed var(--line);font-size:11.5px;color:var(--muted);line-height:1.45}
+  .pu-shield b{color:var(--gold-bright)}
+  .pu-shield.used b{color:var(--gold)}
+  .me-streak .pu-shnote{display:block;font-size:10.5px;font-weight:700;color:var(--gold);margin-top:3px}
+  .pu-armcount{font-size:12.5px;font-weight:700;color:var(--gold);padding:10px 13px;margin:2px 0 8px;border-radius:13px;border:1px solid rgba(180,151,89,.35);background:linear-gradient(110deg,rgba(180,151,89,.10),transparent 75%),var(--glass)}
+  .pu-armcount b{color:var(--gold-bright);font-family:var(--font-d);font-weight:400;font-size:14px}
+  .pu-rowband{font-style:normal;margin-right:4px}
+  .ptable .pgrp.pu{color:var(--gold-bright)}
+  .org-note.pu-fair{margin-top:8px}
+  .org-note.pu-fair b{color:var(--gold)}
+  body.tv .pu-arm{display:none!important} /* kiosk: no armable control a passer-by can flip */
+
   /* ===== Score-input pass: one-tap knockout chips + thumb-sized score fields =====
      .chipb/.scorein/.si were under the 44px touch minimum; chips are now also the
      knockout score path so mis-taps save real predictions. touch-action already
@@ -1432,15 +1512,15 @@
   </header>
 
   <div id="xb-sent" aria-hidden="true"></div>
-  <div class="xbanner" id="xbanner" style="display:none" role="status" aria-label="New: knockout exact-score streaks" onclick="if(!event.target.closest('a,button'))toggleBanner()" title="Tap to expand or shrink">
-    <div class="xb-ic" aria-hidden="true">🔥</div>
+  <div class="xbanner" id="xbanner" style="display:none" role="status" aria-label="New: Quarter-final power-ups" onclick="if(!event.target.closest('a,button'))toggleBanner()" title="Tap to expand or shrink">
+    <div class="xb-ic" aria-hidden="true">⚡</div>
     <div class="xb-tx">
-      <b class="xb-h">New: the exact-score streak</b>
-      <span class="xb-sub">Guess the exact final score in two or more knockout games in a row — the bonus grows each time:</span>
-      <div class="xb-chips" aria-hidden="true"><span class="xb-chip">+5<small>ON YOUR 2ND</small></span><span class="xb-chip">+15<small>ON YOUR 3RD</small></span><span class="xb-chip">+20<small>4TH ON, EACH</small></span></div>
-      <span class="xb-quiet">Knockout games only. Your group points and champion pick (+25) stay the same.</span><br>
-      <a class="xb-cta" href="javascript:void 0" onclick="openFaq('streak');return false">See how the streak works ›</a>
-      <a class="xb-cta2" href="javascript:void 0" onclick="openFaq('streak');return false">How it works ›</a>
+      <b class="xb-h">New: Quarter-final power-ups</b>
+      <span class="xb-sub">Three power-ups land from the Quarter-finals — the same kit for every player, automatically:</span>
+      <div class="xb-chips" aria-hidden="true"><span class="xb-chip">×2<small>CAPTAIN’S ARMBAND</small></span><span class="xb-chip">🛡<small>STREAK SHIELD</small></span><span class="xb-chip">+2<small>UPSET BONUS</small></span></div>
+      <span class="xb-quiet">Nothing already scored changes · live from the Quarter-finals.</span><br>
+      <a class="xb-cta" href="javascript:void 0" onclick="openFaq('power-up');return false">See how power-ups work ›</a>
+      <a class="xb-cta2" href="javascript:void 0" onclick="openFaq('power-up');return false">How it works ›</a>
     </div>
     <button class="xb-min" onclick="toggleBanner()" aria-label="Shrink announcement"><span class="xb-col" aria-hidden="true">▴</span><span class="xb-exp" aria-hidden="true">▾</span></button>
   </div>
@@ -1540,7 +1620,7 @@
       <div class="top"><span>Predictions<span id="champ-tok" role="button" onclick="go('me')"></span></span><span><b id="pred-count">0</b> / <span id="pred-total">72</span></span></div>
       <div class="bar"><i id="pred-bar" style="width:0%"></i></div>
       <button id="qpbtn" class="qpbtn" style="display:none" onclick="openSwipe()">⚡ <span class="qp-full">Swipe to pick · </span><span id="qp-left">0</span><span class="qp-full"> left</span></button>
-      <div class="rules"><b>+4 to +10</b> who goes through &nbsp;·&nbsp; <span class="pfaint">more each round</span> &nbsp;·&nbsp; <b>+ exact score</b> on top &nbsp;·&nbsp; <a href="javascript:void 0" onclick="openFaq('streak');return false" class="rules-streak">🔥 streak <b>+5 to +20</b></a> &nbsp;·&nbsp; 🏆 champion <b>+25</b></div>
+      <div class="rules"><b>+4 to +10</b> who goes through &nbsp;·&nbsp; <span class="pfaint">more each round</span> &nbsp;·&nbsp; <b>+ exact score</b> on top &nbsp;·&nbsp; <a href="javascript:void 0" onclick="openFaq('streak');return false" class="rules-streak">🔥 streak <b>+5 to +20</b></a> &nbsp;·&nbsp; <a href="javascript:void 0" onclick="openFaq('power-up');return false" class="rules-streak">⚡ power-ups <b>from the QF</b></a> &nbsp;·&nbsp; 🏆 champion <b>+25</b></div>
       <button class="ptbtn" onclick="togglePts(this)">How do points work? ▾</button>
       <div class="ptable" id="ptable">
         <div class="pgrp">Group stage · 11–27 June (now finished)</div>
@@ -1559,6 +1639,11 @@
         <div class="prow"><span>3 in a row <span class="pfaint">(one-time)</span></span><b>+15</b></div>
         <div class="prow"><span>4th in a row and every one after <span class="pfaint">(each)</span></span><b>+20</b></div>
         <div class="prow"><span class="pfaint">One miss in a game you predicted resets the streak.</span></div>
+        <div class="pgrp pu">⚡ From the Quarter-finals · power-ups — same kit for everyone, automatic</div>
+        <div class="prow"><span>⚡ Captain’s Armband <span class="pfaint">· one per round (QF / SF / Final) — arm a match before it locks; its advance + exact-score points double</span></span><b>×2</b></div>
+        <div class="prow"><span>🛡 Streak Shield <span class="pfaint">· automatic — your first streak-breaking miss from the QF on is ignored; the run lives</span></span><b>once</b></div>
+        <div class="prow"><span>🦅 Upset Bonus <span class="pfaint">· automatic — correct winner pick on the lower-ranked side (fixed FIFA ranking, published in the FAQ)</span></span><b>+2</b></div>
+        <div class="org-note pu-fair">Fair-play commitments: <b>1)</b> nothing already scored changes — power-ups start at the Quarter-finals, never retroactively · <b>2)</b> everyone gets the identical kit — nothing to buy, no favours · <b>3)</b> streak bonuses and the champion +25 are never doubled · <b>4)</b> your armband seals like a pick — nobody sees where it sits until that match locks · <b>5)</b> upsets pay on one fixed FIFA-ranking table published in-app — never odds or betting language.</div>
         <div class="pgrp">Champion</div>
         <div class="prow"><span>Picked the World Champion <span class="pfaint">(locked 18 June, 7:00 PM Doha)</span></span><b>+25</b></div>
       </div>
@@ -1659,10 +1744,11 @@
     <div class="wn-card">
       <div class="wn-spark" aria-hidden="true">✨</div>
       <div class="wn-h">What’s new</div>
-      <div class="wn-sub">The pool’s <b>670+</b> strong now — so we added a few things.</div>
-      <button class="wn-item" onclick="wnGoRoom()"><span class="wn-ic">🏟️</span><span class="wn-tx"><b>The Room</b><span>See how the whole office called every match — and who nailed it.</span></span><span class="wn-go">›</span></button>
-      <button class="wn-item" onclick="wnGoSquad()"><span class="wn-ic">🏢</span><span class="wn-tx"><b>Department leagues</b><span>Where does your squad rank of 12? Rally your desk.</span></span><span class="wn-go">›</span></button>
-      <div class="wn-more">🎯 Plus rival head-to-head &amp; “you passed…” alerts on your card.</div>
+      <div class="wn-sub">Power-ups land at the <b>Quarter-finals</b> — the same kit for every player, automatically.</div>
+      <button class="wn-item" onclick="wnGoFaq('power-up')"><span class="wn-ic">⚡</span><span class="wn-tx"><b>Captain’s Armband</b><span>One per round from the QF — arm a match before it locks and its advance + exact points count double.</span></span><span class="wn-go">›</span></button>
+      <button class="wn-item" onclick="wnGoFaq('Streak Shield')"><span class="wn-ic">🛡</span><span class="wn-tx"><b>Streak Shield</b><span>Automatic, once: your first streak-breaking miss from the QF is forgiven — the run stays alive.</span></span><span class="wn-go">›</span></button>
+      <button class="wn-item" onclick="wnGoFaq('Upset Bonus')"><span class="wn-ic">🦅</span><span class="wn-tx"><b>Upset Bonus</b><span>+2 on top when you back the lower-ranked team through — fixed FIFA ranking, published in-app.</span></span><span class="wn-go">›</span></button>
+      <div class="wn-more">Nothing already scored changes — everything up to the QF stays exactly as it was.</div>
       <button class="wn-ok" onclick="dismissWhatsNew()">Got it</button>
     </div>
   </div>
@@ -1689,6 +1775,7 @@
   </div>
   <div id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
   <div id="demo-badge" aria-hidden="true">DEMO</div>
+  <div class="tv-tag" aria-hidden="true">STAFF CHALLENGE · LIVE BOARD</div>
 
 <script>
 /* ===== Matchday — World Cup 2026 staff pool · full 104-match build · v2: knockout predictions · WC26 official theme (black/gold + host tricolor) ===== */
@@ -1839,6 +1926,37 @@ function koPts(m){return m.tag==="final"?KO_PTS.final:(m.tag==="third"?KO_PTS.th
    final scoreline (after extra time if the tie went there; penalties excluded) — see koScoreHit. */
 const KO_BONUS={R32:4,R16:5,QF:6,SF:7,third:5,final:8};
 function koBonus(m){return m.tag==="final"?KO_BONUS.final:(m.tag==="third"?KO_BONUS.third:(KO_BONUS[m.round]||0));}
+/* ===== WAVE B · Quarter-final Power-Ups — activation constants + rank table (DORMANT) =====
+   Every scoring function below defaults to the pre-power-up math unless a caller opts in
+   (chips arg / shield flag), so nothing changes until launch. MUST stay tier-for-tier identical
+   to sql/standings.sql ("WAVE B" block there carries the SAME constants and the SAME wc_rank
+   numbers — generate both from one list, edit them together). */
+const PU_FROM_K=25;   // mechanics live from the QF onward (k25..k32); k31 third place: upset yes, armband no
+const PU_UPSET=2;     // 🦅 flat upset bonus — never doubled by the armband
+function puRound(kn){return (kn>=25&&kn<=28)?"qf":((kn===29||kn===30)?"sf":(kn===32?"fin":null));}
+/* PU_RANK — fixed FIFA-ranking snapshot (June 2026) for all 48 teams in FL; published in-app;
+   lower number = higher ranked. SAME numbers as the wc_rank seed in sql/standings.sql. */
+const PU_RANK={
+ "Spain":1,"Argentina":2,"France":3,"England":4,"Brazil":5,"Portugal":6,"Netherlands":7,"Belgium":8,
+ "Germany":9,"Croatia":10,"Morocco":11,"Colombia":13,"USA":14,"Mexico":15,"Uruguay":16,"Switzerland":17,
+ "Japan":18,"Senegal":19,"Iran":20,"Austria":22,"South Korea":23,"Ecuador":24,"Australia":26,"Türkiye":27,
+ "Canada":28,"Norway":29,"Panama":31,"Egypt":33,"Algeria":35,"Scotland":38,"Paraguay":40,"Tunisia":42,
+ "Czechia":43,"Ivory Coast":44,"Sweden":45,"Uzbekistan":51,"Qatar":54,"Iraq":57,"Saudi Arabia":59,
+ "DR Congo":60,"South Africa":62,"Jordan":64,"Bosnia & H.":69,"Ghana":71,"Cape Verde":73,"Curaçao":82,
+ "Haiti":85,"New Zealand":87
+};
+/* 🦅 upset test: the recorded winner was the LOWER-ranked side of the tie (rank number strictly
+   greater than the loser's). Tie teams resolve via koTeams (organizer override wins); an
+   unresolved side or a missing rank = no bonus. k>=PU_FROM_K only (k31 third place included).
+   SQL mirror: the "upset" CTE in sql/standings.sql via wc_ko_teams(res,ovr) + wc_rank. */
+function upsetWin(m,r){
+  if(!m||!r||!r.w||!/^k[0-9]+$/.test(m.id)||(+m.id.slice(1))<PU_FROM_K)return false;
+  const t=koTeams(m),h=t.h&&t.h.n,a=t.a&&t.a.n;
+  const loser=(h===r.w)?a:((a===r.w)?h:null);
+  if(!loser)return false;
+  const rw=PU_RANK[r.w],rl=PU_RANK[loser];
+  return !!(rw&&rl&&rw>rl);
+}
 /* Bonus is judged on the FINAL score — the scoreline when the match ends: the 90-min score
    if decided in regulation, or the after-extra-time score if the tie was level at 90. Penalties
    don't change it. The organizer records that one final score in h/a; players predict a single
@@ -1850,8 +1968,11 @@ function koScoreHit(p,r){
    CONSECUTIVE knockout matches you predicted (chronological by k-id). Per match in a run:
    1st +0 · 2nd +5 · 3rd +15 · 4th-and-onward +20 each. Any non-exact predicted KO match resets the run.
    Window = settled knockout matches the player engaged with (has a winner pick or a numeric score).
-   Uses koScoreHit so "exact" matches the bonus exactly. */
-function koStreakBonus(preds,results){
+   Uses koScoreHit so "exact" matches the bonus exactly.
+   WAVE B: optional 3rd arg `shield` (truthy = power-up mode): the FIRST streak-breaking miss with
+   k>=PU_FROM_K (a non-exact engaged row immediately after >=1 exact hit) is ignored ONCE — the run
+   continues across it. Omitted/falsy = pre-power-up math. SQL mirror: ko_shielded in standings.sql. */
+function koStreakBonus(preds,results,shield){
   if(!preds||!results)return 0;
   const ids=[];
   for(const id in results){
@@ -1862,9 +1983,10 @@ function koStreakBonus(preds,results){
     ids.push(id);
   }
   ids.sort((a,b)=>(+a.slice(1))-(+b.slice(1)));
-  let bonus=0,run=0;
+  let bonus=0,run=0,sh=!!shield;
   for(const id of ids){
     if(koScoreHit(preds[id],results[id])){run++;bonus+=run===1?0:(run===2?5:(run===3?15:20));}
+    else if(sh&&run>0&&(+id.slice(1))>=PU_FROM_K)sh=false;  /* 🛡 first breaking miss from the QF: ignored once, run survives */
     else run=0;
   }
   return bonus;
@@ -1883,16 +2005,28 @@ function koEngagedSettledKIds(preds,results){
   ids.sort((a,b)=>(+a.slice(1))-(+b.slice(1)));
   return ids;
 }
-function koStreakRunAt(preds,results,id){
+/* WAVE B: both take an optional trailing `shield` flag — same one-skip walk as
+   koStreakBonus(…,shield); on the shielded miss itself the carried run is returned
+   ("streak alive"). Omitted = old behavior. */
+function koStreakRunAt(preds,results,id,shield){
   if(!preds||!results||!/^k[0-9]+$/.test(id))return 0;
-  const ids=koEngagedSettledKIds(preds,results);let run=0;
-  for(const k of ids){run=koScoreHit(preds[k],results[k])?run+1:0;if(k===id)return run;}
+  const ids=koEngagedSettledKIds(preds,results);let run=0,sh=!!shield;
+  for(const k of ids){
+    if(koScoreHit(preds[k],results[k]))run++;
+    else if(sh&&run>0&&(+k.slice(1))>=PU_FROM_K)sh=false;  /* 🛡 run carried across the shielded miss */
+    else run=0;
+    if(k===id)return run;
+  }
   return 0;
 }
-function koStreakCurrent(preds,results){
+function koStreakCurrent(preds,results,shield){
   if(!preds||!results)return 0;
-  const ids=koEngagedSettledKIds(preds,results);let run=0;
-  for(const k of ids)run=koScoreHit(preds[k],results[k])?run+1:0;
+  const ids=koEngagedSettledKIds(preds,results);let run=0,sh=!!shield;
+  for(const k of ids){
+    if(koScoreHit(preds[k],results[k]))run++;
+    else if(sh&&run>0&&(+k.slice(1))>=PU_FROM_K)sh=false;
+    else run=0;
+  }
   return run;
 }
 function streakBonusAt(run){return run<=1?0:(run===2?5:(run===3?15:20));}
@@ -1911,6 +2045,110 @@ function streakMoment(run){
     setTimeout(function(){el.classList.add("out");},1500);
     setTimeout(function(){el.remove();},1950);
   }catch(e){}
+}
+/* ===== WAVE B · power-up UI (dormant until launch — ?powerups / #powerups previews) =====
+   Own chips only pre-lock; other players' chips surface exclusively through the Room,
+   which already gates on locked matches (seal-safe by construction). */
+function puPreview(){try{return /[?&#]powerups\b/.test(location.search+location.hash);}catch(e){return false;}}
+function puChips(){return (state.player&&state.player.chips)||null;}   /* own power-up context for scoreFor/rvVerdict */
+function puRoundLabel(rnd){return rnd==="qf"?"Quarter-final":(rnd==="sf"?"Semi-final":"Final");}
+function puArmedId(rnd){const c=puChips();return (c&&c[rnd])||null;}
+function puMatchName(m){if(!m)return "";const v=fxView(m);return esc(v.home.n+" v "+v.away.n);}
+/* ⚡ arm row under the pick buttons of an unlocked QF/SF/FINAL card. One band per round;
+   it moves freely until the match it sits on locks — then it's committed (protect.sql
+   enforces the same rule server-side). Writes ride persistPlayer like any pick. */
+function puArmRow(id){
+  const m=FIXBYID[id],rnd=m?puRound(+id.slice(1)):null;
+  if(!m||!rnd)return "";
+  const cur=puArmedId(rnd),here=cur===id;
+  let note;
+  if(here)note="advance + exact-score points ×2 · tap again to take it off";
+  else if(cur)note="your "+puRoundLabel(rnd)+" band is on "+puMatchName(FIXBYID[cur])+" — tap to move it here";
+  else note="one per round · seals like a pick · streaks & champion never doubled";
+  return '<div class="pu-arm" data-arm="'+id+'" data-rnd="'+rnd+'">'+
+    '<button type="button" class="pu-armbtn'+(here?' on':'')+'" onclick="armBand(\''+id+'\')" aria-pressed="'+(here?'true':'false')+'">⚡ '+(here?'Armband armed here — this match counts double':'Captain’s Armband — double this match')+'</button>'+
+    '<span class="pu-armnote">'+note+'</span></div>';
+}
+function armBand(id){
+  if(!state.player||state.demo){toast("Join the pool to use power-ups ⚡");return;}
+  const m=FIXBYID[id],rnd=m?puRound(+id.slice(1)):null;
+  if(!m||!rnd)return;
+  if(lockedM(m)||isFinished(m)){toast("🔒 This match has locked — the armband can’t be placed here");return;}
+  if(!state.player.chips)state.player.chips={};
+  const ch=state.player.chips,cur=ch[rnd]||null;
+  if(cur&&cur!==id){const o=FIXBYID[cur];
+    if(o&&lockedM(o)){toast("🔒 Your "+puRoundLabel(rnd)+" armband locked with "+cur.toUpperCase()+" — it can’t move now");return;}}
+  if(cur===id){ch[rnd]=null;toast("Armband removed — arm any "+puRoundLabel(rnd)+" before it locks");}
+  else{ch[rnd]=id;toast("⚡ Armband armed — advance + exact points on this match count double");}
+  try{navigator.vibrate&&navigator.vibrate(8);}catch(e){}
+  sndTick();
+  queueSave();
+  puSyncArm(rnd);
+}
+/* Refresh every arm row of the round in place (the band moved) + the ⚡ corner tags. */
+function puSyncArm(rnd){
+  document.querySelectorAll('.pu-arm[data-rnd="'+rnd+'"]').forEach(function(el){
+    const id=el.getAttribute("data-arm"),card=el.closest(".match-card");
+    const host=document.createElement("div");host.innerHTML=puArmRow(id);
+    if(host.firstChild)el.replaceWith(host.firstChild);
+    if(card)card.classList.toggle("pu-armed",puArmedId(rnd)===id);
+  });
+}
+/* 🛡 which settled match (if any) the automatic shield was spent on — the same walk as
+   koStreakBonus(…,shield): the first breaking miss k>=PU_FROM_K after a live run. */
+function puShieldUsedOn(preds,results){
+  if(!preds||!results)return null;
+  const ids=koEngagedSettledKIds(preds,results);let run=0;
+  for(const k of ids){
+    if(koScoreHit(preds[k],results[k]))run++;
+    else if(run>0&&(+k.slice(1))>=PU_FROM_K)return k;
+    else run=0;
+  }
+  return null;
+}
+/* Me "Power-up Kit" — three armband slots + shield status. Own data only (seal-safe).
+   ?powerups renders a fixed demo kit for review screenshots — display only, never writes. */
+const PU_DEMO_SLOTS=[
+ {lab:"QF",st:"used",tx:"used on <b>Brazil v Portugal</b> · <b>+12</b> gained"},
+ {lab:"SF",st:"armed",tx:"armed on <b>Semi-final 1</b> · moves freely until kickoff"},
+ {lab:"FIN",st:"open",tx:"open — arm it on the Final before kickoff"}];
+const PU_DEMO_SHIELD={used:true,tx:"spent on <b>Quarter-final 2</b> — your streak carried on"};
+function puKitSlots(){
+  const preds=(state.player&&state.player.predictions)||{},ch=puChips()||{};
+  const R={qf:[25,28],sf:[29,30],fin:[32,32]};
+  return ["qf","sf","fin"].map(function(rnd){
+    const id=ch[rnd]||null,lab=rnd==="fin"?"FIN":rnd.toUpperCase();
+    if(id){
+      const m=FIXBYID[id],r=state.results[id],nm=m?puMatchName(m):esc(id.toUpperCase());
+      if(m&&r&&r.w!=null){
+        const gain=rvVerdict(m,preds[id]||{},r).pts;   /* un-doubled points = exactly what the band added */
+        return gain>0?{lab:lab,st:"used",tx:"used on <b>"+nm+"</b> · <b>+"+gain+"</b> gained"}
+                     :{lab:lab,st:"expired",tx:"used on <b>"+nm+"</b> — the pick missed, nothing to double"};
+      }
+      return {lab:lab,st:"armed",tx:"armed on <b>"+nm+"</b>"+((m&&lockedM(m))?" · locked in":" · moves freely until kickoff")};
+    }
+    const lo=R[rnd][0],hi=R[rnd][1];
+    const openLeft=FIXTURES.some(function(f){if(!f.kn)return false;const n=+f.id.slice(1);return n>=lo&&n<=hi&&!lockedM(f)&&!isFinished(f);});
+    return openLeft?{lab:lab,st:"open",tx:"open — arm it on a "+puRoundLabel(rnd)+" match before kickoff"}
+                   :{lab:lab,st:"expired",tx:"expired — the round ended with the band unused"};
+  });
+}
+function puKitHTML(slots,shield,demo){
+  return '<div class="pu-kit"><div class="pk-hd">⚡ Power-up kit · from the Quarter-finals'+(demo?'<i class="pk-demo">PREVIEW</i>':'')+'</div>'+
+    slots.map(function(s){return '<div class="pu-slot '+s.st+'"><span class="sl">'+s.lab+'</span><span class="tx">'+s.tx+'</span></div>';}).join('')+
+    '<div class="pu-shield'+(shield.used?' used':'')+'">🛡 <b>Streak Shield</b> — '+shield.tx+'</div></div>';
+}
+function mePowerKit(){
+  if(puPreview())return puKitHTML(PU_DEMO_SLOTS,PU_DEMO_SHIELD,true);
+  if(!state.player)return "";
+  const us=puShieldUsedOn(state.player.predictions,state.results);
+  const sh=us?{used:true,tx:"spent on <b>"+puMatchName(FIXBYID[us])+"</b> — your streak carried on"}
+             :{used:false,tx:"ready — your first streak-breaking miss from the QF on is ignored, once"};
+  return puKitHTML(puKitSlots(),sh,false);
+}
+/* the fixed FIFA-ranking snapshot, rendered into the FAQ so it's genuinely published in-app */
+function puRankListText(){
+  try{return Object.keys(PU_RANK).map(function(t){return t+" "+PU_RANK[t];}).join(" · ");}catch(e){return "";}
 }
 /* Labeled "How the bonus works" pill → toggles an inline explanation panel (the next sibling). */
 function toggleHelp(e,btn){
@@ -2075,6 +2313,12 @@ function reconcilePicks(srv){
     }
   }
   if(locked(CHAMP_LOCK)&&srv.champ!==state.player.champ)state.player.champ=srv.champ;
+  /* WAVE B — adopt the server's canonical chips too: a lock-guard-rejected arm/move must not
+     survive locally (the client would double a match the server doesn't). */
+  if(JSON.stringify(srv.chips||null)!==JSON.stringify(state.player.chips||null)){
+    state.player.chips=srv.chips||{};
+    try{if(typeof puSyncArm==="function")puSyncArm();}catch(e){}
+  }
   if(sealed){syncProgress();updateChip();toast("🔒 "+sealed+" pick"+(sealed>1?"s":"")+" had already kicked off — kept as sealed");}
 }
 function needPin(){
@@ -2136,7 +2380,7 @@ async function fetchStandings(){
   }
   if(!rows){
     const players=await sbulkJSON("wc:player:");
-    rows=players.map(p=>{const s=scoreFor(p.predictions,state.results,p.champ);
+    rows=players.map(p=>{const s=scoreFor(p.predictions,state.results,p.champ,p.chips||null); /* WAVE B — parity with SQL standings */
       return{slug:p.slug,name:p.name,dept:p.dept,pts:s.pts,exact:s.exact,correct:s.correct,
         predicted:Object.values(p.predictions||{}).filter(x=>x.o||x.w).length};});
   }
@@ -2280,7 +2524,12 @@ function deptAvatarFill(name){
 }
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]));}
 
-function scoreFor(preds,results,champ){
+/* WAVE B: pass a 4th arg — the player's chips object ({"qf":"k26",...}) or null — to score in
+   power-up mode: ⚡ armband double (that match's advance+exact only) · 🛡 streak shield ·
+   🦅 upset +2. Omit the arg entirely = pre-power-up math, byte-for-byte the old ladder.
+   MUST stay tier-for-tier identical to standings() in sql/standings.sql. */
+function scoreFor(preds,results,champ,chips){
+  const pu=(chips!==undefined),ch=(pu&&chips)?chips:{};
   let pts=0,exact=0,correct=0,scored=0;
   for(const id in results){
     if(id.charAt(0)==="_")continue;
@@ -2289,8 +2538,15 @@ function scoreFor(preds,results,champ){
       if(!p||(!p.w&&p.h==null))continue;
       scored++;
       const f=FIXBYID[id];
-      if(p.w&&p.w===r.w){pts+=f?koPts(f):4;correct++;}
-      if(koScoreHit(p,r)){pts+=f?koBonus(f):0;exact++;}
+      let kp=0;
+      if(p.w&&p.w===r.w){kp+=f?koPts(f):4;correct++;}
+      if(koScoreHit(p,r)){kp+=f?koBonus(f):0;exact++;}
+      if(pu){
+        const kn=/^k[0-9]+$/.test(id)?(+id.slice(1)):0,rnd=puRound(kn);
+        if(rnd&&ch[rnd]===id)kp*=2;                        /* ⚡ armband: multiplies advance+exact only, never creates */
+        if(p.w&&p.w===r.w&&f&&upsetWin(f,r))kp+=PU_UPSET;  /* 🦅 upset: flat +2, never doubled */
+      }
+      pts+=kp;
       continue;
     }
     if(!p||!p.o)continue;
@@ -2299,8 +2555,8 @@ function scoreFor(preds,results,champ){
     if(p.o===ro){pts+=3;correct++;}
     if(p.h!=null&&p.a!=null&&Number(p.h)===r.h&&Number(p.a)===r.a){pts+=2;exact++;}
   }
-  pts+=koStreakBonus(preds,results);   // knockout exact-score streak (going forward)
-  if(results&&results._champ&&champ&&champ===results._champ)pts+=CHAMP_PTS;
+  pts+=koStreakBonus(preds,results,pu);   // knockout exact-score streak (🛡 shield-aware in power-up mode)
+  if(results&&results._champ&&champ&&champ===results._champ)pts+=CHAMP_PTS;  // champion +25: never doubled
   return {pts,exact,correct,scored};
 }
 function predCount(){if(!state.player)return 0;let c=0;for(const id in state.player.predictions){const p=state.player.predictions[id];if(p.o||p.w)c++;}return c;}
@@ -2461,7 +2717,7 @@ function updateChip(){
   av.classList.remove("champ","podium");
   document.getElementById("chip-name").textContent=state.player.name;
   const ptsEl=document.getElementById("chip-pts");
-  let nv=scoreFor(state.player.predictions,state.results,state.player.champ).pts+" PTS";
+  let nv=scoreFor(state.player.predictions,state.results,state.player.champ,puChips()).pts+" PTS";
   /* live rank badge — cache-only (never triggers a fetch); tie-aware, same idiom as the board */
   if(STAND_CACHE.rows){
     const st=STAND_CACHE.rows.slice().sort((a,b)=>cmpSt(a,b)||(a.name||"").localeCompare(b.name||""));
@@ -2726,6 +2982,8 @@ function koMatchCard(m,idx){
   const res=state.results[m.id],win=(res&&res.w)?res.w:null;
   const exK=!!(win&&p.w&&koBonus(m)>0&&koScoreHit(p,res)); /* exact-score bonus won */
   const lk=lockedM(m)||!!win;
+  /* WAVE B — ⚡ armband context (own chips only; k31 third place excluded via puRound) */
+  const prnd=puRound(+m.id.slice(1)),armedHere=!!(prnd&&puArmedId(prnd)===m.id);
   const label=(m.tag==="final"?"🏆 Final":(m.tag==="third"?"Third-place play-off":RLABEL[m.round]))+' · winner +'+koPts(m)+' pts';
   const isQa=m.home.n==="Qatar"||m.away.n==="Qatar";
   const ribbon=isQa?'<div class="ribbon">⭐ Qatar</div>':'';
@@ -2738,19 +2996,24 @@ function koMatchCard(m,idx){
     if(win&&p.w){
       const gotW=(p.w===win)?koPts(m):0;
       const gotB=koScoreHit(p,res)?koBonus(m):0;
+      /* WAVE B — ⚡ ×2 on advance+exact only, 🦅 flat +2 on a correct lower-ranked call: mirrors scoreFor */
+      const base=gotW+gotB,dbl=!!(armedHere&&base>0),ups=(gotW&&upsetWin(m,res))?PU_UPSET:0;
+      const got=base*(dbl?2:1)+ups;
       const sc=(p.h!=null&&p.a!=null)?(' <span style="color:var(--faint);white-space:nowrap">('+p.h+'–'+p.a+')</span>'):'';
-      picks='<div class="result-line '+(gotW?"win":"lose")+'">'+(gotW?"✓ ":"✗ ")+esc(lab)+sc+' <span style="color:var(--faint)">· '+esc(win)+' through</span><span class="pts">+'+(gotW+gotB)+' pts</span>'+(gotB?'<span class="exact-chip">✨ EXACT</span>':'')+'</div>';
+      picks='<div class="result-line '+(gotW?"win":"lose")+'">'+(gotW?"✓ ":"✗ ")+esc(lab)+sc+' <span style="color:var(--faint)">· '+esc(win)+' through</span><span class="pts">+'+got+' pts</span>'+(gotB?'<span class="exact-chip">✨ EXACT</span>':'')+(dbl?'<span class="exact-chip pu-dbl">⚡ DOUBLED</span>':'')+'</div>'+
+        (ups?'<div class="kn-note pu-upline">🦅 +2 upset — you called the lower-ranked side through</div>':'');
     }else if(win){
       picks='<div class="result-line"><span class="locked-tag">'+esc(win)+' through</span> <span style="color:var(--muted)">No pick</span></div>';
     }else{
       picks='<div class="result-line">'+(isLive(m)?'<span class="live-pill"><span class="pulse"></span>LIVE</span>':'<span class="locked-tag">Locked</span>')+' <span style="color:var(--muted)">'+esc(lab)+(p.w&&p.h!=null&&p.a!=null?' <span style="color:var(--faint);white-space:nowrap">('+p.h+'–'+p.a+')</span>':'')+'</span></div>';
-      if(!isLive(m)&&p.w)picks+='<div class="kn-note stakeline">⏳ kicks off '+fmtTime(m.ko)+' · <b>+'+(koPts(m)+((p.h!=null&&p.a!=null)?koBonus(m):0))+'</b> on the line</div>';
+      if(!isLive(m)&&p.w)picks+='<div class="kn-note stakeline">⏳ kicks off '+fmtTime(m.ko)+' · <b>+'+(koPts(m)+((p.h!=null&&p.a!=null)?koBonus(m):0))+'</b> on the line'+(armedHere?' · ⚡ armband ×2':'')+'</div>';
     }
     picks+='<div class="cons" data-cons="'+m.id+'"></div>';
   }else{
     picks='<div class="picks ko" data-mid="'+m.id+'">'+
       '<button class="pick '+(p.w===m.home.n?"sel":"")+'" data-w="'+esc(m.home.n)+'" aria-label="Pick '+esc(m.home.n)+' to go through"><span class="mini">'+m.home.f+'</span></button>'+
       '<button class="pick '+(p.w===m.away.n?"sel":"")+'" data-w="'+esc(m.away.n)+'" aria-label="Pick '+esc(m.away.n)+' to go through"><span class="mini">'+m.away.f+'</span></button></div>'+
+      (prnd?puArmRow(m.id):'')+ /* WAVE B — ⚡ arm row (QF/SF/Final only; moves until this match locks) */
       '<div class="kn-note">Pick who goes through — <b>extra time &amp; penalties decide it</b></div>'+
       '<div class="chips-lab">Final score · one tap · +'+koBonus(m)+' bonus</div>'+
       '<div class="chips" data-kch="'+m.id+'">'+koChipRowHTML(m.id,m)+'</div>'+
@@ -2759,7 +3022,8 @@ function koMatchCard(m,idx){
       '<div class="bonus-fields '+((p.h!=null&&!koChipSet(m,p).some(c=>c[0]===p.h&&c[1]===p.a))?"show":"")+'" data-kbf="'+m.id+'"><label>'+m.home.f+'</label><input class="scorein" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" autocomplete="off" enterkeyhint="next" aria-label="'+esc(m.home.n)+' goals" data-ksh="'+m.id+'" value="'+(p.h!=null?p.h:"")+'"><span class="scoredash">–</span><input class="scorein" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" autocomplete="off" enterkeyhint="done" aria-label="'+esc(m.away.n)+' goals" data-ksa="'+m.id+'" value="'+(p.a!=null?p.a:"")+'"><label>'+m.away.f+'</label></div>'+
       '<div class="lockin'+((lockTs(m)-Date.now()-CLOCK_OFFSET)<7200000?' soon':'')+'" data-lockts="'+lockTs(m)+'">⏳ '+fmtLeft(lockTs(m)-Date.now()-CLOCK_OFFSET)+'</div>';
   }
-  return '<div class="match-card '+(isQa?"qatar":"")+(m.tag==="final"?" final":"")+(isLive(m)&&!win?" live":"")+(win?" done":"")+(exK?" exact":"")+'" style="animation-delay:'+Math.min(idx*0.03,0.4)+'s">'+ribbon+
+  return '<div class="match-card '+(isQa?"qatar":"")+(m.tag==="final"?" final":"")+(isLive(m)&&!win?" live":"")+(win?" done":"")+(exK?" exact":"")+(armedHere?" pu-armed":"")+'" style="animation-delay:'+Math.min(idx*0.03,0.4)+'s">'+ribbon+
+    (prnd?'<i class="pu-tag" aria-hidden="true" title="Captain’s Armband armed">⚡</i>':'')+
     '<div class="rnd-pill">'+label+'</div>'+
     '<div class="teams"><div class="team"><div class="flag">'+m.home.f+'</div><div class="tname">'+esc(m.home.n)+'</div></div>'+mid+
     '<div class="team right"><div class="flag">'+m.away.f+'</div><div class="tname">'+esc(m.away.n)+'</div></div></div>'+
@@ -3109,7 +3373,7 @@ function lbRowHTML(r,i,PT){
   var streakChip="";
   if(r.me&&state.player&&!state.demo){try{const run=koStreakCurrent(state.player.predictions,state.results);if(run>=2)streakChip='<span class="lb-streak">\ud83d\udd25\u00d7'+run+'</span>';}catch(e){}}
   return '<div class="lb-row '+(r.me?"me":"")+'" style="animation-delay:'+Math.min(i*0.03,0.5)+'s"><div class="rank">'+r.rank+'</div>'+moveHTML(r.dRank)+'<div class="avatar">'+avatarFill(r.name)+'</div>'+
-    '<div class="lb-info"><div class="n">'+esc(r.name)+(r.me?'<span class="youtag">YOU</span>':'')+streakChip+titleChip(r.slug)+(r.rv?'<span class="rivtag">\ud83c\udfaf RIVAL</span>':'')+(r.demo?'<span class="demotag">demo</span>':'')+'</div><div class="d">'+esc(r.dept||"")+'</div>'+
+    '<div class="lb-info"><div class="n">'+esc(r.name)+(r.me?'<span class="youtag">YOU</span>':'')+streakChip+titleChip(r.slug)+(r.rv?'<span class="rivtag">\ud83c\udfaf RIVAL</span>':'')+(r.dby?'<span class="derbytag">\u2694\ufe0f DERBY</span>':'')+(r.demo?'<span class="demotag">demo</span>':'')+'</div><div class="d">'+esc(r.dept||"")+'</div>'+
     '<div class="lb-stats"><span>◎ <b>'+r.exact+'</b> exact</span><span>✓ <b>'+r.correct+'</b> correct</span><span>'+r.predicted+'/'+PT+' picked</span></div></div>'+
     '<div class="lb-pts"><b>'+'<span class="ptsn" data-pslug="'+r.slug+'">'+r.pts+'</span>'+'</b><span>pts</span></div></div>';
 }
@@ -3138,6 +3402,7 @@ async function renderLeaderboard(){
   }
   rows.sort((a,b)=>cmpSt(a,b)||a.name.localeCompare(b.name));
   let rank=0,prevR=null;rows.forEach((r,i)=>{if(prevR===null||cmpSt(r,prevR)!==0){rank=i+1;prevR=r;}r.rank=rank;});
+  if(!state.demo){const dd=derbyInfo(rows);if(dd&&dd.opp&&!dd.opp.rv)dd.opp.dby=true;} /* MATCHNIGHT F2 — derby marker (chosen rival wins) */
   if(!state.demo){
     const snap=await rankSnap();
     if(snap&&snap.ranks)rows.forEach(r=>{const pr=snap.ranks[r.slug];r.dRank=(pr!=null)?(pr-r.rank):null;});
@@ -3238,18 +3503,20 @@ function meRevealChip(){
 /* Finite-schedule scarcity: the calendar itself is the urgency engine. */
 function meStreak(){
   if(!state.player)return "";
-  var run=0;try{run=koStreakCurrent(state.player.predictions,state.results);}catch(e){}
+  var run=0;try{run=koStreakCurrent(state.player.predictions,state.results,true);}catch(e){} /* WAVE B — 🛡 shield-aware run */
+  var shId=null;try{shId=puShieldUsedOn(state.player.predictions,state.results);}catch(e){}
+  const shn=shId?'<span class="pu-shnote">🛡 shield spent on '+puMatchName(FIXBYID[shId])+(run>=1?' — streak alive':'')+'</span>':'';
   const hasKo=FIXTURES.some(function(f){if(!f.kn)return false;const r=state.results[f.id];if(!(r&&r.w!=null))return false;const q=(state.player.predictions||{})[f.id]||{};return !!q.w;});
   if(run<1){
     if(!hasKo)return "";
-    return '<div class="me-streak dim"><span class="ms-ic" aria-hidden="true">🔥</span><div class="ms-tx"><b>No active streak</b><span>Nail an exact knockout score to start one — two in a row is <b>+5</b></span></div></div>';
+    return '<div class="me-streak dim"><span class="ms-ic" aria-hidden="true">🔥</span><div class="ms-tx"><b>No active streak</b><span>Nail an exact knockout score to start one — two in a row is <b>+5</b></span>'+shn+'</div></div>';
   }
   var next;
   if(run===1)next='One more exact score → <b>+5</b> streak bonus';
   else if(run===2)next='One more → <b>+15</b> at ×3';
   else if(run===3)next='One more → <b>+20 each</b> from ×4 on';
   else next='Every exact score from here → <b>+20</b>';
-  return '<div class="me-streak"><span class="ms-ic" aria-hidden="true">🔥</span><div class="ms-tx"><b>Exact-score streak · ×'+run+'</b><span>'+next+'</span></div></div>';
+  return '<div class="me-streak"><span class="ms-ic" aria-hidden="true">🔥</span><div class="ms-tx"><b>Exact-score streak · ×'+run+'</b><span>'+next+'</span>'+shn+'</div></div>';
 }
 function meScarcity(){
   if(!state.player||state.demo)return "";
@@ -3307,7 +3574,7 @@ function meBestWorst(){
   const pr=state.player.predictions||{};
   let best=null,worst=null;
   settled.forEach(function(m){
-    const v=rvVerdict(m,pr[m.id]||{},state.results[m.id]);
+    const v=rvVerdict(m,pr[m.id]||{},state.results[m.id],puChips());
     if(best===null||v.pts>best.pts)best={m:m,pts:v.pts};
     if(worst===null||v.pts<=worst.pts)worst={m:m,pts:v.pts};
   });
@@ -3349,6 +3616,40 @@ function meSquad(st){
     '<button class="sq-share" onclick="shareSquad()" title="Share your squad card" aria-label="Share your squad card">📤</button></div>'+
     (myInDept?('<div class="sq-you">You’re <b>#'+myInDept+'</b> of '+mates.length+' in '+esc(myDept)+(pctTop<=20?' — top <b>'+pctTop+'%</b> of your squad 🔑':'')+'</div>'):'')+
     '<div class="sq-derby">'+derby+'</div></div>';
+}
+/* MATCHNIGHT F2 — Derby of the Day: auto-rivalry vs the row directly above you
+   (or directly below when you lead). Slim standings only — seal-safe. */
+function derbyInfo(st){
+  if(state.demo||!state.meSlug||!st||st.length<2)return null;
+  const i=st.findIndex(function(r){return r.slug===state.meSlug;});
+  if(i<0)return null;
+  const above=i>0,opp=above?st[i-1]:st[i+1];
+  if(!opp)return null;
+  return {opp:opp,gap:Math.abs((opp.pts|0)-(st[i].pts|0)),above:above,meIdx:i,prize:above?i:1};
+}
+async function meDerby(st){
+  const d=derbyInfo(st);
+  if(!d)return "";
+  let oppD=null,meD=null;
+  try{const snap=await rankSnap();
+    if(snap&&snap.ranks){ /* same prev-minus-now delta convention as renderLeaderboard — TIE-AWARE ranks, not raw indexes */
+      let rank=0,prevR=null;const rk={};
+      st.forEach(function(r,i){if(prevR===null||cmpSt(r,prevR)!==0){rank=i+1;prevR=r;}rk[r.slug]=rank;});
+      const po=snap.ranks[d.opp.slug],pm=snap.ranks[state.meSlug];
+      if(po!=null&&rk[d.opp.slug]!=null)oppD=po-rk[d.opp.slug];
+      if(pm!=null&&rk[state.meSlug]!=null)meD=pm-rk[state.meSlug];
+    }}catch(e){}
+  const now=Date.now()+CLOCK_OFFSET;
+  const up=FIXTURES.filter(function(f){return new Date(f.ko).getTime()>now;}).sort(function(a,b){return new Date(a.ko)-new Date(b.ko);});
+  const tonight=up.find(function(f){return dayKey(f.ko)===dayKey(new Date(now).toISOString());});
+  const when=tonight?('first whistle <b>'+fmtTime(tonight.ko)+'</b>'):(up.length?('next match-night <b>'+fmtWk(up[0].ko)+'</b>'):'');
+  const stat=(oppD!=null&&oppD>0)?'They moved overnight — hold the line'
+            :((meD!=null&&meD>0)?'You’re closing — keep it up'
+            :('Winner takes '+ordinal(d.prize)));
+  return '<div class="me-derby"><div class="md-hd">⚔️ Tonight’s derby</div>'+
+    '<div class="md-vs">You vs <b>'+esc(d.opp.name)+'</b></div>'+
+    '<div class="md-gap">'+(d.gap>0?('<b>'+d.gap+'</b> pt'+(d.gap===1?'':'s')+' between you'):'Level on points — tiebreakers split you')+(when?' · '+when:'')+'</div>'+
+    '<div class="md-stat">'+stat+'</div></div>';
 }
 function meNeighbours(st,awaiting){
   if(awaiting||!st||!st.length||state.demo)return "";
@@ -3407,7 +3708,7 @@ function rtmStrip(g){
 async function renderMe(){
   if(!state.player){go("join");return;}
   if(CONFIGURED&&!state.demo)consensus().catch(function(){});
-  const s=scoreFor(state.player.predictions,state.results,state.player.champ);
+  const s=scoreFor(state.player.predictions,state.results,state.player.champ,puChips()); /* WAVE B — power-up-aware (identical pre-QF) */
   const pc=predCount();
   const st=(await fetchStandings()).slice().sort(cmpSt);
   let myRank="—",total=st.length;
@@ -3458,6 +3759,7 @@ async function renderMe(){
     '<div class="role">'+esc(state.player.dept)+'</div>'+(state.player.ig?'<div class="mail">@'+esc(state.player.ig)+'</div>':'')+
     rankPill+
     meStreak()+
+    mePowerKit()+ /* WAVE B — ⚡🛡🦅 power-up kit (own data; ?powerups renders the demo kit) */
     '<div id="me-honours-slot">'+meHonours(s)+'</div>'+
     meScarcity()+
     '<div class="me-stat"><div class="s hero"><b>'+s.pts+'</b><span>Points</span></div><div class="s"><b>'+(awaiting?"—":("#"+myRank))+'</b><span>Rank'+(total?(" of "+total):"")+'</span></div><div class="s"><b>'+pc+'</b><span>Predicted</span></div></div>'+
@@ -3466,6 +3768,7 @@ async function renderMe(){
     meNextPick()+
     meChampLine()+
     '<div id="champ-bets-slot">'+champBetsLine()+'</div>'+
+    (awaiting?"":await meDerby(st))+ /* MATCHNIGHT F2 — derby panel above the neighbours */
     meNeighbours(st,awaiting)+
     meSquad(st)+
     '<div class="me-seclbl">Achievements</div><div class="badges">'+badges.slice(0,5).map(b=>'<div class="badge '+(b.g?"gold":"")+'">'+b.t+'</div>').join("")+'</div>'+
@@ -4214,7 +4517,7 @@ function csvEsc(v){v=String(v==null?"":v);return '"'+v.replace(/"/g,'""')+'"';}
 async function downloadReport(){
   toast("Building report…");
   const players=await sbulkJSON("wc:player:");
-  const rows=players.map(p=>{const s=scoreFor(p.predictions,state.results,p.champ);return{name:p.name,ig:"@"+(p.ig||p.slug),dept:p.dept||"",country:p.country||"",pts:s.pts,exact:s.exact,correct:s.correct,picked:Object.values(p.predictions||{}).filter(x=>x.o||x.w).length,champ:p.champ||""};});
+  const rows=players.map(p=>{const s=scoreFor(p.predictions,state.results,p.champ,p.chips||null);return{name:p.name,ig:"@"+(p.ig||p.slug),dept:p.dept||"",country:p.country||"",pts:s.pts,exact:s.exact,correct:s.correct,picked:Object.values(p.predictions||{}).filter(x=>x.o||x.w).length,champ:p.champ||""};});
   rows.sort(cmpSt);
   rows.forEach((r,i)=>r.rank=i+1);
   const depts={};
@@ -4467,8 +4770,9 @@ async function renderRoom(body){
     return;
   }
   if(!ROOM_SEL||!list.some(m=>m.id===ROOM_SEL)){
-    const settled=list.filter(roomSettled);              /* default: most-recent settled, else most-recent eligible */
-    ROOM_SEL=(settled[0]||list[0]).id;
+    const liveM=list.find(m=>isLive(m)&&!roomSettled(m)); /* MATCHNIGHT F1.1: a live tie owns the room */
+    const settled=list.filter(roomSettled);              /* else: most-recent settled, else most-recent eligible */
+    ROOM_SEL=(liveM||settled[0]||list[0]).id;
   }
   const opts=list.map(m=>{const v=fxView(m);
     return '<option value="'+m.id+'"'+(m.id===ROOM_SEL?' selected':'')+'>'+(roomSettled(m)?'✓ ':'• ')+m.id.toUpperCase()+' · '+esc(v.home.n)+' v '+esc(v.away.n)+'</option>';}).join("");
@@ -4509,6 +4813,40 @@ function roomConsensus(m,players,myPk){
 /* Suspense split bar from the SAME floored counts roomConsensus computed — renders only
    when the text line itself passed the k-anon floor. Aggregates only, never names. */
 function roomBarHTML(segs){return '<div class="room-bar">'+segs.filter(function(s){return s.pct>0;}).map(function(s){return '<i class="'+s.k+(s.mine?' mine':'')+'" style="width:'+s.pct+'%"></i>';}).join('')+'</div>';}
+/* MATCHNIGHT F1.3 — "as it stands" while a locked knockout tie is in play. AGGREGATES ONLY:
+   counts ride the same tot<8 k-anon floor as roomConsensus; the only pick ever named is YOURS.
+   Reads the already-pulled players array — never a second fetch. */
+function roomAsIs(m,mv,players,myPk){
+  if(!m.kn||!isLive(m)||typeof liveFor!=="function")return "";
+  const le=liveFor(mv);
+  if(!le||le.state!=="in"||le.hs==null)return "";
+  const lead=le.hs>le.as?mv.home.n:(le.as>le.hs?mv.away.n:null);
+  let cash=0,sweat=0,exNow=0,tot=0;
+  players.forEach(function(p){const v=(p.predictions||{})[m.id];if(!v||!v.w)return;
+    if(v.w!==mv.home.n&&v.w!==mv.away.n)return;tot++;
+    if(lead){if(v.w===lead)cash++;else sweat++;}
+    if(v.h!=null&&v.a!=null&&Number(v.h)===le.hs&&Number(v.a)===le.as&&(!lead||v.w===lead))exNow++;});
+  let html='';
+  if(tot>=8){                                           /* same floor as roomConsensus */
+    if(lead){
+      html+='<div class="asis-line">⚖️ As it stands: <span class="cash"><b>'+cash+'</b> colleagues cashing +'+koPts(m)+'</span> · <span class="sweat"><b>'+sweat+'</b> sweating</span></div>';
+      if(exNow>0)html+='<div class="asis-line ex">🎯 <b>'+exNow+'</b> would land the exact score</div>';
+    }else{
+      html+='<div class="asis-line">⚖️ Level — nobody’s through yet'+(exNow>0?' · <b>'+exNow+'</b> holding the exact '+le.hs+'–'+le.as:'')+'</div>';
+    }
+  }
+  if(myPk&&myPk.w&&lead){                               /* YOUR line — own pick, always allowed */
+    if(myPk.w===lead){
+      const exMe=myPk.h!=null&&myPk.a!=null&&Number(myPk.h)===le.hs&&Number(myPk.a)===le.as;
+      html+='<div class="mine-live">✅ You’re cashing +'+koPts(m)+' as it stands'+(exMe?' · and the exact-score bonus 🎯':'')+'</div>';
+    }else if(myPk.w===mv.home.n||myPk.w===mv.away.n){
+      html+='<div class="mine-live sweat-me">😬 You need '+esc(myPk.w)+' to turn it around</div>';
+    }
+  }
+  if(!html)return "";
+  return '<div class="room-asis">'+html+'</div>'+
+    '<button class="room-refresh" onclick="renderRoomBody()">↻ updated at the whistle — tap to refresh the board</button>';
+}
 /* Windowed table — at 670 players a settled knockout can have 600+ rows. Show the
    top scorers + your row + your immediate neighbours, with a one-tap "show all". */
 function roomTable(rows,mv,m){
@@ -4529,7 +4867,7 @@ function roomTable(rows,mv,m){
     prev=i;
     const x=rows[i],me=x.p.slug===state.meSlug;
     html+='<div class="pp-row room-row '+x.cls+(me?' mine':'')+'" style="animation:rise .35s both;animation-delay:'+Math.min((vk++)*0.025,0.4)+'s"><span class="pp-n"><i class="rr">'+rks[i]+'</i>'+esc(x.p.name||x.p.slug)+(me?'<span class="youtag">YOU</span>':'')+'<small>'+esc(x.p.dept||"")+'</small></span>'+
-      '<span class="pp-p">'+esc(ppPickLabel(mv,m.kn,x.pk)||"—")+'</span>'+
+      '<span class="pp-p">'+(x.armed?'<i class="pu-rowband" aria-hidden="true" title="Captain’s Armband — points doubled">⚡</i>':'')+esc(ppPickLabel(mv,m.kn,x.pk)||"—")+'</span>'+
       '<span class="pp-e">'+ppExactHTML(x.pk)+'</span>'+
       '<span class="pp-s '+(x.pts>0?'win':'zero')+'">'+(x.pts>0?'+'+x.pts:'+0')+'</span></div>';
   });
@@ -4548,23 +4886,34 @@ async function renderRoomBody(){
   if(settled){
     html+='<div class="room-res land"><span class="rh">FULL TIME</span><b>'+esc(mv.home.n)+' '+(r.h!=null?r.h:'')+'–'+(r.a!=null?r.a:'')+' '+esc(mv.away.n)+'</b>'+(m.kn&&r.w?'<span class="rw">'+esc(r.w)+' advance</span>':'')+'</div>';
   }else{
-    html+='<div class="room-res live"><span class="rh">SEALED · awaiting result</span><b>'+esc(mv.home.n)+' v '+esc(mv.away.n)+'</b></div>';
+    /* MATCHNIGHT F1.2 — live score + clock header (locked ⇒ seal-safe; ids let liveTick patch text cheaply) */
+    const le0=(isLive(m)&&typeof liveFor==="function")?liveFor(mv):null;
+    if(le0&&le0.state==="in"&&le0.hs!=null)
+      html+='<div class="room-res live"><span class="rh">🔴 LIVE</span><b>'+esc(mv.home.n)+' <span id="room-live-score">'+le0.hs+'–'+le0.as+'</span> '+esc(mv.away.n)+'</b><span class="rw" id="room-live-clock">'+esc(le0.clock||"LIVE")+'</span></div>';
+    else
+      html+='<div class="room-res live"><span class="rh">SEALED · awaiting result</span><b>'+esc(mv.home.n)+' v '+esc(mv.away.n)+'</b></div>';
   }
   const cons=roomConsensus(m,players,myPk);   /* aggregate from the single pull; safe pre-result via the tot<5/8 floor */
   if(cons&&cons.html)html+='<div class="room-cons">'+cons.html+((!settled&&cons.segs)?roomBarHTML(cons.segs):'')+'</div>';
+  /* WAVE B — ⚡ armband round of this tie (null outside QF/SF/Final); chips ride the same
+     locked-matches-only blobs the Room already gates, so pre-lock they're never readable here */
+  const prnd=m.kn?puRound(+m.id.slice(1)):null;
   if(!settled){
+    if(prnd){let aN=0;players.forEach(function(p){if(p&&p.chips&&p.chips[prnd]===m.id)aN++;}); /* aggregate only, same k-floor family */
+      if(aN>=8)html+='<div class="pu-armcount">⚡ <b>'+aN+'</b> colleagues armed the band on this one</div>';}
+    html+=roomAsIs(m,mv,players,myPk);   /* MATCHNIGHT F1.3 — aggregate "as it stands" tally; NO names pre-settle */
     html+='<div class="org-note">🔒 Who picked what unlocks at the final whistle. The office split above is live — the names land after full time.</div>';
     host.innerHTML=html;return;
   }
   const rows=players.map(p=>({p:p,pk:(p.predictions||{})[m.id]}))
     .filter(x=>x.pk&&(x.pk.o||x.pk.w))
-    .map(x=>{const vd=rvVerdict(m,x.pk,r);return {p:x.p,pk:x.pk,pts:vd.pts,cls:vd.cls};})
+    .map(x=>{const vd=rvVerdict(m,x.pk,r,(x.p.chips||null));return {p:x.p,pk:x.pk,pts:vd.pts,cls:vd.cls,armed:!!(prnd&&x.p.chips&&x.p.chips[prnd]===m.id)};}) /* WAVE B — doubled pts + ⚡ marker */
     .sort((a,b)=>b.pts-a.pts||(a.p.name||"").localeCompare(b.p.name||""));
   if(!rows.length){host.innerHTML=html+'<div class="org-note">No one in the office had a pick on this match.</div>';return;}
   const hero=roomHero(m,r,rows);if(hero)html+=hero;
   const scored=rows.filter(x=>x.pts>0).length,exactN=rows.filter(x=>x.cls==="exact").length;
   html+='<div class="room-tally"><b>'+scored+'</b> of '+rows.length+' scored'+(exactN?' · <b>'+exactN+'</b> nailed the exact score 🎯':'')+'</div>';
-  const myVd=(myPk&&(myPk.o||myPk.w))?rvVerdict(m,myPk,r):null;
+  const myVd=(myPk&&(myPk.o||myPk.w))?rvVerdict(m,myPk,r,puChips()):null;
   /* C2 — exact-score rarity callout (post-settlement, aggregate + own): a nailed score is a scarce status asset */
   if(exactN>0&&r.h!=null&&r.a!=null){
     const sc=r.h+'–'+r.a,pct=Math.round(exactN/rows.length*100);
@@ -4574,9 +4923,10 @@ async function renderRoomBody(){
       html+='<div class="room-rarity">🎯 Only <b>'+exactN+'</b> of '+rows.length+' called <b>'+sc+'</b>'+(pct>0?' ('+pct+'%)':'')+'</div>';
   }
   /* C1 — viewer's live exact-score streak surfaced at the moment it extends */
-  if(myVd&&myVd.cls==="exact"){var mrun=0;try{mrun=koStreakCurrent(state.player.predictions,state.results);}catch(e){}
+  if(myVd&&myVd.cls==="exact"){var mrun=0;try{mrun=koStreakCurrent(state.player.predictions,state.results,true);}catch(e){}
     if(mrun>=2)html+='<div class="room-rarity mine">🔥 That’s <b>×'+mrun+'</b> exact in a row for you</div>';}
   if(myVd&&myVd.pts>0)html+='<button class="btn btn-ghost btn-sm room-brag" onclick="bragCall()">📤 Brag this call</button>';
+  if(rows.length>=8)html+='<button class="btn btn-ghost btn-sm room-brag" onclick="bragOffice()">🏟️ Share the office story</button>'; /* MATCHNIGHT F3 — collective card, shown regardless of own score */
   html+=roomTable(rows,mv,m);
   host.innerHTML=html;
 }
@@ -4615,7 +4965,7 @@ async function rivalH2H(rivalSlug){
       const r=state.results[m.id],a=mp[m.id],b=rp[m.id];
       if(!a||!(a.o||a.w)||!b||!(b.o||b.w))return;   /* both must have a sealed pick on this match */
       both++;
-      const ap=rvVerdict(m,a,r).pts,bp=rvVerdict(m,b,r).pts;myPts+=ap;rvPts+=bp;
+      const ap=rvVerdict(m,a,r,(me.chips||null)).pts,bp=rvVerdict(m,b,r,(rv.chips||null)).pts;myPts+=ap;rvPts+=bp; /* WAVE B — both blobs' chips */
       if(ap>bp)win++;else if(ap<bp)loss++;else level++;
     });
     if(!both)return "";
@@ -4672,7 +5022,7 @@ function shareFunLine(){
 async function shareCard(){
   try{
     if(!state.player){toast("Sign in first");return;}
-    const sc=scoreFor(state.player.predictions,state.results,state.player.champ);
+    const sc=scoreFor(state.player.predictions,state.results,state.player.champ,puChips());
     const st=(await fetchStandings()).slice().sort(cmpSt);
     let rank=null,total=st.length;st.forEach((r,i)=>{if(r.slug===state.meSlug&&rank===null)rank=i+1;});
     try{if(document.fonts&&document.fonts.load)await Promise.all([
@@ -4808,7 +5158,7 @@ async function shareSquad(){
    rank. Only ever offered for a call you WON (never a shame card). */
 async function shareBrag(o){
   try{
-    if(!state.player){toast("Sign in first");return;}
+    if(!state.player&&o.foot==null){toast("Sign in first");return;} /* collective cards (o.foot) carry no name — fine signed-out */
     try{if(document.fonts&&document.fonts.load)await Promise.all([
       document.fonts.load("400 200px Anton"),document.fonts.load("800 44px 'Hanken Grotesk'")]);}catch(e){}
     const W=1080,H=1350,c=document.createElement("canvas");c.width=W;c.height=H;
@@ -4836,9 +5186,9 @@ async function shareBrag(o){
     if(o.line1){x.fillStyle="#f4eee3";x.font="700 34px 'Hanken Grotesk',sans-serif";wrapText(x,o.line1,W/2,888,W-140,42,2);}
     if(o.line2){x.fillStyle="rgba(227,211,163,.85)";x.font="600 28px 'Hanken Grotesk',sans-serif";x.fillText(o.line2,W/2,980);}
     x.fillStyle="rgba(244,238,227,.6)";x.font="700 30px 'Hanken Grotesk',sans-serif";
-    x.fillText(state.player.name+(state.player.dept?(" · "+state.player.dept):""),W/2,1138);
+    x.fillText(o.foot!=null?o.foot:(state.player.name+(state.player.dept?(" · "+state.player.dept):"")),W/2,1138); /* MATCHNIGHT F3: collective cards override the name line */
     x.fillStyle="#b49759";x.font="700 30px 'Hanken Grotesk',sans-serif";
-    x.fillText("Think you can beat me? → staffchallenge26.com",W/2,1204);
+    x.fillText(o.cta||"Think you can beat me? → staffchallenge26.com",W/2,1204);
     x.fillStyle="rgba(244,238,227,.35)";x.font="600 22px 'Hanken Grotesk',sans-serif";
     x.fillText("Staff World Cup 2026 · 11 June – 19 July",W/2,1254);
     c.toBlob(async b=>{
@@ -4861,13 +5211,13 @@ async function bragCall(){
     const r=state.results[m.id],pk=(state.player&&state.player.predictions||{})[m.id];
     if(!r||!pk||!(pk.o||pk.w)){toast("No card for this one");return;}
     if(m.kn?r.w==null:r.h==null){toast("Wait for the final whistle 🙂");return;}
-    const vd=rvVerdict(m,pk,r);
+    const vd=rvVerdict(m,pk,r,puChips()); /* chips-aware: the card must match the Room's powered figure */
     if(vd.pts<=0){toast("Brag cards are for the calls you nail 😉");return;}
     const mv=fxView(m),players=await ppPlayers();
     let tot=0,gotIt=0,exactC=0;
     const exOK=r.h!=null&&r.a!=null;
-    if(m.kn){players.forEach(p=>{const v=(p.predictions||{})[m.id];if(!v||!v.w)return;tot++;if(v.w===r.w)gotIt++;if(exOK&&v.h===r.h&&v.a===r.a)exactC++;});}
-    else{const ro=r.h>r.a?"H":(r.h<r.a?"A":"D");players.forEach(p=>{const v=(p.predictions||{})[m.id];if(!v||!v.o)return;tot++;if(v.o===ro)gotIt++;if(exOK&&v.h===r.h&&v.a===r.a)exactC++;});}
+    if(m.kn){players.forEach(p=>{const v=(p.predictions||{})[m.id];if(!v||!v.w)return;tot++;if(v.w===r.w)gotIt++;if(exOK&&Number(v.h)===Number(r.h)&&Number(v.a)===Number(r.a))exactC++;});}
+    else{const ro=r.h>r.a?"H":(r.h<r.a?"A":"D");players.forEach(p=>{const v=(p.predictions||{})[m.id];if(!v||!v.o)return;tot++;if(v.o===ro)gotIt++;if(exOK&&Number(v.h)===Number(r.h)&&Number(v.a)===Number(r.a))exactC++;});}
     const pct=tot?Math.round(gotIt/tot*100):100;
     const matchLbl=mv.home.n+" "+(r.h!=null?r.h:"")+"–"+(r.a!=null?r.a:"")+" "+mv.away.n;
     const exact=vd.cls==="exact";
@@ -4880,6 +5230,38 @@ async function bragCall(){
       shareBrag({emoji:"🎯",badge:"CALLED IT",big:exact?(r.h+"–"+r.a):("+"+vd.pts),bigLabel:exact?"EXACT SCORE":"POINTS",
         line1:matchLbl,line2:(exLine?exLine:(pct<100?((pct<=50?"Only ":"")+pct+"% of the office got it"):"Right on the money")),
         accent:[180,151,89],file:"called-it",shareText:(exLine?exLine+" — "+matchLbl:"Called "+matchLbl)+" in Staff Challenge 26"});
+    }
+  }catch(e){toast("Couldn’t build the card");}
+}
+/* MATCHNIGHT F3 — the office "WE" story card: collective, settled-only, open to
+   everyone in the room (no personal points needed). Same guards + counting loop
+   as bragCall; NO individual is ever named on the card or in the share text. */
+async function bragOffice(){
+  try{
+    const m=FIXBYID[ROOM_SEL];if(!m)return;
+    const r=state.results[m.id];
+    if(!r||(m.kn?r.w==null:r.h==null)){toast("Wait for the final whistle 🙂");return;}
+    const mv=fxView(m),players=await ppPlayers();
+    let tot=0,gotIt=0,exactC=0;
+    const exOK=r.h!=null&&r.a!=null;
+    if(m.kn){players.forEach(p=>{const v=(p.predictions||{})[m.id];if(!v||!v.w)return;tot++;if(v.w===r.w)gotIt++;if(exOK&&Number(v.h)===Number(r.h)&&Number(v.a)===Number(r.a))exactC++;});}
+    else{const ro=r.h>r.a?"H":(r.h<r.a?"A":"D");players.forEach(p=>{const v=(p.predictions||{})[m.id];if(!v||!v.o)return;tot++;if(v.o===ro)gotIt++;if(exOK&&Number(v.h)===Number(r.h)&&Number(v.a)===Number(r.a))exactC++;});}
+    if(tot<8){toast("Not enough office calls on this one yet");return;}
+    const pct=Math.round(gotIt/tot*100);
+    const matchLbl=mv.home.n+" "+(r.h!=null?r.h:"")+"–"+(r.a!=null?r.a:"")+" "+mv.away.n;
+    const foot="One office · one story",cta="Join the office story → staffchallenge26.com",l2="One office · "+tot+" calls";
+    if(pct<=30){
+      shareBrag({emoji:"🏟️",badge:"NOBODY SAW IT COMING",big:gotIt+"/"+tot,bigLabel:"CALLED IT",
+        line1:matchLbl,line2:l2,accent:[138,21,56],file:"office-story",foot:foot,cta:cta,
+        shareText:"Only "+gotIt+" of "+tot+" of us saw "+matchLbl+" coming — Staff Challenge 26"});
+    }else if(exOK&&exactC>0&&exactC<=3){
+      shareBrag({emoji:"🎯",badge:"RARE AIR",big:exactC+"/"+tot,bigLabel:"NAILED "+r.h+"–"+r.a,
+        line1:matchLbl,line2:l2,accent:[180,151,89],file:"office-story",foot:foot,cta:cta,
+        shareText:"Just "+exactC+" of "+tot+" of us nailed "+r.h+"–"+r.a+" in "+matchLbl+" — Staff Challenge 26"});
+    }else{
+      shareBrag({emoji:"🏟️",badge:"THE OFFICE CALLED IT",big:pct+"%",bigLabel:"GOT IT RIGHT",
+        line1:matchLbl,line2:l2,accent:[180,151,89],file:"office-story",foot:foot,cta:cta,
+        shareText:pct+"% of the office called "+matchLbl+" — Staff Challenge 26"});
     }
   }catch(e){toast("Couldn’t build the card");}
 }
@@ -4908,10 +5290,10 @@ function mePerfectDay(){
   const byDay={};settled.forEach(function(f){(byDay[dayKey(f.ko)]=byDay[dayKey(f.ko)]||[]).push(f);});
   let best=null;
   Object.keys(byDay).forEach(function(k){const a=byDay[k];
-    if(a.length>=2&&a.every(function(f){return rvVerdict(f,pr[f.id]||{},state.results[f.id]).pts>0;})){
+    if(a.length>=2&&a.every(function(f){return rvVerdict(f,pr[f.id]||{},state.results[f.id],puChips()).pts>0;})){
       if(!best||new Date(a[0].ko)>new Date(byDay[best][0].ko))best=k;}});
   if(!best)return null;
-  const a=byDay[best],pts=a.reduce(function(s,f){return s+rvVerdict(f,pr[f.id]||{},state.results[f.id]).pts;},0);
+  const a=byDay[best],pts=a.reduce(function(s,f){return s+rvVerdict(f,pr[f.id]||{},state.results[f.id],puChips()).pts;},0);
   return {day:best,matches:a,pts:pts};
 }
 function bragStreak(){
@@ -4956,7 +5338,7 @@ async function bragMaldives(){
 function meBrags(st){
   if(!state.player||state.demo)return "";
   const chips=[];
-  try{const n=koStreakCurrent(state.player.predictions,state.results);if(n>=2)chips.push('<button class="brag-chip" onclick="bragStreak()">🔥 On fire ×'+n+'</button>');}catch(e){}
+  try{const n=koStreakCurrent(state.player.predictions,state.results,true);if(n>=2)chips.push('<button class="brag-chip" onclick="bragStreak()">🔥 On fire ×'+n+'</button>');}catch(e){}
   if(mePerfectDay())chips.push('<button class="brag-chip" onclick="bragPerfectDay()">💎 Perfect day</button>');
   if(st&&st.length){const myDept=deptKey(state.player.dept);const mates=st.filter(function(r){return deptKey(r.dept)===myDept;}).slice().sort(cmpSt);
     if(mates.length>=3&&mates[0]&&mates[0].slug===state.meSlug)chips.push('<button class="brag-chip" onclick="bragSquadMVP()">⭐ Squad MVP</button>');}
@@ -5333,6 +5715,9 @@ const FAQ_ITEMS=[
  {q:"How do points work?",a:"Three ways to earn points.\n\n1) Group matches: +3 for the right result (win, draw or loss), and +2 more if you also get the exact score (5 max per match).\n\n2) Knockouts \u2014 you pick who goes through. Pays more each round: Round of 32 +4, Round of 16 +5, Quarter-final +6, Semi-final +8, Third-place match +6, Final +10.\n\n3) Champion pick: +25.\n\nIn the knockouts you can also add an exact-score guess for a bonus, and exact scores in a row earn a streak bonus \u2014 see the next two questions."},
  {q:"Knockouts \u2014 how does the score bonus work?",a:"Two separate things.\n\n1) Pick who goes through \u2014 extra time and penalties decide that. This earns the round\u2019s points.\n\n2) Optionally add an exact-score guess for a bonus on top: Round of 32 +4, Round of 16 +5, Quarter-final +6, Semi-final +7, Third-place match +5, Final +8.\n\nThe final score is the score when the match ends, after extra time if it\u2019s played. Penalties don\u2019t change it: a 1\u20131 won on penalties is still 1\u20131.\n\nThe two parts are scored separately \u2014 you can win the score bonus even if your who-goes-through pick was wrong."},
  {q:"\ud83d\udd25 What is the exact-score streak bonus?",a:"Get the exact final score right in knockout games one after another, and a bonus stacks on top of your normal exact-score bonus:\n\n\u2022 2 in a row: +5\n\u2022 3 in a row: +15\n\u2022 4th and every one after: +20 each\n\nMiss the exact score in a game you predicted, and the streak starts again from zero.\n\nExample: exact scores in your Round of 32, Round of 16 and Quarter-final games in a row earns +5 then +15 \u2014 that\u2019s +20 extra, on top of the per-game points. Knockout games only."},
+ {q:"\u26a1 What are the Quarter-final power-ups?",a:"Three power-ups go live from the Quarter-finals \u2014 the identical kit for every player, nothing to buy. Nothing scored before the QF changes.\n\n\u26a1 Captain\u2019s Armband \u2014 one per round (Quarter-finals, Semi-finals, Final; the third-place match is excluded). Arm it on ONE match of that round before that match locks: your advance + exact-score points on it are DOUBLED. You can move it freely until the match you armed locks; unused at the end of the round, it expires. Streak bonuses and the champion +25 are never doubled.\n\nExample: armband on your Quarter-final, you call the winner (+6) and the exact score (+6) \u2014 that match pays 24 instead of 12.\n\nYour armband is sealed like a pick \u2014 nobody sees where it sits until that match locks. The \ud83d\udee1 Streak Shield and \ud83e\udd85 Upset Bonus are automatic \u2014 see the next two questions."},
+ {q:"\ud83d\udee1 How does the Streak Shield work?",a:"Automatic \u2014 nothing to press. Once per player, from the Quarter-finals onward.\n\nThe first time a miss would break your exact-score streak in a QF-or-later game you predicted, the shield absorbs it: your run continues as if the miss never happened. The missed match itself still scores normally \u2014 only the streak is protected.\n\nExample: you\u2019re on \u00d72 exact scores, your Quarter-final score is wrong \u2014 the shield is spent, and an exact score in the Semi-final continues the run at \u00d73.\n\nMisses before the Quarter-finals are not shielded, and the shield never rewrites anything already scored."},
+ {q:"\ud83e\udd85 What is the Upset Bonus?",a:"From the Quarter-finals onward: when your correct who-goes-through pick was the LOWER-ranked team of the tie, you earn +2 on top \u2014 automatically. It is never doubled by the armband.\n\nRankings come from one fixed FIFA-ranking snapshot, set before the Quarter-finals and never changed \u2014 no odds, no betting language, this stays a free office pool.\n\nExample: Morocco (ranked 11) knock out France (ranked 3) and you called it \u2014 the round\u2019s advance points plus +2.\n\nThe published table (team \u00b7 rank): "+puRankListText()+"."},
  {q:"Does this change my group points or my champion pick?",a:"No. Group-stage points already earned stay exactly as they were (+3 result, +2 exact), and your champion pick is still worth +25. The knockout score and streak bonuses are extra, on top \u2014 nothing you\u2019ve already locked in is reduced."},
  {q:"When do picks lock?",a:"At kickoff, match by match. Until then edit freely \u2014 changes save as you type."},
  {q:"I got the score right but only received 3 points?",a:"Exact-score points need both number boxes filled before kickoff. If one was empty, only your result pick counted."},
@@ -5370,7 +5755,7 @@ function toggleFaq(i){
    per player (localStorage-gated by version), deep-links into each new feature,
    and never nags. Persistent NEW dots on the Leaderboard nav + The Room toggle
    catch stragglers and self-clear once the surface is visited. */
-const WHATSNEW_VER="2026-06-29-social";
+const WHATSNEW_VER="2026-07-02-powerups";
 function seenKey(k){try{return localStorage.getItem("wc:seen:"+k)==="1";}catch(e){return true;}}
 function markSeen(k){try{localStorage.setItem("wc:seen:"+k,"1");}catch(e){}updateNewDots();}
 function updateNewDots(){
@@ -5403,6 +5788,7 @@ function wnGoSquad(){
   go("me");
   setTimeout(function(){const el=document.querySelector(".me-squad");if(el&&el.scrollIntoView)el.scrollIntoView({behavior:"smooth",block:"center"});},350);
 }
+function wnGoFaq(which){dismissWhatsNew();openFaq(which);} /* WAVE B — spotlight items deep-link into the FAQ */
 
 /* ===== juice: sounds + odometers ===== */
 function sndOn(){try{return localStorage.getItem("wc:snd")==="1";}catch(e){return false;}}
@@ -5439,14 +5825,23 @@ function odo(el,from,to,ms){
 let LB_PREV={};
 
 /* ===== the reveal ritual ===== */
-function rvVerdict(m,p,r){
+/* WAVE B: optional 4th arg = that row's player chips object (or null) \u2192 power-up-aware verdict:
+   \u26a1\u00d72 marker when the armband doubled this match, \ud83e\udd85 +2 upset folded into pts. Omit = old behavior.
+   Room rows pass each blob's chips; own card/reveal paths pass state.player.chips. */
+function rvVerdict(m,p,r,chips){
   if(m.kn){
     const ok=!!(p.w&&r.w&&p.w===r.w);
-    const wpts=ok?koPts(m):0,bpts=koScoreHit(p,r)?koBonus(m):0,tot=wpts+bpts; /* winner ladder + independent final-score bonus, matching scoreFor */
+    const wpts=ok?koPts(m):0,bpts=koScoreHit(p,r)?koBonus(m):0; /* winner ladder + independent final-score bonus, matching scoreFor */
+    let tot=wpts+bpts,tag="";
+    if(chips!==undefined){
+      const ch=chips||{},kn=/^k[0-9]+$/.test(m.id)?(+m.id.slice(1)):0,rnd=puRound(kn);
+      if(rnd&&ch[rnd]===m.id&&tot>0){tot*=2;tag+=" \u26a1\u00d72";}          /* armband doubles advance+exact only */
+      if(ok&&upsetWin(m,r)){tot+=PU_UPSET;tag+=" \ud83e\udd85 +2 upset";}    /* flat, never doubled */
+    }
     if(tot<=0)return{pts:0,cls:"miss",label:"\u2717 +0"};
-    if(ok&&bpts)return{pts:tot,cls:"exact",label:"\u25ce +"+tot+" exact!"};
-    if(ok)return{pts:tot,cls:"hit",label:"\u2713 +"+tot};
-    return{pts:tot,cls:"hit",label:"\u25ce +"+tot+" exact score"};
+    if(ok&&bpts)return{pts:tot,cls:"exact",label:"\u25ce +"+tot+" exact!"+tag};
+    if(ok)return{pts:tot,cls:"hit",label:"\u2713 +"+tot+tag};
+    return{pts:tot,cls:"hit",label:"\u25ce +"+tot+" exact score"+tag};
   }
   const ro=r.h>r.a?"H":r.h<r.a?"A":"D";
   const ex=p.h!=null&&p.a!=null&&Number(p.h)===r.h&&Number(p.a)===r.a;
@@ -5527,8 +5922,8 @@ function revealFlip(){
   clearTimeout(RV.timer);
   try{sndFlip();}catch(e){} /* card-whoosh as it turns */
   const m=RV.q[RV.i],p=state.player.predictions[m.id]||{},r=state.results[m.id];
-  const v=rvVerdict(m,p,r);
-  const sr=(m.kn&&v.cls==="exact")?koStreakRunAt(state.player.predictions,state.results,m.id):0;
+  const v=rvVerdict(m,p,r,puChips()); /* WAVE B — ⚡×2 / 🦅 tags fold into the stamp label */
+  const sr=(m.kn&&v.cls==="exact")?koStreakRunAt(state.player.predictions,state.results,m.id,true):0;
   if(sr>=2)card.classList.add("sr"+Math.min(sr,4)); /* streak-tier heat scales the gold flash */
   card.classList.add("flipped",v.cls+"fx");
   const st=document.getElementById("rv-stamp");
@@ -5648,8 +6043,8 @@ function revealSummary(){
   clearTimeout(RV.timer);
   let total=0,html='<div class="rv-sum">';
   RV.q.forEach(function(m){
-    const p=state.player.predictions[m.id]||{},r=state.results[m.id],v=rvVerdict(m,p,r);
-    const sb=(m.kn&&v.cls==="exact")?streakBonusAt(koStreakRunAt(state.player.predictions,state.results,m.id)):0;
+    const p=state.player.predictions[m.id]||{},r=state.results[m.id],v=rvVerdict(m,p,r,puChips());
+    const sb=(m.kn&&v.cls==="exact")?streakBonusAt(koStreakRunAt(state.player.predictions,state.results,m.id,true)):0;
     total+=v.pts+sb;markRevealed(m.id);
     const mv=fxView(m);
     html+='<div class="rv-row '+v.cls+'"><span>'+esc(mv.home.n+" v "+mv.away.n)+'</span><b>'+esc(v.label)+(sb>0?' 🔥+'+sb:'')+'</b></div>';
@@ -5711,7 +6106,7 @@ function renderDayBanner(){
   mine.forEach(function(m){
     const r=state.results[m.id],p=state.player.predictions[m.id];
     const settled=m.kn?(r&&r.w!=null):(r&&r.h!=null);
-    if(settled)got+=rvVerdict(m,p,r).pts;
+    if(settled)got+=rvVerdict(m,p,r,puChips()).pts;
     else{left++;pot+=m.kn?(koPts(m)+((p.h!=null&&p.a!=null)?koBonus(m):0)):((p.h!=null&&p.a!=null)?5:3);}
   });
   const pips='<span class="db-pips">'+'\u25b0'.repeat(mine.length-left)+'\u25b1'.repeat(left)+'</span>'; /* settled vs pending pips (mine.length>=1 here) */
@@ -5883,6 +6278,22 @@ function liveTick(){
   const active=FIXTURES.some(m=>{const k=new Date(m.ko).getTime();return now>k-15*60e3&&now<k+150*60e3;});
   if(active)fetchLive();
   if(active&&state.view==="leaderboard"&&LB_MODE==="people"&&!state.demo)renderLeaderboard(); /* board heartbeat: only while a match is live, so odo count-up fires when results land — never replays the board on quiet weeks (60s cadence, cached) */
+  /* MATCHNIGHT F1.5 — Room heartbeat: patch score/clock textContent from the LIVE cache only.
+     NEVER renderRoomBody() on the steady tick — that would bulk-pull the players blob on a timer.
+     ONE exception: the SEALED→LIVE transition (score exists but the live header doesn't yet)
+     re-renders ONCE per match — PP_CACHE-backed, so it costs at most one cached read. */
+  if(active&&state.view==="leaderboard"&&LB_MODE==="room"&&ROOM_SEL&&typeof liveFor==="function"){
+    const rm=FIXBYID[ROOM_SEL];
+    if(rm&&isLive(rm)){
+      const rle=liveFor(fxView(rm));
+      if(rle&&rle.state==="in"&&rle.hs!=null){
+        const rs=document.getElementById("room-live-score"),rc=document.getElementById("room-live-clock");
+        if(rs)rs.textContent=rle.hs+"–"+rle.as;
+        if(rc)rc.textContent=rle.clock||"LIVE";
+        if(!rs&&window.__roomLiveUp!==rm.id){window.__roomLiveUp=rm.id;try{renderRoomBody();}catch(e){}}
+      }
+    }
+  }
 }
 
 /* Collapse the progress panel to a slim bar once it sticks. Two rules keep this from feeling broken:
@@ -5975,6 +6386,33 @@ function liveTick(){
   });
 })();
 
+/* ===== MATCHNIGHT F4 — TV / kiosk mode (?tv): a clean signage board for office
+   screens. Same URL-flag idiom as bannerForced. Boot popups are suppressed and
+   the board cycles people → dept → room on ONE interval. ===== */
+function tvMode(){try{return /(^|[?&#])tv\b/i.test(location.search+location.hash);}catch(e){return false;}}
+let TV_T=null,TV_HOLD=0;
+function tvLoop(){
+  if(TV_T)return;                                     /* handle stored — the interval can never double */
+  const seq=["people","dept","room"];let i=0;
+  /* 22s per step ⇒ a full people→dept→room lap is 66s; the Room's blob pull rides the
+     60s PP_CACHE, so ONE kiosk device costs ≤1 pull/min — acceptable. */
+  TV_T=setInterval(function(){
+    if(Date.now()<TV_HOLD)return;                     /* someone's at the screen — hold, resume after 90s */
+    if(state.demo)return;
+    if(state.view!=="leaderboard"){go("leaderboard");return;} /* self-heal: a stray tap can never strand the kiosk */
+    i=(i+1)%seq.length;LB_MODE=seq[i];
+    if(LB_MODE==="room"){                             /* the live match owns the room, else latest settled */
+      const list=roomMatches(),liveM=list.find(function(m){return isLive(m)&&!roomSettled(m);}),done=list.filter(roomSettled);
+      if(list.length)ROOM_SEL=(liveM||done[0]||list[0]).id;
+      else{i=(i+1)%seq.length;LB_MODE=seq[i];}        /* room not open yet — skip that step */
+    }
+    const lm=document.getElementById("lbmode");
+    if(lm)lm.querySelectorAll("button").forEach(function(b){b.classList.toggle("on",b.dataset.m===LB_MODE);});
+    renderLeaderboard();
+  },22000);
+  document.addEventListener("pointerdown",function(){TV_HOLD=Date.now()+90000;},true);
+}
+
 (async function init(){
   state.results=await getJSON("wc:results",true)||{};
   state.kteams=await getJSON("wc:kteams",true)||{};
@@ -5982,13 +6420,16 @@ function liveTick(){
   const me=await getJSON("wc:me",false);
   if(me){const p=await getJSON("wc:player:"+me,true);if(p){state.player=p;state.meSlug=me;}}
   state.filter=defaultRound();
+  const TV=tvMode();                                 /* MATCHNIGHT F4 — kiosk board */
+  if(TV)document.body.classList.add("tv");
   if(state.player){
     document.getElementById("userchip").style.display="flex";
     document.getElementById("countdown").style.display="flex";
     const h=(location.hash||"").slice(1);
-    updateChip();go(["matches","bracket","leaderboard","me"].indexOf(h)>=0?h:"matches");
-    if(!openReveal()){if(!maybeWhatsNew())welcomeDelta();}
-  }else{go("join");}
+    updateChip();go(TV?"leaderboard":(["matches","bracket","leaderboard","me"].indexOf(h)>=0?h:"matches"));
+    if(!TV){if(!openReveal()){if(!maybeWhatsNew())welcomeDelta();}}  /* TV: no boot popups on the office screen */
+  }else{go(TV?"leaderboard":"join");}                /* the board reads fine signed-out */
+  if(TV)tvLoop();
   setupBanner();
   renderPulse();setInterval(renderPulse,30000);
   fetchLive();setInterval(liveTick,60000);

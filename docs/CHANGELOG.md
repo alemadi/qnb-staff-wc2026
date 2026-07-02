@@ -5,6 +5,46 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-07-02 (Doha) — WAVE B "Quarter-final Power-Ups" — FULLY BUILT, DORMANT, AWAITING ORGANIZER LAUNCH
+
+**Commits:** this commit (`index.html` + `sql/standings.sql` + `sql/protect.sql` + changelog). **⚠️ NOT LIVE:** repo-only — the live Supabase functions are UNCHANGED. Mechanics are double-gated: (1) they only score on k≥25 results (none exist pre-QF — every scoring path verified bit-identical to today's math), and (2) the revised SQL isn't applied until the launch runbook below is executed on organizer sign-off. Merging this branch publishes only the ANNOUNCEMENT layer (banner, spotlight, points-table section, display-only kit panel, arm rows that stay hidden until QF pairings exist via `koReady`).
+
+**The mechanics (evidence-led, no-gambling):** ⚡ **Captain's Armband** — one per round (QF/SF/Final; third-place excluded), arm before that match locks, its advance+exact points double (streak/champion never doubled), unused expires with the round. 🛡 **Streak Shield** — automatic, once per player, QF-onward only: the first streak-breaking miss is forgiven (run survives; no retro-rescue of R32/R16 misses). 🦅 **Upset Bonus** — flat +2 for a correct lower-ranked winner (k≥25), from a published FIFA-ranking table (`wc_rank` in SQL ↔ `PU_RANK` in JS, cross-referenced, organizer-editable before launch; full table published in the FAQ).
+
+**Parity is the contract:** one agent wrote BOTH scoring halves; a 25-case vector file (`scratchpad/wave-b-vectors.json`) covering armband hit/miss/exact/expiry/k31-hack, shield once-only/no-retro/run-continues, upset both directions/tie/never-doubled, combos, and 3 today's-math regression cases passes against **the real extracted `scoreFor`** AND against **the revised `standings()` on a local Postgres 16** (throwaway cluster; live DB untouched). An adversarial line-by-line JS↔SQL walk found parity CLEAN; its three findings are **fixed in this commit**: `reconcilePicks` now adopts server-canonical chips (a lock-rejected arm can't survive locally), `save_picks` treats an absent chips key as "keep stored" (a stale tab can no longer silently wipe an armband) while explicit disarm still works, and brag cards are chips-aware so they match the Room's powered figures. Vectors re-run green after the fixes.
+
+**Storage/guard:** player blob gains optional `chips:{qf,sf,fin}` through the existing `save_picks`; new `wc_chip_valid` + per-round merge in `protect.sql` (locked set/move/removal all revert to stored; out-of-range ids dropped; k31 never armable). `standings()` is now SECURITY DEFINER (read-only, pinned search_path) so anon can read the RLS-walled rank/schedule tables at launch.
+
+**UI (all preview-verified, 0 page errors, `?powerups` demo flag for review):** arm row + ⚡ tag on QF/SF/Final cards; Me "Power-up Kit" panel (slots + shield status); "From the Quarter-finals" points-table tier + five fairness commitments; banner/spotlight announcement (`WHATSNEW_VER` bump); Room pre-settle "⚡ N armed the band" (≥8 floor) + post-settle ⚡ rows with doubled points; "⚡ DOUBLED" / "🦅 +2 upset" / "🛡 shield spent — streak alive" on settle surfaces; TV mode hides arm controls.
+
+**LAUNCH RUNBOOK (execute only on organizer go; target: announce ≥48h before first QF lock Thu 9 Jul):**
+1. Merge branch → main (announcement live; mechanics still dormant — no k≥25 results exist).
+2. Snapshot `select * from standings()` → file. Paste revised `sql/protect.sql` then `sql/standings.sql` into the Supabase SQL editor; re-run the 25 vectors via the SQL harness (synthetic rows in a rolled-back transaction); diff live standings vs the snapshot — **must be byte-identical** (zero drift pre-QF).
+3. Confirm/adjust the `wc_rank` seed (marked ORGANIZER-EDITABLE) before QF kickoff.
+**Rollback:** `git revert <this commit>`; DB: re-run previous `standings.sql`/`protect.sql` (`git show <prev>:sql/...`) — chips fields are additive and simply ignored by the old functions.
+
+---
+
+## 2026-07-02 (Doha) — "MATCHNIGHT" social pass: the Room goes LIVE, a derby for everyone, the office story card, TV mode
+
+**Commits:** this commit + two WIP checkpoints (`index.html` + changelog). **Frontend only — no DB / scoring / sync / lock-logic change.** Seal-safe; all new styling static (no new animation). New state: none (localStorage untouched; `?tv` is a URL flag).
+
+**Why:** the engagement research's social follow-through — shared *moments*, not just personal stats. Four features: (1) the Room becomes a live second screen during matches, (2) every player gets an automatic rivalry, (3) a group-identity share card anyone can post without self-promotion, (4) a kiosk board for office screens.
+
+**What changed — `index.html`** (two `MATCHNIGHT pass` CSS blocks + render edits):
+- **🔴 The Room · LIVE (`roomAsIs` + live header + selector default).** During a live tie (picks locked = seal-safe) the Room shows the live score + clock, the office split, an **"as it stands"** tally — "13 colleagues cashing +4 · 8 sweating · 3 would land the exact score" (same ≥8 k-anon floor) — and YOUR line (cashing / need-a-turnaround / exact-watch). **Names stay sealed until full time — aggregates only.** `liveTick` patches only the score/clock text from the LIVE cache (never a blob pull on the timer); one PP_CACHE-backed re-render fires on the SEALED→LIVE transition; a tap-to-refresh button re-renders on demand. Selector defaults to the live match.
+- **⚔️ Derby of the Day (`derbyInfo`/`meDerby` + board tag).** Standings-only auto-rivalry: you vs the colleague directly above (below for #1) — Me-card panel with the gap, tonight's first whistle, and a tie-aware overnight status line; the opponent's row wears a ⚔️ DERBY tag on the board (chosen rival wins if both apply).
+- **🏟️ Office story card (`bragOffice`).** A collective share card with **no individual named** — "NOBODY SAW IT COMING · 5/20" / "RARE AIR" / "THE OFFICE CALLED IT" — offered on settled Room matches (≥8 pickers) to *everyone*, including the zero-point crowd who'd never self-brag. `shareBrag` gained `foot`/`cta` overrides for nameless cards.
+- **📺 TV mode (`?tv` + `tvLoop`).** A kiosk board for office screens: hides personal chrome, scales up, cycles People → Departments → Room every 22s (Room = live match else latest settled; blob pull rides the 60s PP_CACHE ⇒ ≤1 pull/min per kiosk), suppresses boot popups, pauses 90s on touch, **self-heals if a passer-by taps anything** (join CTA hidden; view drift auto-returns to the board).
+
+**Review fixes folded in (adversarial pass findings):** kiosk stranding (join CTA hidden + tvLoop self-heal — re-verified headless: back on board within one cycle after a forced `go('join')`); `meDerby` overnight deltas now use tie-aware ranks like the board (no contradictory arrows around point ties); the Room upgrades itself once when its match kicks off mid-view; brag exact-counts use `Number()` coercion matching every scoring path.
+
+**Verified:** `node --check` clean; headless Chromium **34/34 asserts, 0 page errors** across live-Room (counts exact vs stub math; **seal assert: 0 of 20 stub names in the pre-settle DOM**; liveTick patched score with zero extra blob pulls), derby (correct opponent + single board tag), WE card (offered at 0 points; download fallback clean with `navigator.share` absent), TV mode (cycles, popups suppressed, reduced-motion clean), plus the fix re-check. Screenshots on all surfaces.
+
+**Rollback:** `git revert` of this commit + the two WIP checkpoints — frontend-only; removes the two MATCHNIGHT CSS blocks, `roomAsIs`/`derbyInfo`/`meDerby`/`bragOffice`/`tvMode`/`tvLoop`, and the isolated hooks in `renderRoom(Body)`/`liveTick`/`renderMe`/`lbRowHTML`/`renderLeaderboard`/`init`/`shareBrag`.
+
+---
+
 ## 2026-07-02 (Doha) — Score chips dressed in the house style
 
 **Commits:** this commit (`index.html` + changelog). **Frontend only — CSS + one render reorder in `koMatchCard`; no DB / scoring / sync / lock-logic / state change.** Seal-safe.

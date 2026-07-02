@@ -171,6 +171,15 @@ returns text language sql immutable
 set search_path = public, extensions
 as $$ select encode(digest('wc26:' || coalesce(p,''), 'sha256'), 'hex') $$;
 
+-- WAVE B ⚡ Captain's Armband: is this id a legal target for this chip round?
+-- qf k25-28 · sf k29-30 · fin k32 ONLY (k31 third place is never armable).
+create or replace function public.wc_chip_valid(rn text, id text)
+returns boolean language sql immutable as
+$$ select case rn when 'qf'  then id in ('k25','k26','k27','k28')
+                  when 'sf'  then id in ('k29','k30')
+                  when 'fin' then id = 'k32'
+                  else false end $$;
+
 -- ------------------------------------------------------------
 -- 4) save_picks — the ONLY way a player row gets written.
 --    · PIN: first valid save claims the slug; afterwards verified.
@@ -179,6 +188,11 @@ as $$ select encode(digest('wc26:' || coalesce(p,''), 'sha256'), 'hex') $$;
 --    · Sanitizes: known prediction ids, o∈{H,D,A}, scores 0–20,
 --      winner ≤40 chars, profile fields length-capped, pin never
 --      stored, slug forced to match the authenticated slug.
+--    · WAVE B chips (⚡ armband targets, {"qf":"k26",...}): ids
+--      outside the round's k-range dropped (wc_chip_valid); a
+--      chip whose target match has kicked off is SEALED — setting
+--      or moving it is rejected (stored value kept), keeping the
+--      unchanged value is fine. Same server-clock lock as picks.
 --    Returns the canonical stored row so the client can reconcile.
 -- ------------------------------------------------------------
 create or replace function public.save_picks(p_slug text, p_pin text, p_payload jsonb)
@@ -193,6 +207,8 @@ declare
   fin jsonb; fin_preds jsonb := '{}'::jsonb;
   k text; v jsonb; pv jsonb;
   v_o text; v_w text; v_h int; v_a int; v_champ text;
+  cur_chips jsonb; new_chips jsonb; fin_chips jsonb := '{}'::jsonb;
+  rn text; c_old text; c_new text;
 begin
   if p_slug is null or p_slug !~ '^[a-z0-9._]{1,30}$' then
     raise exception 'bad_slug';
@@ -252,6 +268,32 @@ begin
     v_champ := nullif(left(coalesce(p_payload->>'champ',''), 40), '');
   end if;
 
+  -- WAVE B ⚡ chips (Captain's Armband targets) — {"qf":"k26","sf":null,"fin":"k32"}.
+  -- Same lock philosophy as picks: kicked-off = sealed. Per round: an id outside
+  -- the round's k-range is dropped (qf k25-28 · sf k29-30 · fin k32 — k31 never
+  -- armable); an UNCHANGED value always passes; otherwise setting/moving is
+  -- rejected (stored value kept) when EITHER the currently-armed match OR the
+  -- new target has already kicked off. Server clock only.
+  cur_chips := coalesce(cur->'chips', '{}'::jsonb);
+  if jsonb_typeof(cur_chips) <> 'object' then cur_chips := '{}'::jsonb; end if;
+  new_chips := coalesce(p_payload->'chips', '{}'::jsonb);
+  if jsonb_typeof(new_chips) <> 'object' then new_chips := '{}'::jsonb; end if;
+  foreach rn in array array['qf','sf','fin'] loop
+    c_old := nullif(cur_chips->>rn, '');
+    -- key ABSENT = client didn't speak about this round (stale tab) → keep stored;
+    -- key present with null/'' = explicit disarm request (armBand keeps the key on unarm).
+    c_new := case when new_chips ? rn then nullif(new_chips->>rn, '') else c_old end;
+    if c_old is not null and not public.wc_chip_valid(rn, c_old) then c_old := null; end if;
+    if c_new is not null and not public.wc_chip_valid(rn, c_new) then c_new := null; end if;
+    if c_new is distinct from c_old then
+      if (c_old is not null and exists (select 1 from wc_locks l where l.id = c_old and l.ko <= now()))
+      or (c_new is not null and exists (select 1 from wc_locks l where l.id = c_new and l.ko <= now())) then
+        c_new := c_old;                          -- locked: chip stays where it is
+      end if;
+    end if;
+    if c_new is not null then fin_chips := fin_chips || jsonb_build_object(rn, c_new); end if;
+  end loop;
+
   fin := jsonb_build_object(
     'slug',     p_slug,
     'ig',       coalesce(nullif(left(coalesce(p_payload->>'ig',''),30),''), p_slug),
@@ -263,6 +305,7 @@ begin
                          to_jsonb((extract(epoch from now())*1000)::bigint)),
     'predictions', fin_preds);
   if v_champ is not null then fin := fin || jsonb_build_object('champ', v_champ); end if;
+  if fin_chips <> '{}'::jsonb then fin := fin || jsonb_build_object('chips', fin_chips); end if;
 
   insert into kv(key, value, updated_at)
   values ('wc:player:' || p_slug, fin::text, now())
@@ -384,6 +427,7 @@ revoke all on function public.save_picks(text,text,jsonb)        from public;
 revoke all on function public.org_check(text)                    from public;
 revoke all on function public.org_exec(text,text,text,text)      from public;
 revoke all on function public.wc_pin_hash(text)                  from public;
+revoke all on function public.wc_chip_valid(text,text)           from public;
 grant execute on function public.save_picks(text,text,jsonb)     to anon, authenticated;
 grant execute on function public.org_check(text)                 to anon, authenticated;
 grant execute on function public.org_exec(text,text,text,text)   to anon, authenticated;

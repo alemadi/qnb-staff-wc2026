@@ -2,7 +2,8 @@
 -- MATCHDAY · standings() RPC — server-side leaderboard (slim payload)
 -- Paste this whole file into the Supabase SQL editor and click Run.
 -- Safe to re-run any time (CREATE OR REPLACE) — no DROP, signature unchanged,
--- grant re-applied at the bottom.
+-- grant re-applied at the bottom. Run AFTER sql/robot.sql (needs wc_ko_teams)
+-- and sql/protect.sql (chips are validated + lock-guarded in save_picks there).
 --
 -- Scoring mirrors scoreFor() in index.html exactly (agreed ladder + exact-score streak):
 --   Group (UNCHANGED): +3 correct outcome (requires an outcome pick),
@@ -19,24 +20,97 @@
 --          predicted (chronological order = the numeric part of the k-id)
 --          earns, per match in the run:
 --          1st in a run +0 · 2nd +5 · 3rd +15 · 4th-and-onward +20 each.
---          Any non-exact predicted knockout match resets the run.
---   Champion: +25 when wc:results._champ matches the pick.
+--          Any non-exact predicted knockout match resets the run (but see 🛡).
+--   Champion: +25 when wc:results._champ matches the pick — NEVER doubled.
+--
+-- WAVE B · QUARTER-FINAL POWER-UPS (live from k25; k31 third place: upset only):
+--   ⚡ CAPTAIN'S ARMBAND — the player blob may carry optional
+--      chips {"qf":"k26","sf":null,"fin":"k32"} (round-range + lock validated by
+--      save_picks in sql/protect.sql). When a round's chip names a match, THAT
+--      match's knockout earn becomes (advance + exact-bonus) × 2. The chip only
+--      MULTIPLIES, it never creates points — a missed armed match doubles zero.
+--      Rounds: qf = k25–k28 · sf = k29–k30 · fin = k32 (k31 excluded). Streak
+--      bonuses and the champion +25 are NEVER doubled.
+--   🛡 STREAK SHIELD — automatic, at most ONCE per player: the FIRST
+--      streak-breaking miss with kn>=25 (a predicted, settled, non-exact KO row
+--      that immediately follows >=1 exact hit in the engaged sequence) is
+--      IGNORED for streak-run computation — the run continues across it. The
+--      missed match itself still scores its normal points (or lack thereof).
+--   🦅 UPSET BONUS — flat +2 on top when the player's correct winner pick
+--      (kn>=25 only, k31 included) was the LOWER-ranked side per wc_rank
+--      (higher r = lower ranked). The tie's loser is resolved via
+--      wc_ko_teams(results, wc:kteams override) from sql/robot.sql; an
+--      unresolved side or missing rank pays nothing. Never doubled by ⚡.
+--   PARITY CONTRACT: constants + math tier-for-tier identical to the JS half —
+--   PU_FROM_K=25 / PU_UPSET=2 / puRound() / PU_RANK / scoreFor() /
+--   koStreakBonus(…,shield) / upsetWin() in index.html. The wc_rank seed below
+--   and the PU_RANK const are generated from ONE list — edit them together.
+--   Cross-half test vectors: scratchpad wave-b-vectors.json (launch-day proof).
+--
+-- NOTE: standings() is now SECURITY DEFINER — the upset join reads wc_fixtures /
+-- wc_ko_sched / wc_rank, which are RLS-walled from the anon role by
+-- sql/protect.sql. Body is a single read-only SELECT; search_path pinned.
 -- ============================================================================
+
+-- ----------------------------------------------------------------------------
+-- wc_rank — fixed FIFA-ranking snapshot backing the 🦅 upset bonus. Published
+-- in-app as the PU_RANK const in index.html: SAME 48 teams, SAME numbers.
+--
+-- >>> ORGANIZER-EDITABLE BEFORE LAUNCH <<<
+-- The r values below are a plausible June-2026 FIFA ranking. Before pasting on
+-- launch day, update them to the real 25-June-2026 FIFA release AND mirror any
+-- change into PU_RANK in index.html (the two must stay identical). Re-running
+-- this file never clobbers manual edits (ON CONFLICT DO NOTHING); to bulk-reset
+-- instead: delete from wc_rank; then re-run this insert.
+-- ----------------------------------------------------------------------------
+create table if not exists wc_rank(team text primary key, r int not null);
+insert into wc_rank(team, r) values
+ ('Spain',1),('Argentina',2),('France',3),('England',4),('Brazil',5),('Portugal',6),
+ ('Netherlands',7),('Belgium',8),('Germany',9),('Croatia',10),('Morocco',11),('Colombia',13),
+ ('USA',14),('Mexico',15),('Uruguay',16),('Switzerland',17),('Japan',18),('Senegal',19),
+ ('Iran',20),('Austria',22),('South Korea',23),('Ecuador',24),('Australia',26),('Türkiye',27),
+ ('Canada',28),('Norway',29),('Panama',31),('Egypt',33),('Algeria',35),('Scotland',38),
+ ('Paraguay',40),('Tunisia',42),('Czechia',43),('Ivory Coast',44),('Sweden',45),('Uzbekistan',51),
+ ('Qatar',54),('Iraq',57),('Saudi Arabia',59),('DR Congo',60),('South Africa',62),('Jordan',64),
+ ('Bosnia & H.',69),('Ghana',71),('Cape Verde',73),('Curaçao',82),('Haiti',85),('New Zealand',87)
+on conflict (team) do nothing;
+-- walled like the other engine tables; standings() reads it as definer
+alter table public.wc_rank enable row level security;
+revoke all on table public.wc_rank from anon, authenticated;
 
 create or replace function public.standings()
 returns table(slug text, name text, dept text, pts int, exact int, correct int, predicted int)
 language sql
 stable
+security definer
 set search_path = public
 as $$
 with results_row as materialized (
   select value::jsonb as r from kv where key = 'wc:results'
+),
+-- resolved knockout tie teams { kID: {h,a} } — robot's resolver; organizer
+-- wc:kteams override wins, exactly like koTeams() in index.html
+kteams as materialized (
+  select wc_ko_teams(
+           coalesce((select r from results_row), '{}'::jsonb),
+           coalesce((select value::jsonb from kv where key = 'wc:kteams'), '{}'::jsonb)
+         ) as t
 ),
 matches as materialized (
   select e.key as id,
          e.value->>'w' as rw,
          case when (e.value->>'h') ~ '^[0-9]+$' then (e.value->>'h')::int end as rh,
          case when (e.value->>'a') ~ '^[0-9]+$' then (e.value->>'a')::int end as ra,
+         -- numeric part of the k-id (null for group matches)
+         case when e.key ~ '^k[0-9]+$' then substring(e.key from 2)::int end as kn,
+         -- ⚡ armband round bucket (k31 third place deliberately excluded)
+         case
+           when e.key !~ '^k[0-9]+$' then null
+           when substring(e.key from 2)::int between 25 and 28 then 'qf'
+           when substring(e.key from 2)::int in (29,30)        then 'sf'
+           when substring(e.key from 2)::int = 32              then 'fin'
+           else null
+         end as rnd,
          -- knockout ADVANCE points (mirrors KO_PTS / koPts() in index.html)
          case
            when e.key !~ '^k[0-9]+$' then 0
@@ -62,6 +136,21 @@ matches as materialized (
     and ( (e.value->>'w') is not null
           or ((e.value->>'h') ~ '^[0-9]+$' and (e.value->>'a') ~ '^[0-9]+$') )
 ),
+-- 🦅 per settled QF+ match: was the recorded winner the LOWER-ranked side?
+-- Loser = the other resolved side of the tie; unresolved / unranked ⇒ no row
+-- ⇒ no bonus (mirrors upsetWin() in index.html).
+upset as materialized (
+  select m.id, (wrw.r > wrl.r) as up
+  from matches m
+  cross join kteams kt
+  cross join lateral (
+    select case when kt.t->m.id->>'h' = m.rw then kt.t->m.id->>'a'
+                when kt.t->m.id->>'a' = m.rw then kt.t->m.id->>'h' end as team
+  ) lose
+  join wc_rank wrw on wrw.team = m.rw
+  join wc_rank wrl on wrl.team = lose.team
+  where m.rw is not null and m.kn >= 25
+),
 champ as materialized (
   select r->>'_champ' as c from results_row
 ),
@@ -69,6 +158,16 @@ players as materialized (
   select substring(key from 11)                       as pslug,   -- after 'wc:player:'
          value::jsonb                                  as j
   from kv where key like 'wc:player:%'
+),
+-- ⚡ each player's armband targets (optional; absent = no chips). Junk ids are
+-- harmless here: the multiplier also requires rnd-bucket + id equality, and
+-- save_picks (sql/protect.sql) refuses to store out-of-range / locked values.
+chips as materialized (
+  select pslug,
+         j->'chips'->>'qf'  as c_qf,
+         j->'chips'->>'sf'  as c_sf,
+         j->'chips'->>'fin' as c_fin
+  from players
 ),
 -- one row per (player, prediction); each blob parsed exactly once
 preds as materialized (
@@ -95,6 +194,26 @@ ko as (
     and m.id ~ '^k[0-9]+$'                      -- guard: only k<digits> reach substring(...)::int (mirrors JS /^k[0-9]+$/)
     and (pr.pw is not null or pr.ph is not null)
 ),
+-- 🛡 STREAK SHIELD: drop at most ONE row per player — the FIRST non-exact row
+-- with kn>=25 that immediately follows an exact hit (lag over the same engaged
+-- sequence). Removing that row makes the run continue across the miss in the
+-- islands step below; any later breaking miss then resets as normal. Mirrors
+-- the one-skip walk in koStreakBonus(preds,results,shield) in index.html.
+ko_shielded as (
+  select pslug, kn, exact_hit
+  from (
+    select pslug, kn, exact_hit, brk,
+           sum(case when brk then 1 else 0 end)
+             over (partition by pslug order by kn) as nbrk
+    from (
+      select pslug, kn, exact_hit,
+             (not exact_hit and kn >= 25
+               and coalesce(lag(exact_hit) over (partition by pslug order by kn), false)) as brk
+      from ko
+    ) s1
+  ) s2
+  where not (brk and nbrk = 1)
+),
 -- gaps-and-islands: number each exact hit within its maximal consecutive run.
 -- Island id = row_number(over all KO by kn) - row_number(over same exact_hit by kn);
 -- constant within a run of identical exact_hit. Keep only the true runs.
@@ -105,7 +224,7 @@ ko_streak as (
     select pslug, kn, exact_hit,
            row_number() over (partition by pslug order by kn)
              - row_number() over (partition by pslug, exact_hit order by kn) as grp
-    from ko
+    from ko_shielded
   ) z
   where exact_hit
 ),
@@ -124,11 +243,18 @@ scored as (
   select pr.pslug,
     sum( case
       when m.rw is not null then                       -- knockout
-        ( case when pr.pw = m.rw then m.kadv else 0 end )
+        ( ( case when pr.pw = m.rw then m.kadv else 0 end )
+          +
+          ( case when m.rh is not null and m.ra is not null
+                  and pr.ph = m.rh and pr.pa = m.ra
+             then m.kbonus else 0 end ) )
+        * ( case when (m.rnd = 'qf'  and c.c_qf  = m.id)
+                   or (m.rnd = 'sf'  and c.c_sf  = m.id)
+                   or (m.rnd = 'fin' and c.c_fin = m.id)
+             then 2 else 1 end )                       -- ⚡ armband: multiplies, never creates
         +
-        ( case when m.rh is not null and m.ra is not null
-                and pr.ph = m.rh and pr.pa = m.ra
-           then m.kbonus else 0 end )
+        ( case when m.kn >= 25 and pr.pw = m.rw and coalesce(u.up, false)
+           then 2 else 0 end )                         -- 🦅 upset: flat +2, never doubled
       when coalesce(pr.po,'') = '' then 0              -- group: outcome pick required
       else
         ( case when pr.po = (case when m.rh > m.ra then 'H'
@@ -152,6 +278,8 @@ scored as (
         then 1 else 0 end ) as correct
   from preds pr
   join matches m on m.id = pr.id
+  left join chips c on c.pslug = pr.pslug
+  left join upset u on u.id    = m.id
   group by pr.pslug
 ),
 pred_counts as (
@@ -178,7 +306,11 @@ left join streak_bonus sb on sb.pslug = p.pslug
 left join pred_counts  pc on pc.pslug = p.pslug
 $$;
 
+revoke all on function public.standings() from public;
 grant execute on function public.standings() to anon;
 
 -- Sanity check after running:
 -- select * from standings() order by pts desc limit 10;
+-- Launch-day proof: re-run the wave-b-vectors.json cases (synthetic kv rows in a
+-- transaction → select standings() → assert → rollback) and assert ZERO drift on
+-- all real pre-QF rows vs a pre-deploy snapshot of standings().
