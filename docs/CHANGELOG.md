@@ -5,6 +5,18 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-07-02 (Doha) — Pages deploys migrated to the GitHub-Actions pipeline (infra only)
+
+**Commits:** this commit (`.github/workflows/pages.yml` + changelog). **No app change.**
+
+**Why:** the legacy "deploy from a branch" Pages pipeline wedged — three consecutive deploys sat at `deployment_queued` for the full 10-minute timeout while the build job succeeded in seconds (runs 28602430907 / 28604145054 / 28605141864; the deploy-step log polls `Current status: deployment_queued` every 5s until `##[error] The operation was canceled`). The legacy queue exposes no re-run lever to our token (403 on GitHub's dynamic `pages-build-deployment` workflow), so the site kept serving the pre-#29 build.
+
+**What:** a standard `actions/deploy-pages` workflow — checkout → `upload-pages-artifact` (repo as-is; the site is plain static HTML and Jekyll added nothing) → `deploy-pages`; triggers on push-to-main plus manual `workflow_dispatch`; `concurrency: pages` with cancel-in-progress. **Activation requires one organizer click: Settings → Pages → Source → "GitHub Actions"** — which simultaneously abandons the wedged legacy queue. The custom domain persists in Pages settings.
+
+**Rollback:** flip Source back to "Deploy from a branch"; `git revert <this commit>`.
+
+---
+
 ## 2026-07-02 (Doha) — WAVE B "Quarter-final Power-Ups" — FULLY BUILT, DORMANT, AWAITING ORGANIZER LAUNCH
 
 **Commits:** this commit (`index.html` + `sql/standings.sql` + `sql/protect.sql` + changelog). **⚠️ NOT LIVE:** repo-only — the live Supabase functions are UNCHANGED. Mechanics are double-gated: (1) they only score on k≥25 results (none exist pre-QF — every scoring path verified bit-identical to today's math), and (2) the revised SQL isn't applied until the launch runbook below is executed on organizer sign-off. Merging this branch publishes only the ANNOUNCEMENT layer (banner, spotlight, points-table section, display-only kit panel, arm rows that stay hidden until QF pairings exist via `koReady`).
