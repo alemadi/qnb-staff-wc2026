@@ -1475,18 +1475,21 @@
   .res-row .si{width:46px;min-height:44px}
 
   /* ===== Score-input visual pass: chips in the house style =====
-     Chips now carry the knockout score path, so they wear the app's display
-     language: Anton scoreline digits, glass surface, gold hover, and a soft
-     glow + one-shot pop on the selected chip (reduced-motion-gated). The
-     custom… chip stays a quiet text affordance. Shared by group cards and
-     the swipe fine-tune pass (same .chipb). */
-  .chipb{font-family:var(--font-d);font-weight:400;font-size:14.5px;letter-spacing:.07em;color:var(--cream);background:var(--glass);padding:9px 15px;transition:border-color .15s,background .15s,transform .12s}
-  .chipb:hover{border-color:var(--gold);background:var(--glass-2)}
-  .chipb.sel{box-shadow:0 3px 16px -7px rgba(180,151,89,.8)}
+     Chips carry the knockout score path, so they wear the app's display
+     language: Anton scoreline digits + a top-lit raised pill. The card is
+     already --glass (.06), so a flat --glass chip on it collapsed into a
+     black outline — these use a brighter top-lit gradient + a crisper edge
+     + a hairline top highlight so each chip reads as a raised, tappable
+     surface. Selected = gold gradient + glow + one-shot pop (RM-gated).
+     custom… stays a quiet text affordance. Shared by group cards and the
+     swipe fine-tune pass (same .chipb). */
+  .chipb{font-family:var(--font-d);font-weight:400;font-size:14.5px;letter-spacing:.07em;color:var(--cream);background:linear-gradient(180deg,rgba(255,255,255,.15),rgba(255,255,255,.055));border-color:rgba(244,238,227,.22);box-shadow:inset 0 1px 0 rgba(255,255,255,.09);padding:9px 15px;transition:border-color .15s,background .15s,box-shadow .15s,transform .12s}
+  .chipb:hover{border-color:var(--gold);background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,255,255,.09))}
+  .chipb.sel{color:#181106;background:linear-gradient(125deg,var(--gold-deep),var(--gold));border-color:transparent;box-shadow:0 4px 18px -6px rgba(180,151,89,.9),inset 0 1px 0 rgba(255,255,255,.25)}
   @media(prefers-reduced-motion:no-preference){.chipb.sel{animation:chip-in .2s both}}
   @keyframes chip-in{from{transform:scale(.9)}to{transform:scale(1)}}
-  .chipb.custom{font-family:var(--font-b);font-weight:700;font-size:11.5px;letter-spacing:.02em;color:var(--muted);background:transparent}
-  .chipb.custom:hover{color:var(--cream)}
+  .chipb.custom{font-family:var(--font-b);font-weight:700;font-size:11.5px;letter-spacing:.02em;color:var(--muted);background:transparent;border-color:var(--line);box-shadow:none}
+  .chipb.custom:hover{color:var(--cream);background:var(--glass)}
   .bonus-fields.show{margin-top:9px}
 </style>
 </head>

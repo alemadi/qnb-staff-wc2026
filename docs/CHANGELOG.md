@@ -5,6 +5,23 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-07-02 (Doha) — Score chips: lift them off the black
+
+**Commits:** this commit (`index.html` + changelog). **Frontend only — CSS only; no DB / scoring / sync / lock-logic / state / markup change.** Seal-safe.
+
+**Why:** on real OLED phones the chips read as flat black holes. Root cause: the chip fill was `var(--glass)` (`rgba(255,255,255,.06)`) sitting on a `.match-card` that is *also* `--glass` .06 — so the chip surface barely lifted off the card and collapsed into a near-black pill with only a faint outline.
+
+**What changed — `index.html`** (the visual-pass CSS sub-block only):
+- **Raised-pill surface:** unselected `.chipb` now uses a top-lit gradient (`rgba(255,255,255,.15)→.055`) — clearly brighter than the .06 card — a crisper edge (`rgba(244,238,227,.22)`), and a 1px inner top highlight (`inset 0 1px 0 rgba(255,255,255,.09)`), so each chip reads as a raised, tappable surface instead of a black outline. Hover lifts brighter.
+- **Selected = unmistakably gold:** `.chipb.sel` now explicitly carries the gold gradient (`--gold-deep→--gold`, `#181106` text) + the glow + an inset top highlight, matching the winner-pick buttons — consistent across group and knockout chips.
+- **`custom…` stays quiet:** transparent with the standard hairline, a soft glass wash on hover — so it never competes with the score chips.
+
+**Verified:** `node --check` clean; full 34-assertion headless smoke re-run green (zero page errors); 390px @2× screenshot confirms the lifted pills, crisp edges, and solid-gold selected chip against the dark card.
+
+**Rollback:** `git revert <this commit>` — restores the flat `--glass` chip fill.
+
+---
+
 ## 2026-07-02 (Doha) — WAVE B "Quarter-final Power-Ups" — FULLY BUILT, DORMANT, AWAITING ORGANIZER LAUNCH
 
 **Commits:** this commit (`index.html` + `sql/standings.sql` + `sql/protect.sql` + changelog). **⚠️ NOT LIVE:** repo-only — the live Supabase functions are UNCHANGED. Mechanics are double-gated: (1) they only score on k≥25 results (none exist pre-QF — every scoring path verified bit-identical to today's math), and (2) the revised SQL isn't applied until the launch runbook below is executed on organizer sign-off. Merging this branch publishes only the ANNOUNCEMENT layer (banner, spotlight, points-table section, display-only kit panel, arm rows that stay hidden until QF pairings exist via `koReady`).
