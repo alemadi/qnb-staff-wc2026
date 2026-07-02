@@ -5,6 +5,27 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-07-02 (Doha) — Score input made one-tap: knockout exact-score chips + hardened score fields
+
+**Commits:** this commit (`index.html` + changelog). **Frontend only — no DB / scoring / sync / lock-logic change.** Seal-safe; no new state keys (predictions still store the same `{w,h,a}` / results the same `{h,a,w}`).
+
+**Why:** mid-knockout, the highest-value input in the game — the knockout exact score (+4..+8 bonus + the streak) — was the only score surface with **no one-tap path**: two bare 46px `type="number"` boxes and the OS keyboard. A code audit also surfaced three data-integrity holes in score entry (below), all reachable from normal typing.
+
+**What changed — `index.html`:**
+- **Knockout cards get exact-score chips** (`koChipRowHTML`/`koChipPick`, rendered in `koMatchCard`): keyed off the picked winner (`P.w`, not H/D/A) — winner set `1–0 / 2–0 / 2–1 / 3–1` (mirrored for the away side) **plus level scores `1–1 / 2–2`** since a tie can end level and be decided on penalties; the neutral `CHIP_START` trio shows before a winner is picked. A decisive chip also **sets the winner** (one tap = complete prediction, mirroring how group `saveScore` derives `P.o`); level chips leave the winner pick alone. The raw inputs now hide behind `custom…` exactly like group cards.
+- **Winner/score contradictions resolved like the group flow:** `pickWinner` clears a decisive predicted score that names the other team (toast explains; level scores survive); a decisive typed score sets/updates the winner with a toast.
+- **`koSaveScore` fixed:** each field parses independently (`''`→null, clamp 0–20) and h/a persist only when **both** boxes are filled — the debounced save used to coerce the untouched box to `0`, silently storing a `2–0` the player never entered. Completing a score now gives the same feedback as group entry (toast + stake pop).
+- **All 8 score fields hardened:** `type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" enterkeyhint` + a shared digits-only sanitizer (`wireScorePair`) — kills desktop spinner arrows, scroll-wheel silently mutating a focused score, and typeable `e`/`+`/`-`; values >20 clamp in the field itself.
+- **Typing flow on every pair (player cards + both organizer editors):** select-on-focus (a prefilled `2` is replaced, not appended into `23`), home→away auto-advance after the first digit (only while the away box is empty — two-digit scores stay typeable), Enter walks home→away→commit (organizer: →next row), and `custom…` now focuses the first box as it opens.
+- **Organizer editors:** results save now **clamps 0–20** (`saveResult`/`orgSetKScore` — a fat-fingered `31` used to save as 31 and skew standings) and **ignores mid-entry** (one box filled) instead of transiently deleting/writing an official result on the auto-advance blur.
+- **Touch targets:** appended CSS block — `.chipb` min-height 44px, `.scorein` 54×44px, organizer `.si` 46×44px (chips are now also the knockout score path; they were ~34px tall next to scores that differ by one goal).
+
+**Verified:** `node --check` clean on the inline script. Headless Chromium (390×740) drove the real page over 34 assertions, all passing with **zero page errors**: starter→winner-keyed chip reorientation, decisive chip setting `{h,a,w}` in one tap, winner flip clearing a contradicting 1–0 but keeping a level 1–1, custom… open+focus+auto-advance, **no phantom 3–0 on the mid-entry debounce**, `e5`→`5` / `99`→`20` sanitization with two-digit `10` still typeable, group-card chip/custom flow intact (4–2 saves with `o:'H'`), and the organizer editor (24 rows): mid-entry guard, Enter row-hop, `31`→20 clamp. Re-verified after rebasing onto the CROWD pass (#26): both appended CSS blocks coexist; full smoke re-run green.
+
+**Rollback:** `git revert <this commit>` — frontend-only; removes the chip machinery, `wireScorePair`, the input-attribute changes and the appended CSS block, restoring the previous inputs and save semantics intact.
+
+---
+
 ## 2026-07-02 (Doha) — "CROWD" engagement pass (Wave A — frontend-only, evidence-led)
 
 **Commits:** this commit (`index.html` + changelog). **Frontend only — no DB / scoring / sync / lock-logic change.** Seal-safe throughout; every new element is static (no new animation) so reduced-motion is unaffected. New state: none.
