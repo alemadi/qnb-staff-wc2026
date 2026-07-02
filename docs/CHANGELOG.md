@@ -5,6 +5,18 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-07-02 (Doha) — Pages deploys migrated to the GitHub-Actions pipeline (infra only)
+
+**Commits:** this commit (`.github/workflows/pages.yml` + changelog). **No app change.**
+
+**Why:** the legacy "deploy from a branch" Pages pipeline wedged — three consecutive deploys sat at `deployment_queued` for the full 10-minute timeout while the build job succeeded in seconds (runs 28602430907 / 28604145054 / 28605141864; the deploy-step log polls `Current status: deployment_queued` every 5s until `##[error] The operation was canceled`). The legacy queue exposes no re-run lever to our token (403 on GitHub's dynamic `pages-build-deployment` workflow), so the site kept serving the pre-#29 build.
+
+**What:** a standard `actions/deploy-pages` workflow — checkout → `upload-pages-artifact` (repo as-is; the site is plain static HTML and Jekyll added nothing) → `deploy-pages`; triggers on push-to-main plus manual `workflow_dispatch`; `concurrency: pages` with cancel-in-progress. **Activation requires one organizer click: Settings → Pages → Source → "GitHub Actions"** — which simultaneously abandons the wedged legacy queue. The custom domain persists in Pages settings.
+
+**Rollback:** flip Source back to "Deploy from a branch"; `git revert <this commit>`.
+
+---
+
 ## 2026-07-02 (Doha) — Score chips: lift them off the black
 
 **Commits:** this commit (`index.html` + changelog). **Frontend only — CSS only; no DB / scoring / sync / lock-logic / state / markup change.** Seal-safe.
