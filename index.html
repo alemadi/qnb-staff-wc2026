@@ -1340,6 +1340,51 @@
   .rv-fuse::after{content:"";display:block;height:100%;background:linear-gradient(90deg,var(--gold-deep),var(--gold-bright));animation:fuse 1.4s linear both}
   @keyframes fuse{from{width:100%}to{width:0}}
   @media(prefers-reduced-motion:reduce){.rv-fuse{display:none}}
+
+  /* ===================================================================
+     CROWD pass — engagement & social layer (frontend-only, palette-locked,
+     reduced-motion-gated, seal-safe). Visible exact-score streak, Room
+     rarity callouts, participation social proof, department derby cup.
+     No scoring/sync/lock change; every aggregate rides existing k-floors.
+     =================================================================== */
+  /* C1 — visible exact-score streak tile (Me card) + own-row LB chip */
+  .me-streak{display:flex;align-items:center;gap:13px;margin:11px 0 2px;padding:12px 15px;border-radius:15px;border:1px solid rgba(180,151,89,.4);background:linear-gradient(120deg,rgba(180,151,89,.16),rgba(180,151,89,.03))}
+  .me-streak.dim{border-color:var(--line);background:var(--glass)}
+  .me-streak .ms-ic{font-size:24px;line-height:1;flex:none}
+  .me-streak.dim .ms-ic{filter:grayscale(.55);opacity:.7}
+  .me-streak .ms-tx{flex:1;min-width:0;text-align:left}
+  .me-streak .ms-tx>b{display:block;font-size:13.5px;color:var(--cream);font-weight:800}
+  .me-streak .ms-tx span{font-size:11.5px;color:var(--muted)}
+  .me-streak .ms-tx span b{color:var(--gold-bright)}
+  .lb-streak{font-size:9px;font-weight:800;letter-spacing:.02em;color:#181106;background:linear-gradient(115deg,var(--gold-deep),var(--gold-bright));border-radius:6px;padding:1px 6px;vertical-align:middle}
+  /* C2 — exact-score rarity callouts in The Room */
+  .room-rarity{font-size:12px;color:var(--muted);margin:2px 2px 8px;line-height:1.5}
+  .room-rarity b{color:var(--gold-bright)}
+  .room-rarity.solo{color:var(--cream);font-weight:700}
+  .room-rarity.mine{color:var(--gold-bright);font-weight:700}
+  /* C4 — participation social proof */
+  .play-office{font-size:12px;font-weight:700;color:var(--muted);text-align:center;margin:0 0 12px;padding:8px 12px;border:1px solid var(--line);background:var(--glass);border-radius:12px}
+  .play-office b{color:var(--gold-bright);font-family:var(--font-d);font-weight:400;font-size:15px;letter-spacing:.02em;vertical-align:-1px}
+  .dept-play{color:var(--ok);font-weight:800}
+  .dept-row .lb-info .d{white-space:normal;overflow:visible;text-overflow:clip} /* let "· 100% playing" wrap instead of truncating */
+  /* C5 — peak-timed streak share button in the reveal foot */
+  .sw-b.rv-share{background:linear-gradient(115deg,rgba(180,151,89,.22),rgba(138,21,56,.18));border-color:rgba(180,151,89,.5);color:var(--gold-bright)}
+  /* C3 — department derby cup */
+  .dept-cup{background:linear-gradient(135deg,rgba(180,151,89,.16),rgba(180,151,89,.03)),var(--glass);border:1px solid rgba(180,151,89,.45);border-radius:16px;padding:14px 15px;margin:0 0 14px;box-shadow:0 0 22px -12px rgba(180,151,89,.6)}
+  .dept-cup .dc-hd{font-size:9.5px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);text-align:center;margin-bottom:12px}
+  .dept-cup .dc-tie{display:flex;align-items:center;gap:10px}
+  .dept-cup .dc-side{flex:1;min-width:0;text-align:center}
+  .dept-cup .dc-side.mine .dc-nm{color:var(--gold-bright)}
+  .dept-cup .dc-crest{width:44px!important;height:44px!important;margin:0 auto 7px;border-radius:13px}
+  .dept-cup .dc-nm{font-size:12px;font-weight:800;color:var(--cream);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .dept-cup .dc-av{font-family:var(--font-d);font-size:21px;line-height:1;background:linear-gradient(var(--gold-bright),var(--gold-deep));-webkit-background-clip:text;background-clip:text;color:transparent;margin-top:3px}
+  .dept-cup .dc-vs{font-family:var(--font-d);font-size:15px;color:var(--faint);flex:none}
+  .dept-cup .dc-bar{height:8px;border-radius:99px;overflow:hidden;display:flex;gap:2px;margin:12px 0 8px;background:rgba(255,255,255,.05)}
+  .dept-cup .dc-bar i{display:block;height:100%}
+  .dept-cup .dc-bar .a{background:linear-gradient(90deg,var(--gold-deep),var(--gold-bright))}
+  .dept-cup .dc-bar .b{background:rgba(138,21,56,.7)}
+  .dept-cup .dc-stake{font-size:12px;color:var(--muted);text-align:center;line-height:1.5}
+  .dept-cup .dc-stake b{color:var(--gold-bright)}
 </style>
 </head>
 <body>
@@ -2586,7 +2631,9 @@ function modHero(now){
     '<div class="teams"><div class="team">'+tn(m.home)+'</div>'+
     '<div class="midcol"><div class="vs">VS</div><div class="kotime">'+fmtTime(m.ko)+'</div><div class="koday">'+fmtWk(m.ko)+'</div></div>'+
     '<div class="team right">'+tn(m.away)+'</div></div>'+
-    '<div class="kn-note stakeline" style="font-style:normal">'+stake+'</div></div>';
+    '<div class="kn-note stakeline" style="font-style:normal">'+stake+'</div>'+
+    (lockedM(m)?'':'<div class="lockin mod-lock'+((lockTs(m)-Date.now()-CLOCK_OFFSET)<7200000?' soon':'')+'" data-lockts="'+lockTs(m)+'">⏳ '+fmtLeft(lockTs(m)-Date.now()-CLOCK_OFFSET)+'</div>')+
+    '</div>';
 }
 function modJump(id){
   const n=document.querySelector('[data-mc="'+id+'"],.picks[data-mid="'+id+'"]');
@@ -2938,8 +2985,10 @@ function meHonours(s){
   return inner?('<div class="me-seclbl">Office honours</div><div class="me-honours">'+inner+'</div>'):'';
 }
 function lbRowHTML(r,i,PT){
+  var streakChip="";
+  if(r.me&&state.player&&!state.demo){try{const run=koStreakCurrent(state.player.predictions,state.results);if(run>=2)streakChip='<span class="lb-streak">\ud83d\udd25\u00d7'+run+'</span>';}catch(e){}}
   return '<div class="lb-row '+(r.me?"me":"")+'" style="animation-delay:'+Math.min(i*0.03,0.5)+'s"><div class="rank">'+r.rank+'</div>'+moveHTML(r.dRank)+'<div class="avatar">'+avatarFill(r.name)+'</div>'+
-    '<div class="lb-info"><div class="n">'+esc(r.name)+(r.me?'<span class="youtag">YOU</span>':'')+titleChip(r.slug)+(r.rv?'<span class="rivtag">\ud83c\udfaf RIVAL</span>':'')+(r.demo?'<span class="demotag">demo</span>':'')+'</div><div class="d">'+esc(r.dept||"")+'</div>'+
+    '<div class="lb-info"><div class="n">'+esc(r.name)+(r.me?'<span class="youtag">YOU</span>':'')+streakChip+titleChip(r.slug)+(r.rv?'<span class="rivtag">\ud83c\udfaf RIVAL</span>':'')+(r.demo?'<span class="demotag">demo</span>':'')+'</div><div class="d">'+esc(r.dept||"")+'</div>'+
     '<div class="lb-stats"><span>◎ <b>'+r.exact+'</b> exact</span><span>✓ <b>'+r.correct+'</b> correct</span><span>'+r.predicted+'/'+PT+' picked</span></div></div>'+
     '<div class="lb-pts"><b>'+'<span class="ptsn" data-pslug="'+r.slug+'">'+r.pts+'</span>'+'</b><span>pts</span></div></div>';
 }
@@ -2984,6 +3033,9 @@ async function renderLeaderboard(){
     html+='</div>';
   }
   if(state.player&&!state.demo)html+=rtmStrip(roadGap(rows));
+  /* C4 — office-wide participation social proof (descriptive norm; high numbers only, from slim standings) */
+  if(!state.demo&&rows.length>=20){const playing=rows.filter(r=>r.predicted>0).length;
+    if(playing/rows.length>=0.5)html+='<div class="play-office">🔒 <b>'+playing+'</b> of '+rows.length+' colleagues are in the game</div>';}
   html+='<div class="lb-tick" id="lb-tick" style="display:none"></div>';
   const lim=Math.min(rows.length,LB_SHOWN);
   for(let i=0;i<lim;i++)html+=lbRowHTML(rows[i],i,PT);
@@ -3063,6 +3115,21 @@ function meRevealChip(){
     '<span class="go">›</span></button>';
 }
 /* Finite-schedule scarcity: the calendar itself is the urgency engine. */
+function meStreak(){
+  if(!state.player)return "";
+  var run=0;try{run=koStreakCurrent(state.player.predictions,state.results);}catch(e){}
+  const hasKo=FIXTURES.some(function(f){if(!f.kn)return false;const r=state.results[f.id];if(!(r&&r.w!=null))return false;const q=(state.player.predictions||{})[f.id]||{};return !!q.w;});
+  if(run<1){
+    if(!hasKo)return "";
+    return '<div class="me-streak dim"><span class="ms-ic" aria-hidden="true">🔥</span><div class="ms-tx"><b>No active streak</b><span>Nail an exact knockout score to start one — two in a row is <b>+5</b></span></div></div>';
+  }
+  var next;
+  if(run===1)next='One more exact score → <b>+5</b> streak bonus';
+  else if(run===2)next='One more → <b>+15</b> at ×3';
+  else if(run===3)next='One more → <b>+20 each</b> from ×4 on';
+  else next='Every exact score from here → <b>+20</b>';
+  return '<div class="me-streak"><span class="ms-ic" aria-hidden="true">🔥</span><div class="ms-tx"><b>Exact-score streak · ×'+run+'</b><span>'+next+'</span></div></div>';
+}
 function meScarcity(){
   if(!state.player||state.demo)return "";
   const now=Date.now()+CLOCK_OFFSET;
@@ -3233,8 +3300,7 @@ async function renderMe(){
     const settled=FIXTURES.filter(function(f){const r=state.results[f.id];if(!r)return false;if(f.kn?r.w==null:r.h==null)return false;const q=state.player.predictions[f.id]||{};return !!(q.o||q.w);}).sort(function(a,b){return new Date(a.ko)-new Date(b.ko);});
     let stk=0;for(let i=settled.length-1;i>=0;i--){const f=settled[i];if(rvVerdict(f,state.player.predictions[f.id]||{},state.results[f.id]).pts>0)stk++;else break;}
     if(stk>=3)badges.unshift({g:true,t:"✅ "+stk+" correct in a row"});
-    const exr=koStreakCurrent(state.player.predictions,state.results);
-    if(exr>=2)badges.unshift({g:true,t:"\ud83d\udd25 Exact-score streak \u00d7"+exr});
+    /* exact-score streak now has its own prominent meStreak() tile above \u2014 no duplicate badge */
     const byDay={};settled.forEach(function(f){const k=dayKey(f.ko);(byDay[k]=byDay[k]||[]).push(f);});
     for(const k in byDay){const a=byDay[k];if(a.length>=2&&a.every(function(f){return rvVerdict(f,state.player.predictions[f.id]||{},state.results[f.id]).pts>0;})){badges.unshift({g:true,t:"\ud83d\udc8e Perfect day"});break;}}
     const qa=FIXTURES.filter(function(f){return !f.kn&&(f.home.n==="Qatar"||f.away.n==="Qatar");});
@@ -3270,6 +3336,7 @@ async function renderMe(){
     '<div class="avatar av" onclick="foilReplay()">'+avatarFill(state.player.name)+'</div><h3>'+esc(state.player.name)+'</h3>'+
     '<div class="role">'+esc(state.player.dept)+'</div>'+(state.player.ig?'<div class="mail">@'+esc(state.player.ig)+'</div>':'')+
     rankPill+
+    meStreak()+
     '<div id="me-honours-slot">'+meHonours(s)+'</div>'+
     meScarcity()+
     '<div class="me-stat"><div class="s hero"><b>'+s.pts+'</b><span>Points</span></div><div class="s"><b>'+(awaiting?"—":("#"+myRank))+'</b><span>Rank'+(total?(" of "+total):"")+'</span></div><div class="s"><b>'+pc+'</b><span>Predicted</span></div></div>'+
@@ -4207,21 +4274,48 @@ function deptLeague(rows){
   const small=deps.filter(x=>x.n<DEPT_MIN).sort((a,b)=>b.avg-a.avg||a.d.localeCompare(b.d));
   return {ranked:ranked,small:small};
 }
+/* C3 — Department derby spotlight: a head-to-head cup tie between your squad and its nearest
+   rival (or the title race), derived entirely from the deptLeague avg-points ranking. Display
+   only — it changes no scoring and invents no second ladder. */
+function deptCup(lg,myDept){
+  const R=lg.ranked;if(!R||R.length<2)return "";
+  const myIdx=myDept?R.findIndex(function(x){return x.d===myDept;}):-1;
+  let aIdx,bIdx,head;
+  if(myIdx>0){aIdx=myIdx-1;bIdx=myIdx;head="🏆 The derby · catch them";}
+  else if(myIdx===0){aIdx=0;bIdx=1;head="🏆 Defending #1";}
+  else{aIdx=0;bIdx=1;head="🏆 Title race";}
+  const A=R[aIdx],B=R[bIdx];                       /* A is the higher-ranked squad */
+  const tot=(A.avg+B.avg)||1,ap=Math.round(A.avg/tot*100),bp=100-ap;
+  const gap=Math.round(Math.abs(A.avg-B.avg)*10)/10;
+  const mineA=myDept&&A.d===myDept,mineB=myDept&&B.d===myDept;
+  let stake;
+  if(myIdx>0)stake='<b>'+gap.toFixed(1)+'</b> avg behind '+esc(A.d)+' — overtake them for #'+(aIdx+1);
+  else if(myIdx===0)stake='<b>'+gap.toFixed(1)+'</b> avg ahead of '+esc(B.d)+' — hold the top spot';
+  else stake=esc(A.d)+' lead '+esc(B.d)+' by <b>'+gap.toFixed(1)+'</b> avg for the crown';
+  const side=function(x,mine){return '<div class="dc-side'+(mine?' mine':'')+'"><div class="avatar deptbadge dc-crest">'+deptAvatarFill(x.d)+'</div><div class="dc-nm">'+esc(x.d)+'</div><div class="dc-av">'+(Math.round(x.avg*10)/10)+'</div></div>';};
+  return '<div class="dept-cup"><div class="dc-hd">'+head+'</div>'+
+    '<div class="dc-tie">'+side(A,mineA)+'<div class="dc-vs">VS</div>'+side(B,mineB)+'</div>'+
+    '<div class="dc-bar"><i class="a" style="width:'+ap+'%"></i><i class="b" style="width:'+bp+'%"></i></div>'+
+    '<div class="dc-stake">'+stake+'</div></div>';
+}
 async function renderDept(body){
   const rows=await fetchStandings();
   const lg=deptLeague(rows);
+  /* C4 — per-dept participation (from slim standings; shown only when high, per the negative-social-proof boundary) */
+  const playMap={};rows.forEach(function(r){const d=deptKey(r.dept),o=playMap[d]||(playMap[d]={play:0,tot:0});o.tot++;if((r.predicted|0)>0)o.play++;});
   if(!lg.ranked.length){body.innerHTML='<div class="empty"><div class="ic">\ud83c\udfe2</div><b>No squads ranked yet</b><span>Departments join the league once they have '+DEPT_MIN+'+ players.</span></div>';return;}
   const myDept=state.player?deptKey(state.player.dept):null;
   const med=["\ud83e\udd47","\ud83e\udd48","\ud83e\udd49"];
-  let html='<div class="dept-note">\ud83c\udfe2 <b>Department leagues</b> \u2014 your squad vs the rest of the bank. Ranked by <b>average points per player</b> (fair across squad sizes); ties broken by total. Squads need '+DEPT_MIN+'+ players to rank.</div>';
+  let html=deptCup(lg,myDept)+'<div class="dept-note">\ud83c\udfe2 <b>Department leagues</b> \u2014 your squad vs the rest of the bank. Ranked by <b>average points per player</b> (fair across squad sizes); ties broken by total. Squads need '+DEPT_MIN+'+ players to rank.</div>';
   lg.ranked.forEach((x,i)=>{
     const mine=x.d===myDept;
     let gap='';   /* rows 1-3: avg gap subline (display only \u2014 ranking math untouched) */
     if(i===0&&lg.ranked[1]){const d=Math.round((x.avg-lg.ranked[1].avg)*10)/10;if(d>0)gap='<div class="lb-stats"><span>\u25b2 <b>'+d.toFixed(1)+'</b> avg clear of '+esc(lg.ranked[1].d)+'</span></div>';}
     else if(i>0&&i<3){const up=lg.ranked[i-1],d=Math.round((up.avg-x.avg)*10)/10;gap='<div class="lb-stats"><span>'+(d>0?('\u25b2 <b>'+d.toFixed(1)+'</b> avg to catch '+esc(up.d)):('level on avg with '+esc(up.d)))+'</span></div>';}
+    const pm=playMap[x.d],ppct=(pm&&pm.tot)?Math.round(pm.play/pm.tot*100):0,playTxt=(ppct>=60)?' \u00b7 <span class="dept-play">'+ppct+'% playing</span>':'';
     html+='<div class="lb-row dept-row'+(mine?' me':'')+(i===0?' lead':'')+(i<3?' dept-top':'')+'" style="animation-delay:'+Math.min(i*0.03,0.4)+'s"><div class="rank">'+(i<3?med[i]:(i+1))+'</div>'+
       '<div class="avatar deptbadge">'+deptAvatarFill(x.d)+'</div>'+
-      '<div class="lb-info"><div class="n">'+esc(x.d)+(mine?'<span class="youtag">YOUR SQUAD</span>':'')+'</div><div class="d">'+x.n+' players \u00b7 \u03a3 '+x.sum+' pts</div>'+gap+'</div>'+
+      '<div class="lb-info"><div class="n">'+esc(x.d)+(mine?'<span class="youtag">YOUR SQUAD</span>':'')+'</div><div class="d">'+x.n+' players \u00b7 \u03a3 '+x.sum+' pts'+playTxt+'</div>'+gap+'</div>'+
       '<div class="lb-pts"><b>'+(Math.round(x.avg*10)/10)+'</b><span>avg</span></div></div>';});
   if(lg.small.length)html+='<div class="dept-note" style="margin-top:12px">Not yet ranked (under '+DEPT_MIN+' players): '+lg.small.map(x=>esc(x.d)+' ('+x.n+')').join(' \u00b7 ')+'</div>';
   body.innerHTML=html;
@@ -4343,6 +4437,17 @@ async function renderRoomBody(){
   const scored=rows.filter(x=>x.pts>0).length,exactN=rows.filter(x=>x.cls==="exact").length;
   html+='<div class="room-tally"><b>'+scored+'</b> of '+rows.length+' scored'+(exactN?' · <b>'+exactN+'</b> nailed the exact score 🎯':'')+'</div>';
   const myVd=(myPk&&(myPk.o||myPk.w))?rvVerdict(m,myPk,r):null;
+  /* C2 — exact-score rarity callout (post-settlement, aggregate + own): a nailed score is a scarce status asset */
+  if(exactN>0&&r.h!=null&&r.a!=null){
+    const sc=r.h+'–'+r.a,pct=Math.round(exactN/rows.length*100);
+    if(exactN===1&&myVd&&myVd.cls==="exact")
+      html+='<div class="room-rarity solo">🎯 You were the <b>ONLY</b> one in the office who called <b>'+sc+'</b></div>';
+    else
+      html+='<div class="room-rarity">🎯 Only <b>'+exactN+'</b> of '+rows.length+' called <b>'+sc+'</b>'+(pct>0?' ('+pct+'%)':'')+'</div>';
+  }
+  /* C1 — viewer's live exact-score streak surfaced at the moment it extends */
+  if(myVd&&myVd.cls==="exact"){var mrun=0;try{mrun=koStreakCurrent(state.player.predictions,state.results);}catch(e){}
+    if(mrun>=2)html+='<div class="room-rarity mine">🔥 That’s <b>×'+mrun+'</b> exact in a row for you</div>';}
   if(myVd&&myVd.pts>0)html+='<button class="btn btn-ghost btn-sm room-brag" onclick="bragCall()">📤 Brag this call</button>';
   html+=roomTable(rows,mv,m);
   host.innerHTML=html;
@@ -4631,9 +4736,10 @@ async function bragCall(){
     const vd=rvVerdict(m,pk,r);
     if(vd.pts<=0){toast("Brag cards are for the calls you nail 😉");return;}
     const mv=fxView(m),players=await ppPlayers();
-    let tot=0,gotIt=0;
-    if(m.kn){players.forEach(p=>{const v=(p.predictions||{})[m.id];if(!v||!v.w)return;tot++;if(v.w===r.w)gotIt++;});}
-    else{const ro=r.h>r.a?"H":(r.h<r.a?"A":"D");players.forEach(p=>{const v=(p.predictions||{})[m.id];if(!v||!v.o)return;tot++;if(v.o===ro)gotIt++;});}
+    let tot=0,gotIt=0,exactC=0;
+    const exOK=r.h!=null&&r.a!=null;
+    if(m.kn){players.forEach(p=>{const v=(p.predictions||{})[m.id];if(!v||!v.w)return;tot++;if(v.w===r.w)gotIt++;if(exOK&&v.h===r.h&&v.a===r.a)exactC++;});}
+    else{const ro=r.h>r.a?"H":(r.h<r.a?"A":"D");players.forEach(p=>{const v=(p.predictions||{})[m.id];if(!v||!v.o)return;tot++;if(v.o===ro)gotIt++;if(exOK&&v.h===r.h&&v.a===r.a)exactC++;});}
     const pct=tot?Math.round(gotIt/tot*100):100;
     const matchLbl=mv.home.n+" "+(r.h!=null?r.h:"")+"–"+(r.a!=null?r.a:"")+" "+mv.away.n;
     const exact=vd.cls==="exact";
@@ -4642,9 +4748,10 @@ async function bragCall(){
         line1:(gotIt<=1?"The ONLY one in the office who called it":"1 of just "+gotIt+" who called it"),
         line2:matchLbl,accent:[138,21,56],file:"lone-wolf",shareText:"I called "+matchLbl+" when almost no one did"});
     }else{
+      const exLine=(exact&&exOK)?(exactC<=1?"The ONLY one who nailed the exact score":"Only "+exactC+" of "+tot+" nailed the exact score"):null;
       shareBrag({emoji:"🎯",badge:"CALLED IT",big:exact?(r.h+"–"+r.a):("+"+vd.pts),bigLabel:exact?"EXACT SCORE":"POINTS",
-        line1:matchLbl,line2:(pct<100?((pct<=50?"Only ":"")+pct+"% of the office got it"):"Right on the money"),
-        accent:[180,151,89],file:"called-it",shareText:"Called "+matchLbl+" in Staff Challenge 26"});
+        line1:matchLbl,line2:(exLine?exLine:(pct<100?((pct<=50?"Only ":"")+pct+"% of the office got it"):"Right on the money")),
+        accent:[180,151,89],file:"called-it",shareText:(exLine?exLine+" — "+matchLbl:"Called "+matchLbl)+" in Staff Challenge 26"});
     }
   }catch(e){toast("Couldn’t build the card");}
 }
@@ -5344,7 +5451,10 @@ async function revealFinale(){
   fillRevealOffice();
   try{var _bn=document.getElementById("rv-bign");if(_bn){_bn.textContent="0";odo(_bn,0,RV.total,750);}}catch(e){} /* count up the reveal total */
   try{sndFinale();}catch(e){} /* triumphant flourish */
+  /* C5 — offer the most relevant brag AT the peak: a live streak beats the generic card */
+  var _run=0;try{_run=koStreakCurrent(state.player.predictions,state.results);}catch(e){}
   document.getElementById("rv-foot").innerHTML=
+    (_run>=2?'<button class="sw-b rv-share" onclick="bragStreak()">🔥 Share ×'+_run+' streak</button>':'')+
     '<button class="sw-b" onclick="shareCard()">Share this</button>'+
     '<button class="sw-b sw-done-b" onclick="closeReveal()">Done</button>';
   if(RV.total>0){ /* +0 nights keep confetti suppressed — never fake a celebration */

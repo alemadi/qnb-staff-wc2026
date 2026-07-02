@@ -5,6 +5,28 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-07-02 (Doha) — "CROWD" engagement pass (Wave A — frontend-only, evidence-led)
+
+**Commits:** this commit (`index.html` + changelog). **Frontend only — no DB / scoring / sync / lock-logic change.** Seal-safe throughout; every new element is static (no new animation) so reduced-motion is unaffected. New state: none.
+
+**Why:** a cited deep-research pass (FPL, Duolingo, Superbru, Kicktipp + behavioral science; 25 claims verified under a 3-vote adversarial panel) ranked the highest-leverage ways to make the pool more exciting/engaging/social in the finite July 2–19 knockout window. This ships **Wave A — the six mechanics that need no scoring change** (the five point-affecting ones — round-expiring boosts, streak shield, round escalation, upset bonus, bonus questions — are held for a separate, loudly-announced `sql/standings.sql` deploy). Every mechanic respects sealed-until-kickoff picks and carries no gambling framing.
+
+**What changed — `index.html`** (one appended `CROWD pass` CSS block + targeted render edits):
+- **C1 · Visible exact-score streak** (research: Duolingo +1.7% D7, JCR superordinate-goal). A prominent gold **streak tile** on the Me card (`meStreak()`) showing the current run and the next-milestone gap, with a *neutral* prompt at run 0 (never shames a broken streak — the JCR boundary condition); a `🔥×N` chip on the viewer's own leaderboard row; and a "🔥 that's ×N in a row" note in The Room when your call was exact. Milestone flourish already fires via `streakMoment` in the reveal. Removed the now-duplicate streak *badge*.
+- **C2 · Exact-score rarity callouts** (research: Superbru publishes these; exact rates as low as 0.08%). In The Room (post-settlement only), "🎯 Only **N** of **M** called **h–a** (X%)", or "You were the **ONLY** one" when you alone nailed it; and the same rarity is stamped into the **CALLED IT** brag card.
+- **C3 · Department derby cup** (research: Duolingo leagues +17% time). A head-to-head **derby spotlight** atop the Departments board (`deptCup()`) — your squad vs its nearest rival (or the title race), with crests, a gold-vs-maroon avg bar and the stakes line. Derived purely from the existing `deptLeague` avg ranking; changes no scoring and invents no second ladder.
+- **C4 · Participation social proof** (research: Berger observability; *high numbers only*). Office-wide "🔒 **N** of M colleagues are in the game" on the people board, and per-department "**X%** playing" on the Departments board — both from the slim standings already fetched (no heavy pull, no timer), shown only when high (≥50% office / ≥60% dept) so it's never negative social proof.
+- **C5 · Peak-timed brag** (research: high-arousal sharing). The reveal finale now offers a "🔥 Share ×N streak" button when the session left you on a run — the brag lands at the emotional peak, not on a static screen.
+- **C6 · Live lock countdowns.** Added the ticking `.lockin` pill (driven by the existing `[data-lockts]` loop — no new timer) to the Match-of-the-Day hero; open group/knockout cards already had it.
+
+**Seal-safety:** every cross-player number rides an existing floor — The Room rarity is strictly post-settlement (after the `if(!settled)` gate) and aggregate + your own pick; participation is counts-only from public slim standings; the derby cup is department aggregates. No pre-settle pick, no `@ig`, no new bulk pull on a timer.
+
+**Verified:** `node --check` clean. Headless Chromium (390×840) drove a signed-in fixture with a settled exact-score run — **zero page errors** in both standard and reduced-motion contexts. Confirmed: the Me streak tile ("Exact-score streak · ×3"), the own-row `🔥×3` chip, office participation ("35 of 40 colleagues are in the game"), the derby cup ("Defending #1", crests + bar + stakes), per-dept "% playing", and the Room rarity ("Only 2 of 32 called 2–1 (6%)") + streak note. Screenshots confirm layout on all surfaces.
+
+**Rollback:** `git revert <this commit>` — frontend-only; removes the `CROWD pass` CSS block, the `meStreak`/`deptCup` helpers, and the isolated render hooks in `renderMe`/`lbRowHTML`/`renderLeaderboard`/`renderDept`/`renderRoomBody`/`bragCall`/`revealFinale`/`modHero`.
+
+---
+
 ## 2026-07-02 (Doha) — "SHOWTIME" visual & excitement polish pass (every surface)
 
 **Commits:** this commit (`index.html` + `watch.html` + changelog). **Frontend only — no DB / scoring / sync / lock-logic change.** Seal-safe throughout; every new animation is one-shot or single-element and reduced-motion-gated (watch.html rules each carry their own `@media(prefers-reduced-motion:reduce)` guard since it has no global kill-switch). New state: none.
