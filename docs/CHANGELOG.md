@@ -5,6 +5,25 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-07-02 (Doha) — Live match-card no longer collapses; Me-card derby de-duplicated
+
+**Commits:** this commit (`index.html` + changelog). **Frontend only — one CSS scope fix + one CSS guard + a small `meNeighbours` guard; no DB / scoring / sync / lock-logic / state change.** Seal-safe.
+
+**Why (visual bug — the live card):** on the Matches list a *live* knockout card rendered as a broken horizontal jumble — the big `0–0` score sat on top of the flags and team names, and every line was force-uppercased with wide letter-spacing. Root cause: the generic badge rule `.live{display:inline-flex;text-transform:uppercase;letter-spacing:1.5px;…}` (written for the small "Live" tag in the leaderboard header) *also* matched `.match-card.live`. Since `.match-card` never declared its own `display`, the whole card became an `inline-flex` **row** — its stacked children (round pill, teams grid, venue, result line, consensus) collapsed side-by-side to min-content and overlapped — while the inherited `text-transform`/`letter-spacing` shouted every descendant.
+
+**What changed:**
+- Scoped the badge rule to **`.live:not(.match-card)`** — it still styles the leaderboard "Live" tag, the pulsebar and the sealed room-result banner (none are match-cards, so their look is unchanged), but it no longer leaks into the live match-card, which owns its own block layout. Fixes both the overlap and the stray uppercasing in one line.
+- Added an explicit **`display:block`** to `.match-card` as a guard, so no generic single-class rule can ever hijack a card's layout again.
+- Verified in headless Chromium at 393px: the live card now stacks correctly (score centred with clock, teams either side, normal-case venue / `Picked:` / consensus) — matching the settled-card styling directly below it.
+
+**Why (redundancy — the Me card):** the colleague directly above you was surfaced twice, back-to-back — the **⚔️ Tonight's derby** panel (`You vs <name> · 1 pt between you`) and then the **Around you ▲** row (`<name> … is 1 pt ahead — reel them in`) — always the same person and gap, since both read `standings[i-1]`.
+
+**What changed:** `meNeighbours` now skips whichever neighbour the derby card already spotlights (`derbyInfo(st).opp`). Mid-table you now see only the person *below* under "Around you"; at #1 / last the lone neighbour is the derby opponent, so "Around you" cleanly omits itself rather than echoing the panel. No information is lost — only the duplicate. The higher "Road to the Maldives" prize line is a distinct narrative and is left as-is.
+
+**Rollback:** `git revert <this commit>` — restores the bare `.live` rule, drops the `.match-card{display:block}` guard, and removes the `meNeighbours` skip.
+
+---
+
 ## 2026-07-02 (Doha) — Pages deploys migrated to the GitHub-Actions pipeline (infra only)
 
 **Commits:** this commit (`.github/workflows/pages.yml` + changelog). **No app change.**

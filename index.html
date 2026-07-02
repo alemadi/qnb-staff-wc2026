@@ -173,7 +173,7 @@
   .sec-title{display:flex;align-items:center;gap:10px;margin:20px 2px 12px}
   .sec-title h2{font-family:var(--font-d);font-size:23px;letter-spacing:.5px;font-weight:400}
   .sec-title .tag{margin-left:auto;font-size:11px;color:var(--muted);font-weight:600;text-align:right}
-  .live{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);font-weight:700}
+  .live:not(.match-card){display:inline-flex;align-items:center;gap:6px;font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);font-weight:700} /* badge style only — never the live match-card, which owns its own block layout */
 
   .progress{background:#101014;border:1px solid var(--line);border-radius:16px;padding:13px 15px;margin-bottom:6px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 58px);z-index:30;transition:padding .18s ease,border-radius .18s ease,gap .18s ease}
   .progress .top{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;margin-bottom:9px}
@@ -257,7 +257,7 @@
   .dayhdr .dot{width:5px;height:5px;border-radius:50%;background:var(--gold)}
   .dayhdr .ln{flex:1;height:1px;background:var(--line)}
 
-  .match-card{background:var(--glass);border:1px solid var(--line);border-radius:20px;padding:15px 15px 13px;
+  .match-card{display:block;background:var(--glass);border:1px solid var(--line);border-radius:20px;padding:15px 15px 13px;
     margin-bottom:13px;position:relative;overflow:hidden;animation:rise .5s both;transition:border-color .25s}
   .match-card::before{content:"";position:absolute;inset:0;background:radial-gradient(420px 120px at 50% -30%,rgba(255,255,255,.06),transparent);pointer-events:none}
   .match-card.qatar{border-color:rgba(138,21,56,.55);box-shadow:0 0 0 1px rgba(138,21,56,.25),0 14px 38px -22px rgba(138,21,56,.7)}
@@ -3658,10 +3658,12 @@ function meNeighbours(st,awaiting){
   if(awaiting||!st||!st.length||state.demo)return "";
   const idx=st.findIndex(function(r){return r.slug===state.meSlug;});
   if(idx<0)return "";
+  const skip=(derbyInfo(st)||{}).opp; /* the ⚔️ derby card just above already spotlights this rival — don't repeat them here */
+  const skipSlug=skip?skip.slug:null;
   const me=st[idx],rows=[];
-  if(idx>0){const a=st[idx-1],gap=(a.pts|0)-(me.pts|0);
+  if(idx>0&&st[idx-1].slug!==skipSlug){const a=st[idx-1],gap=(a.pts|0)-(me.pts|0);
     rows.push('<div class="row up"><span class="ar">▲</span><div>'+(gap===0?('Level with <b>'+esc(a.name)+'</b> — exact scores split you'):('<b>'+esc(a.name)+'</b>'+(a.dept?' · '+esc(a.dept):'')+' is <b>'+gap+'</b> pt'+(gap===1?'':'s')+' ahead — reel them in'))+'</div></div>');}
-  if(idx<st.length-1){const b=st[idx+1],gap=(me.pts|0)-(b.pts|0);
+  if(idx<st.length-1&&st[idx+1].slug!==skipSlug){const b=st[idx+1],gap=(me.pts|0)-(b.pts|0);
     rows.push('<div class="row dn"><span class="ar">▼</span><div><b>'+esc(b.name)+'</b>'+(b.dept?' · '+esc(b.dept):'')+' is <b>'+gap+'</b> pt'+(gap===1?'':'s')+' behind'+(gap<=3?' — one result and they’re past you':'')+'</div><button class="nb-brag" onclick="bragChase()" title="Share a brag card" aria-label="Share a brag card">📤</button></div>');}
   if(!rows.length)return "";
   return '<div class="me-seclbl">Around you</div><div class="me-nb">'+rows.join("")+'</div>';
