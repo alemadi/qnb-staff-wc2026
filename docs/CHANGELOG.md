@@ -5,6 +5,23 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-07-02 (Doha) — Score chips dressed in the house style
+
+**Commits:** this commit (`index.html` + changelog). **Frontend only — CSS + one render reorder in `koMatchCard`; no DB / scoring / sync / lock-logic / state change.** Seal-safe.
+
+**Why:** the new score chips carry the knockout score path but wore the old muted-outline look — 12px body-font text on a bare border, visually flat next to the app's gold display language, and the knockout `chips-lab` line wrapped to two lines at 390px.
+
+**What changed — `index.html`:**
+- **Chips restyled in the appended CSS block:** Anton (`--font-d`) scoreline digits at 14.5px on a glass surface (`--glass`), gold border + brighter glass on hover, and a soft gold glow + one-shot pop on the selected chip (`chip-in`, reduced-motion-gated). The `custom…` chip drops back to the body font as a quiet text affordance. Shared by group cards and the swipe fine-tune pass (same `.chipb`).
+- **Action-first order on knockout cards:** the chip row now sits directly under the `Final score` label; the ⓘ help pill moved below the chips (it lines up beside the lock countdown), so the primary tap target is first.
+- **Label fits one line:** dropped `· optional` from the knockout `chips-lab` (optionality is already covered by the help body and the fine-tune copy).
+
+**Verified:** `node --check` clean; full 34-assertion headless smoke re-run green (zero page errors); before/after screenshots at 390px confirm the one-line label, chip row, and selected-chip glow in fresh / winner-picked / custom states.
+
+**Rollback:** `git revert <this commit>` — removes the visual CSS sub-block and restores the previous element order and label.
+
+---
+
 ## 2026-07-02 (Doha) — Score input made one-tap: knockout exact-score chips + hardened score fields
 
 **Commits:** this commit (`index.html` + changelog). **Frontend only — no DB / scoring / sync / lock-logic change.** Seal-safe; no new state keys (predictions still store the same `{w,h,a}` / results the same `{h,a,w}`).

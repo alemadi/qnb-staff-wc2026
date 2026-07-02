@@ -1393,6 +1393,21 @@
   .chipb{min-height:44px}
   .scorein{width:54px;min-height:44px}
   .res-row .si{width:46px;min-height:44px}
+
+  /* ===== Score-input visual pass: chips in the house style =====
+     Chips now carry the knockout score path, so they wear the app's display
+     language: Anton scoreline digits, glass surface, gold hover, and a soft
+     glow + one-shot pop on the selected chip (reduced-motion-gated). The
+     custom… chip stays a quiet text affordance. Shared by group cards and
+     the swipe fine-tune pass (same .chipb). */
+  .chipb{font-family:var(--font-d);font-weight:400;font-size:14.5px;letter-spacing:.07em;color:var(--cream);background:var(--glass);padding:9px 15px;transition:border-color .15s,background .15s,transform .12s}
+  .chipb:hover{border-color:var(--gold);background:var(--glass-2)}
+  .chipb.sel{box-shadow:0 3px 16px -7px rgba(180,151,89,.8)}
+  @media(prefers-reduced-motion:no-preference){.chipb.sel{animation:chip-in .2s both}}
+  @keyframes chip-in{from{transform:scale(.9)}to{transform:scale(1)}}
+  .chipb.custom{font-family:var(--font-b);font-weight:700;font-size:11.5px;letter-spacing:.02em;color:var(--muted);background:transparent}
+  .chipb.custom:hover{color:var(--cream)}
+  .bonus-fields.show{margin-top:9px}
 </style>
 </head>
 <body>
@@ -2737,10 +2752,10 @@ function koMatchCard(m,idx){
       '<button class="pick '+(p.w===m.home.n?"sel":"")+'" data-w="'+esc(m.home.n)+'" aria-label="Pick '+esc(m.home.n)+' to go through"><span class="mini">'+m.home.f+'</span></button>'+
       '<button class="pick '+(p.w===m.away.n?"sel":"")+'" data-w="'+esc(m.away.n)+'" aria-label="Pick '+esc(m.away.n)+' to go through"><span class="mini">'+m.away.f+'</span></button></div>'+
       '<div class="kn-note">Pick who goes through — <b>extra time &amp; penalties decide it</b></div>'+
-      '<div class="chips-lab">Final score · one tap · +'+koBonus(m)+' bonus · optional</div>'+
+      '<div class="chips-lab">Final score · one tap · +'+koBonus(m)+' bonus</div>'+
+      '<div class="chips" data-kch="'+m.id+'">'+koChipRowHTML(m.id,m)+'</div>'+
       '<button type="button" class="help-chip" aria-expanded="false" onclick="toggleHelp(event,this)">ⓘ How the bonus works <span class="hc-chev">›</span></button>'+
       '<div class="help-body" hidden>Final score = the score when the match ends — after extra time if it’s played. Penalties don’t change it: a 1–1 won on penalties is still <b>1–1</b>.<div class="help-eg"><b>Example</b> — a match is <b>1–1 at full time</b>, then <b>2–1 after extra time</b>:<br><span class="eg-y">✓ predict 2–1</span> — wins the bonus<br><span class="eg-n">✗ 1–1</span> doesn’t win</div><div class="help-eg" style="margin-top:6px">🔥 <b>Streak:</b> get exact scores in knockout games one after another for a growing bonus. <a href="javascript:void 0" onclick="openFaq(\'streak\');return false" style="color:var(--gold-bright);font-weight:700">How it works ›</a></div></div>'+
-      '<div class="chips" data-kch="'+m.id+'">'+koChipRowHTML(m.id,m)+'</div>'+
       '<div class="bonus-fields '+((p.h!=null&&!koChipSet(m,p).some(c=>c[0]===p.h&&c[1]===p.a))?"show":"")+'" data-kbf="'+m.id+'"><label>'+m.home.f+'</label><input class="scorein" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" autocomplete="off" enterkeyhint="next" aria-label="'+esc(m.home.n)+' goals" data-ksh="'+m.id+'" value="'+(p.h!=null?p.h:"")+'"><span class="scoredash">–</span><input class="scorein" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" autocomplete="off" enterkeyhint="done" aria-label="'+esc(m.away.n)+' goals" data-ksa="'+m.id+'" value="'+(p.a!=null?p.a:"")+'"><label>'+m.away.f+'</label></div>'+
       '<div class="lockin'+((lockTs(m)-Date.now()-CLOCK_OFFSET)<7200000?' soon':'')+'" data-lockts="'+lockTs(m)+'">⏳ '+fmtLeft(lockTs(m)-Date.now()-CLOCK_OFFSET)+'</div>';
   }
