@@ -1465,6 +1465,29 @@
   .org-note.pu-fair{margin-top:8px}
   .org-note.pu-fair b{color:var(--gold)}
   body.tv .pu-arm{display:none!important} /* kiosk: no armable control a passer-by can flip */
+
+  /* ===== Score-input pass: one-tap knockout chips + thumb-sized score fields =====
+     .chipb/.scorein/.si were under the 44px touch minimum; chips are now also the
+     knockout score path so mis-taps save real predictions. touch-action already
+     covered by the button/input rule above. */
+  .chipb{min-height:44px}
+  .scorein{width:54px;min-height:44px}
+  .res-row .si{width:46px;min-height:44px}
+
+  /* ===== Score-input visual pass: chips in the house style =====
+     Chips now carry the knockout score path, so they wear the app's display
+     language: Anton scoreline digits, glass surface, gold hover, and a soft
+     glow + one-shot pop on the selected chip (reduced-motion-gated). The
+     custom… chip stays a quiet text affordance. Shared by group cards and
+     the swipe fine-tune pass (same .chipb). */
+  .chipb{font-family:var(--font-d);font-weight:400;font-size:14.5px;letter-spacing:.07em;color:var(--cream);background:var(--glass);padding:9px 15px;transition:border-color .15s,background .15s,transform .12s}
+  .chipb:hover{border-color:var(--gold);background:var(--glass-2)}
+  .chipb.sel{box-shadow:0 3px 16px -7px rgba(180,151,89,.8)}
+  @media(prefers-reduced-motion:no-preference){.chipb.sel{animation:chip-in .2s both}}
+  @keyframes chip-in{from{transform:scale(.9)}to{transform:scale(1)}}
+  .chipb.custom{font-family:var(--font-b);font-weight:700;font-size:11.5px;letter-spacing:.02em;color:var(--muted);background:transparent}
+  .chipb.custom:hover{color:var(--cream)}
+  .bonus-fields.show{margin-top:9px}
 </style>
 </head>
 <body>
@@ -2830,7 +2853,7 @@ function renderMatches(){
   rest.forEach(m=>{
     const k=dayKey(m.ko);if(!groups[k]){groups[k]=[];order.push(k);}groups[k].push(m);
   });
-  let html=modHero(nowL),idx=0;
+  let html=modHero(nowL,list),idx=0;
   if(liveNow.length){
     html+='<div class="daygroup"><div class="dayhdr soonhdr livehdr"><span class="dot soon livedot"></span><h3>🔴 Live now</h3><span class="ln"></span></div>';
     liveNow.forEach(m=>{const v=fxView(m);html+=m.kn?(koReady(m)?koMatchCard(v,idx++):knockoutCard(v,idx++)):matchCard(v,idx++);});
@@ -2865,9 +2888,10 @@ function gScorePts(p,res){
 /* "Match of the Day" hero — a spotlight above the list when nothing is live and a
    fixture kicks off within 72h. Own-data only (seal-safe): no consensus, no other
    players' picks, no pick buttons — tap scrolls to the real card. */
-function modHero(now){
+function modHero(now,pool){
   if(!state.player||FIXTURES.some(f=>isLive(f)))return "";
-  const fut=FIXTURES.filter(m=>{const t=new Date(m.ko).getTime();return t>now&&t-now<=72*36e5&&!isFinished(m);});
+  /* pick the spotlight from the currently filtered list, so e.g. Arab Teams never heroes a non-Arab match */
+  const fut=(pool||FIXTURES).filter(m=>{const t=new Date(m.ko).getTime();return t>now&&t-now<=72*36e5&&!isFinished(m);});
   if(!fut.length)return "";
   fut.sort((a,b)=>new Date(a.ko)-new Date(b.ko));
   const dk=dayKey(fut[0].ko);
@@ -2922,8 +2946,8 @@ function matchCard(m,idx){
       '<div class="chips-lab">Exact score · one tap · +2 bonus</div>'+
       '<div class="chips" data-ch="'+m.id+'">'+chipRowHTML(m.id)+'</div>'+
       '<div class="bonus-fields '+((p.h!=null&&!ALL_CHIPS.some(c=>c[0]===p.h&&c[1]===p.a))?"show":"")+'" data-bf="'+m.id+'">'+
-      '<label>'+m.home.f+'</label><input class="scorein" type="number" min="0" max="20" inputmode="numeric" aria-label="'+esc(m.home.n)+' goals" data-sh="'+m.id+'" value="'+(p.h!=null?p.h:"")+'">'+
-      '<span class="scoredash">–</span><input class="scorein" type="number" min="0" max="20" inputmode="numeric" aria-label="'+esc(m.away.n)+' goals" data-sa="'+m.id+'" value="'+(p.a!=null?p.a:"")+'"><label>'+m.away.f+'</label></div></div>'+
+      '<label>'+m.home.f+'</label><input class="scorein" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" autocomplete="off" enterkeyhint="next" aria-label="'+esc(m.home.n)+' goals" data-sh="'+m.id+'" value="'+(p.h!=null?p.h:"")+'">'+
+      '<span class="scoredash">–</span><input class="scorein" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" autocomplete="off" enterkeyhint="done" aria-label="'+esc(m.away.n)+' goals" data-sa="'+m.id+'" value="'+(p.a!=null?p.a:"")+'"><label>'+m.away.f+'</label></div></div>'+
       '<div class="lockin'+((lockTs(m)-Date.now()-CLOCK_OFFSET)<7200000?' soon':'')+'" data-lockts="'+lockTs(m)+'">⏳ '+fmtLeft(lockTs(m)-Date.now()-CLOCK_OFFSET)+'</div>';
   }
   return '<div class="match-card '+(m.tag==="qatar"?"qatar":"")+(isLive(m)&&!res?" live":"")+(res?" done":"")+(ex?" exact":"")+'" style="animation-delay:'+Math.min(idx*0.03,0.4)+'s">'+ribbon+
@@ -2991,11 +3015,11 @@ function koMatchCard(m,idx){
       '<button class="pick '+(p.w===m.away.n?"sel":"")+'" data-w="'+esc(m.away.n)+'" aria-label="Pick '+esc(m.away.n)+' to go through"><span class="mini">'+m.away.f+'</span></button></div>'+
       (prnd?puArmRow(m.id):'')+ /* WAVE B — ⚡ arm row (QF/SF/Final only; moves until this match locks) */
       '<div class="kn-note">Pick who goes through — <b>extra time &amp; penalties decide it</b></div>'+
-      '<div class="chips-lab">Final score · +'+koBonus(m)+' bonus · optional</div>'+
+      '<div class="chips-lab">Final score · one tap · +'+koBonus(m)+' bonus</div>'+
+      '<div class="chips" data-kch="'+m.id+'">'+koChipRowHTML(m.id,m)+'</div>'+
       '<button type="button" class="help-chip" aria-expanded="false" onclick="toggleHelp(event,this)">ⓘ How the bonus works <span class="hc-chev">›</span></button>'+
       '<div class="help-body" hidden>Final score = the score when the match ends — after extra time if it’s played. Penalties don’t change it: a 1–1 won on penalties is still <b>1–1</b>.<div class="help-eg"><b>Example</b> — a match is <b>1–1 at full time</b>, then <b>2–1 after extra time</b>:<br><span class="eg-y">✓ predict 2–1</span> — wins the bonus<br><span class="eg-n">✗ 1–1</span> doesn’t win</div><div class="help-eg" style="margin-top:6px">🔥 <b>Streak:</b> get exact scores in knockout games one after another for a growing bonus. <a href="javascript:void 0" onclick="openFaq(\'streak\');return false" style="color:var(--gold-bright);font-weight:700">How it works ›</a></div></div>'+
-      '<div class="kn-note" style="font-style:normal;margin-top:5px">Predict the <b style="color:var(--gold)">final score</b></div>'+
-      '<div class="bonus-fields show"><label>'+m.home.f+'</label><input class="scorein" type="number" min="0" max="20" inputmode="numeric" aria-label="'+esc(m.home.n)+' goals" data-ksh="'+m.id+'" value="'+(p.h!=null?p.h:"")+'"><span class="scoredash">–</span><input class="scorein" type="number" min="0" max="20" inputmode="numeric" aria-label="'+esc(m.away.n)+' goals" data-ksa="'+m.id+'" value="'+(p.a!=null?p.a:"")+'"><label>'+m.away.f+'</label></div>'+
+      '<div class="bonus-fields '+((p.h!=null&&!koChipSet(m,p).some(c=>c[0]===p.h&&c[1]===p.a))?"show":"")+'" data-kbf="'+m.id+'"><label>'+m.home.f+'</label><input class="scorein" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" autocomplete="off" enterkeyhint="next" aria-label="'+esc(m.home.n)+' goals" data-ksh="'+m.id+'" value="'+(p.h!=null?p.h:"")+'"><span class="scoredash">–</span><input class="scorein" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" autocomplete="off" enterkeyhint="done" aria-label="'+esc(m.away.n)+' goals" data-ksa="'+m.id+'" value="'+(p.a!=null?p.a:"")+'"><label>'+m.away.f+'</label></div>'+
       '<div class="lockin'+((lockTs(m)-Date.now()-CLOCK_OFFSET)<7200000?' soon':'')+'" data-lockts="'+lockTs(m)+'">⏳ '+fmtLeft(lockTs(m)-Date.now()-CLOCK_OFFSET)+'</div>';
   }
   return '<div class="match-card '+(isQa?"qatar":"")+(m.tag==="final"?" final":"")+(isLive(m)&&!win?" live":"")+(win?" done":"")+(exK?" exact":"")+(armedHere?" pu-armed":"")+'" style="animation-delay:'+Math.min(idx*0.03,0.4)+'s">'+ribbon+
@@ -3022,7 +3046,7 @@ function rerenderChips(id){
   if(!host)return;
   host.innerHTML=chipRowHTML(id);
   const cb=host.querySelector(".chipb.custom");
-  if(cb)cb.addEventListener("click",()=>{const f=document.querySelector('[data-bf="'+id+'"]');if(f)f.classList.toggle("show");});
+  if(cb)cb.addEventListener("click",()=>{const f=document.querySelector('[data-bf="'+id+'"]');if(!f)return;f.classList.toggle("show");if(f.classList.contains("show")){const ih=f.querySelector("[data-sh]");if(ih)ih.focus();}});
   host.querySelectorAll(".chipb[data-cid]").forEach(b=>b.addEventListener("click",()=>chipPick(b.dataset.cid,+b.dataset.h,+b.dataset.a)));
 }
 function chipPick(id,h,a){
@@ -3036,13 +3060,83 @@ function chipPick(id,h,a){
   sndTick();
   queueSave();
 }
+/* ===== Score-input pass: knockout exact-score chips ====================
+   Knockout was the only player score surface with no one-tap path — group cards
+   had chips, knockout forced the keyboard on the biggest bonuses in the game.
+   Sets are keyed off the picked winner (not H/D/A like CHIP_SETS, since knockout
+   predictions store a team name in P.w); level scores stay in because a tie can
+   end 1–1 and be decided on penalties. Before a winner is picked, the neutral
+   CHIP_START trio keeps a single tap working. */
+const KO_CHIP_WIN=[[1,0],[2,0],[2,1],[3,1]];
+const KO_CHIP_LEVEL=[[1,1],[2,2]];
+function koChipSet(mv,P){
+  if(P&&P.w===mv.home.n)return KO_CHIP_WIN.concat(KO_CHIP_LEVEL);
+  if(P&&P.w===mv.away.n)return KO_CHIP_WIN.map(c=>[c[1],c[0]]).concat(KO_CHIP_LEVEL);
+  return CHIP_START;
+}
+function koChipRowHTML(id,mv){
+  if(!mv){const f=FXID[id];if(!f)return"";mv=fxView(f);}
+  const P=state.player.predictions[id]||{};
+  return koChipSet(mv,P).map(c=>'<button class="chipb'+((P.h===c[0]&&P.a===c[1])?' sel':'')+'" data-kcid="'+id+'" data-h="'+c[0]+'" data-a="'+c[1]+'">'+c[0]+'–'+c[1]+'</button>').join('')+'<button class="chipb custom" data-kbt="'+id+'">custom…</button>';
+}
+function bindKoChipRow(host){
+  host.querySelectorAll(".chipb[data-kcid]").forEach(b=>b.addEventListener("click",()=>koChipPick(b.dataset.kcid,+b.dataset.h,+b.dataset.a)));
+  const cb=host.querySelector(".chipb.custom");
+  if(cb)cb.addEventListener("click",()=>{const f=document.querySelector('[data-kbf="'+cb.dataset.kbt+'"]');if(!f)return;f.classList.toggle("show");if(f.classList.contains("show")){const ih=f.querySelector("[data-ksh]");if(ih)ih.focus();}});
+}
+function rerenderKoChips(id){
+  const host=document.querySelector('.chips[data-kch="'+id+'"]');
+  if(!host)return;
+  host.innerHTML=koChipRowHTML(id);
+  bindKoChipRow(host);
+}
+function koChipPick(id,h,a){
+  if(!state.player.predictions[id])state.player.predictions[id]={};
+  const P=state.player.predictions[id];
+  P.h=h;P.a=a; /* never writes P.o — knockout predictions are keyed on P.w */
+  if(h!==a){ /* a decisive final score decides who advances — set the winner too */
+    const f=FXID[id],mv=f?fxView(f):null;
+    if(mv&&mv.home.f&&mv.away.f){const w=h>a?mv.home.n:mv.away.n;if(P.w!==w){P.w=w;syncPickRow(id);}}
+  }
+  const ih=document.querySelector('[data-ksh="'+id+'"]'),ia=document.querySelector('[data-ksa="'+id+'"]');
+  if(ih)ih.value=h;if(ia)ia.value=a;
+  rerenderKoChips(id);rewardPick(id);syncProgress();updateChip();updateJump();
+  try{navigator.vibrate&&navigator.vibrate(8);}catch(e){}
+  sndTick();
+  queueSave();
+}
+/* Shared wiring for every score field pair (player cards + organizer editors):
+   digits-only sanitizer (type=text keeps the numeric keypad but nothing else blocks
+   letters/paste), select-on-focus so a prefilled value is replaced rather than
+   appended to, home→away auto-advance after the first digit (only while the away
+   box is still empty, so two-digit scores stay typeable), and Enter walks
+   home→away→commit. Registered before the save handlers at every call site so
+   saves always read sanitized values. */
+function wireScorePair(hi,ai,next){
+  [hi,ai].forEach(inp=>{
+    if(!inp)return;
+    inp.addEventListener("focus",()=>{requestAnimationFrame(()=>{try{inp.select();}catch(e){}});});
+    inp.addEventListener("input",()=>{
+      const v=inp.value.replace(/\D/g,"").slice(0,2);
+      inp.value=(+v>20)?"20":v;
+    });
+  });
+  if(!hi||!ai)return;
+  hi.addEventListener("input",()=>{if(hi.value.length&&ai.value==="")ai.focus();});
+  hi.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();ai.focus();}});
+  ai.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();if(next)next();else ai.blur();}});
+}
 function bindMatchEvents(){
   document.querySelectorAll(".picks").forEach(row=>{row.querySelectorAll(".pick").forEach(btn=>btn.addEventListener("click",()=>{
     if(btn.dataset.w!=null)pickWinner(row.dataset.mid,btn.dataset.w);
     else pickOutcome(row.dataset.mid,btn.dataset.o);
   }));});
-  document.querySelectorAll(".chipb.custom").forEach(b=>b.addEventListener("click",()=>{document.querySelector('[data-bf="'+b.dataset.bt+'"]').classList.toggle("show");}));
+  document.querySelectorAll(".chipb.custom[data-bt]").forEach(b=>b.addEventListener("click",()=>{const f=document.querySelector('[data-bf="'+b.dataset.bt+'"]');if(!f)return;f.classList.toggle("show");if(f.classList.contains("show")){const ih=f.querySelector("[data-sh]");if(ih)ih.focus();}}));
   document.querySelectorAll(".chipb[data-cid]").forEach(b=>b.addEventListener("click",()=>chipPick(b.dataset.cid,+b.dataset.h,+b.dataset.a)));
+  document.querySelectorAll(".chips[data-kch]").forEach(bindKoChipRow);
+  /* pair wiring first — its sanitizer must run before the debounced saves below */
+  document.querySelectorAll("[data-sh]").forEach(hi=>wireScorePair(hi,document.querySelector('[data-sa="'+hi.dataset.sh+'"]')));
+  document.querySelectorAll("[data-ksh]").forEach(hi=>wireScorePair(hi,document.querySelector('[data-ksa="'+hi.dataset.ksh+'"]')));
   document.querySelectorAll(".scorein").forEach(inp=>{
     const fire=()=>{const id=inp.dataset.sh||inp.dataset.sa;if(!id)return; /* group score; knockout inputs use data-ks* below */
       saveScore(id,document.querySelector('[data-sh="'+id+'"]').value,document.querySelector('[data-sa="'+id+'"]').value);};
@@ -3056,15 +3150,31 @@ function bindMatchEvents(){
     let t;inp.addEventListener("input",()=>{clearTimeout(t);t=setTimeout(fire,450);});
   });
 }
-/* Optional knockout score prediction — sets only h/a; the winner pick (w) is separate */
+/* Optional knockout score prediction. Each field parses independently and h/a only
+   persist once BOTH boxes are filled — the debounced save used to coerce the untouched
+   box to 0, so typing "2" and pausing silently stored a 2–0 the player never entered.
+   A decisive score also sets the winner (mirrors group saveScore deriving P.o at the
+   line below it); a level score leaves the winner pick alone. */
 function koSaveScore(id){
   const hi=document.querySelector('[data-ksh="'+id+'"]'),ai=document.querySelector('[data-ksa="'+id+'"]');
   if(!hi||!ai)return;
   if(!state.player.predictions[id])state.player.predictions[id]={};
   const P=state.player.predictions[id];
-  if(hi.value===""&&ai.value===""){delete P.h;delete P.a;}
-  else{P.h=Math.max(0,parseInt(hi.value,10)||0);P.a=Math.max(0,parseInt(ai.value,10)||0);}
+  const hv=hi.value===""?null:Math.max(0,Math.min(20,parseInt(hi.value,10)));
+  const av=ai.value===""?null:Math.max(0,Math.min(20,parseInt(ai.value,10)));
+  const had=P.h!=null&&P.a!=null;
+  let wChanged=false;
+  if(hv==null||av==null||isNaN(hv)||isNaN(av)){delete P.h;delete P.a;}
+  else{
+    P.h=hv;P.a=av;
+    if(hv!==av){ /* decisive final score decides who advances */
+      const f=FXID[id],mv=f?fxView(f):null;
+      if(mv&&mv.home.f&&mv.away.f){const w=hv>av?mv.home.n:mv.away.n;if(P.w!==w){P.w=w;wChanged=true;syncPickRow(id);toast(w+" set as your winner — from your "+hv+"–"+av);}}
+    }
+  }
+  rerenderKoChips(id);
   syncProgress();updateChip();updateJump();queueSave();
+  if(!had&&P.h!=null&&P.a!=null){rewardPick(id);if(!wChanged){const f=FXID[id];toast("Score saved · +"+(f?koBonus(f):2)+" bonus armed ⚡");}}
 }
 function syncPickRow(id){
   const p=state.player.predictions[id]||{};
@@ -3139,7 +3249,18 @@ function confettiBurst(){
 }
 function pickWinner(id,team){
   if(!state.player.predictions[id])state.player.predictions[id]={};
-  state.player.predictions[id].w=team;
+  const P=state.player.predictions[id];
+  P.w=team;
+  if(P.h!=null&&P.a!=null&&P.h!==P.a){ /* a decisive predicted score must match the new winner (level scores survive — pens can send either side through) */
+    const f=FXID[id],mv=f?fxView(f):null;
+    if(mv&&mv.home.f&&mv.away.f&&(P.h>P.a?mv.home.n:mv.away.n)!==team){
+      delete P.h;delete P.a;
+      const ih=document.querySelector('[data-ksh="'+id+'"]'),ia=document.querySelector('[data-ksa="'+id+'"]');
+      if(ih)ih.value="";if(ia)ia.value="";
+      toast("Exact score cleared — it didn’t match your new winner");
+    }
+  }
+  rerenderKoChips(id);
   syncPickRow(id);rewardPick(id);syncProgress();updateChip();updateJump();
   if(state.view==="bracket")renderBracket();
   try{navigator.vibrate&&navigator.vibrate(8);}catch(e){}
@@ -4040,11 +4161,15 @@ function renderResultsEditor(){
     const lf=(!r&&typeof liveFor==="function")?liveFor(m):null;
     const ph=(lf&&lf.done&&lf.hs!=null)?lf.hs:"",pa=(lf&&lf.done&&lf.as!=null)?lf.as:"";
     html+='<div class="res-row"><div class="rt">'+m.home.f+' '+esc(m.home.n)+' <span style="color:var(--faint)">v</span> '+esc(m.away.n)+' '+m.away.f+'</div>'+
-      '<input class="si" type="number" min="0" max="20" inputmode="numeric" data-rh="'+m.id+'" value="'+(r?r.h:ph)+'">'+
-      '<input class="si" type="number" min="0" max="20" inputmode="numeric" data-ra="'+m.id+'" value="'+(r?r.a:pa)+'">'+
+      '<input class="si" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" autocomplete="off" enterkeyhint="next" data-rh="'+m.id+'" value="'+(r?r.h:ph)+'">'+
+      '<input class="si" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" autocomplete="off" enterkeyhint="next" data-ra="'+m.id+'" value="'+(r?r.a:pa)+'">'+
       '<span class="saved" data-rs="'+m.id+'">'+(r?"✓":"")+'</span></div>';
   });
   host.innerHTML=html;
+  host.querySelectorAll("[data-rh]").forEach(hi=>{ /* pair wiring first — sanitizer before the change-save below; Enter on the away box hops to the next row */
+    const ai=host.querySelector('[data-ra="'+hi.dataset.rh+'"]');
+    wireScorePair(hi,ai,()=>{ai.blur();const all=[...host.querySelectorAll("[data-rh]")],nx=all[all.indexOf(hi)+1];if(nx)nx.focus();});
+  });
   host.querySelectorAll(".si").forEach(inp=>inp.addEventListener("change",()=>{
     const id=inp.dataset.rh||inp.dataset.ra;
     saveResult(id,document.querySelector('[data-rh="'+id+'"]').value,document.querySelector('[data-ra="'+id+'"]').value);
@@ -4052,8 +4177,9 @@ function renderResultsEditor(){
   if(document.getElementById("pp-match"))renderPicks();
 }
 async function saveResult(id,h,a,quiet){
-  if(h===""||a===""){delete state.results[id];await orgSet("wc:results",state.results);const m=document.querySelector('[data-rs="'+id+'"]');if(m)m.textContent="";updateChip();return false;}
-  state.results[id]={h:Math.max(0,parseInt(h,10)||0),a:Math.max(0,parseInt(a,10)||0)};
+  if(h===""&&a===""){delete state.results[id];await orgSet("wc:results",state.results);const m=document.querySelector('[data-rs="'+id+'"]');if(m)m.textContent="";updateChip();return false;}
+  if(h===""||a==="")return false; /* mid-entry — one box filled; wait for the second before touching the saved result */
+  state.results[id]={h:Math.max(0,Math.min(20,parseInt(h,10)||0)),a:Math.max(0,Math.min(20,parseInt(a,10)||0))};
   const ok=await orgSet("wc:results",state.results);
   const m=document.querySelector('[data-rs="'+id+'"]');
   if(!ok){delete state.results[id];if(m)m.textContent="✗";toast("⚠ Save failed — check connection and retry");return false;}
@@ -4276,15 +4402,16 @@ function renderKnockoutEditor(host,rnd){
       (t.a?'<option value="'+esc(t.a)+'"'+(r&&r.w===t.a?' selected':'')+'>'+esc(t.a)+'</option>':'')+
       '</select><span class="saved">'+(r&&r.w?"✓":"")+'</span></div>'+
       '<div class="krow" style="margin-top:5px;align-items:center;gap:7px"><span style="font-size:10.5px;color:var(--faint);min-width:74px">Final score</span>'+
-      '<input class="input ksel" type="number" min="0" max="20" inputmode="numeric" data-krh="'+m.id+'" value="'+(r&&r.h!=null?r.h:"")+'"'+((t.h&&t.a)?'':' disabled')+' style="max-width:60px;text-align:center">'+
+      '<input class="input ksel" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" autocomplete="off" enterkeyhint="next" data-krh="'+m.id+'" value="'+(r&&r.h!=null?r.h:"")+'"'+((t.h&&t.a)?'':' disabled')+' style="max-width:60px;text-align:center">'+
       '<span style="color:var(--faint)">–</span>'+
-      '<input class="input ksel" type="number" min="0" max="20" inputmode="numeric" data-kra="'+m.id+'" value="'+(r&&r.a!=null?r.a:"")+'"'+((t.h&&t.a)?'':' disabled')+' style="max-width:60px;text-align:center">'+
+      '<input class="input ksel" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" autocomplete="off" enterkeyhint="done" data-kra="'+m.id+'" value="'+(r&&r.a!=null?r.a:"")+'"'+((t.h&&t.a)?'':' disabled')+' style="max-width:60px;text-align:center">'+
       '<span style="font-size:10px;color:var(--faint)">+'+koBonus(m)+' bonus</span><span class="saved" data-krs="'+m.id+'">'+(r&&r.h!=null?"✓":"")+'</span></div>'+
       '<div style="font-size:9.5px;color:var(--faint);margin-top:3px">Score after extra time if the tie went there · penalties don’t count</div></div>';
   });
   host.innerHTML=html;
   host.querySelectorAll('[data-kh],[data-ka]').forEach(s=>s.addEventListener("change",()=>orgSetKTeam(s.dataset.kh||s.dataset.ka)));
   host.querySelectorAll('[data-kw]').forEach(s=>s.addEventListener("change",()=>orgSetKWinner(s.dataset.kw)));
+  host.querySelectorAll('[data-krh]').forEach(hi=>wireScorePair(hi,host.querySelector('[data-kra="'+hi.dataset.krh+'"]'))); /* pair wiring first — sanitizer before the change-save below */
   host.querySelectorAll('[data-krh],[data-kra]').forEach(s=>s.addEventListener("change",()=>orgSetKScore(s.dataset.krh||s.dataset.kra)));
 }
 async function orgSetKTeam(id){
@@ -4314,10 +4441,11 @@ async function orgSetKWinner(id){
 async function orgSetKScore(id){
   const hi=document.querySelector('[data-krh="'+id+'"]'),ai=document.querySelector('[data-kra="'+id+'"]');
   if(!hi||!ai)return;
+  if((hi.value==="")!==(ai.value===""))return; /* mid-entry — one box filled; wait for the second before writing an official result */
   const cur=state.results[id]||{};
   delete cur.h2;delete cur.a2;                 // legacy two-score fields no longer used
   if(hi.value===""&&ai.value===""){delete cur.h;delete cur.a;}
-  else{cur.h=Math.max(0,parseInt(hi.value,10)||0);cur.a=Math.max(0,parseInt(ai.value,10)||0);}
+  else{cur.h=Math.max(0,Math.min(20,parseInt(hi.value,10)||0));cur.a=Math.max(0,Math.min(20,parseInt(ai.value,10)||0));}
   if(cur.w==null&&cur.h==null&&cur.a==null)delete state.results[id];else state.results[id]=cur;
   const ok=await orgSet("wc:results",state.results);
   const m=document.querySelector('[data-krs="'+id+'"]');if(m)m.textContent=(cur.h!=null?"✓":"");
