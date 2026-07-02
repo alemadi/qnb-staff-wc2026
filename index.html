@@ -2574,7 +2574,7 @@ function renderMatches(){
   rest.forEach(m=>{
     const k=dayKey(m.ko);if(!groups[k]){groups[k]=[];order.push(k);}groups[k].push(m);
   });
-  let html=modHero(nowL),idx=0;
+  let html=modHero(nowL,list),idx=0;
   if(liveNow.length){
     html+='<div class="daygroup"><div class="dayhdr soonhdr livehdr"><span class="dot soon livedot"></span><h3>🔴 Live now</h3><span class="ln"></span></div>';
     liveNow.forEach(m=>{const v=fxView(m);html+=m.kn?(koReady(m)?koMatchCard(v,idx++):knockoutCard(v,idx++)):matchCard(v,idx++);});
@@ -2609,9 +2609,10 @@ function gScorePts(p,res){
 /* "Match of the Day" hero — a spotlight above the list when nothing is live and a
    fixture kicks off within 72h. Own-data only (seal-safe): no consensus, no other
    players' picks, no pick buttons — tap scrolls to the real card. */
-function modHero(now){
+function modHero(now,pool){
   if(!state.player||FIXTURES.some(f=>isLive(f)))return "";
-  const fut=FIXTURES.filter(m=>{const t=new Date(m.ko).getTime();return t>now&&t-now<=72*36e5&&!isFinished(m);});
+  /* pick the spotlight from the currently filtered list, so e.g. Arab Teams never heroes a non-Arab match */
+  const fut=(pool||FIXTURES).filter(m=>{const t=new Date(m.ko).getTime();return t>now&&t-now<=72*36e5&&!isFinished(m);});
   if(!fut.length)return "";
   fut.sort((a,b)=>new Date(a.ko)-new Date(b.ko));
   const dk=dayKey(fut[0].ko);
