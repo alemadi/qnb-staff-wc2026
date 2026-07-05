@@ -2358,16 +2358,26 @@ async function orgDel(k){return orgRPC("del",k);}
    organizer device) confirmed since this tab loaded — a long-open tab must not silently delete
    them. We only ADD keys this tab has never seen (state.resultsSeen), so the organizer's own
    edits and deletions always win, matching the robot's "organizer supremacy" rule. */
+/* state.resultsSeen = the keys the server last held for this tab. Fold in any result NOT in
+   that set and not already local — i.e. new robot/other-device confirmations — while the
+   organizer's own edits and deletions win. Retries the read and fails CLOSED (returns false)
+   if the server can't be read, so a transient blip can't make us blind-overwrite (and wipe)
+   robot-confirmed results. */
 async function orgSyncResults(){
-  try{const srv=await getJSON("wc:results",true);
-    if(srv&&typeof srv==="object"){
-      if(!state.resultsSeen)state.resultsSeen=new Set(Object.keys(state.results));
-      for(const k in srv){if(!state.resultsSeen.has(k)&&!(k in state.results))state.results[k]=srv[k];}
-    }}catch(e){}
-  if(!state.resultsSeen)state.resultsSeen=new Set();
-  Object.keys(state.results).forEach(k=>state.resultsSeen.add(k));
+  let srv=null;
+  for(let i=0;i<3;i++){srv=await getJSON("wc:results",true);if(srv&&typeof srv==="object")break;}
+  const expectServer=(Object.keys(state.results).length>0)||(state.resultsSeen&&state.resultsSeen.size>0);
+  if((srv==null||typeof srv!=="object")&&expectServer)return false;   // couldn't read the server — don't blind-overwrite it
+  if(!state.resultsSeen)state.resultsSeen=new Set(Object.keys(state.results));
+  if(srv&&typeof srv==="object")for(const k in srv){if(!state.resultsSeen.has(k)&&!(k in state.results))state.results[k]=srv[k];}
+  return true;
 }
-async function orgSaveResults(){await orgSyncResults();return orgSet("wc:results",state.results);}
+async function orgSaveResults(){
+  if(!(await orgSyncResults())){toast("⚠ Couldn’t reach the database — not saved. Check connection and retry");return false;}
+  const ok=await orgSet("wc:results",state.results);
+  if(ok)state.resultsSeen=new Set(Object.keys(state.results));   // server now holds exactly these keys; a later robot re-confirm of a removed tie can fold back in
+  return ok;
+}
 async function getJSON(k,sh){const v=await sget(k,sh);if(v==null)return null;try{return typeof v==="string"?JSON.parse(v):v;}catch(e){return null;}}
 async function setJSON(k,v,sh){return await sset(k,JSON.stringify(v),sh);}
 /* Bulk fetch: all records under a prefix in ONE query (leaderboard at scale) */
@@ -4474,10 +4484,10 @@ async function orgSetKWinner(id){
   const cur=state.results[id]||{};
   if(!v){delete cur.w;}else{cur.w=v;}
   if(cur.w==null&&cur.h==null&&cur.a==null)delete state.results[id];else state.results[id]=cur;
-  await orgSaveResults();
+  const ok=await orgSaveResults();
   await propagate();
   updateChip();renderResultsEditor();
-  toast(v?(v+" through — next round updated 🏆"):"Winner cleared");
+  toast(!ok?"⚠ Couldn’t save — retry":(v?(v+" through — next round updated 🏆"):"Winner cleared"));
 }
 /* Organizer records the knockout FINAL score (after extra time if played; penalties excluded)
    for the exact-score bonus. Preserves the winner. */
@@ -4496,9 +4506,9 @@ async function orgSetKScore(id){
   if(cur.w==null&&cur.h==null&&cur.a==null)delete state.results[id];else state.results[id]=cur;
   const ok=await orgSaveResults();
   const m=document.querySelector('[data-krs="'+id+'"]');if(m)m.textContent=(cur.h!=null?"✓":"");
-  if(ok&&derived){await propagate();renderResultsEditor();}
+  if(ok&&cur.w!=null){const ws=document.querySelector('[data-kw="'+id+'"]');if(ws&&ws.value!==cur.w)ws.value=cur.w;await propagate();}  /* advance the bracket (also on a retry after a failed save) + reflect the derived winner without a disruptive full re-render */
   updateChip();
-  toast(ok?(derived?(cur.w+" through — winner set from the score 🏆"):"Final score saved · bonus live ✓"):"⚠ Save failed — retry");
+  toast(ok?(derived?(cur.w+" through — winner set from the score 🏆"):"Final score saved · bonus live ✓"):"⚠ Couldn’t save — retry");
 }
 /* Which team a feeder tie sends forward: its winner ("W") or its loser ("L", third-place) */
 function feedTeam(fid,take){
