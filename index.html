@@ -2354,6 +2354,20 @@ async function orgRPC(op,key,obj){
 }
 async function orgSet(k,obj){return orgRPC("set",k,obj);}
 async function orgDel(k){return orgRPC("del",k);}
+/* Before writing the whole wc:results blob back, fold in any results the robot (or another
+   organizer device) confirmed since this tab loaded — a long-open tab must not silently delete
+   them. We only ADD keys this tab has never seen (state.resultsSeen), so the organizer's own
+   edits and deletions always win, matching the robot's "organizer supremacy" rule. */
+async function orgSyncResults(){
+  try{const srv=await getJSON("wc:results",true);
+    if(srv&&typeof srv==="object"){
+      if(!state.resultsSeen)state.resultsSeen=new Set(Object.keys(state.results));
+      for(const k in srv){if(!state.resultsSeen.has(k)&&!(k in state.results))state.results[k]=srv[k];}
+    }}catch(e){}
+  if(!state.resultsSeen)state.resultsSeen=new Set();
+  Object.keys(state.results).forEach(k=>state.resultsSeen.add(k));
+}
+async function orgSaveResults(){await orgSyncResults();return orgSet("wc:results",state.results);}
 async function getJSON(k,sh){const v=await sget(k,sh);if(v==null)return null;try{return typeof v==="string"?JSON.parse(v):v;}catch(e){return null;}}
 async function setJSON(k,v,sh){return await sset(k,JSON.stringify(v),sh);}
 /* Bulk fetch: all records under a prefix in ONE query (leaderboard at scale) */
@@ -2426,7 +2440,7 @@ function dayKey(iso){return fDayKey.format(new Date(iso));}
 function locked(iso){return new Date(iso).getTime()<=Date.now()+CLOCK_OFFSET;}
 function lockTs(m){const off=(m.round==="MD1")?0:LOCK_HRS*3600*1000;return new Date(m.ko).getTime()-off;}
 function lockedM(m){return lockTs(m)<=Date.now()+CLOCK_OFFSET;}
-function isLive(m){if(state.results[m.id])return false;if(m.kn&&!koReady(m))return false;/* a knockout tie can't be live while its teams are still placeholder slots */const t=new Date(m.ko).getTime(),n=Date.now()+CLOCK_OFFSET;return n>=t&&n-t<150*60000;}
+function isLive(m){if(state.results[m.id])return false;if(m.kn&&!koReady(m))return false;/* a knockout tie can't be live while its teams are still placeholder slots */const t=new Date(m.ko).getTime(),n=Date.now()+CLOCK_OFFSET;return n>=t&&n-t<(m.kn?210:150)*60000;}
 function fmtLeft(ms){
   if(ms<=0)return "locking…";
   const mins=Math.floor(ms/60000),d=Math.floor(mins/1440),h=Math.floor((mins%1440)/60),mm=mins%60;
@@ -3850,7 +3864,7 @@ async function rivalHTML(s,st){
 async function unlockOrg(){
   const v=document.getElementById("org-pass").value;
   const res=await rpc("org_check",{p_code:v});
-  if(res.ok&&res.j===true){state.org=true;state.orgCode=v;await setJSON("wc:org",Date.now(),false);await propagate();showOrg();toast("Organizer unlocked 🔓 — this tab only; relocks on reload");}
+  if(res.ok&&res.j===true){state.org=true;state.orgCode=v;await setJSON("wc:org",Date.now(),false);await orgSyncResults();await propagate();showOrg();toast("Organizer unlocked 🔓 — this tab only; relocks on reload");}
   else if(!res.ok)toast("Couldn't reach the database — try again");
   else toast("Incorrect access code");
 }
@@ -3884,7 +3898,7 @@ function showOrg(){
       oc.addEventListener("change",async()=>{
         if(oc.value){if(!confirm("Set "+oc.value+" as World Champion and award +"+CHAMP_PTS+" pts to correct picks?")){oc.value=state.results._champ||"";return;}state.results._champ=oc.value;}
         else delete state.results._champ;
-        await orgSet("wc:results",state.results);updateChip();
+        await orgSaveResults();updateChip();
         toast(oc.value?("Champion set: "+oc.value+" 🏆"):"Champion result cleared");
       });
     }
@@ -4206,10 +4220,10 @@ function renderResultsEditor(){
   if(document.getElementById("pp-match"))renderPicks();
 }
 async function saveResult(id,h,a,quiet){
-  if(h===""&&a===""){delete state.results[id];await orgSet("wc:results",state.results);const m=document.querySelector('[data-rs="'+id+'"]');if(m)m.textContent="";updateChip();return false;}
+  if(h===""&&a===""){delete state.results[id];await orgSaveResults();const m=document.querySelector('[data-rs="'+id+'"]');if(m)m.textContent="";updateChip();return false;}
   if(h===""||a==="")return false; /* mid-entry — one box filled; wait for the second before touching the saved result */
   state.results[id]={h:Math.max(0,Math.min(20,parseInt(h,10)||0)),a:Math.max(0,Math.min(20,parseInt(a,10)||0))};
-  const ok=await orgSet("wc:results",state.results);
+  const ok=await orgSaveResults();
   const m=document.querySelector('[data-rs="'+id+'"]');
   if(!ok){delete state.results[id];if(m)m.textContent="✗";toast("⚠ Save failed — check connection and retry");return false;}
   if(m)m.textContent="✓";
@@ -4449,7 +4463,7 @@ async function orgSetKTeam(id){
   if(h&&a&&h===a){toast("Pick two different teams");renderResultsEditor();return;}
   if(h||a)state.kteams[id]={h:h,a:a};else delete state.kteams[id];
   const r=state.results[id];
-  if(r&&r.w&&r.w!==h&&r.w!==a){delete state.results[id];await orgSet("wc:results",state.results);}
+  if(r&&r.w&&r.w!==h&&r.w!==a){delete state.results[id];await orgSaveResults();}
   await orgSet("wc:kteams",state.kteams);
   await propagate();
   updateChip();renderResultsEditor();
@@ -4460,7 +4474,7 @@ async function orgSetKWinner(id){
   const cur=state.results[id]||{};
   if(!v){delete cur.w;}else{cur.w=v;}
   if(cur.w==null&&cur.h==null&&cur.a==null)delete state.results[id];else state.results[id]=cur;
-  await orgSet("wc:results",state.results);
+  await orgSaveResults();
   await propagate();
   updateChip();renderResultsEditor();
   toast(v?(v+" through — next round updated 🏆"):"Winner cleared");
@@ -4475,11 +4489,16 @@ async function orgSetKScore(id){
   delete cur.h2;delete cur.a2;                 // legacy two-score fields no longer used
   if(hi.value===""&&ai.value===""){delete cur.h;delete cur.a;}
   else{cur.h=Math.max(0,Math.min(20,parseInt(hi.value,10)||0));cur.a=Math.max(0,Math.min(20,parseInt(ai.value,10)||0));}
+  /* A decisive knockout final score has no draws — derive the winner so a score-only entry still
+     advances the bracket. A level score means it went to penalties: that winner needs the dropdown. */
+  const kt=state.kteams[id]||{};let derived=false;
+  if(cur.w==null&&cur.h!=null&&cur.a!=null&&cur.h!==cur.a&&kt.h&&kt.a){cur.w=(cur.h>cur.a?kt.h:kt.a);derived=true;}
   if(cur.w==null&&cur.h==null&&cur.a==null)delete state.results[id];else state.results[id]=cur;
-  const ok=await orgSet("wc:results",state.results);
+  const ok=await orgSaveResults();
   const m=document.querySelector('[data-krs="'+id+'"]');if(m)m.textContent=(cur.h!=null?"✓":"");
+  if(ok&&derived){await propagate();renderResultsEditor();}
   updateChip();
-  toast(ok?"Final score saved · bonus live ✓":"⚠ Save failed — retry");
+  toast(ok?(derived?(cur.w+" through — winner set from the score 🏆"):"Final score saved · bonus live ✓"):"⚠ Save failed — retry");
 }
 /* Which team a feeder tie sends forward: its winner ("W") or its loser ("L", third-place) */
 function feedTeam(fid,take){
@@ -4502,7 +4521,7 @@ async function propagate(){
     if(r&&r.w&&cur.h&&cur.a&&r.w!==cur.h&&r.w!==cur.a){delete state.results[id];rch=true;}
   }
   if(kch)await orgSet("wc:kteams",state.kteams);
-  if(rch)await orgSet("wc:results",state.results);
+  if(rch)await orgSaveResults();
   return kch||rch;
 }
 function toggleDemo(){
@@ -4638,7 +4657,7 @@ function renderPulse(){
     const sc=(le&&le.hs!=null&&le.state!=="pre")?('<b class="pb-score">'+le.hs+'\u2013'+le.as+'</b>'):'v';
     const done=!!(le&&le.done);
     const ck=done?'FT':((le&&le.state==="in"&&le.clock)?le.clock:(min+'\u2032'));
-    el.innerHTML='<span class="pb-dot'+(done?' idle':(min>=80?' final-push':''))+'"></span><b>'+(done?'FT':'LIVE')+'</b>&nbsp;'+(v.home.f?v.home.f+' ':'')+esc(v.home.n)+' '+sc+' '+esc(v.away.n)+(v.away.f?' '+v.away.f:'')+(done?'':' \u00b7 '+esc(ck))+(live.length>1?'<span class="pb-more">+'+(live.length-1)+' more live</span>':'')+'<a class="pb-watch" href="watch.html" onclick="event.stopPropagation()">\ud83d\udcfa where to watch</a><div class="pb-stakes" id="pbstk" style="display:none"></div>';
+    el.innerHTML='<span class="pb-dot'+(done?' idle':(min>=80?' final-push':''))+'"></span><b>'+(done?'FT':'LIVE')+'</b>&nbsp;'+(v.home.f?v.home.f+' ':'')+esc(v.home.n)+' '+sc+' '+esc(v.away.n)+(v.away.f?' '+v.away.f:'')+(done?((v.kn&&le&&le.wname&&le.hs===le.as)?' \u00b7 '+esc(le.wname)+' won':''):' \u00b7 '+esc(ck))+(live.length>1?'<span class="pb-more">+'+(live.length-1)+' more live</span>':'')+'<a class="pb-watch" href="watch.html" onclick="event.stopPropagation()">\ud83d\udcfa where to watch</a><div class="pb-stakes" id="pbstk" style="display:none"></div>';
     el.className=done?"pulsebar":"pulsebar live";el.style.display="flex";el.dataset.pm=m.id; /* FT drops the live frame; tap jumps to this card */
     if(le)fillStakes(v,le);
     return;
@@ -5410,7 +5429,7 @@ function drawCardTrophy(x,cx,cy,s){
 }
 
 /* ===== live scores — ESPN public World Cup feed; display-only; fails silent ===== */
-const LIVEF={on:true,fails:0,ev:[],ours:null};
+const LIVEF={on:true,fails:0,ev:[],ours:null,retryAt:0};
 const TEAM_ALIAS={"unitedstates":"USA","turkey":"T\u00fcrkiye","czechrepublic":"Czechia","bosniaandherzegovina":"Bosnia & H.","bosniaherzegovina":"Bosnia & H.","cotedivoire":"Ivory Coast","capeverdeislands":"Cape Verde","caboverde":"Cape Verde","congodr":"DR Congo","democraticrepublicofthecongo":"DR Congo","iriran":"Iran","korearepublic":"South Korea"};
 function tnorm(x){return (x||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]/g,"");}
 function ourTeam(n){
@@ -5418,7 +5437,7 @@ function ourTeam(n){
   const t=tnorm(n);return TEAM_ALIAS[t]||LIVEF.ours[t]||null;
 }
 async function fetchLive(){
-  if(!LIVEF.on)return;
+  if(!LIVEF.on){if(LIVEF.retryAt&&Date.now()>LIVEF.retryAt){LIVEF.on=true;LIVEF.fails=0;LIVEF.retryAt=0;}else return;}  /* auto-recover ~5 min after a run of ESPN errors */
   try{
     const f=d=>d.toISOString().slice(0,10).replace(/-/g,"");
     const a=new Date(Date.now()-12*36e5),b=new Date(Date.now()+36*36e5);
@@ -5429,28 +5448,30 @@ async function fetchLive(){
       const c=(e.competitions||[])[0]||{};let H=null,A=null;
       (c.competitors||[]).forEach(t=>{
         const o={name:ourTeam(t.team&&(t.team.displayName||t.team.name)),
-                 score:(t.score!=null&&t.score!=="")?+t.score:null};
+                 score:(t.score!=null&&t.score!=="")?+t.score:null,win:!!(t.winner)};
         if(t.homeAway==="home")H=o;else A=o;});
       const st=(c.status||{}).type||{};
       return {ko:Date.parse(e.date),H:H||{},A:A||{},state:st.state||"pre",done:!!st.completed,
-              clock:String((c.status||{}).displayClock||"").replace(/'+$/,"\u2032")};
+              clock:String((c.status||{}).displayClock||"").replace(/'+$/,"\u2032"),
+              wname:(H&&H.win?H.name:(A&&A.win?A.name:null))};
     }).filter(e=>!isNaN(e.ko));
     LIVEF.fails=0;
     liveDecorate();renderPulse();
-  }catch(e){if(++LIVEF.fails>=3)LIVEF.on=false;}
+  }catch(e){if(++LIVEF.fails>=3){LIVEF.on=false;LIVEF.retryAt=Date.now()+5*60e3;}}
 }
 function liveFor(m){
   if(!LIVEF.on||!LIVEF.ev.length)return null;
   const ko=new Date(m.ko).getTime();let best=null;
+  const win=m.kn?180*60e3:15*60e3;  /* knockout kickoff estimates can drift + ET/pens run long; teams disambiguate the tie */
   for(const e of LIVEF.ev){
-    if(Math.abs(e.ko-ko)>15*60e3)continue;
+    if(Math.abs(e.ko-ko)>win)continue;
     if(e.H.name===m.home.n&&e.A.name===m.away.n)
-      return {state:e.state,done:e.done,clock:e.clock,hs:e.H.score,as:e.A.score};
+      return {state:e.state,done:e.done,clock:e.clock,hs:e.H.score,as:e.A.score,wname:e.wname};
     if(e.H.name===m.away.n&&e.A.name===m.home.n)
-      return {state:e.state,done:e.done,clock:e.clock,hs:e.A.score,as:e.H.score};
-    if(!best&&(e.H.name===m.home.n||e.A.name===m.away.n||e.H.name===m.away.n||e.A.name===m.home.n)){
+      return {state:e.state,done:e.done,clock:e.clock,hs:e.A.score,as:e.H.score,wname:e.wname};
+    if(!best&&Math.abs(e.ko-ko)<=15*60e3&&(e.H.name===m.home.n||e.A.name===m.away.n||e.H.name===m.away.n||e.A.name===m.home.n)){
       const sw=(e.H.name===m.away.n||e.A.name===m.home.n);
-      best={state:e.state,done:e.done,clock:e.clock,hs:sw?e.A.score:e.H.score,as:sw?e.H.score:e.A.score};
+      best={state:e.state,done:e.done,clock:e.clock,hs:sw?e.A.score:e.H.score,as:sw?e.H.score:e.A.score,wname:e.wname};
     }
   }
   return best;
@@ -5461,7 +5482,7 @@ function midHTML(m,res){
   if(le&&le.state==="in"&&le.hs!=null&&lockedM(m))
     return '<div class="final-score livescore">'+le.hs+'\u2013'+le.as+'</div><div class="final-tag live-tag"><span class="pulse"></span>'+esc(le.clock||"LIVE")+'</div>';
   if(le&&le.done&&le.hs!=null&&lockedM(m))
-    return '<div class="final-score" style="opacity:.82">'+le.hs+'\u2013'+le.as+'</div><div class="final-tag">FT \u00b7 unofficial</div>';
+    return '<div class="final-score" style="opacity:.82">'+le.hs+'\u2013'+le.as+'</div><div class="final-tag">FT \u00b7 unofficial'+((m.kn&&le.wname&&le.hs===le.as)?' \u00b7 '+esc(le.wname)+' won':'')+'</div>';
   return '<div class="vs">VS</div><div class="kotime">'+fmtTime(m.ko)+'</div><div class="koday">'+fmtWk(m.ko)+'</div>';
 }
 function liveDecorate(){
@@ -6305,7 +6326,7 @@ function bindSwipeGestures(){
 }
 function liveTick(){
   const now=Date.now()+CLOCK_OFFSET;
-  const active=FIXTURES.some(m=>{const k=new Date(m.ko).getTime();return now>k-15*60e3&&now<k+150*60e3;});
+  const active=FIXTURES.some(m=>{const k=new Date(m.ko).getTime();return now>k-15*60e3&&now<k+(m.kn?210:150)*60e3;});
   if(active)fetchLive();
   if(active&&state.view==="leaderboard"&&LB_MODE==="people"&&!state.demo)renderLeaderboard(); /* board heartbeat: only while a match is live, so odo count-up fires when results land — never replays the board on quiet weeks (60s cadence, cached) */
   /* MATCHNIGHT F1.5 — Room heartbeat: patch score/clock textContent from the LIVE cache only.
@@ -6445,6 +6466,7 @@ function tvLoop(){
 
 (async function init(){
   state.results=await getJSON("wc:results",true)||{};
+  state.resultsSeen=new Set(Object.keys(state.results));     /* keys this tab has ever seen — so an org save can't wipe robot results it never loaded */
   state.kteams=await getJSON("wc:kteams",true)||{};
   state.puLive=!!(await getJSON("wc:powerups_live",true));   /* WAVE B launch gate — off until the organizer flips it (see runbook) */
   state.org=false; /* org actions are server-verified per call — unlock fresh each load */

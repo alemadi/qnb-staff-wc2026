@@ -5,6 +5,23 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-07-05 (Doha) — Knockout hardening: no stale-tab result wipes, score-only entries advance the bracket, live layer survives ET/penalties
+
+**Commits:** this commit (`index.html` + changelog). **Frontend only — no DB / scoring-math / sync-protocol change.** Seal-safe.
+
+**Why (readiness audit follow-ups, verified against the live project):** three concrete knockout-stage risks. (A) The client loads `wc:results` once at boot and every organizer save posts the whole blob back with no server-side merge — so a long-open organizer tab (worst case: the champion-set after the Final, when the most results exist and the robot has stopped polling) could silently DELETE results the pg_cron robot confirmed after the tab loaded. (B) `orgSetKScore` wrote `h/a` but not the winner, so entering a knockout final score without also touching the Winner dropdown produced a scored-but-not-advanced tie. (C) The live-score layer never read ESPN's `winner` flag and capped its live window at 150 min, so a penalty-decided tie showed a bare level score with no indication who advanced, and the pulse/Room/card froze mid-shootout on the marquee matches.
+
+**What changed — `index.html`:**
+- **(A) Merge-before-write.** New `orgSyncResults()` refetches `wc:results` and folds in any result this tab has never seen (tracked in `state.resultsSeen`), then `orgSaveResults()` writes; every organizer `wc:results` write now routes through it (winner, score, team change, champion, propagate, group save). Only *unseen* keys are added, so the organizer's own edits **and deletions** still win — matching the robot's "organizer supremacy" rule. Also syncs on organizer unlock. Net: a stale tab can no longer wipe robot-confirmed QF/SF/Final results.
+- **(B) Winner from a decisive score.** `orgSetKScore` now derives the winner from a decisive final score (`h≠a`, no draws in a knockout) using the tie's teams, then propagates the bracket — so a score-only entry still advances. A level score (penalties) still needs the explicit Winner dropdown; a later dropdown change still overrides.
+- **(C) Live layer for ET/penalties.** `fetchLive` reads `competitor.winner`; a level FT knockout now shows "· <team> won" on the card mid-tile and the pulse bar. The live/poll window widens to 210 min and the kickoff-match window to 180 min for knockouts (the fuzzy single-name fallback stays at 15 min so it can't mis-attach), and the live layer auto-recovers ~5 min after a run of ESPN errors instead of staying dark for the session.
+
+**Verified:** `node --check` clean; a VM harness running the real functions confirms — (A) `orgSyncResults` adds robot-confirmed keys, never resurrects an organizer deletion, preserves local edits, and a fresh session adopts unseen results; (C) knockouts match across the wide window while group games stay tight, and the ESPN winner name flows through. The Wave-B launch gate from the prior commit still holds (OFF scores the base ladder, ON doubles). No player currently holds power-up chips; group + R32 + partial R16 results already recorded, robot cron active.
+
+**Rollback:** `git revert <this commit>` — restores the single boot-load of `state.results` with whole-blob organizer writes, the winner-only-via-dropdown entry, and the 150-min group-era live window. Frontend-only; no DB change to reverse.
+
+---
+
 ## 2026-07-05 (Doha) — WAVE B launch gate: a master switch so the power-up UI/scoring can't get ahead of the SQL deploy
 
 **Commits:** this commit (`index.html` + `sql/protect.sql` + `sql/standings.sql` + changelog). **Frontend behaviour gate + two repo-only SQL edits (NOT yet deployed).** Seal-safe: no live DB scoring change; the live `standings()` / `save_picks` are untouched by this commit.
