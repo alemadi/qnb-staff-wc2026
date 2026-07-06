@@ -319,9 +319,9 @@ if(!clash.jumpOverlap) pass('FAB clears the "next unpicked" button'); else fail(
 /* persistent banner markets the current feature set with tappable deep-link rows; the FAB still owns the tray */
 const xb = await pg.evaluate(()=>{ const b=document.getElementById('xbanner');
   return { shown: !!(b && b.style.display!=='none'),
-    copy: !!(b && b.textContent.includes('Stats for nerds') && b.textContent.includes('card deck')),
+    copy: !!(b && b.textContent.includes('The Lab') && b.textContent.includes('card deck')),   /* renamed from 'Stats for nerds' 2026-07-06 */
     links: !!(b && b.querySelector('.xb-feat[onclick*="xbGoMode"]') && b.querySelector('.xb-feat[onclick*="openShareTray"]') && b.querySelector('.xb-feat[onclick*="power-up"]')) }; });
-if(xb.shown && xb.copy && xb.links) pass('banner shows every visit, markets nerd stats + the card deck, rows deep-link'); else fail('banner: '+JSON.stringify(xb));
+if(xb.shown && xb.copy && xb.links) pass('banner shows every visit, markets The Lab + the card deck, rows deep-link'); else fail('banner: '+JSON.stringify(xb));
 await pg.screenshot({ path: `${SCRATCH}/live-header.png`, clip:{x:0,y:0,width:1280,height:300} });
 const tray = await pg.evaluate(async ()=>{ try{
   /* earlier tests ran consensusFull() over the 12 seeded blobs, dropping QF counts below

@@ -450,10 +450,10 @@ const got = await pg.evaluate(()=>{
 console.log(JSON.stringify(got,null,1).slice(0,3600));
 
 // ---- assertions ----
-if(got.onPill && got.onPill.includes('Nerds')) pass('mode pill switched'); else fail('mode pill not on');
+if(got.onPill && got.onPill.includes('The Lab')) pass('mode pill switched (The Lab)'); else fail('mode pill not on: '+got.onPill);
 if(got.badgeAfter===false) pass('NEW badge cleared after visit'); else fail('NEW badge still on after click');
 if(got.tiles===6) pass('6 KPI tiles'); else fail('tiles='+got.tiles);
-['The points curve','Desk spread','Raffle or racetrack?','The hive mind','The payoff matrix','The overconfidence curve','The herd-o-meter','The scoreline lab','The markets lab','The scoreline stock market','The draw blind spot','Goals by round','Home-soil bias','The favourite tax','The form curve','The graveyard shift','The predictability ladder','The streak spectrum','Stage wins','The photo finish','The belt races','The champion market','The armband ledger','Still alive','Swing matches','The founding members','Nerd corner'].forEach(t=>{
+['The points curve','Desk spread','Raffle or racetrack?','The hive mind','The payoff matrix','The overconfidence curve','The herd-o-meter','The scoreline lab','The markets lab','The scoreline stock market','The draw blind spot','Goals by round','Home-soil bias','The favourite tax','The form curve','The graveyard shift','The predictability ladder','The streak spectrum','Stage wins','The photo finish','The belt races','The champion market','The armband ledger','Still alive','Swing matches','The founding members','Odds & ends'].forEach(t=>{
   if(got.titles.includes(t)) pass('card present: '+t); else fail('card MISSING: '+t);
 });
 // batch 5 numeric checks

@@ -1708,7 +1708,7 @@
   .aw-nm small{color:var(--faint);font-weight:700}
   .tv .aw-more{display:none} /* kiosk cycles modes on a timer — no one is there to tap */
 
-  /* ===== STATS FOR NERDS (Leaderboard → 🤓 Nerds) =====
+  /* ===== THE LAB — stats panel (Leaderboard → 🧪 The Lab; internal mode key stays "nerds") =====
      One quiet visual system: gold = office data, blue = reality/benchmark, marks stay
      thin, values live in text tokens. Bars grow from a single baseline with a 2px gap;
      the only loud element is the data. */
@@ -1843,13 +1843,13 @@
   </header>
 
   <div id="xb-sent" aria-hidden="true"></div>
-  <div class="xbanner" id="xbanner" style="display:none" role="status" aria-label="New this week: stats for nerds, your card deck, power-ups" onclick="if(!event.target.closest('a,button'))toggleBanner()" title="Tap to expand or shrink">
+  <div class="xbanner" id="xbanner" style="display:none" role="status" aria-label="New this week: the stats lab, your card deck, power-ups" onclick="if(!event.target.closest('a,button'))toggleBanner()" title="Tap to expand or shrink">
     <div class="xb-ic" aria-hidden="true">✨</div>
     <div class="xb-tx">
-      <b class="xb-h">Just dropped: 🤓 nerd stats · 📤 your card deck</b>
+      <b class="xb-h">Just dropped: 🧪 The Lab · 📤 your card deck</b>
       <span class="xb-sub">The office’s picks finally get X-rayed, every big moment mints a card — and the ⚡ armband window is open. Tap in:</span>
       <div class="xb-feats">
-        <button class="xb-feat" onclick="xbGoMode('nerds')"><span class="xf-ic" aria-hidden="true">🤓</span><span class="xf-tx"><b>Stats for nerds<i class="xf-new">NEW</i></b><small>21 cards of office truth — the herd-o-meter, the favourite tax, who can still win</small></span><span class="xf-go" aria-hidden="true">›</span></button>
+        <button class="xb-feat" onclick="xbGoMode('nerds')"><span class="xf-ic" aria-hidden="true">🧪</span><span class="xf-tx"><b>The Lab<i class="xf-new">NEW</i></b><small>27 cards of office truth — the herd-o-meter, the favourite tax, who can still win</small></span><span class="xf-go" aria-hidden="true">›</span></button>
         <button class="xb-feat" onclick="openShareTray()"><span class="xf-ic" aria-hidden="true">📤</span><span class="xf-tx"><b>Your card deck</b><small>every big moment mints a share card — preview it, then drop it in the chat</small></span><span class="xf-go" aria-hidden="true">›</span></button>
         <button class="xb-feat" onclick="openFaq('power-up')"><span class="xf-ic" aria-hidden="true">⚡</span><span class="xf-tx"><b>Captain’s armband ×2</b><small>arm a Quarter-final pick before Thursday’s locks — shield &amp; upset bonus too</small></span><span class="xf-go" aria-hidden="true">›</span></button>
       </div>
@@ -2008,7 +2008,7 @@
   <!-- LEADERBOARD -->
   <section class="view" id="view-leaderboard">
     <div class="sec-title"><h2>Leaderboard</h2><span class="live tag" id="lb-live"><span class="pulse"></span> Live</span></div>
-    <div class="lbmode" id="lbmode"><button type="button" data-m="people" class="on">People</button><button type="button" data-m="dept">Departments</button><button type="button" data-m="room">🏟 The Room<i class="tnew" id="room-new" style="display:none">NEW</i></button><button type="button" data-m="awards">🏆 Awards<i class="tnew" id="aw-new" style="display:none">NEW</i></button><button type="button" data-m="nerds">🤓 Nerds<i class="tnew" id="nrd-new" style="display:none">NEW</i></button></div>
+    <div class="lbmode" id="lbmode"><button type="button" data-m="people" class="on">People</button><button type="button" data-m="dept">Departments</button><button type="button" data-m="room">🏟 The Room<i class="tnew" id="room-new" style="display:none">NEW</i></button><button type="button" data-m="awards">🏆 Awards<i class="tnew" id="aw-new" style="display:none">NEW</i></button><button type="button" data-m="nerds">🧪 The Lab<i class="tnew" id="nrd-new" style="display:none">NEW</i></button></div>
     <div class="prize-strip">🥇 <b>Maldives trip</b> · 🥈 60,000 pts · 🥉 40,000 pts<span class="ps-note">QNB Life Rewards · prizes for the top three at the final whistle · 🏆 office titles crowned in the Trophy Room</span></div>
     <div id="demo-banner" class="demo-banner" style="display:none">🎬 Demo mode — sample players shown for presentation. Nothing here is saved.</div>
     <div id="lb-body"></div>
@@ -2090,9 +2090,9 @@
     <div class="wn-card">
       <div class="wn-spark" aria-hidden="true">✨</div>
       <div class="wn-h">What’s new</div>
-      <div class="wn-sub">⚡ Power-ups are <b>LIVE</b> for the Quarter-finals — arm before Thursday’s locks. Plus a new 🤓 stats corner and your 📤 share-card deck.</div>
+      <div class="wn-sub">⚡ Power-ups are <b>LIVE</b> for the Quarter-finals — arm before Thursday’s locks. Plus the new 🧪 stats Lab and your 📤 share-card deck.</div>
       <button class="wn-item" onclick="wnGoFaq('power-up')"><span class="wn-ic">⚡</span><span class="wn-tx"><b>Captain’s Armband — arm it now</b><span>One per round from the QF. Arm a match before it locks and its advance + exact points count DOUBLE. On the QF cards.</span></span><span class="wn-go">›</span></button>
-      <button class="wn-item" onclick="wnGoNerds()"><span class="wn-ic">🤓</span><span class="wn-tx"><b>Stats for nerds</b><span>The whole office as one dataset — hit rates, the points curve, the hive mind, dead champion tickets. Leaderboard → 🤓 Nerds.</span></span><span class="wn-go">›</span></button>
+      <button class="wn-item" onclick="wnGoNerds()"><span class="wn-ic">🧪</span><span class="wn-tx"><b>The Lab</b><span>The whole office as one dataset — hit rates, the points curve, the hive mind, dead champion tickets. Leaderboard → 🧪 The Lab.</span></span><span class="wn-go">›</span></button>
       <button class="wn-item" onclick="wnGoBrags()"><span class="wn-ic">📤</span><span class="wn-tx"><b>Your share-card deck</b><span>Every brag you’ve earned, one tap on the gold 📤 button by your thumb. Cards preview first — nothing sends until you say so.</span></span><span class="wn-go">›</span></button>
       <div class="wn-more">🛡 Streak Shield and 🦅 Upset Bonus run automatically from the QF — the same kit for every player, nothing to buy. 🏆 Title races run live under Leaderboard → Awards; titles never move points.</div>
       <button class="wn-ok" onclick="dismissWhatsNew()">Got it</button>
@@ -3043,7 +3043,7 @@ function toggleBanner(){
   try{localStorage.setItem(BANNER_MIN_KEY,bannerMin?"1":"0");}catch(e){}
   if(window.__xbSync)window.__xbSync();
 }
-/* banner chip → jump straight into a leaderboard mode (🏆 Awards / 🤓 Nerds).
+/* banner chip → jump straight into a leaderboard mode (🏆 Awards / 🧪 The Lab).
    Standalone from the wnGo* spotlight paths: it must NOT touch wc:whatsnew, so using a
    chip never suppresses the one-time spotlight for someone who hasn't seen it yet. */
 function xbGoMode(m){
@@ -5544,7 +5544,7 @@ async function renderAwards(body){
   body.innerHTML=html;
 }
 
-/* ===== STATS FOR NERDS (Leaderboard → 🤓 Nerds) — the tournament as a dataset =====
+/* ===== THE LAB (Leaderboard → 🧪 The Lab; internal mode key stays "nerds") — the tournament as a dataset =====
    Every number is an AGGREGATE over settled matches (plus the sanctioned champion-bet
    spread), recomputed live in the browser from data already in hand: the slim standings
    + the consensusFull() analytics tier + confirmed results. No new backend, no extra
@@ -5557,7 +5557,7 @@ function nrdVs(f){const v=fxView(f),r=state.results[f.id]||{};
   return esc(v.home.n)+(r.h!=null?' <b>'+r.h+'–'+r.a+'</b> ':' v ')+esc(v.away.n);}
 async function renderNerds(body){
   const rows=await fetchStandings();
-  if(!rows.length){body.innerHTML='<div class="empty"><div class="ic">🤓</div><b>The lab opens with the first points</b><span>Lock in your picks under “Matches” — the numbers start piling up at the first whistle.</span></div>';return;}
+  if(!rows.length){body.innerHTML='<div class="empty"><div class="ic">🧪</div><b>The Lab opens with the first points</b><span>Lock in your picks under “Matches” — the numbers start piling up at the first whistle.</span></div>';return;}
   const c=(CONS.full&&CONS.map)?CONS:null;
   if(!c&&CONFIGURED&&!state.demo)consensusFull().then(function(){if(state.view==="leaderboard"&&LB_MODE==="nerds")renderLeaderboard();}).catch(function(){});
   const pend='<div class="aw-pend"><span class="pulse"></span>Counting every call in the office…</div>';
@@ -5573,7 +5573,7 @@ async function renderNerds(body){
   const ptsAll=playing.map(function(r){return r.pts|0;}).sort(function(a,b){return a-b;});
   const ptsSum=ptsAll.reduce(function(a,b){return a+b;},0);
   const med=ptsAll.length?(ptsAll.length%2?ptsAll[ptsAll.length>>1]:Math.round((ptsAll[(ptsAll.length>>1)-1]+ptsAll[ptsAll.length>>1])/2)):0;
-  let html='<div class="dept-note">🤓 <b>Stats for nerds</b> — the whole tournament as one dataset: every settled call in the office, sliced live in your browser. Aggregates only; nobody gets pointed at.</div>';
+  let html='<div class="dept-note">🧪 <b>The Lab</b> — the whole tournament as one dataset: every settled call in the office, sliced live in your browser. Aggregates only; nobody gets pointed at.</div>';
   /* headline tiles */
   const tile=function(v,l){return '<div class="nrd-tile"><b>'+v+'</b><span>'+l+'</span></div>';};
   html+='<div class="nrd-tiles">'
@@ -5873,7 +5873,7 @@ async function renderNerds(body){
           +'<div class="bar a"><i style="width:'+(d.a/mMax*100).toFixed(1)+'%"></i></div>'
           +'<div class="bar b"><i style="width:'+(d.b/mMax*100).toFixed(1)+'%"></i></div></div>';});
       const dOv=mOv/mTot-(aTot?aOv/aTot:0);
-      html+='<div class="nrd-line">'+(dOv<-0.05?'🧊 The office is an Under bettor at heart — reality out-scores its script':dOv>0.05?'🍾 The office is goal-drunk — it scripts more goals than football delivers':'⚖️ Sharp bookies — the office prices the goal markets about right')+'</div>';
+      html+='<div class="nrd-line">'+(dOv<-0.05?'🧊 The office is an Under bettor at heart — reality out-scores its script':dOv>0.05?'🚀 The office is goal-hungry — it scripts more goals than football delivers':'⚖️ Sharp bookies — the office prices the goal markets about right')+'</div>';
     }
   }
   html+='</div>';
@@ -6341,7 +6341,7 @@ async function renderNerds(body){
   }
   html+='</div>';
   /* NERD CORNER — loose numbers with nowhere else to live */
-  html+='<div class="aw-card"><div class="aw-hd"><span class="aw-ic">🥼</span><div class="aw-t"><b>Nerd corner</b><span>Loose numbers with nowhere else to live</span></div></div>';
+  html+='<div class="aw-card"><div class="aw-hd"><span class="aw-ic">🥼</span><div class="aw-t"><b>Odds &amp; ends</b><span>Loose numbers with nowhere else to live</span></div></div>';
   html+='<div class="nrd-line">⚽ <b>'+nrdN(goals)+'</b> goals across '+gN+' finished scorelines · '+draws+' group-stage draws in '+gDone+' ('+nrdPct(draws,gDone)+'%)</div>';
   if(big)html+='<div class="nrd-line">🎪 Biggest scoreline so far: '+nrdVs(big.f)+' — '+(big.r.h+big.r.a)+' goals</div>';
   if(c&&c.officeHit.t)html+='<div class="nrd-line">🎯 Exact-score strike rate: ≈<b>'+(exTot/c.officeHit.t*100).toFixed(1)+'%</b> of settled calls land the exact score</div>';
@@ -8557,7 +8557,7 @@ function seenKey(k){try{return localStorage.getItem("wc:seen:"+k)==="1";}catch(e
 function markSeen(k){try{localStorage.setItem("wc:seen:"+k,"1");}catch(e){}updateNewDots();}
 function updateNewDots(){
   const on=!!state.player&&!state.demo;
-  const ld=document.getElementById("lb-new");if(ld)ld.style.display=(on&&(!seenKey("lb")||!seenKey("nerds")))?"":"none"; /* chained to the newest in-leaderboard surface: the nav dot survives dismissing the spotlight and only clears when the 🤓 pill is actually tapped */
+  const ld=document.getElementById("lb-new");if(ld)ld.style.display=(on&&(!seenKey("lb")||!seenKey("nerds")))?"":"none"; /* chained to the newest in-leaderboard surface: the nav dot survives dismissing the spotlight and only clears when the 🧪 Lab pill is actually tapped */
   const rn=document.getElementById("room-new");if(rn)rn.style.display=(on&&!seenKey("room"))?"":"none";
   try{refreshShareFab();}catch(e){} /* 📤 share-deck FAB — async over cached reads */
   const an=document.getElementById("aw-new");if(an)an.style.display=(on&&!seenKey("awards"))?"":"none";

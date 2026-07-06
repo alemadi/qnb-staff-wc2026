@@ -5,6 +5,20 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-07-06 (Doha) — MAIN DEPLOY · RENAME: "Stats for nerds" → 🧪 "The Lab" + corporate-copy sweep (ships the sickos→diehards fix below too)
+
+**Commits:** this commit (`index.html` + `tests/nerd-stats/run.mjs` + `tests/share-cards/run.mjs` + changelog) and the diehards fix below on `claude/stats-for-nerds-3yajyc`, **rebased onto `main` `c0e840c`** (the squad-board + Trophy-pass-2 deploys; one changelog conflict, both sides kept) **then fast-forwarded to `main` on the organizer's explicit "Push"**. **Frontend copy only — no logic, no layout, no data change.** Organizer raised corporate-appropriateness ("Would someone be offended in corporate by this"); the fix is to name the *place*, not the *person*. Also updates the share-cards suite's banner assertion to the new name (it was checking for the literal string "Stats for nerds").
+
+**What changed (user-facing text only — every internal key stays `nerds`/`nrd-*`, so seen-flags, deep links and the mode key are untouched):**
+- Leaderboard pill: `🤓 Nerds` → **`🧪 The Lab`**; intro card: "🤓 Stats for nerds" → "🧪 The Lab"; empty state icon 🤓 → 🧪 (its copy already said "The Lab opens…").
+- Home-banner hub row + heading and the What's-new spotlight item: "Stats for nerds"/"🤓 nerd stats" → "The Lab"/"🧪 The Lab"; the hub row's stale "21 cards" corrected to **27**.
+- Card "Nerd corner" → **"Odds & ends"** (subtitle unchanged — it was already "Loose numbers with nowhere else to live").
+- Copy sweep: "🍾 goal-drunk" → "🚀 goal-hungry" (alcohol idiom out, same meaning). Code comments updated to match.
+
+**Verified on the shipped (rebased) tree:** `tests/nerd-stats/run.mjs` ALL GREEN (incl. the Trophy-pass-2 additions another session made to this suite); `tests/squad-board/run.mjs` ALL GREEN; `tests/perf-boot/run.mjs` ALL GREEN; `tests/share-cards/run.mjs` back to green-except-the-pre-existing-340px-header failure once its banner assertion was updated to the new name. `node --check` clean on both inline blocks; zero rendered "nerd"/🤓 strings remain (grep). **Rollback:** `git push origin +c0e840c:main` (client-only; reverts to the squad-board tip — removes both this rename and the diehards fix).
+
+---
+
 ## 2026-07-06 (Doha) — Copy fix: "day-one sickos" → "day-one diehards" (branch-only, NOT deployed)
 
 **Commits:** this commit (`index.html` + changelog) on `claude/stats-for-nerds-3yajyc`. One word in the founding-members card subtitle, on the organizer's ask ("change the sickos"). No logic, no layout. **Verified:** `tests/nerd-stats/run.mjs` ALL GREEN; `node --check` clean; zero remaining "sickos" greps. **Rollback:** `git revert` this commit.
