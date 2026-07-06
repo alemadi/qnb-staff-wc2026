@@ -5,6 +5,24 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-07-06 (Doha) — MAIN DEPLOY: the nudge pass (spotlight refresh + engagement-cleared breadcrumbs) ships to production
+
+**Commits:** this commit (changelog), then `main` fast-forwarded `27a528e` → this tip and pushed **on the organizer's explicit "Push main"**. Main had moved under the branch (the two Stats-for-nerds card batches `366051b`/`27a528e`) — **rebased onto the new tip first**; `index.html` and `tests/share-cards/run.mjs` auto-merged (disjoint regions), the one changelog conflict resolved keeping both sides. Ships the two branch commits below (nudge pass 1 + 2). **Frontend only — no DB / scoring / sync change, zero new backend traffic.**
+
+**Player-visible net change:**
+- The one-time What's-new spotlight re-shows **once** (`WHATSNEW_VER` → `"2026-07-06-nerds-deck"`) with today's top three: ⚡ armband (QF locks Thursday) · 🤓 Stats for nerds (new `wnGoNerds()` deep link) · 📤 the share-card deck (FAB + preview copy). Trophy Room folds into the footer line.
+- The Leaderboard nav NEW dot survives dismissing the spotlight and clears only when the 🤓 pill is actually tapped; dismissal refreshes dots immediately.
+- A pinned gold "✨ What's new" row at the top of the Help sheet re-opens the spotlight anytime (`openWhatsNew()`).
+- Fit fix: the spotlight card scrolls on short phones instead of clipping the "Got it" button.
+
+**Verified on the shipped (rebased) tree:** `share-cards` 106 PASS + only the **pre-existing** 340px header overlap · `nerd-stats` ALL GREEN · `perf-boot` ALL GREEN · the 10-check headless persistence proof ALL PASS · `node --check` clean ×2.
+
+**Verify after push:** Pages action green; prod `index.html` (cache-busted) contains `2026-07-06-nerds-deck` and `faq-wn`.
+
+**Rollback:** `git push origin +27a528e:main` (client-only — nothing server-side changed; reverts `main` to the batch-three tip, the parent of this deploy). The app ships a service worker: a stale shell may need one hard reload / app reopen. Rolling back also un-bumps `WHATSNEW_VER` — players who saw the new card will simply not see it again (their stamp no longer matches either version; harmless).
+
+---
+
 ## 2026-07-06 (Doha) — NUDGE PASS 2: the nudge survives dismissal (branch-only, NOT deployed)
 
 **Commits:** this commit (`index.html` + changelog) on `claude/nudge-users-new-features-qubl0y`, on top of the spotlight refresh below. **NOT pushed to main.** **Frontend only.** Organizer follow-up: "if they click on something or dismiss it, it disappears forever."
