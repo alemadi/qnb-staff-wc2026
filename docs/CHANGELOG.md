@@ -5,6 +5,20 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-07-06 (Doha) — MAIN DEPLOY: the banner rework (what's-new billboard with feature rows) ships to production
+
+**Commits:** this commit (changelog), then `main` fast-forwarded `6eb8660` → this tip and pushed **on the organizer's explicit "Go ahead and push"**. Main had moved under the branch twice (the banner-hub deploy `70711fd` and Nerds batch four `6eb8660`) — **rebased onto the batch-four tip first**; the share-cards test auto-merged, three `index.html` banner hunks resolved in this rework's favour (adopting the hub pass's `xbGoMode` helper), the changelog conflict resolved keeping both sides. Ships the one branch commit below. **Frontend only — no DB / scoring / sync change, zero new backend traffic.**
+
+**Player-visible net change:** the persistent banner re-leads with today's launches ("Just dropped: 🤓 nerd stats · 📤 your card deck", ✨ icon); the four icon chips become three feature rows with a name + one-line pitch + deep link (🤓 → Nerds leaderboard · 📤 → share tray · ⚡ armband → power-ups FAQ, with Thursday's QF-lock deadline in the pitch); the CTA becomes "Everything that's new ›" (re-opens the spotlight); and the min-key bump (`wc:banner:min2`) gives every player — including those who shrank the old banner — exactly one full showing of the refreshed card.
+
+**Verified on the shipped (rebased) tree:** `share-cards` 106 PASS + only the **pre-existing** 340px header overlap · `nerd-stats` ALL GREEN (21 cards) · `perf-boot` ALL GREEN · `node --check` clean ×2 · headless click-through of every row + CTA with zero page errors (`wc:whatsnew` untouched by the rows).
+
+**Verify after push:** Pages action green; prod `index.html` (cache-busted) contains `xb-feats` and `wc:banner:min2`.
+
+**Rollback:** `git push origin +6eb8660:main` (client-only — reverts `main` to the batch-four tip, the parent of this deploy; nothing server-side changed). The app ships a service worker: a stale shell may need one hard reload / app reopen. `wc:banner:min2` is orphaned on rollback (harmless); players return to their old `wc:banner:min` choice.
+
+---
+
 ## 2026-07-06 (Doha) — BANNER REWORK: the persistent banner becomes a what's-new billboard with feature rows (branch, deploying on organizer's "Go ahead and push")
 
 **Commits:** this commit (`index.html` + `tests/share-cards/run.mjs` + changelog) on `claude/banner-content-display-pzpnff`, cut from `b055b84` and **rebased onto `main` `6eb8660`** (batch four) after main moved twice in flight — the banner-hub deploy (`70711fd`) and Nerds batch four. `tests/share-cards/run.mjs` auto-merged; `index.html` had three banner hunks resolved in this rework's favour; this changelog keeps both sides. **Frontend only — no DB / scoring / sync change, zero new backend traffic.** Organizer ask: the banner's contents and display are stale — "more important and more interesting new features not properly displayed/marketed."
