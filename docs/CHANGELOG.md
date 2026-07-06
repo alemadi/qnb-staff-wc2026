@@ -5,6 +5,21 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-07-06 (Doha) — NUDGE PASS 2: the nudge survives dismissal (branch-only, NOT deployed)
+
+**Commits:** this commit (`index.html` + changelog) on `claude/nudge-users-new-features-qubl0y`, on top of the spotlight refresh below. **NOT pushed to main.** **Frontend only.** Organizer follow-up: "if they click on something or dismiss it, it disappears forever."
+
+**What (three small pieces — the spotlight stays one-shot; persistence moves to engagement-cleared breadcrumbs):**
+- **Nav dot chained to the newest surface:** `lb-new` (the dot on the Leaderboard nav) now shows while `wc:seen:lb` **or** `wc:seen:nerds` is unset — it survives dismissing the spotlight and even visiting the leaderboard, and only clears when the 🤓 pill is actually tapped (where `nrd-new` continues the trail). Per-launch curated chain — extend the OR when a future launch warrants it, don't wire every mode in permanently.
+- **`dismissWhatsNew()` now calls `updateNewDots()`** so the breadcrumb appears the instant the modal closes, not on the next navigation.
+- **The spotlight is re-openable on demand:** a pinned gold "✨ What's new — the latest features" row at the top of the Help sheet (`.faq-wn`, above `#faq-list`, reachable from home "How does this work?", Me → FAQ, the rules line, the power-ups banner) calls new `openWhatsNew()` — same `#wnov` card, no version-gate side effects beyond the usual stamp on dismiss.
+
+**Verified on this tree:** one-off headless proof (10 checks): dismiss without tapping → nav dot appears immediately; leaderboard visit marks `lb` but the dot persists; 🤓 pill tap clears both dots; Help shows the ✨ row; row click closes Help and re-opens the spotlight; steady state clean (no boot re-show, no dots, scroll restored); zero page errors. Harness regression: `share-cards` 106 PASS + the **pre-existing** 340px header overlap only · `nerd-stats` ALL GREEN (its `nrd-new` set/clear assertions untouched) · `perf-boot` ALL GREEN. `node --check` clean ×2. Help sheet screenshot at 390px eyeballed.
+
+**Rollback:** branch-only — `git revert` this commit.
+
+---
+
 ## 2026-07-06 (Doha) — NUDGE PASS: What's-new spotlight refreshed to today's feature set (branch-only, NOT deployed)
 
 **Commits:** this commit (`index.html` + `tests/share-cards/run.mjs` + changelog) on `claude/nudge-users-new-features-qubl0y`, cut from `main` tip `3cea386`. **NOT pushed to main** — deploying is the organizer's call ("push to main"). **Frontend only — no DB / scoring / sync change, zero new backend traffic.** Organizer ask: "slightly nudge the users to the new features."
