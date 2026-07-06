@@ -5,6 +5,16 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-07-06 (Doha) — MAIN DEPLOY: the share-card pack ships to production
+
+**Commits:** this commit, then `main` fast-forwarded to it and pushed **on the organizer's explicit "push to main"**. The two share-card commits were rebased onto the Trophy Room deploy tip (`bac9e9c`); conflicts were changelog ordering plus the What's-new card, resolved by **merging the two announcements** — the Trophy Room card keeps its 🏆/🔮 items and gains the 📤 share-cards item (`WHATSNEW_VER="2026-07-06-sharecards"`, so players who dismissed today's trophy-room card see the combined card once — intended). **Re-verified on the rebased tree:** `tests/share-cards/run.mjs` 26/26 (all ten cards build over the merged code, incl. the belts on the Trophy-Room-extended `computeHonours`), zero page errors, `node --check` clean. Frontend-only — the live DB is untouched by this push. Also ships `docs/social-artifacts-preview.html` (the branch's design-preview gallery; noindex, demo data only).
+
+**Verify after push:** Pages action green; prod `index.html` (cache-busted) contains `shareSlip` + `cardShip` (this pack) alongside `renderAwards` (Trophy Room).
+
+**Rollback:** `git push origin +bac9e9c:main` (client-only — nothing server-side changed with this push).
+
+---
+
 ## 2026-07-06 (Doha) — SHARE-CARD PACK: the ten social artifacts ship (frontend-only, all surfaces gated)
 
 **Commits:** this commit (`index.html` + `tests/share-cards/run.mjs` + changelog), on `claude/social-artifacts-ideas-0ocr94`. **Frontend only — no DB, no scoring-math, no sync-protocol change, no new server reads beyond existing classes.** Implements all ten cards from the design preview below, on the existing canvas kit.
