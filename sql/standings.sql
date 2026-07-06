@@ -156,6 +156,13 @@ upset as materialized (
 champ as materialized (
   select r->>'_champ' as c from results_row
 ),
+-- WAVE B master switch (server side): the ⚡ armband ×2, 🦅 upset +2 and 🛡 shield apply
+-- ONLY when the organizer has flipped wc:powerups_live. Off ⇒ pure pre-power-up ladder, so
+-- this function stays byte-identical in output to the old one until launch — no silent
+-- upset/shield at the QF just because the SQL is deployed. Mirrors puLive() in index.html.
+pu as materialized (
+  select exists(select 1 from kv where key = 'wc:powerups_live' and value in ('true','1')) as live
+),
 players as materialized (
   select substring(key from 11)                       as pslug,   -- after 'wc:player:'
          value::jsonb                                  as j
@@ -214,7 +221,7 @@ ko_shielded as (
       from ko
     ) s1
   ) s2
-  where not (brk and nbrk = 1)
+  where not (brk and nbrk = 1 and (select live from pu))     -- 🛡 shield forgives only when power-ups are live
 ),
 -- gaps-and-islands: number each exact hit within its maximal consecutive run.
 -- Island id = row_number(over all KO by kn) - row_number(over same exact_hit by kn);
@@ -250,13 +257,13 @@ scored as (
           ( case when m.rh is not null and m.ra is not null
                   and pr.ph = m.rh and pr.pa = m.ra
              then m.kbonus else 0 end ) )
-        * ( case when (m.rnd = 'qf'  and c.c_qf  = m.id)
+        * ( case when (select live from pu) and ( (m.rnd = 'qf'  and c.c_qf  = m.id)
                    or (m.rnd = 'sf'  and c.c_sf  = m.id)
-                   or (m.rnd = 'fin' and c.c_fin = m.id)
-             then 2 else 1 end )                       -- ⚡ armband: multiplies, never creates
+                   or (m.rnd = 'fin' and c.c_fin = m.id) )
+             then 2 else 1 end )                       -- ⚡ armband: multiplies, never creates (flag-gated)
         +
-        ( case when m.kn >= 25 and pr.pw = m.rw and coalesce(u.up, false)
-           then 2 else 0 end )                         -- 🦅 upset: flat +2, never doubled
+        ( case when (select live from pu) and m.kn >= 25 and pr.pw = m.rw and coalesce(u.up, false)
+           then 2 else 0 end )                         -- 🦅 upset: flat +2, never doubled (flag-gated)
       when coalesce(pr.po,'') = '' then 0              -- group: outcome pick required
       else
         ( case when pr.po = (case when m.rh > m.ra then 'H'

@@ -60,4 +60,12 @@ export const VECTORS = [
     player:{predictions:{k31:{w:"Norway",h:1,a:0}}, chips:{fin:"k31"}}, expect:{pts:13,exact:1,correct:1} },
   { name:"24 settled tie, no prediction = 0", kteams:{k25:{h:"France",a:"Morocco"}}, results:{k25:{w:"France",h:1,a:0}},
     player:{predictions:{}}, expect:{pts:0,exact:0,correct:0} },
+  // ---- flag OFF (wc:powerups_live unset): server + client gate must yield the pure base ladder ----
+  { name:"25 flag OFF: armband ignored", flagOff:true, kteams:{k25:{h:"France",a:"Morocco"}}, results:{k25:{w:"France",h:2,a:1}},
+    player:{predictions:{k25:{w:"France",h:2,a:1}}, chips:{qf:"k25"}}, expect:{pts:12,exact:1,correct:1} },
+  { name:"26 flag OFF: upset ignored", flagOff:true, kteams:{k25:{h:"France",a:"Morocco"}}, results:{k25:{w:"Morocco",h:1,a:0}},
+    player:{predictions:{k25:{w:"Morocco",h:1,a:0}}}, expect:{pts:12,exact:1,correct:1} },
+  { name:"27 flag OFF: shield does not forgive", flagOff:true, kteams:{k25:{h:"France",a:"Morocco"},k26:{h:"Spain",a:"Portugal"},k27:{h:"England",a:"Germany"}},
+    results:{k25:{w:"France",h:2,a:1},k26:{w:"Spain",h:1,a:0},k27:{w:"England",h:3,a:1}},
+    player:{predictions:{k25:{w:"France",h:2,a:1},k26:{w:"Spain",h:9,a:9},k27:{w:"England",h:3,a:1}}}, expect:{pts:30,exact:2,correct:3} },
 ];

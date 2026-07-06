@@ -19,7 +19,8 @@ const j = (o) => JSON.stringify(o).replace(/'/g, "''");
 let sql = "";
 VECTORS.forEach((v, i) => {
   const slug = "v" + String(i + 1).padStart(2, "0");
-  sql += `begin;\ninsert into kv(key,value) values ('wc:results','${j(v.results)}'),('wc:kteams','${j(v.kteams || {})}'),('wc:player:${slug}','${j(Object.assign({ slug }, v.player))}');\n`;
+  const flag = v.flagOff ? "" : `,('wc:powerups_live','true')`;   // powered vectors set the launch flag; flagOff vectors leave it unset
+  sql += `begin;\ninsert into kv(key,value) values ('wc:results','${j(v.results)}'),('wc:kteams','${j(v.kteams || {})}'),('wc:player:${slug}','${j(Object.assign({ slug }, v.player))}')${flag};\n`;
   sql += `select 'VEC|${i}|'||pts||'|'||exact||'|'||correct from standings() where slug='${slug}';\nrollback;\n`;
 });
 writeFileSync(TMP + "/wave-b-vectors.sql", sql);
@@ -35,14 +36,14 @@ const ii = appSrc.indexOf("(async function init(){"); if (ii > 0) appSrc = appSr
 const chain = new Proxy(function () {}, { get(_t, p) { if (p === "length") return 0; if (p === Symbol.toPrimitive) return () => 0; return chain; }, apply() { return chain; }, set() { return true; }, construct() { return chain; } });
 const doc = new Proxy({}, { get() { return chain; }, set() { return true; } });
 const ctx = { console, document: doc, localStorage: { getItem: () => null, setItem() {}, removeItem() {} }, fetch: async () => { throw 0; }, navigator: {}, location: { search: "", hash: "" }, matchMedia: () => ({ matches: false, addEventListener() {}, addListener() {} }), setInterval: () => 0, clearInterval() {}, setTimeout: () => 0, clearTimeout() {}, requestAnimationFrame: () => 0, crypto: { subtle: { digest: async () => new ArrayBuffer(32) } }, URL, TextEncoder, TextDecoder, Date, Math, JSON, Object, Array, String, Number, Boolean, RegExp, Promise, Map, Set, isNaN, parseInt, parseFloat };
-appSrc += "\n;globalThis.__scoreFor=scoreFor; globalThis.__PU_RANK=PU_RANK; globalThis.__set=(r,k)=>{state.results=r;state.kteams=k;state.puLive=true;};";
+appSrc += "\n;globalThis.__scoreFor=scoreFor; globalThis.__PU_RANK=PU_RANK; globalThis.__set=(r,k,pu)=>{state.results=r;state.kteams=k;state.puLive=pu;};";
 vm.createContext(ctx); ctx.window = ctx; ctx.self = ctx; ctx.globalThis = ctx;
 vm.runInContext(appSrc, ctx, { filename: "index-app.js", timeout: 5000 });
 const jsRes = {};
 VECTORS.forEach((v, i) => {
   const R = JSON.parse(JSON.stringify(v.results));                 // same object seeded into state (for upsetWin's koTeams) and passed as the results arg
-  ctx.__set(R, JSON.parse(JSON.stringify(v.kteams || {})));
-  const chips = ("chips" in v.player) ? v.player.chips : null;     // null (not undefined) => automatic upset/shield fire, as live
+  ctx.__set(R, JSON.parse(JSON.stringify(v.kteams || {})), !v.flagOff);   // puLive mirrors the flag
+  const chips = ("chips" in v.player) ? v.player.chips : null;     // null (not undefined) => automatic upset/shield fire when live
   const s = ctx.__scoreFor(v.player.predictions || {}, R, v.player.champ || "", chips);
   jsRes[i] = { pts: s.pts, exact: s.exact, correct: s.correct };
 });

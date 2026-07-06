@@ -5,6 +5,22 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-07-06 (Doha) — WAVE B: server-side flag gate (deploy becomes truly inert until launch)
+
+**Commits:** this commit (`sql/standings.sql` + `tests/wave-b/*` + changelog). **Repo-only SQL + tests. No live change.**
+
+**Why (found while prepping the deploy):** `wc:powerups_live` was a **client-only** flag — the revised `standings()` computed the 🦅 upset +2 and 🛡 shield **automatically** for any k≥25 result (no chip needed). So merely *deploying* the SQL would have silently launched upset+shield on the server leaderboard at the first quarter-final, diverging from the flag-off client and committing an undecided organizer to the mechanics. "Deploy is safe, the toggle launches" was not actually true.
+
+**What changed — `sql/standings.sql`:** a `pu` CTE reads `wc:powerups_live` and **gates all three Wave-B terms server-side** — armband ×2, upset +2, and the shield's break-forgiveness. Flag off ⇒ the function returns the pure pre-power-up ladder for ANY results (not just pre-QF). Now the flag is the single switch for power-ups on **both** client (`puLive()`) and server (`standings()`), so deploying the SQL changes nothing until the organizer flips it.
+
+**What changed — `tests/wave-b/`:** 3 flag-OFF vectors added (armband ignored, upset ignored, shield does-not-forgive) asserting the gate yields base. Harness now sets `wc:powerups_live` per vector and mirrors it into the client `puLive`.
+
+**Verified (throwaway PG16, real sql/):** **27/27 vectors** expected === SQL === JS; `wc_rank` === `PU_RANK`; **zero-drift 687/687** with the flag unset — and now guaranteed for future k≥25 results too, not only pre-QF.
+
+**Rollback:** `git revert <this commit>` (repo/test only).
+
+---
+
 ## 2026-07-06 (Doha) — WAVE B launch prep: parity proof rebuilt, real FIFA ranks, ready to deploy
 
 **Commits:** this commit (`index.html` PU_RANK + `sql/standings.sql` wc_rank/comments + `tests/wave-b/*` + changelog). **Frontend const + repo-only SQL + a test harness. No live scoring change in this commit** — the SQL deploy + toggle are separate, gated steps.
