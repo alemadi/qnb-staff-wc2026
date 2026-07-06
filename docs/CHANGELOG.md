@@ -5,6 +5,26 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-07-06 (Doha) — MAIN DEPLOY: STATS FOR NERDS · batch two — six more cards
+
+**Commits:** this commit (`index.html` + `tests/nerd-stats/run.mjs` + changelog) on `claude/stats-for-nerds-3yajyc`, on top of the already-deployed `🤓 Nerds` mode (`a9af420`), **rebased onto `main` (`3cea386`, the knockout round-picker caret fix) then fast-forwarded to `main`** on the organizer's explicit "push to main". Clean rebase — `3cea386` touches only the round-picker caret CSS, disjoint from the Nerds code, no changelog conflict. **Frontend only — no DB / scoring / sync change, zero new backend traffic** (same standings + `consensusFull()` caches).
+
+**What:** six new cards in `renderNerds()`, interleaved with the original six, each design-vetted (5-lens ideation → judged → adversarial feasibility/seal-safety verify) before build:
+- **Desk spread** (📦, box plots) — points *dispersion* per department (min · Q1 · median · Q3 · max), the story the Dept Cup's average can't tell. Standings-only, `DEPT_MIN=5` gate, names desks not people.
+- **The payoff matrix** (🎲, 2×2 grid) — every settled call bucketed herd-vs-fade × right-vs-wrong (Safe&right / Sharp fade / Herd trap / Brave&wrong), with going-with vs fading-the-crowd success meters and the points a landed fade banks vs a landed ride. Aggregate call counts only; `total<150` shows pending.
+- **The overconfidence curve** (🎯, calibration) — bins settled matches by the office's modal-vote *confidence*, plots how-often-right (gold) vs how-sure (blue) per band, a Brier skill-vs-coin-flip score, and an over/under-confidence headline. Sparse bands fold down; `<6` floored matches → pending.
+- **Goals by round** (🥅, histogram) — goals/match by structural round (MD1→Final), peak highlighted, group-vs-knockout tightening/blowing-open read. Public final scores only — zero k-anon surface.
+- **Still alive** (⏳, meter) — the mathematical points ceiling still on the table and how many of the field can still catch the leader; pure fixture arithmetic over standings, hidden until someone's scored. Your own catchability line subtracts a dead champion ticket.
+- **Swing matches** (🎢) — locked-but-unsettled ties ranked by stake × how split the office is (a sealed 50/50 in a big tie tops it). Gated on `lockedM` + the 5/8 floors — the same aggregate consText already shows on match cards.
+
+All settled-only, k-anon-floored (5 group / 8 knockout), names only positive leaders + "you" (personal lines wear `.aw-you`, hidden on `?tv`). New CSS is scoped `.nrd-quad/.nrd-box*/.nrd-rounds/.nrd-swing`; calibration/still-alive reuse the existing `nrd-*` idiom.
+
+**Verified on this tree:** `node tests/nerd-stats/run.mjs` **ALL GREEN** — rebuilt with a richer ~48-player, 5-department seed (deterministic-but-varied picks so splits/confidence/dispersion are non-degenerate); asserts all twelve cards render (none stuck pending) with numbers **recomputed independently in the test from the same seed**: payoff ride/fade success %, goals-by-round wildest round, still-alive points-on-the-table (120) + can-still-win (26/48), desk count (5) + your-desk highlight, crowd meter, dead-ticket share, and the personal points line. Regression: `tests/perf-boot/run.mjs` ALL GREEN; `tests/share-cards/run.mjs` green except the **pre-existing** 340px header failure (identical count on the deployed base). `node --check` clean on both inline blocks. 390px full-page screenshot of all twelve cards eyeballed. (Test note: the seed has favorites always winning, so the payoff card's fade-lands path reads 0% in-test — it's exercised by real results in production; the counting logic is verified against independent recompute.)
+
+**Rollback:** `git push origin +3cea386:main` (client-only — nothing server-side changed; reverts `main` to the round-picker-caret tip, the parent of this commit). The app ships a service worker (prior perf pack): a stale shell may need one hard reload / app reopen to pick up the new `index.html`.
+
+---
+
 ## 2026-07-06 (Doha) — MAIN DEPLOY: STATS FOR NERDS — a 🤓 Nerds leaderboard mode
 
 **Commits:** this commit (`index.html` + new `tests/nerd-stats/run.mjs` + changelog) on `claude/stats-for-nerds-3yajyc`, **rebased onto `main` (`ff52d84`, the day-banner pip-glyph fix) then fast-forwarded to `main`** on the organizer's explicit "push to main". Main moved twice mid-session (the power-ups-banner cleanup `f1f07d8`, then the pip fix `ff52d84`); rebased fresh onto each. Clean rebases — `index.html` auto-merged every time (the banner CSS, the pip glyphs, and the Nerds code are disjoint regions); the one changelog conflict (vs the banner entry) was resolved keeping both. **Frontend only — no DB / scoring / sync change, zero new backend traffic** (reads the standings + `consensusFull()` analytics caches already in hand).

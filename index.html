@@ -1714,6 +1714,36 @@
   .nrd-line{font-size:11.5px;color:var(--muted);font-weight:600;padding:6px 0;border-top:1px solid rgba(255,255,255,.05);line-height:1.5}
   .nrd-line b{color:var(--gold-bright)}
   .nrd-line:first-of-type{border-top:0}
+  /* --- batch 2 nerd cards: payoff quad · desk box-plots · goals-by-round · swing rows --- */
+  .nrd-quad{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:4px 0 10px}
+  .nrd-qc{border:1px solid var(--line);border-radius:11px;padding:11px 8px;text-align:center;background:var(--glass)}
+  .nrd-qc b{display:block;font-family:var(--font-d);font-size:22px;line-height:1;color:var(--cream)}
+  .nrd-qc span{display:block;margin-top:5px;font-size:8.5px;letter-spacing:.7px;text-transform:uppercase;font-weight:800;color:var(--faint)}
+  .nrd-qc.good{border-color:rgba(180,151,89,.32);background:linear-gradient(150deg,rgba(180,151,89,.09),var(--glass) 70%)}
+  .nrd-qc.good b{color:var(--gold-bright)}
+  .nrd-boxrow{display:flex;align-items:center;gap:9px;padding:5px 0;border-top:1px solid rgba(255,255,255,.05)}
+  .nrd-boxrow:first-of-type{border-top:0}
+  .nrd-boxrow.me .dn{color:var(--gold-bright)}
+  .nrd-boxrow .dn{width:96px;flex:none;font-size:11px;font-weight:700;color:var(--cream);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .nrd-boxrow .dn small{color:var(--faint);font-weight:700}
+  .nrd-boxrow .trk{flex:1}
+  .nrd-boxrow .mn{width:30px;flex:none;text-align:right;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+  .nrd-box{position:relative;height:20px;border-radius:5px;background:rgba(255,255,255,.03)}
+  .nrd-box .whisk{position:absolute;top:50%;height:2px;transform:translateY(-50%);background:rgba(244,238,227,.26);border-radius:2px}
+  .nrd-box .iqr{position:absolute;top:4px;bottom:4px;min-width:3px;border-radius:4px;background:linear-gradient(180deg,var(--gold-bright),var(--gold-deep))}
+  .nrd-box .med{position:absolute;top:2px;bottom:2px;width:2px;background:var(--cream)}
+  .nrd-rounds{display:flex;align-items:flex-end;gap:4px;height:100px;padding-top:18px;border-bottom:1px solid var(--line)}
+  .nrd-rounds .rc{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}
+  .nrd-rounds .rc>i{width:100%;max-width:28px;background:rgba(180,151,89,.32);border-radius:3px 3px 0 0;min-height:3px;position:relative}
+  .nrd-rounds .rc>i.hot{background:linear-gradient(180deg,var(--gold-bright),var(--gold))}
+  .nrd-rounds .rc>i em{position:absolute;top:-15px;left:50%;transform:translateX(-50%);font-style:normal;font-size:9px;font-weight:800;color:var(--muted)}
+  .nrd-rlab{display:flex;gap:4px;margin-top:5px}
+  .nrd-rlab u{flex:1;text-decoration:none;font-size:8px;letter-spacing:.3px;text-transform:uppercase;color:var(--faint);font-weight:800;text-align:center}
+  .nrd-swing{padding:8px 0;border-top:1px solid rgba(255,255,255,.05)}
+  .nrd-swing:first-of-type{border-top:0}
+  .nrd-swing .sh{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:11.5px;font-weight:700;color:var(--cream);margin-bottom:5px}
+  .nrd-swing .mt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .nrd-swing .stk{flex:none;font-size:10px;font-weight:800;color:#181106;background:linear-gradient(115deg,var(--gd),var(--gold));border-radius:5px;padding:1px 6px}
   /* ===== PERF ===== */
   /* Long lists: skip layout+paint for offscreen cards (104 matches / 100+ board rows).
      contain-intrinsic-size ≈ a typical card so the scrollbar stays honest; the `auto`
@@ -5353,6 +5383,38 @@ async function renderNerds(body){
     if(meIdx>=0)html+='<span class="aw-you">You: <b>'+(meRow.pts|0)+'</b> pts — '+ordinal(meIdx+1)+' of '+sorted.length+' · top <b>'+Math.max(1,Math.ceil((meIdx+1)/sorted.length*100))+'%</b>'+((meRow.pts|0)>med?' · <b>'+((meRow.pts|0)-med)+'</b> clear of the median':'')+'</span>';
   }
   html+='</div>';
+  /* DESK SPREAD — department points dispersion (box plots), the story Dept Cup's average can't tell */
+  {
+    const officeTop=playing.reduce(function(m,r){return Math.max(m,r.pts|0);},0);
+    if(officeTop>0){
+      const dm={};playing.forEach(function(r){const d=deptKey(r.dept);(dm[d]=dm[d]||[]).push(r.pts|0);});
+      const qf=function(a,p){const i=p*(a.length-1),lo=Math.floor(i),hi=Math.ceil(i);return lo===hi?a[lo]:a[lo]+(a[hi]-a[lo])*(i-lo);};
+      const desks=[];
+      for(const d in dm){const a=dm[d];if(a.length<DEPT_MIN)continue;a.sort(function(x,y){return x-y;});
+        desks.push({d:d,n:a.length,min:a[0],q1:qf(a,.25),med:qf(a,.5),q3:qf(a,.75),max:a[a.length-1]});}
+      if(desks.length>=2){
+        desks.forEach(function(x){x.iqr=x.q3-x.q1;});
+        desks.sort(function(a,b){return b.med-a.med||b.q3-a.q3||a.d.localeCompare(b.d);});
+        const myDept=state.player?deptKey(state.player.dept):null;
+        const pc=function(v){return (v/officeTop*100).toFixed(1);};
+        html+='<div class="aw-card"><div class="aw-hd"><span class="aw-ic">📦</span><div class="aw-t"><b>Desk spread</b><span>Points spread inside each department — box = middle half, line = full range</span></div><span class="aw-prz">'+desks.length+' desks</span></div>';
+        desks.forEach(function(x){const mine=x.d===myDept;
+          html+='<div class="nrd-boxrow'+(mine?' me':'')+'"><div class="dn">'+esc(x.d)+' <small>· '+x.n+'</small></div>'
+            +'<div class="trk"><div class="nrd-box">'
+            +'<i class="whisk" style="left:'+pc(x.min)+'%;width:'+pc(x.max-x.min)+'%"></i>'
+            +'<i class="iqr" style="left:'+pc(x.q1)+'%;width:'+pc(x.q3-x.q1)+'%"></i>'
+            +'<i class="med" style="left:'+pc(x.med)+'%"></i>'
+            +'</div></div><div class="mn">'+Math.round(x.med)+'</div></div>';});
+        const tight=desks.slice().sort(function(a,b){return a.iqr-b.iqr;})[0];
+        const floorD=desks.slice().sort(function(a,b){return b.q1-a.q1;})[0];
+        html+='<div class="nrd-line">🎯 Tightest desk: <b>'+esc(tight.d)+'</b> — just '+Math.round(tight.iqr)+' pts across its middle half</div>';
+        html+='<div class="nrd-line">🧱 Highest floor: <b>'+esc(floorD.d)+'</b> — even its quieter half sits at <b>'+Math.round(floorD.q1)+'+</b> pts</div>';
+        if(myDept){const mx=desks.find(function(x){return x.d===myDept;});
+          if(mx)html+='<span class="aw-you">Your desk <b>'+esc(myDept)+'</b>: median <b>'+Math.round(mx.med)+'</b> · '+Math.round(mx.min)+'–'+Math.round(mx.max)+' across '+mx.n+'</span>';}
+        html+='</div>';
+      }
+    }
+  }
   /* HIVE MIND — would blindly following the office majority beat the average colleague? */
   html+='<div class="aw-card"><div class="aw-hd"><span class="aw-ic">🧠</span><div class="aw-t"><b>The hive mind</b><span>One robot that always picks with the office majority — vs the average colleague</span></div>'+(c?'<span class="aw-prz">n = '+c.n+'</span>':'')+'</div>';
   if(!c)html+=pend;
@@ -5380,6 +5442,102 @@ async function renderNerds(body){
       const ms=scoreFor(state.player.predictions,state.results,state.player.champ,state.player.chips);
       if(ms.scored>=3){const mp=nrdPct(ms.correct,ms.scored);
         html+='<span class="aw-you">You: <b>'+mp+'%</b> over '+ms.scored+' settled calls — '+(mp>ap?('<b>'+(mp-ap)+'</b> above the office'):mp<ap?((ap-mp)+' below the office — regression to the mean is undefeated'):'exactly the office average')+'</span>';}
+    }
+  }
+  html+='</div>';
+  /* THE PAYOFF MATRIX — herd vs fade × right vs wrong, and whether fighting the office pays */
+  html+='<div class="aw-card"><div class="aw-hd"><span class="aw-ic">🎲</span><div class="aw-t"><b>The payoff matrix</b><span>Every settled call: with the crowd or against it — and did it land?</span></div></div>';
+  if(!c)html+=pend;
+  else{
+    let SR=0,HT=0,SF=0,BW=0,rideN=0,ridePts=0,fadeN=0,fadePts=0;
+    settled.forEach(function(f){const cc=c.map[f.id];if(!cc)return;const r=state.results[f.id];
+      if(f.kn){const v=fxView(f),hN=cc.w[v.home.n]||0,aN=cc.w[v.away.n]||0,tot=hN+aN;if(tot<8)return;
+        if(r.w!==v.home.n&&r.w!==v.away.n)return;
+        const fav=hN>=aN?v.home.n:v.away.n;
+        [[v.home.n,hN],[v.away.n,aN]].forEach(function(pr){const team=pr[0],n=pr[1];if(!n)return;
+          const cons=(team===fav),right=(team===r.w);
+          if(cons&&right)SR+=n;else if(cons&&!right)HT+=n;else if(!cons&&right)SF+=n;else BW+=n;
+          if(right){const p=koPts(f)+(upsetWin(f,r)?PU_UPSET:0);if(cons){rideN+=n;ridePts+=n*p;}else{fadeN+=n;fadePts+=n*p;}}});
+      }else{const tot=cc.H+cc.D+cc.A;if(tot<5)return;
+        const ro=r.h>r.a?"H":(r.h<r.a?"A":"D");
+        const fav=(cc.H>=cc.D&&cc.H>=cc.A)?"H":((cc.D>=cc.A)?"D":"A");
+        [["H",cc.H],["D",cc.D],["A",cc.A]].forEach(function(pr){const o=pr[0],n=pr[1];if(!n)return;
+          const cons=(o===fav),right=(o===ro);
+          if(cons&&right)SR+=n;else if(cons&&!right)HT+=n;else if(!cons&&right)SF+=n;else BW+=n;
+          if(right){if(cons){rideN+=n;ridePts+=n*3;}else{fadeN+=n;fadePts+=n*3;}}});}});
+    const allCons=SR+HT,allContra=SF+BW,total=allCons+allContra;
+    if(total<150)html+='<div class="aw-pend">Not enough settled calls to draw the matrix yet.</div>';
+    else{
+      const qc=function(v,l,good){return '<div class="nrd-qc'+(good?' good':'')+'"><b>'+nrdN(v)+'</b><span>'+l+'</span></div>';};
+      html+='<div class="nrd-quad">'+qc(SR,'Safe & right',true)+qc(SF,'Sharp fade',true)+qc(HT,'Herd trap',false)+qc(BW,'Brave & wrong',false)+'</div>';
+      const meter=function(lab,pcv,alt){return '<div class="nrd-meter"><div class="lab"><span>'+lab+'</span><b>'+(pcv==null?'—':pcv+'%')+'</b></div><div class="nrd-track"><i'+(alt?' class="alt"':'')+' style="width:'+(pcv||0)+'%"></i></div></div>';};
+      const rideS=allCons?Math.round(SR/allCons*100):null,fadeS=allContra?Math.round(SF/allContra*100):null;
+      html+=meter('Going with the crowd · '+nrdN(allCons)+' calls',rideS,false)+meter('Fading the crowd · '+nrdN(allContra)+' calls',fadeS,true);
+      html+='<div class="nrd-line">🌊 <b>'+Math.round(allContra/total*100)+'%</b> of all settled calls swam against the office tide</div>';
+      const avgRide=rideN?ridePts/rideN:null,avgFade=fadeN?fadePts/fadeN:null;
+      if(avgRide!=null&&avgFade!=null)html+='<div class="nrd-line">💰 A landed fade banked <b>'+avgFade.toFixed(1)+'</b> pts on average vs <b>'+avgRide.toFixed(1)+'</b> for a landed ride — '+(avgFade>avgRide?'contrarians get paid more when they’re right':'the crowd’s winners bank just as well')+'</div>';
+      else if(allContra===0)html+='<div class="nrd-line">🐑 The office hasn’t fought its own herd yet — every call so far went with the plurality</div>';
+      if(state.player&&state.player.predictions){
+        let mSR=0,mHT=0,mSF=0,mBW=0;const pr=state.player.predictions;
+        settled.forEach(function(f){const cc=c.map[f.id];if(!cc)return;const v=fxView(f),r=state.results[f.id],p=pr[f.id];if(!p)return;
+          if(f.kn){const hN=cc.w[v.home.n]||0,aN=cc.w[v.away.n]||0,tot=hN+aN;if(tot<8)return;if(!p.w)return;if(r.w!==v.home.n&&r.w!==v.away.n)return;
+            const fav=hN>=aN?v.home.n:v.away.n,cons=(p.w===fav),right=(p.w===r.w);
+            if(cons&&right)mSR++;else if(cons&&!right)mHT++;else if(!cons&&right)mSF++;else mBW++;}
+          else{const tot=cc.H+cc.D+cc.A;if(tot<5)return;if(!p.o)return;
+            const ro=r.h>r.a?"H":(r.h<r.a?"A":"D"),fav=(cc.H>=cc.D&&cc.H>=cc.A)?"H":((cc.D>=cc.A)?"D":"A"),cons=(p.o===fav),right=(p.o===ro);
+            if(cons&&right)mSR++;else if(cons&&!right)mHT++;else if(!cons&&right)mSF++;else mBW++;}});
+        const mFade=mSF+mBW,mAll=mSR+mHT+mFade;
+        if(mAll>=5){if(mFade===0)html+='<span class="aw-you">You went with the office on every settled call — a true company player</span>';
+          else html+='<span class="aw-you">You fought the office <b>'+mFade+'</b> times and landed <b>'+mSF+'</b> ('+Math.round(mSF/mFade*100)+'%)</span>';}
+      }
+    }
+  }
+  html+='</div>';
+  /* THE OVERCONFIDENCE CURVE — when the office is X% sure, how often is it right? (calibration) */
+  html+='<div class="aw-card"><div class="aw-hd"><span class="aw-ic">🎯</span><div class="aw-t"><b>The overconfidence curve</b><span>How sure the office was vs how often it was right</span></div></div>';
+  if(!c)html+=pend;
+  else{
+    const MM=[];
+    settled.forEach(function(f){const cc=c.map[f.id];if(!cc)return;const r=state.results[f.id],v=fxView(f);
+      if(f.kn){const hN=cc.w[v.home.n]||0,aN=cc.w[v.away.n]||0,tot=hN+aN;if(tot<8)return;
+        if(r.w!==v.home.n&&r.w!==v.away.n)return;
+        const ph=hN/tot,pa=aN/tot,conf=Math.max(ph,pa),modal=hN>=aN?v.home.n:v.away.n,correct=(modal===r.w)?1:0;
+        const yh=(r.w===v.home.n)?1:0,ya=1-yh,bo=(ph-yh)*(ph-yh)+(pa-ya)*(pa-ya);
+        MM.push({conf:conf,correct:correct,bo:bo,bu:0.5});}
+      else{const tot=cc.H+cc.D+cc.A;if(tot<5)return;
+        const pH=cc.H/tot,pD=cc.D/tot,pA=cc.A/tot,conf=Math.max(pH,pD,pA);
+        const ro=r.h>r.a?"H":(r.h<r.a?"A":"D"),modal=(cc.H>=cc.D&&cc.H>=cc.A)?"H":((cc.D>=cc.A)?"D":"A"),correct=(modal===ro)?1:0;
+        const yH=ro==="H"?1:0,yD=ro==="D"?1:0,yA=ro==="A"?1:0,bo=(pH-yH)*(pH-yH)+(pD-yD)*(pD-yD)+(pA-yA)*(pA-yA);
+        MM.push({conf:conf,correct:correct,bo:bo,bu:0.6667});}});
+    if(MM.length<6)html+='<div class="aw-pend">Not enough settled calls to test the office’s nerve yet.</div>';
+    else{
+      const edges=[[0.34,0.50],[0.50,0.65],[0.65,0.80],[0.80,1.01]];
+      const bands=edges.map(function(e){return {lo:e[0],hi:e[1],n:0,hit:0,cs:0};});
+      MM.forEach(function(m){for(let i=0;i<bands.length;i++){if(m.conf>=bands[i].lo&&m.conf<bands[i].hi){bands[i].n++;bands[i].hit+=m.correct;bands[i].cs+=m.conf;break;}}});
+      for(let i=bands.length-1;i>0;i--){if(bands[i].n>0&&bands[i].n<4){bands[i-1].n+=bands[i].n;bands[i-1].hit+=bands[i].hit;bands[i-1].cs+=bands[i].cs;bands[i-1].hi=bands[i].hi;bands[i].n=0;}}
+      const shown=bands.filter(function(b){return b.n>0;});
+      const lab=function(b){return Math.round(b.lo*100)+'–'+Math.round(Math.min(1,b.hi)*100)+'% sure';};
+      html+='<div class="nrd-key"><span class="a"><i></i>right this often</span><span class="b"><i></i>how sure they were</span></div>';
+      shown.forEach(function(b){const acc=Math.round(b.hit/b.n*100),ref=Math.round(b.cs/b.n*100);
+        html+='<div class="nrd-duo"><div class="lab"><span>'+lab(b)+'</span><span><b>'+acc+'%</b> right · '+b.n+' calls</span></div>'
+          +'<div class="bar a"><i style="width:'+acc+'%"></i></div>'
+          +'<div class="bar b"><i style="width:'+ref+'%"></i></div></div>';});
+      const mc=MM.reduce(function(a,m){return a+m.conf;},0)/MM.length,ma=MM.reduce(function(a,m){return a+m.correct;},0)/MM.length;
+      const gap=Math.round((mc-ma)*100);
+      const mbo=MM.reduce(function(a,m){return a+m.bo;},0)/MM.length,mbu=MM.reduce(function(a,m){return a+m.bu;},0)/MM.length;
+      const skill=1-mbo/mbu,hi=shown[shown.length-1];
+      html+='<div class="nrd-tiles" style="grid-template-columns:1fr 1fr;margin-top:10px">'
+        +'<div class="nrd-tile"><b>'+Math.round(hi.hit/hi.n*100)+'<small>%</small></b><span>right when '+Math.round(hi.lo*100)+'%+ sure</span></div>'
+        +'<div class="nrd-tile"><b>'+(skill>=0?'+':'')+skill.toFixed(2)+'</b><span>skill vs a coin toss</span></div>'
+        +'</div>';
+      html+='<div class="nrd-line">'+(gap>4?('🙈 The office is <b>'+gap+' pts</b> overconfident — surer than it is right'):gap<-4?('🧊 The office is <b>'+(-gap)+' pts</b> underconfident — better than it thinks'):'🎯 The office is well-calibrated — its confidence matches its results')+'</div>';
+      if(state.player&&state.player.predictions){
+        let y=0,yt=0;const pr=state.player.predictions;
+        settled.forEach(function(f){const cc=c.map[f.id];if(!cc)return;const r=state.results[f.id],v=fxView(f),p=pr[f.id];if(!p)return;
+          if(f.kn){const hN=cc.w[v.home.n]||0,aN=cc.w[v.away.n]||0,tot=hN+aN;if(tot<8)return;if(!p.w)return;if(Math.max(hN,aN)/tot<0.8)return;yt++;if(p.w===r.w)y++;}
+          else{const tot=cc.H+cc.D+cc.A;if(tot<5)return;if(!p.o)return;if(Math.max(cc.H,cc.D,cc.A)/tot<0.8)return;const ro=r.h>r.a?"H":(r.h<r.a?"A":"D");yt++;if(p.o===ro)y++;}});
+        if(yt>=3)html+='<span class="aw-you">On the office’s lock-of-the-week calls (80%+ sure), you went <b>'+y+'/'+yt+'</b></span>';
+      }
     }
   }
   html+='</div>';
@@ -5416,6 +5574,32 @@ async function renderNerds(body){
     }
   }
   html+='</div>';
+  /* GOALS BY ROUND — the tournament tightening (or blowing open) as the stakes climb; public scores only */
+  {
+    const rb={};
+    FIXTURES.forEach(function(f){const r=state.results[f.id];if(!r)return;
+      const set=f.kn?(r.w!=null):(r.h!=null);if(!set)return;if(r.h==null||r.a==null)return;
+      const o=rb[f.round]||(rb[f.round]={g:0,m:0});o.g+=(+r.h)+(+r.a);o.m++;});
+    const order=ROUNDS.map(function(x){return x[0];}).filter(function(k){return rb[k]&&rb[k].m>=1;});
+    if(order.length){
+      const shortR={MD1:"MD1",MD2:"MD2",MD3:"MD3",R32:"R32",R16:"R16",QF:"QF",SF:"SF",FINAL:"FIN"};
+      const longR={MD1:"Matchday 1",MD2:"Matchday 2",MD3:"Matchday 3",R32:"Round of 32",R16:"Round of 16",QF:"Quarter-finals",SF:"Semi-finals",FINAL:"Final"};
+      const gpm=function(k){return rb[k].g/rb[k].m;};
+      let peak=order[0],trough=order[0];order.forEach(function(k){if(gpm(k)>gpm(peak))peak=k;if(gpm(k)<gpm(trough))trough=k;});
+      const maxG=gpm(peak)||1;
+      html+='<div class="aw-card"><div class="aw-hd"><span class="aw-ic">🥅</span><div class="aw-t"><b>Goals by round</b><span>Goals per match as the tournament climbs</span></div></div>';
+      html+='<div class="nrd-rounds">'+order.map(function(k){const v=gpm(k),h=Math.max(3,Math.round(v/maxG*100));
+        return '<div class="rc"><i class="'+(k===peak?'hot':'')+'" style="height:'+h+'%"><em>'+v.toFixed(1)+'</em></i></div>';}).join('')+'</div>';
+      html+='<div class="nrd-rlab">'+order.map(function(k){return '<u>'+shortR[k]+'</u>';}).join('')+'</div>';
+      const grp=["MD1","MD2","MD3"].filter(function(k){return rb[k];}),ko=["R32","R16","QF","SF","FINAL"].filter(function(k){return rb[k];});
+      const avg=function(keys){let g=0,m=0;keys.forEach(function(k){g+=rb[k].g;m+=rb[k].m;});return m?g/m:null;};
+      const ga=avg(grp),ka=avg(ko);
+      if((gpm(peak)-gpm(trough))<=0.1)html+='<div class="nrd-line">📏 Dead flat — every round is serving about <b>'+gpm(peak).toFixed(1)+'</b> goals a game</div>';
+      else if(ga!=null&&ka!=null)html+='<div class="nrd-line">'+(ka<ga-0.1?('📉 The tournament is tightening — knockouts (<b>'+ka.toFixed(2)+'</b>/game) are drier than the groups (<b>'+ga.toFixed(2)+'</b>)'):ka>ga+0.1?('📈 The knockouts are blowing open — <b>'+ka.toFixed(2)+'</b>/game vs the groups’ <b>'+ga.toFixed(2)+'</b>'):('➖ Goals are holding steady — groups <b>'+ga.toFixed(2)+'</b>, knockouts <b>'+ka.toFixed(2)+'</b>'))+'</div>';
+      html+='<div class="nrd-line">🌋 Wildest round: <b>'+longR[peak]+'</b> at <b>'+gpm(peak).toFixed(2)+'</b> goals a game</div>';
+      html+='</div>';
+    }
+  }
   /* THE FORM CURVE — office hit rate, matchday by matchday */
   html+='<div class="aw-card"><div class="aw-hd"><span class="aw-ic">📈</span><div class="aw-t"><b>The form curve</b><span>Office hit rate, matchday by matchday</span></div></div>';
   if(!c)html+=pend;
@@ -5462,6 +5646,69 @@ async function renderNerds(body){
     if(state.player&&state.player.champ){
       const share=nrdPct(cm[state.player.champ]||0,c.champN);
       html+='<span class="aw-you">Your ticket: <b>'+esc(state.player.champ)+'</b> — '+(dead(state.player.champ)?'💀 already out. It happens to the best of us':('alive, riding with <b>'+share+'%</b> of the office'))+'</span>';}
+  }
+  html+='</div>';
+  /* STILL ALIVE — the mathematical points ceiling, and who can still catch the leader */
+  {
+    const fieldN=playing.length;
+    if(fieldN>0&&maxP>0){
+      const unsettled=FIXTURES.filter(function(f){const r=state.results[f.id];return !(r&&(f.kn?r.w!=null:r.h!=null));});
+      let remMax=0;unsettled.forEach(function(f){if(!f.kn){remMax+=5;return;}
+        let k=koPts(f)+koBonus(f);if(puLive()&&/^k[0-9]+$/.test(f.id)&&(+f.id.slice(1))>=PU_FROM_K)k+=PU_UPSET;remMax+=k;});
+      if(!state.results._champ)remMax+=CHAMP_PTS;
+      const L=sorted[0].pts|0;
+      const aliveN=playing.filter(function(r){return (L-(r.pts|0))<=remMax;}).length;
+      const leadNm=esc((sorted[0].name||"").split(" ")[0]);
+      html+='<div class="aw-card"><div class="aw-hd"><span class="aw-ic">⏳</span><div class="aw-t"><b>Still alive</b><span>Points still on the table — and who can mathematically still win it</span></div></div>';
+      html+='<div class="nrd-tiles"><div class="nrd-tile"><b>'+remMax+'</b><span>points on the table</span></div><div class="nrd-tile"><b>'+nrdN(aliveN)+'</b><span>can still win it</span></div><div class="nrd-tile"><b>'+nrdPct(aliveN,fieldN)+'<small>%</small></b><span>of the field alive</span></div></div>';
+      html+='<div class="nrd-meter"><div class="lab"><span>Still in the title race</span><b>'+nrdN(aliveN)+' / '+nrdN(fieldN)+'</b></div><div class="nrd-track"><i style="width:'+nrdPct(aliveN,fieldN)+'%"></i></div></div>';
+      if(unsettled.length===0)html+='<div class="nrd-line">🏁 It’s decided — no points left to play for</div>';
+      else if(aliveN===fieldN)html+='<div class="nrd-line">🌅 Still wide open — with <b>'+remMax+'</b> points left, everyone who’s played can catch <b>'+leadNm+'</b></div>';
+      else if(aliveN===1)html+='<div class="nrd-line">👑 <b>'+leadNm+'</b> has clinched it — nobody else can mathematically reach the top</div>';
+      else html+='<div class="nrd-line">🔪 The guillotine is dropping — only the top <b>'+nrdN(aliveN)+'</b> can still reach <b>'+leadNm+'</b>’s total</div>';
+      const meRowA=state.meSlug?rows.find(function(r){return r.slug===state.meSlug;}):null;
+      if(meRowA&&(meRowA.predicted|0)>0){
+        let yc=remMax;
+        if(state.player&&state.player.champ&&!state.results._champ){
+          const koSetA=new Set();let koAllA=true;
+          FIXTURES.forEach(function(f){if(!f.kn||f.round!=="R32")return;if(koReady(f)){const v=fxView(f);koSetA.add(v.home.n);koSetA.add(v.away.n);}else koAllA=false;});
+          const beatenA=new Set();
+          settled.forEach(function(f){if(!f.kn)return;const r=state.results[f.id],v=fxView(f);const l=r.w===v.home.n?v.away.n:(r.w===v.away.n?v.home.n:null);if(l)beatenA.add(l);});
+          const koKnownA=koAllA&&koSetA.size>=32,champ=state.player.champ;
+          if(beatenA.has(champ)||(koKnownA&&!koSetA.has(champ)))yc-=CHAMP_PTS;
+        }
+        const gap=L-(meRowA.pts|0);
+        html+='<span class="aw-you">'+(gap<=0?'You’re leading it — hold the line':(gap<=yc?('You’re still alive — <b>'+gap+'</b> back with up to <b>'+yc+'</b> still to play for'):('Out of the title race — <b>'+gap+'</b> back, only <b>'+yc+'</b> left · but the office titles are still on')))+'</span>';
+      }
+      html+='</div>';
+    }
+  }
+  /* SWING MATCHES — sealed, unsettled ties ranked by stake × how split the office is */
+  html+='<div class="aw-card"><div class="aw-hd"><span class="aw-ic">🎢</span><div class="aw-t"><b>Swing matches</b><span>Locked and unsettled — the calls still in play that could move the board</span></div></div>';
+  if(!c)html+=pend;
+  else{
+    const cand=[];
+    FIXTURES.forEach(function(f){const r=state.results[f.id];if(r&&(f.kn?r.w!=null:r.h!=null))return;
+      if(f.kn&&!koReady(f))return;if(!lockedM(f))return;const cc=c.map[f.id];if(!cc)return;const v=fxView(f);
+      let d,stake,segs;
+      if(f.kn){const hN=cc.w[v.home.n]||0,aN=cc.w[v.away.n]||0,tot=hN+aN;if(tot<8)return;
+        const sh=hN/tot,shp=Math.round(sh*100);d=2*Math.min(sh,1-sh);stake=koPts(f);
+        segs=[{k:'h',pct:shp},{k:'a',pct:100-shp}];}
+      else{const tot=cc.H+cc.D+cc.A;if(tot<5)return;
+        const pH=cc.H/tot,pD=cc.D/tot,pA=cc.A/tot;d=1-Math.max(pH,pD,pA);stake=3;
+        segs=[{k:'h',pct:Math.round(pH*100)},{k:'d',pct:Math.round(pD*100)},{k:'a',pct:Math.round(pA*100)}];}
+      cand.push({v:v,swing:stake*d,stake:stake,segs:segs});});
+    if(!cand.length)html+='<div class="aw-pend">The board’s quiet — no sealed matches in play right now. Back at the next kickoff.</div>';
+    else{
+      cand.sort(function(a,b){return b.swing-a.swing;});
+      const top=cand.slice(0,5),maxS=Math.max.apply(null,top.map(function(x){return x.swing;}).concat([0.01]));
+      const fl=function(t){return FL[t]?flagTag(FL[t]):'';};
+      top.forEach(function(x){
+        html+='<div class="nrd-swing"><div class="sh"><span class="mt">'+fl(x.v.home.n)+esc(x.v.home.n)+' v '+fl(x.v.away.n)+esc(x.v.away.n)+'</span><span class="stk">+'+x.stake+'</span></div>'
+          +'<div class="room-bar">'+x.segs.filter(function(s){return s.pct>0;}).map(function(s){return '<i class="'+s.k+'" style="width:'+s.pct+'%"></i>';}).join('')+'</div>'
+          +'<div class="nrd-track" style="height:5px;margin-top:5px"><i style="width:'+Math.round(x.swing/maxS*100)+'%"></i></div></div>';});
+      html+='<div class="nrd-line" style="margin-top:8px">🎢 Swing = what’s at stake × how split the office is — a sealed 50/50 in a big tie tops the list.</div>';
+    }
   }
   html+='</div>';
   /* NERD CORNER — loose numbers with nowhere else to live */
