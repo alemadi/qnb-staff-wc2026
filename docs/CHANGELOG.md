@@ -5,6 +5,22 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-07-06 (Doha) — PERF ①: boot in one round trip + results freshness for long-open tabs
+
+**Commits:** this commit (`index.html` + changelog). **Frontend-only — no DB, scoring, sync-protocol or lock-logic change.** First slice of the app-optimization pass on `claude/app-optimization-dh4i0e`; the slim-RPC + standings-cache slice (server side) follows as its own commit with its own SQL.
+
+**What:**
+- **Batched boot** — new `sbatchJSON(keys)`: one PostgREST `key=in.("…")` read replaces `init()`'s four serial awaits (`wc:results` → `wc:kteams` → `wc:powerups_live` → own `wc:player:` blob). Keys are double-quoted + escaped, so dotted slugs are safe. Returns `null` on ANY failure and `init()` then runs the old serial path **kept verbatim** — a flaky network can never boot worse than before.
+- **`refreshResults()`** — re-reads the single `wc:results` row (~0.6 KB gzipped) inside the same live window that already gates the ESPN poll, plus on tab-return (`visibilitychange`), ≥55 s apart. **Additive-only, the `orgSyncResults` rule:** folds in keys this tab has never seen; never overwrites or deletes a local entry — an organizer's unsaved edits/deletions and the demo stay intact. On fold-in: `bustStandings()` + re-render the current view (matches/bracket/leaderboard/me).
+
+**Why:** the DB lives in `ap-southeast-2` and the players in Doha — each REST round trip costs ~0.3–0.8 s, so the serial boot burned ~1–2 s of pure latency before anything rendered, on every open, for 687 players. And `state.results` was loaded once at boot and never again for players: a tab left open through a match night — worst case the office TV kiosk — never saw robot-confirmed results (cards, groups, bracket and the Room stayed pre-settle until a manual reload) even as the leaderboard's RPC numbers moved.
+
+**Verified:** `node --check` clean. Headless Chromium, fully mocked network (zero live traffic, zero writes) — **27/27**: signed-out and signed-in boots issue exactly ONE kv request (batch names exactly the right keys; per-key boot reads = 0); `state.results`/`resultsSeen`/`meSlug`/`puLive` land correctly; join/matches views render with no page errors; batch forced to 500 → serial fallback issues the classic 4 reads and boots identically; refresh merge folds a new key, refuses to overwrite an existing one, refuses a seen-but-locally-deleted one, costs one single-row read, throttles a second call inside 55 s, never polls in demo, and fires on `visibilitychange`. The exact client-built `in.()` URL was also run against **live** PostgREST: HTTP 200, 3 rows, 1.5 KB gzipped, one round trip (the unset flag row is simply absent — handled).
+
+**Rollback:** `git revert` this commit — frontend-only, no state or DB coupling.
+
+---
+
 ## 2026-07-06 (Doha) — FULL TIME pass: podium home takeover + per-player "Wrapped" recap (dormant until the champion settles)
 
 **Commits:** `aa21fa9` (`index.html` + changelog) + its merge with the Wave-B launch tip `a4c4180` (concurrent session; changelog-only conflict). The merge also makes `tests/wave-b/run.mjs` locate the `<script>` tag instead of hardcoding line 1784 — this pass's overlay markup shifted the script start, which broke that extraction; both suites re-run green on the merged file (**27/27 Wave-B vectors, `wc_rank` === `PU_RANK`**; this pass's 50-assert harness). **Frontend only — no DB / scoring-math / sync-protocol change.** Seal-safe: every read is settled results, public standings, or post-lock blobs (the same access class as the Room). New state: one localStorage key (`wc:wrapped:auto`, the one-shot auto-open marker). **Fully dormant today** — every surface below is gated on `ftOver()` = champion set (`_champ`) **AND** the Final result (`k32.w`) recorded, i.e. the standings are final and the +25 has paid. `?wrapped` / `#wrapped` previews the UI on current data for review (house pattern, like `?powerups`).

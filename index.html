@@ -2484,6 +2484,23 @@ async function sbulkJSON(pre){
     return out;
   }catch(e){return out;}
 }
+/* Batched point-reads: N kv rows in ONE request (PostgREST key=in.(...)). Boot uses
+   this to collapse its four serial reads — each was a full Doha→Sydney round-trip,
+   ~1s of pure latency before anything rendered. Returns {key:parsedValue}; a row the
+   server doesn't hold is simply absent. Returns null on ANY failure so callers fall
+   back to per-key reads — a flaky network can never boot worse than the serial path. */
+async function sbatchJSON(keys){
+  if(!CONFIGURED||!keys.length)return null;
+  try{
+    const q=keys.map(k=>'"'+String(k).replace(/\\/g,"\\\\").replace(/"/g,'\\"')+'"').join(",");
+    const r=await fetch(SUPABASE_URL+"/rest/v1/kv?key=in."+encodeURIComponent("("+q+")")+"&select=key,value",{headers:SBH});
+    const j=await r.json();
+    if(!Array.isArray(j))return null;
+    const out={};
+    j.forEach(x=>{try{out[x.key]=(typeof x.value==="string")?JSON.parse(x.value):x.value;}catch(e){}});
+    return out;
+  }catch(e){return null;}
+}
 /* ===== Standings: server-computed via RPC (slim payload) =====
    One Postgres function (sql/standings.sql) scores everyone server-side and returns
    ~60 bytes/player instead of their full prediction blob (and never their PIN hash).
@@ -6778,10 +6795,37 @@ function bindSwipeGestures(){
   });
   c.addEventListener("pointercancel",()=>{drag=false;c.style.transition="transform .25s";c.style.transform="";c.style.borderColor="";if(gl)gl.style.opacity=0;if(gr)gr.style.opacity=0;});
 }
+/* ===== Results freshness (kiosk + long-open tabs) =====
+   state.results loads once at boot, so a tab left open through a match night — worst
+   case the office TV — never saw robot-confirmed results: cards, groups, bracket and
+   the Room stayed pre-settle until a manual reload even as the leaderboard RPC moved.
+   This re-reads the single wc:results row (~0.6 KB gzipped) inside the same live
+   window that gates the ESPN poll, plus on tab-return. ADDITIVE-ONLY, the same rule
+   as orgSyncResults: fold in keys this tab has NEVER seen; never overwrite or delete
+   a local entry — an organizer's unsaved edits/deletions and the demo stay intact. */
+let RES_T=0;
+async function refreshResults(){
+  if(!CONFIGURED||state.demo)return;
+  if(Date.now()-RES_T<55000)return;                  /* ≥55s apart however often the hooks fire */
+  RES_T=Date.now();
+  const srv=await getJSON("wc:results",true);
+  if(!srv||typeof srv!=="object")return;
+  if(!state.resultsSeen)state.resultsSeen=new Set(Object.keys(state.results));
+  let added=0;
+  for(const k in srv){
+    if(!state.resultsSeen.has(k)&&!(k in state.results)){state.results[k]=srv[k];state.resultsSeen.add(k);added++;}
+  }
+  if(!added)return;
+  bustStandings();                                   /* scoring inputs changed — next standings/KO read recomputes */
+  if(state.view==="matches"){renderFilters();renderMatches();}
+  else if(state.view==="bracket")renderBracket();
+  else if(state.view==="leaderboard")renderLeaderboard();
+  else if(state.view==="me")renderMe();
+}
 function liveTick(){
   const now=Date.now()+CLOCK_OFFSET;
   const active=FIXTURES.some(m=>{const k=new Date(m.ko).getTime();return now>k-15*60e3&&now<k+(m.kn?210:150)*60e3;});
-  if(active)fetchLive();
+  if(active){fetchLive();refreshResults();}
   if(active&&state.view==="leaderboard"&&LB_MODE==="people"&&!state.demo)renderLeaderboard(); /* board heartbeat: only while a match is live, so odo count-up fires when results land — never replays the board on quiet weeks (60s cadence, cached) */
   /* MATCHNIGHT F1.5 — Room heartbeat: patch score/clock textContent from the LIVE cache only.
      NEVER renderRoomBody() on the steady tick — that would bulk-pull the players blob on a timer.
@@ -6919,13 +6963,25 @@ function tvLoop(){
 }
 
 (async function init(){
-  state.results=await getJSON("wc:results",true)||{};
-  state.resultsSeen=new Set(Object.keys(state.results));     /* keys this tab has ever seen — so an org save can't wipe robot results it never loaded */
-  state.kteams=await getJSON("wc:kteams",true)||{};
-  state.puLive=!!(await getJSON("wc:powerups_live",true));   /* WAVE B launch gate — off until the organizer flips it (see runbook) */
-  state.org=false; /* org actions are server-verified per call — unlock fresh each load */
+  /* Boot reads collapsed into ONE request (results+kteams+flag+own blob used to be
+     four serial awaits = four Doha→Sydney round-trips before first render). The
+     serial path below is kept verbatim as the fallback for any batch hiccup. */
   const me=await getJSON("wc:me",false);
-  if(me){const p=await getJSON("wc:player:"+me,true);if(p){state.player=p;state.meSlug=me;}}
+  const bkeys=["wc:results","wc:kteams","wc:powerups_live"];if(me)bkeys.push("wc:player:"+me);
+  const boot=await sbatchJSON(bkeys);
+  if(boot){
+    state.results=boot["wc:results"]||{};
+    state.kteams=boot["wc:kteams"]||{};
+    state.puLive=!!boot["wc:powerups_live"];                 /* WAVE B launch gate — off until the organizer flips it (see runbook) */
+    if(me&&boot["wc:player:"+me]){state.player=boot["wc:player:"+me];state.meSlug=me;}
+  }else{
+    state.results=await getJSON("wc:results",true)||{};
+    state.kteams=await getJSON("wc:kteams",true)||{};
+    state.puLive=!!(await getJSON("wc:powerups_live",true)); /* WAVE B launch gate — off until the organizer flips it (see runbook) */
+    if(me){const p=await getJSON("wc:player:"+me,true);if(p){state.player=p;state.meSlug=me;}}
+  }
+  state.resultsSeen=new Set(Object.keys(state.results));     /* keys this tab has ever seen — so an org save can't wipe robot results it never loaded */
+  state.org=false; /* org actions are server-verified per call — unlock fresh each load */
   state.filter=defaultRound();
   const TV=tvMode();                                 /* MATCHNIGHT F4 — kiosk board */
   if(TV)document.body.classList.add("tv");
@@ -6940,7 +6996,7 @@ function tvLoop(){
   setupBanner();
   renderPulse();setInterval(renderPulse,30000);
   fetchLive();setInterval(liveTick,60000);
-  document.addEventListener("visibilitychange",function(){if(!document.hidden&&LIVEF.on)fetchLive();});
+  document.addEventListener("visibilitychange",function(){if(document.hidden)return;if(LIVEF.on)fetchLive();refreshResults();}); /* tab-return: live scores + any results settled while pocketed */
   if(!CONFIGURED){const w=document.getElementById("cfg-warn");if(w)w.style.display="block";}
   syncClock();setInterval(syncClock,600000);
   tickCountdown();setInterval(tickCountdown,1000);
