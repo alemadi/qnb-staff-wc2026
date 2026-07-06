@@ -1263,7 +1263,9 @@
   .pb-watch{color:var(--gold);font-weight:700;font-size:11px;text-decoration:none;margin-left:auto}
   /* M10 — day-banner scorecard */
   .daybanner .db-earn{color:var(--lime)}
-  .db-pips{letter-spacing:2px;color:var(--gold);font-size:10px;margin-left:6px}
+  .db-pips{display:inline-flex;gap:3px;margin-left:7px;vertical-align:middle;transform:translateY(-1px)}
+  .db-pip{width:7px;height:7px;background:var(--gold);transform:skewX(-14deg);border-radius:1px}
+  .db-pip.o{background:transparent;box-shadow:inset 0 0 0 1.3px var(--gold)}
   /* M11 — Qatar settled-card cleanup: .done fades the frame, maroon glow goes too */
   .match-card.qatar.done{box-shadow:none;border-color:rgba(138,21,56,.3)}
 
@@ -7786,7 +7788,7 @@ function renderDayBanner(){
     if(settled)got+=rvVerdict(m,p,r,puChips()).pts;
     else{left++;pot+=m.kn?(koPts(m)+((p.h!=null&&p.a!=null)?koBonus(m):0)):((p.h!=null&&p.a!=null)?5:3);}
   });
-  const pips='<span class="db-pips">'+'\u25b0'.repeat(mine.length-left)+'\u25b1'.repeat(left)+'</span>'; /* settled vs pending pips (mine.length>=1 here) */
+  const pips='<span class="db-pips">'+'<i class="db-pip"></i>'.repeat(mine.length-left)+'<i class="db-pip o"></i>'.repeat(left)+'</span>'; /* CSS-drawn settled vs pending pips - avoids broken Unicode glyph fallback on mobile (mine.length>=1 here) */
   if(left>0&&got===0)el.innerHTML='Today: up to <b>+'+pot+'</b> riding on your '+left+' pick'+(left===1?'':'s')+pips;
   else if(left>0)el.innerHTML='Today so far: <b class="db-earn">+'+got+'</b> \u00b7 '+left+' still to play'+pips+' <small>up to +'+(got+pot)+' possible</small>';
   else el.innerHTML='Today: <b class="db-earn">+'+got+'</b> \u2014 all settled \u2713'+pips;
