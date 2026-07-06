@@ -5,6 +5,25 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-07-06 (Doha) — BANNER REWORK: the persistent banner becomes a what's-new billboard with feature rows (branch, deploying on organizer's "Go ahead and push")
+
+**Commits:** this commit (`index.html` + `tests/share-cards/run.mjs` + changelog) on `claude/banner-content-display-pzpnff`, cut from `b055b84` and **rebased onto `main` `6eb8660`** (batch four) after main moved twice in flight — the banner-hub deploy (`70711fd`) and Nerds batch four. `tests/share-cards/run.mjs` auto-merged; `index.html` had three banner hunks resolved in this rework's favour; this changelog keeps both sides. **Frontend only — no DB / scoring / sync change, zero new backend traffic.** Organizer ask: the banner's contents and display are stale — "more important and more interesting new features not properly displayed/marketed."
+
+**Why (supersedes the banner-hub layer's copy and chip grid, keeps its plumbing):** even after the hub pass, the banner still *led* with power-ups ("Power-ups are LIVE · share cards are here") — days-old news — and sold today's launches as four cramped icon chips with no pitch. This re-leads the content around what's actually new and gives each feature a name, a one-line pitch, and a door.
+
+**What (same `#xbanner` machinery — sticky, shrink-only, auto-strip on scroll, spacer, kiosk-hidden):**
+- **Content re-led:** header → "Just dropped: 🤓 nerd stats · 📤 your card deck"; icon ⚡ → ✨. Power-ups stay as the third, time-sensitive row (armband before Thursday's QF locks), not the headline.
+- **Icon chips → feature rows** (`.xb-feats`/`.xb-feat` replace `.xb-chips`/`.xb-chip`: real `<button>`s with name + pitch + chevron; stacked on phones, 3-across ≥600px): 🤓 **Stats for nerds** (NEW tag, "21 cards of office truth…") → the hub pass's `xbGoMode('nerds')` (kept — it deliberately never stamps `wc:whatsnew`; the Nerds pill + leaderboard visit clear both NEW-dot keys) · 📤 **Your card deck** → `openShareTray()` · ⚡ **Captain's armband ×2** → `openFaq('power-up')`. Trophy Room cedes its row to the spotlight/CTA (it's day-old news); the card-body tap still toggles the strip.
+- **CTA** "How power-ups work" → "**Everything that's new ›**" (`openWhatsNew()`, the re-openable spotlight); the strip CTA likewise → "What's new ›".
+- **One full showing for everyone:** the hub pass flipped the default to expanded but kept `wc:banner:min` — players who'd ever shrunk the old banner would never see the new card in full. `BANNER_MIN_KEY` → **`wc:banner:min2`**, so the refreshed card gets exactly one guaranteed full showing; scroll auto-shrink and the remembered chevron choice behave as before on the new key.
+- Test kept in sync: the share-cards banner assertion now checks the nerd-stats + card-deck copy and that the rows carry `xbGoMode` / `openShareTray` / `power-up` handlers (the old assertion pinned the `share cards are here` heading this rework retires).
+
+**Verified on the rebased tree:** `share-cards` **106 PASS** + only the **pre-existing** 340px header overlap (identical on base) · `nerd-stats` ALL GREEN (all 21 cards) · `perf-boot` ALL GREEN · `node --check` clean ×2. One-off headless click-through proof (zero page errors): full card shows by default on a fresh profile; 🤓 row → leaderboard + Nerds pill on + seen-keys set, `wc:whatsnew` untouched; ⚡ row → FAQ opens on power-ups; CTA → spotlight re-opens; body tap → strip. Banner screenshots eyeballed at 390px (full + strip) and 720px (3-across).
+
+**Rollback:** `git push origin +6eb8660:main` (client-only — reverts `main` to the batch-four tip, the parent of this deploy; nothing server-side changed). The app ships a service worker: a stale shell may need one hard reload / app reopen. The min-key bump rolls back gracefully: `wc:banner:min2` is orphaned (harmless) and players return to their old `wc:banner:min` choice.
+
+---
+
 ## 2026-07-06 (Doha) — MAIN DEPLOY: STATS FOR NERDS · batch four — raffle-or-racetrack + three bench cards + Trophy Room race pulse
 
 **Commits:** this commit (`index.html` + `tests/nerd-stats/run.mjs` + changelog) on `claude/stats-for-nerds-3yajyc`, **rebased onto `main` `70711fd` (the louder banner-hub deploy; `index.html` auto-merged — disjoint regions; this changelog was the only conflict, both entries kept) then fast-forwarded to `main` on the organizer's explicit "Go ahead"** (in direct reply to "Say push and it ships"). **Frontend only — no DB / scoring / sync change, zero new backend traffic.** One deliberate shared-code touch (below); everything else is additive `renderNerds`/`renderAwards` display.

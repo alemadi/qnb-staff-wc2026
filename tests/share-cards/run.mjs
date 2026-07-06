@@ -316,10 +316,12 @@ const clash = await pg.evaluate(()=>{ const bx=id=>{const e=document.getElementB
     jumpOverlap: inter(f,j), fabBottom: f?Math.round(f.b):null, vh: window.innerHeight }; });
 if(!clash.navOverlap) pass('FAB clears the bottom nav'); else fail('FAB overlaps nav: '+JSON.stringify(clash));
 if(!clash.jumpOverlap) pass('FAB clears the "next unpicked" button'); else fail('FAB overlaps jumpnext: '+JSON.stringify(clash));
-/* persistent banner stays about power-ups; the FAB owns the tray */
+/* persistent banner markets the current feature set with tappable deep-link rows; the FAB still owns the tray */
 const xb = await pg.evaluate(()=>{ const b=document.getElementById('xbanner');
-  return { shown: !!(b && b.style.display!=='none'), copy: !!(b && b.textContent.includes('share cards are here')) }; });
-if(xb.shown && xb.copy) pass('banner shows every visit with the share-cards copy'); else fail('banner: '+JSON.stringify(xb));
+  return { shown: !!(b && b.style.display!=='none'),
+    copy: !!(b && b.textContent.includes('Stats for nerds') && b.textContent.includes('card deck')),
+    links: !!(b && b.querySelector('.xb-feat[onclick*="xbGoMode"]') && b.querySelector('.xb-feat[onclick*="openShareTray"]') && b.querySelector('.xb-feat[onclick*="power-up"]')) }; });
+if(xb.shown && xb.copy && xb.links) pass('banner shows every visit, markets nerd stats + the card deck, rows deep-link'); else fail('banner: '+JSON.stringify(xb));
 await pg.screenshot({ path: `${SCRATCH}/live-header.png`, clip:{x:0,y:0,width:1280,height:300} });
 const tray = await pg.evaluate(async ()=>{ try{
   /* earlier tests ran consensusFull() over the 12 seeded blobs, dropping QF counts below
