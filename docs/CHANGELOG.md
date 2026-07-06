@@ -5,6 +5,26 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-07-06 (Doha) — MAIN DEPLOY: the home banner becomes a "what's new" hub for all four launches
+
+**Commits:** this commit (`index.html` + changelog) on `claude/nudge-users-new-features-1xjgw6`, cherry-picked onto the live nudge-pass tip (`b055b84`) and fast-forwarded to `main` **on the organizer's explicit "Go ahead with this solution."** A parallel session shipped the nudge pass below (spotlight refresh + engagement-cleared breadcrumbs + Help re-open) to production while this was in flight; this deploy therefore adds **only** the louder home-banner layer and drops the two commits that duplicated that live work. **Frontend only — no DB / scoring / sync change, zero new backend traffic.** Organizer ask: "slightly louder, and for all the new features I shipped today."
+
+**Why:** the live nudge pass made discovery correct but quiet — a one-time spotlight plus small breadcrumbs. Today's four launches had home surfaces (⚡ power-ups → this banner; 📤 share cards → the deck FAB), but 🏆 Trophy Room and 🤓 Nerds (Leaderboard modes) had only the quiet nav dot, and the banner itself defaulted to a collapsed strip so its chips were never seen. This turns the persistent banner (`#xbanner`) into the one loud, self-retiring hub for all four.
+
+**What:**
+- **The four decorative chips are now tappable deep-links** (each a real `<button>`, not `aria-hidden` decoration): ⚡ **Power-ups** → `openFaq('power-up')`, 🏆 **Trophy Room** → new `xbGoMode('awards')`, 🤓 **Nerds Stats** → `xbGoMode('nerds')`, 📤 **Share cards** → `openShareTray()`. `xbGoMode(m)` jumps straight into that Leaderboard mode and `markSeen(m)` (clearing the mode's NEW pill + the nav dot) — and deliberately **does not touch `wc:whatsnew`**, so a chip never suppresses the live one-time spotlight for someone who hasn't seen it. The banner's tap-to-toggle already ignores taps on `a,button`, so a chip navigates instead of collapsing the strip.
+- **Banner now greets players expanded** — the default flipped from the shrunk strip to the full card (`BANNER_MIN_KEY` null ⇒ expanded) so the chips are actually seen. It still auto-shrinks on scroll, still remembers an explicit collapse, and still retires itself at `BANNER_UNTIL` (2026-07-15). This is the "slightly louder" knob; a returning player who'd explicitly shrunk it keeps their choice.
+- **Copy broadened** — the sub now names the Trophy Room, Stats for Nerds, and the share cards. The `Power-ups are LIVE · share cards are here` heading is unchanged (kept verbatim — the share-cards test pins that substring).
+- **`.xb-chip` restyled as a button** (border:0, full-width, pointer, hover/active feedback) — same gold-badge look, now interactive.
+
+**Left deliberately unchanged:** 📤 share discovery still *belongs* to the deck FAB (the banner chip is an extra door, not a competing persistent hub); the live nudge pass's one-time spotlight, engagement-cleared nav dot, and Help-sheet re-open row all stay exactly as deployed. Layered: loud one-time spotlight → always-on home banner (now a 4-feature hub) → quiet self-clearing dots → on-demand re-open from Help.
+
+**Verified on this (rebased) tree:** `node tests/share-cards/run.mjs` — banner shows every visit with the `share cards are here` copy ✓, the FAB (not the banner) still owns the tray ✓, FAB count/clearance ✓ (only the **pre-existing** 340px header-overlap failure remains). `node tests/nerd-stats/run.mjs` **ALL GREEN**. `node tests/perf-boot/run.mjs` **ALL GREEN**. Direct probe on the real page: banner defaults expanded; all four chips are `<button>`s with the right deep-links; tapping 🤓 → `state.view='leaderboard'`, `LB_MODE='nerds'`, `wc:seen:nerds=1`, **`wc:whatsnew` still null**; 🏆 → awards mode. Expanded-banner screenshot at 390px eyeballed (clean 2×2 chip grid).
+
+**Rollback:** `git push origin +b055b84:main` (client-only — reverts `main` to the live nudge-pass tip, the parent of this deploy; nothing server-side changed). The app ships a service worker: a stale shell may need one hard reload / app reopen.
+
+---
+
 ## 2026-07-06 (Doha) — MAIN DEPLOY: the nudge pass (spotlight refresh + engagement-cleared breadcrumbs) ships to production
 
 **Commits:** this commit (changelog), then `main` fast-forwarded `27a528e` → this tip and pushed **on the organizer's explicit "Push main"**. Main had moved under the branch (the two Stats-for-nerds card batches `366051b`/`27a528e`) — **rebased onto the new tip first**; `index.html` and `tests/share-cards/run.mjs` auto-merged (disjoint regions), the one changelog conflict resolved keeping both sides. Ships the two branch commits below (nudge pass 1 + 2). **Frontend only — no DB / scoring / sync change, zero new backend traffic.**

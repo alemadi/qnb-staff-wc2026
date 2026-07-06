@@ -153,7 +153,9 @@
   .xbanner .xb-quiet{color:var(--muted);font-size:11px}
   .xbanner .xb-chips{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin:9px 0 8px}
   @media(min-width:600px){.xbanner:not(.mini) .xb-chips{grid-template-columns:repeat(4,1fr)}}
-  .xbanner .xb-chip{font-family:var(--font-d);font-size:14px;letter-spacing:.3px;color:#15120a;background:linear-gradient(170deg,var(--gold-bright),var(--gold));border-radius:9px;padding:5px 9px 4px;line-height:1.05;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;box-shadow:0 1px 2px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.35)}
+  .xbanner .xb-chip{font-family:var(--font-d);font-size:14px;letter-spacing:.3px;color:#15120a;background:linear-gradient(170deg,var(--gold-bright),var(--gold));border:0;width:100%;cursor:pointer;-webkit-appearance:none;appearance:none;border-radius:9px;padding:5px 9px 4px;line-height:1.05;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;box-shadow:0 1px 2px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.35)}
+  .xbanner .xb-chip:hover{filter:brightness(1.05)}
+  .xbanner .xb-chip:active{transform:translateY(1px)}
   .xbanner .xb-chip small{font-family:var(--font-b);font-weight:800;font-size:8.5px;opacity:.72;display:block;letter-spacing:.4px}
   .xbanner a.xb-cta{display:inline-block;margin-top:1px;color:var(--gold-bright);font-weight:800;white-space:nowrap;text-decoration:none}
   .xbanner{cursor:pointer}
@@ -1787,12 +1789,12 @@
   </header>
 
   <div id="xb-sent" aria-hidden="true"></div>
-  <div class="xbanner" id="xbanner" style="display:none" role="status" aria-label="Power-ups are live · new share cards" onclick="if(!event.target.closest('a,button'))toggleBanner()" title="Tap to expand or shrink">
+  <div class="xbanner" id="xbanner" style="display:none" role="status" aria-label="What’s new: power-ups, the Trophy Room, Stats for Nerds, and share cards" onclick="if(!event.target.closest('a,button'))toggleBanner()" title="Tap to expand or shrink">
     <div class="xb-ic" aria-hidden="true">⚡</div>
     <div class="xb-tx">
       <b class="xb-h">Power-ups are LIVE · share cards are here</b>
-      <span class="xb-sub">Arm your Quarter-final armband before Thursday’s locks — and every big moment now has a card to drop in the chat, one tap from the 📤 button up top:</span>
-      <div class="xb-chips" aria-hidden="true"><span class="xb-chip">×2<small>CAPTAIN’S ARMBAND</small></span><span class="xb-chip">🛡<small>STREAK SHIELD</small></span><span class="xb-chip">+2<small>UPSET BONUS</small></span><span class="xb-chip">📤<small>SHARE CARDS</small></span></div>
+      <span class="xb-sub">Arm your Quarter-final armband before Thursday’s locks — then tap below to explore everything that just landed: the 🏆 Trophy Room, 🤓 Stats for Nerds, and every share card from the 📤 button up top.</span>
+      <div class="xb-chips"><button type="button" class="xb-chip" onclick="openFaq('power-up')">⚡<small>POWER-UPS</small></button><button type="button" class="xb-chip" onclick="xbGoMode('awards')">🏆<small>TROPHY ROOM</small></button><button type="button" class="xb-chip" onclick="xbGoMode('nerds')">🤓<small>NERDS STATS</small></button><button type="button" class="xb-chip" onclick="openShareTray()">📤<small>SHARE CARDS</small></button></div>
       <span class="xb-quiet">Slips seal at kick-off · brag cards land at the final whistle.</span><br>
       <a class="xb-cta" href="javascript:void 0" onclick="openFaq('power-up');return false">How power-ups work ›</a>
       <a class="xb-cta2" href="javascript:void 0" onclick="openFaq('power-up');return false">How power-ups work ›</a>
@@ -2969,7 +2971,7 @@ function setupBanner(){
     if(!state.player)return hideBanner();        // joined players only (not the sign-in screen)
     if(BANNER_UNTIL&&Date.now()>BANNER_UNTIL)return hideBanner();  // announcement window has ended
   }
-  try{const _m=localStorage.getItem(BANNER_MIN_KEY);bannerMin=(_m===null)?true:(_m==="1");}catch(e){bannerMin=true;}  // default = shrunk strip; respects an explicit expand/collapse
+  try{const _m=localStorage.getItem(BANNER_MIN_KEY);bannerMin=(_m===null)?false:(_m==="1");}catch(e){bannerMin=false;}  // default = EXPANDED (louder feature push, so the chips are actually seen); auto-shrinks on scroll and respects an explicit collapse
   b.style.display="flex";                      // always show it (no dismiss); it can only be shrunk
   document.body.classList.add("xb-on");
   // measure the collapsed height so the sticky filter/progress bars tuck just below the pinned strip
@@ -2982,6 +2984,15 @@ function toggleBanner(){
   bannerMin=!b.classList.contains("mini");      // showing full → shrink; showing strip → expand
   try{localStorage.setItem(BANNER_MIN_KEY,bannerMin?"1":"0");}catch(e){}
   if(window.__xbSync)window.__xbSync();
+}
+/* banner chip → jump straight into a leaderboard mode (🏆 Awards / 🤓 Nerds).
+   Standalone from the wnGo* spotlight paths: it must NOT touch wc:whatsnew, so using a
+   chip never suppresses the one-time spotlight for someone who hasn't seen it yet. */
+function xbGoMode(m){
+  LB_MODE=m;
+  const lm=document.getElementById("lbmode");if(lm)lm.querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.m===m));
+  markSeen(m);                                  // clears that mode's NEW pill + refreshes the nav dot
+  go("leaderboard");
 }
 
 function go(view){
