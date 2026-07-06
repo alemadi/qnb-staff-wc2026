@@ -145,15 +145,18 @@
     font-size:12.5px;line-height:1.5;color:var(--cream);position:sticky;top:calc(env(safe-area-inset-top,0px) + 4px);z-index:35;overflow:hidden;animation:xbrise .5s both;
     transition:padding .2s ease,gap .2s ease,border-radius .2s ease}
   @keyframes xbrise{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
-  .xbanner .xb-ic{font-size:20px;line-height:1.1;flex:none;animation:xbflame 2.2s ease-in-out infinite;transform-origin:50% 80%}
+  .xbanner .xb-ic{color:var(--gb);flex:none;margin-top:1px;animation:xbflame 2.2s ease-in-out infinite;transform-origin:50% 80%}
+  .xbanner .xb-ic svg{width:20px;height:20px;display:block;filter:drop-shadow(0 0 7px rgba(227,211,163,.4))}
+  .xbanner .xb-inic{width:13px;height:13px;vertical-align:-2px;color:var(--gb)}
   @keyframes xbflame{0%,100%{transform:scale(1) rotate(-3deg);filter:brightness(1)}50%{transform:scale(1.13) rotate(3deg);filter:brightness(1.28)}}
   .xbanner .xb-tx{flex:1;min-width:0}
   .xbanner .xb-h{font-family:var(--font-d);letter-spacing:.4px;font-size:15.5px;color:var(--gold-bright);line-height:1.08;display:block;margin-bottom:3px}
   .xbanner .xb-sub{color:var(--cream)}
   .xbanner .xb-quiet{color:var(--muted);font-size:11px}
   .xbanner .xb-chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 7px}
-  .xbanner .xb-chip{font-family:var(--font-d);font-size:14px;letter-spacing:.3px;color:#15120a;background:linear-gradient(170deg,var(--gold-bright),var(--gold));border-radius:8px;padding:4px 9px 3px;line-height:1.05;text-align:center}
-  .xbanner .xb-chip small{font-family:var(--font-b);font-weight:800;font-size:8.5px;opacity:.72;display:block;letter-spacing:.4px}
+  .xbanner .xb-chip{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-d);font-size:13px;letter-spacing:.4px;color:var(--gb);background:rgba(180,151,89,.12);border:1px solid rgba(180,151,89,.42);border-radius:99px;padding:5px 11px;line-height:1}
+  .xbanner .xb-chip small{font-family:var(--font-b);font-weight:800;font-size:9px;letter-spacing:1.1px;text-transform:uppercase;color:var(--muted)}
+  .xbanner .xb-chip svg{width:13px;height:13px;display:block}
   .xbanner a.xb-cta{display:inline-block;margin-top:1px;color:var(--gold-bright);font-weight:800;white-space:nowrap;text-decoration:none}
   .xbanner{cursor:pointer}
   .xbanner .xb-min{position:absolute;top:7px;right:7px;width:26px;height:26px;display:grid;place-items:center;background:rgba(180,151,89,.16);border:1px solid rgba(180,151,89,.45);color:var(--gold-bright);font-size:12px;line-height:1;cursor:pointer;border-radius:7px}
@@ -165,7 +168,7 @@
   .xbanner .xb-cta2{display:none}
   /* collapsed (stuck) state: a slim one-line strip so the pinned banner never eats the screen */
   .xbanner.mini{align-items:center;padding:7px 38px 7px 13px;gap:9px;border-radius:12px}
-  .xbanner.mini .xb-ic{font-size:16px}
+  .xbanner.mini .xb-ic svg{width:15px;height:15px}
   .xbanner.mini .xb-tx{display:flex;align-items:center;gap:10px;flex-wrap:nowrap;overflow:hidden}
   .xbanner.mini .xb-h{margin-bottom:0;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:0 1 auto}
   .xbanner.mini .xb-sub,.xbanner.mini .xb-chips,.xbanner.mini .xb-quiet,.xbanner.mini .xb-cta,.xbanner.mini .xb-tx br{display:none}
@@ -464,7 +467,7 @@
   .input{flex:1;background:rgba(0,0,0,.3);border:1px solid var(--line);border-radius:12px;color:var(--cream);padding:12px 14px;font-family:var(--font-b);font-size:16px;font-weight:600}
   button,select,input,.switch{touch-action:manipulation}
   .input:focus{outline:none;border-color:var(--gold)}
-  select.input{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23e3d3a3'%3E%3Cpath d='M2 4l4 4 4-4'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center}
+  select.input{max-width:100%;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23e3d3a3'%3E%3Cpath d='M2 4l4 4 4-4'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center}
   .switch-row{display:flex;align-items:center;gap:12px;background:var(--glass);border:1px solid var(--line);border-radius:14px;padding:13px 15px;margin-bottom:13px}
   .switch-row .txt{flex:1}
   .switch-row .txt b{font-size:13px;font-weight:800;display:block}
@@ -729,9 +732,15 @@
   footer.app b{color:var(--muted)}
   @media(max-width:420px){.me-stat{gap:18px}.teams{gap:2px}.tname{font-size:12.5px}}
   /* ===== UX wave: header fit, slim sticky bar, consensus, welcome-back, swipe score-at-end ===== */
-  /* signed-in: the 📤 hub + userchip own the right side, so the wordmark block needs ~700px of
-     row to coexist — below that it yields (was 439px pre-hub, which left a broken 440–699 band) */
-  @media(max-width:699px){body.in .mark .wc,body.in .mark .divider{display:none}}
+  /* signed-in: the share hub + userchip own the right side, so the wordmark block needs ~700px of
+     row to coexist — below that it yields, and the wordmark itself steps down (it was running
+     under the hub on 340–460px phones). The chip sheds width in two steps on the smallest screens. */
+  @media(max-width:699px){
+    body.in .mark .wc,body.in .mark .divider{display:none}
+    body.in .mark .wm{font-size:clamp(19px,5.8vw,32px)}
+  }
+  @media(max-width:479px){body.in .userchip .who b{max-width:64px}}
+  @media(max-width:359px){body.in .userchip .who{display:none}body.in .userchip{padding:5px}}
   #prog-sent{height:1px}
   #prog-spacer{height:0} /* grows to exactly the height the progress panel sheds on collapse — keeps the list from jumping */
   #view-matches{overflow-anchor:none} /* stop scroll anchoring fighting the sticky collapse (jitter loop) */
@@ -774,7 +783,9 @@
   .cons .c2{display:block;margin-top:4px}
   .cons-share{display:block;margin:7px auto 0;font:700 11.5px var(--font-b);color:var(--gb);background:none;border:1px solid rgba(180,151,89,.4);border-radius:99px;padding:5px 11px;cursor:pointer}
   /* ===== 📤 share hub — the always-visible door to every card ===== */
-  .sharehub{position:relative;display:flex;align-items:center;justify-content:center;width:40px;height:40px;margin-right:9px;border-radius:12px;background:var(--glass);border:1px solid var(--line);font-size:17px;cursor:pointer;flex:none}
+  .sharehub{position:relative;display:flex;align-items:center;justify-content:center;width:40px;height:40px;margin-left:auto;margin-right:9px;border-radius:12px;background:var(--glass);border:1px solid var(--line);color:var(--gb);cursor:pointer;flex:none;transition:.2s}
+  .sharehub svg{width:18px;height:18px;display:block}
+  .sharehub:hover{border-color:var(--gold);background:var(--glass-2)}
   .hubcnt{position:absolute;top:-6px;right:-7px;min-width:17px;height:17px;border-radius:9px;padding:0 4px;display:flex;align-items:center;justify-content:center;font:800 10px var(--font-b);font-style:normal;color:#181106;background:linear-gradient(115deg,var(--gold-deep),var(--gold-bright));box-shadow:0 0 0 2px rgba(10,10,12,.95),0 0 8px rgba(227,211,163,.55)}
   .sharehub:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
   @media(max-width:379px){.sharehub{width:34px;height:34px;font-size:14px;margin-right:6px;border-radius:10px}}
@@ -785,6 +796,7 @@
   .sh-card{width:100%;max-width:430px;max-height:82vh;overflow-y:auto;background:linear-gradient(180deg,#16130c,#0c0b08);border:1px solid rgba(180,151,89,.5);border-radius:22px 22px 0 0;padding:18px 16px 22px}
   @media(min-width:560px){.shov{align-items:center;padding:22px}.sh-card{border-radius:22px}}
   .sh-h{display:flex;align-items:center;gap:8px;font-weight:800;font-size:15px;margin:2px 2px 4px}
+  .sh-h>svg{width:16px;height:16px;color:var(--gb);flex:none}
   .sh-h .x{margin-left:auto;background:none;border:none;color:rgba(244,238,227,.55);font-size:16px;cursor:pointer;padding:6px;font-family:inherit}
   .sh-sub{font-size:11.5px;color:rgba(244,238,227,.55);margin:0 2px 12px;line-height:1.45}
   .sh-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
@@ -1207,6 +1219,7 @@
   .xbanner:not(.mini) .xb-chip:nth-child(1){animation-delay:.05s}
   .xbanner:not(.mini) .xb-chip:nth-child(2){animation-delay:.14s}
   .xbanner:not(.mini) .xb-chip:nth-child(3){animation-delay:.23s}
+  .xbanner:not(.mini) .xb-chip:nth-child(4){animation-delay:.32s}
   .xbanner.mini{border-left:3px solid var(--gold)}
 
   /* ===================================================================
@@ -1661,7 +1674,7 @@
         <div class="divider"></div>
         <div class="wc"><b>World Cup 26</b><em>predict · climb · win</em></div>
       </div>
-      <button class="sharehub" id="sharehub" style="display:none" onclick="openShareTray()" aria-label="Share cards" title="Share cards">📤<i class="hubcnt" id="share-new" style="display:none" aria-hidden="true"></i></button>
+      <button class="sharehub" id="sharehub" style="display:none" onclick="openShareTray()" aria-label="Share cards" title="Share cards"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><path d="m8 6 4-4 4 4"/><path d="M12 2v13"/></svg><i class="hubcnt" id="share-new" style="display:none" aria-hidden="true"></i></button>
       <div class="userchip" id="userchip" style="display:none" onclick="go('me')" onpointerdown="try{navigator.vibrate&&navigator.vibrate(8)}catch(e){}">
         <div class="avatar" id="chip-av">--</div>
         <div class="who"><b id="chip-name">—</b><span id="chip-pts">0 PTS</span></div>
@@ -1676,11 +1689,11 @@
 
   <div id="xb-sent" aria-hidden="true"></div>
   <div class="xbanner" id="xbanner" style="display:none" role="status" aria-label="Power-ups are live · new share cards" onclick="if(!event.target.closest('a,button'))toggleBanner()" title="Tap to expand or shrink">
-    <div class="xb-ic" aria-hidden="true">⚡</div>
+    <div class="xb-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 3 14h7l-1 8 11-14h-7l1-6z"/></svg></div>
     <div class="xb-tx">
-      <b class="xb-h">⚡ Power-ups are LIVE · 📤 share cards are here</b>
-      <span class="xb-sub">Arm your Quarter-final armband before Thursday’s locks — and every big moment now has a card to drop in the chat, one tap from the 📤 button up top:</span>
-      <div class="xb-chips" aria-hidden="true"><span class="xb-chip">×2<small>CAPTAIN’S ARMBAND</small></span><span class="xb-chip">🛡<small>STREAK SHIELD</small></span><span class="xb-chip">+2<small>UPSET BONUS</small></span><span class="xb-chip">📤<small>SHARE CARDS</small></span></div>
+      <b class="xb-h">Power-ups are LIVE · share cards are here</b>
+      <span class="xb-sub">Arm your Quarter-final armband before Thursday’s locks — and every big moment now has a card to drop in the chat, one tap from the <svg class="xb-inic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><path d="m8 6 4-4 4 4"/><path d="M12 2v13"/></svg> share button up top:</span>
+      <div class="xb-chips" aria-hidden="true"><span class="xb-chip">×2<small>Captain’s armband</small></span><span class="xb-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-3.4 8-9V5.5L12 2 4 5.5V13c0 5.6 8 9 8 9z"/></svg><small>Streak shield</small></span><span class="xb-chip">+2<small>Upset bonus</small></span><span class="xb-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><path d="m8 6 4-4 4 4"/><path d="M12 2v13"/></svg><small>Share cards</small></span></div>
       <span class="xb-quiet">Slips seal at kick-off · brag cards land at the final whistle.</span><br>
       <a class="xb-cta" href="javascript:void 0" onclick="openFaq('power-up');return false">How power-ups work ›</a>
       <a class="xb-cta2" href="javascript:void 0" onclick="openShareTray();return false">Open the share tray ›</a>
@@ -1919,7 +1932,7 @@
   </div>
   <div id="sharetray" class="shov" style="display:none" role="dialog" aria-modal="true" aria-label="Share cards" onclick="if(event.target===this)closeShareTray()">
     <div class="sh-card">
-      <div class="sh-h">📤 Share cards<button class="x" onclick="closeShareTray()" aria-label="Close">✕</button></div>
+      <div class="sh-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><path d="m8 6 4-4 4 4"/><path d="M12 2v13"/></svg>Share cards<button class="x" onclick="closeShareTray()" aria-label="Close">✕</button></div>
       <div class="sh-sub">Every card you've earned right now — tap one to build it. More unlock as the tournament turns.</div>
       <div class="sh-grid" id="sh-grid"><div class="sh-div">Loading…</div></div>
     </div>
