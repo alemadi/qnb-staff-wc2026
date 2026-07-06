@@ -743,6 +743,7 @@
   }
   /* ===== UX wave 2: stats ===== */
   .cons .c2{display:block;margin-top:4px}
+  .cons-share{display:block;margin:7px auto 0;font:700 11.5px var(--font-b);color:var(--gb);background:none;border:1px solid rgba(180,151,89,.4);border-radius:99px;padding:5px 11px;cursor:pointer}
   .rv-of{margin-top:13px;font-size:11.5px;color:var(--muted);font-weight:700;line-height:1.85;letter-spacing:.2px}
   .champ-soc .fl-img{width:15px;height:11px;border-radius:2px;vertical-align:-1px}
   /* ===== UX wave 3: fun stats sprinkle ===== */
@@ -1852,11 +1853,11 @@
     <div class="wn-card">
       <div class="wn-spark" aria-hidden="true">✨</div>
       <div class="wn-h">What’s new</div>
-      <div class="wn-sub">The <b>Trophy Room</b> is open — more than the podium gets crowned at the final whistle, and every race is live <b>now</b>.</div>
+      <div class="wn-sub">The <b>Trophy Room</b> is open — and every big moment now has a share card to match.</div>
       <button class="wn-item" onclick="wnGoAwards()"><span class="wn-ic">🏆</span><span class="wn-tx"><b>The Trophy Room</b><span>Leaderboard → 🏆 Awards: the live top-3 in every race — and exactly how far you are from each crown.</span></span><span class="wn-go">›</span></button>
       <button class="wn-item" onclick="wnGoFaq('titles')"><span class="wn-ic">🔮</span><span class="wn-tx"><b>Four office titles</b><span>Oracle · Trailblazer · Hot Hand · Perfectionist — awarded at full time. Most exacts is still winnable in the last week.</span></span><span class="wn-go">›</span></button>
-      <button class="wn-item" onclick="wnGoAwards()"><span class="wn-ic">⭐</span><span class="wn-tx"><b>The Department Cup</b><span>Best average per player takes the squad crown — every pick you get right lifts your whole department.</span></span><span class="wn-go">›</span></button>
-      <div class="wn-more">Titles never move points — the main board alone decides 🥇🥈🥉. Ties: higher total points, then the title is shared. Definitions locked today.</div>
+      <button class="wn-item" onclick="wnGoBrags()"><span class="wn-ic">📤</span><span class="wn-tx"><b>New share cards</b><span>Tonight’s slip, the office split, title belts, your climb, the road to the final — in your brag row and the Room.</span></span><span class="wn-go">›</span></button>
+      <div class="wn-more">Titles never move points — the main board alone decides 🥇🥈🥉. Ties: higher total points, then the title is shared.</div>
       <button class="wn-ok" onclick="dismissWhatsNew()">Got it</button>
     </div>
   </div>
@@ -5233,6 +5234,10 @@ async function renderRoomBody(){
       if(aN>=8)html+='<div class="pu-armcount">⚡ <b>'+aN+'</b> colleagues armed the band on this one</div>';}
     html+=roomAsIs(m,mv,players,myPk);   /* MATCHNIGHT F1.3 — aggregate "as it stands" tally; NO names pre-settle */
     html+='<div class="org-note">🔒 Who picked what unlocks at the final whistle. The office split above is live — the names land after full time.</div>';
+    if(!state.demo){ /* 2026-07-06 artifact pack — in-play share surfaces (slip = own sealed picks; split = aggregate, k-floor inside) */
+      if(state.player&&slipEligible())html+='<button class="btn btn-ghost btn-sm room-brag" onclick="shareSlip()">🎟️ Share my slip</button>';
+      html+='<button class="btn btn-ghost btn-sm room-brag" onclick="shareSplit(\''+m.id+'\')">🏟️ Share the office split</button>';
+    }
     host.innerHTML=html;return;
   }
   const rows=players.map(p=>({p:p,pk:(p.predictions||{})[m.id]}))
@@ -5282,31 +5287,38 @@ function roomHero(m,r,rows){
 }
 /* Rival head-to-head, SETTLED matches only, opt-in (only when YOU set a rival).
    Framed as point deltas / a record — never "you lost". Reads both blobs once (cached). */
+async function rivalH2HData(rivalSlug){
+  if(!state.meSlug||!rivalSlug)return null;
+  /* PERF ② — exactly the two blobs this card needs, not all 687 */
+  const bm=await sbatchJSON(["wc:player:"+state.meSlug,"wc:player:"+rivalSlug]);
+  let me,rv;
+  if(bm){me=bm["wc:player:"+state.meSlug];rv=bm["wc:player:"+rivalSlug];}
+  else{const players=await ppPlayers();me=players.find(p=>p&&p.slug===state.meSlug);rv=players.find(p=>p&&p.slug===rivalSlug);}
+  if(!me||!rv)return null;
+  const mp=me.predictions||{},rp=rv.predictions||{};
+  let win=0,loss=0,level=0,both=0,myPts=0,rvPts=0;
+  roomMatches().forEach(m=>{
+    if(!roomSettled(m))return;
+    const r=state.results[m.id],a=mp[m.id],b=rp[m.id];
+    if(!a||!(a.o||a.w)||!b||!(b.o||b.w))return;   /* both must have a sealed pick on this match */
+    both++;
+    const ap=rvVerdict(m,a,r,(me.chips||null)).pts,bp=rvVerdict(m,b,r,(rv.chips||null)).pts;myPts+=ap;rvPts+=bp; /* WAVE B — both blobs' chips */
+    if(ap>bp)win++;else if(ap<bp)loss++;else level++;
+  });
+  if(!both)return null;
+  return {win:win,loss:loss,level:level,both:both,myPts:myPts,rvPts:rvPts};
+}
 async function rivalH2H(rivalSlug){
   try{
-    if(!state.meSlug||!rivalSlug)return "";
-    /* PERF ② — exactly the two blobs this card needs, not all 687 */
-    const bm=await sbatchJSON(["wc:player:"+state.meSlug,"wc:player:"+rivalSlug]);
-    let me,rv;
-    if(bm){me=bm["wc:player:"+state.meSlug];rv=bm["wc:player:"+rivalSlug];}
-    else{const players=await ppPlayers();me=players.find(p=>p&&p.slug===state.meSlug);rv=players.find(p=>p&&p.slug===rivalSlug);}
-    if(!me||!rv)return "";
-    const mp=me.predictions||{},rp=rv.predictions||{};
-    let win=0,loss=0,level=0,both=0,myPts=0,rvPts=0;
-    roomMatches().forEach(m=>{
-      if(!roomSettled(m))return;
-      const r=state.results[m.id],a=mp[m.id],b=rp[m.id];
-      if(!a||!(a.o||a.w)||!b||!(b.o||b.w))return;   /* both must have a sealed pick on this match */
-      both++;
-      const ap=rvVerdict(m,a,r,(me.chips||null)).pts,bp=rvVerdict(m,b,r,(rv.chips||null)).pts;myPts+=ap;rvPts+=bp; /* WAVE B — both blobs' chips */
-      if(ap>bp)win++;else if(ap<bp)loss++;else level++;
-    });
-    if(!both)return "";
-    const diff=myPts-rvPts;
+    const d=await rivalH2HData(rivalSlug);
+    if(!d)return "";
+    const win=d.win,loss=d.loss,level=d.level,both=d.both;
+    const diff=d.myPts-d.rvPts;
     return '<div class="rv-h2h"><div class="hl">Head-to-head · settled matches</div>'+
       '<div class="rv-record"><span class="w"><b>'+win+'</b><i>you edged</i></span><span class="d"><b>'+level+'</b><i>level</i></span><span class="l"><b>'+loss+'</b><i>they edged</i></span></div>'+
       '<div class="rv-h2sub">Across <b>'+both+'</b> shared settled match'+(both===1?'':'es')+' · '+
-      (diff>0?('you’ve out-scored them by <b>+'+diff+'</b>'):(diff<0?('they’re <b>+'+(-diff)+'</b> up on these — reel them in'):'<b>dead level</b> on points'))+'</div></div>';
+      (diff>0?('you’ve out-scored them by <b>+'+diff+'</b>'):(diff<0?('they’re <b>+'+(-diff)+'</b> up on these — reel them in'):'<b>dead level</b> on points'))+'</div>'+
+      (diff>0?'<button class="btn btn-ghost btn-sm room-brag" onclick="bragReceipt()">🧾 Share the receipt</button>':'')+'</div>';
   }catch(e){return "";}
 }
 /* The room's title bets — champ aggregate, HARD-gated on champLocked() (the Final is
@@ -5554,6 +5566,17 @@ async function bragCall(){
     const pct=tot?Math.round(gotIt/tot*100):100;
     const matchLbl=mv.home.n+" "+(r.h!=null?r.h:"")+"–"+(r.a!=null?r.a:"")+" "+mv.away.n;
     const exact=vd.cls==="exact";
+    /* ⚡ ARMBAND CASHED — when the band doubled this settled call, the doubling IS the story.
+       Base = the same verdict without chips (rvVerdict's own pre-power-up path). */
+    const prnd2=m.kn?puRound(+m.id.slice(1)):null;
+    if(puLive()&&prnd2&&state.player.chips&&state.player.chips[prnd2]===m.id){
+      const base=rvVerdict(m,pk,r).pts;
+      shareBrag({emoji:"⚡",badge:"ARMBAND CASHED",big:"+"+vd.pts,bigLabel:"POINTS · BAND ARMED",
+        line1:matchLbl+(exact?" — exact score":""),
+        line2:base+" became "+vd.pts+" at the whistle",
+        accent:[180,151,89],file:"armband-cashed",shareText:"Armed the band on "+matchLbl+" and cashed +"+vd.pts});
+      return;
+    }
     if(tot>=8&&pct<=30){
       shareBrag({emoji:"🐺",badge:"LONE WOLF",big:"+"+vd.pts,bigLabel:"POINTS",
         line1:(gotIt<=1?"The ONLY one in the office who called it":"1 of just "+gotIt+" who called it"),
@@ -5678,8 +5701,628 @@ function meBrags(st){
     if(mates.length>=3&&mates[0]&&mates[0].slug===state.meSlug)chips.push('<button class="brag-chip" onclick="bragSquadMVP()">⭐ Squad MVP</button>');}
   if(champLocked()&&state.player.champ)chips.push('<button class="brag-chip" onclick="bragChampion()">🏆 My champion</button>');
   if(st&&st.findIndex(function(r){return r.slug===state.meSlug;})>=0)chips.push('<button class="brag-chip" onclick="bragMaldives()">✈️ Road to Maldives</button>');
+  /* 2026-07-06 artifact pack — every chip below is a cheap sync gate over data already in hand */
+  if(slipEligible())chips.push('<button class="brag-chip" onclick="shareSlip()">🎟️ Tonight’s slip</button>');
+  try{myTitles().forEach(function(k){const d=TITLE_DEFS.find(function(t){return t.key===k;});
+    if(d)chips.push('<button class="brag-chip" onclick="shareBelt(\''+k+'\')">'+d.emoji+' '+esc(d.label)+' belt</button>');});}catch(e){}
+  try{if(climbCps().length)chips.push('<button class="brag-chip" onclick="shareClimb()">🚀 The climb</button>');}catch(e){}
+  try{if(roadState())chips.push('<button class="brag-chip" onclick="shareRoad()">🛣️ Road to the final</button>');}catch(e){}
+  try{const ms=meMilestone(st);if(ms)chips.push('<button class="brag-chip" onclick="bragMilestone()">'+ms.e+' The '+ms.v+' club</button>');}catch(e){}
+  try{if(CONS&&CONS.full&&CONS.twin&&CONS.twin.n>=5&&CONS.twin.slug&&CONS.twin.slug!==state.meSlug)chips.push('<button class="brag-chip" onclick="shareTwin()">🤝 Same brain</button>');}catch(e){}
   if(!chips.length)return "";
   return '<div class="me-seclbl">Brag-worthy 📤</div><div class="me-brags">'+chips.join("")+'</div>';
+}
+/* ===== Share-card kit v2 — shared scaffolding for the 2026-07-06 artifact pack =====
+   Same visual language as shareCard()/shareBrag(): the ten cards below reuse these
+   helpers instead of re-inlining the frame/glow/foot. Existing cards are untouched. */
+async function cardFonts(){try{if(document.fonts&&document.fonts.load)await Promise.all([
+  document.fonts.load("400 200px Anton"),document.fonts.load("800 44px 'Hanken Grotesk'")]);}catch(e){}}
+function cardScaffold(x,W,H,acc,glowY){
+  acc=acc||[180,151,89];glowY=glowY==null?300:glowY;
+  x.fillStyle="#0a0a0c";x.fillRect(0,0,W,H);
+  const g=x.createRadialGradient(W/2,glowY,40,W/2,glowY,840);
+  g.addColorStop(0,"rgba("+acc[0]+","+acc[1]+","+acc[2]+",.34)");g.addColorStop(1,"rgba("+acc[0]+","+acc[1]+","+acc[2]+",0)");
+  x.fillStyle=g;x.fillRect(0,0,W,H);
+  cardFrame(x,W,H);
+  x.fillStyle="#ef3340";x.fillRect(0,0,W/3,12);x.fillStyle="#2ea84f";x.fillRect(W/3,0,W/3,12);x.fillStyle="#2d6fe0";x.fillRect(W/3*2,0,W/3+2,12);
+  x.textAlign="center";
+  x.fillStyle="#b49759";x.font="800 32px 'Hanken Grotesk',sans-serif";
+  x.fillText("S T A F F   C H A L L E N G E   ·   W C 2 6",W/2,96);
+}
+function cardSub(x,W,t){x.fillStyle="rgba(244,238,227,.55)";x.font="700 27px 'Hanken Grotesk',sans-serif";x.fillText(t,W/2,148);}
+function cardGold(x,y0,y1){const g=x.createLinearGradient(0,y0,0,y1);g.addColorStop(0,"#e3d3a3");g.addColorStop(.55,"#b49759");g.addColorStop(1,"#8a734a");return g;}
+function cardBadge(x,W,t,y){const g=x.createLinearGradient(0,y-66,0,y+24);g.addColorStop(0,"#e3d3a3");g.addColorStop(1,"#b49759");
+  x.fillStyle=g;x.font="400 88px Anton,'Arial Narrow',sans-serif";wrapText(x,t,W/2,y,W-110,86,2);}
+function cardFoot(x,W,name,cta,y1,y2,y3){
+  y1=y1||1138;y2=y2||1204;y3=y3||1254;
+  if(name){x.fillStyle="rgba(244,238,227,.6)";x.font="700 30px 'Hanken Grotesk',sans-serif";x.fillText(name,W/2,y1);}
+  x.fillStyle="#b49759";x.font="700 30px 'Hanken Grotesk',sans-serif";x.fillText(cta,W/2,y2);
+  x.fillStyle="rgba(244,238,227,.35)";x.font="600 22px 'Hanken Grotesk',sans-serif";
+  x.fillText("Staff World Cup 2026 · 11 June – 19 July",W/2,y3);
+}
+function cardPill(x,cx,cy,t,fs){
+  fs=fs||26;x.font="800 "+fs+"px 'Hanken Grotesk',sans-serif";
+  const pw=x.measureText(t).width+56,ph=fs*2;
+  x.fillStyle="rgba(180,151,89,.12)";roundRect(x,cx-pw/2,cy-ph/2,pw,ph,ph/2);x.fill();
+  x.strokeStyle="rgba(180,151,89,.75)";x.lineWidth=2;roundRect(x,cx-pw/2,cy-ph/2,pw,ph,ph/2);x.stroke();
+  x.fillStyle="#e3d3a3";x.fillText(t,cx,cy+fs*.36);
+}
+function cardBoxes(x,W,y,arr){
+  arr.forEach(function(p,i){const cx=W/2+(i-1)*300;
+    x.fillStyle="rgba(0,0,0,.4)";roundRect(x,cx-125,y,250,170,22);x.fill();
+    x.strokeStyle="rgba(244,238,227,.14)";x.lineWidth=2;roundRect(x,cx-125,y,250,170,22);x.stroke();
+    x.fillStyle="rgba(180,151,89,.8)";x.fillRect(cx-103,y,206,2);
+    x.fillStyle="#e3d3a3";x.font="400 76px Anton,'Arial Narrow',sans-serif";x.fillText(String(p[0]),cx,y+88);
+    x.fillStyle="rgba(244,238,227,.5)";x.font="700 22px 'Hanken Grotesk',sans-serif";x.fillText(p[1],cx,y+136);});
+}
+function cardBig(x,W,txt,baseY,startPx){
+  let bf=startPx||250;x.font="400 "+bf+"px Anton,'Arial Narrow',sans-serif";
+  while(x.measureText(String(txt)).width>W-120&&bf>84){bf-=12;x.font="400 "+bf+"px Anton,'Arial Narrow',sans-serif";}
+  x.fillText(String(txt),W/2,baseY);
+}
+/* flags for canvas: flagcdn serves ACAO:*, so drawn images don't taint the canvas.
+   Any load miss (offline, blocked CDN) falls back to a lettered tile — the card always builds. */
+function cardFlagImgs(teams){
+  const codes=Array.from(new Set(teams.filter(Boolean).map(function(t){return FL[t]||null;}).filter(Boolean)));
+  return Promise.all(codes.map(function(c){return new Promise(function(res){
+    const im=new Image();im.crossOrigin="anonymous";
+    let settled=false;const done=function(ok){if(settled)return;settled=true;res([c,ok?im:null]);};
+    const tm=setTimeout(function(){done(false);},1500);
+    im.onload=function(){clearTimeout(tm);done(true);};
+    im.onerror=function(){clearTimeout(tm);done(false);};
+    im.src="https://flagcdn.com/w160/"+c+".png";
+  });})).then(function(pairs){const m={};pairs.forEach(function(p){m[p[0]]=p[1];});return m;});
+}
+function cardFlag(x,imgs,team,a,b,w,h){
+  const c=FL[team]||null,im=(c&&imgs)?imgs[c]:null;
+  const r=Math.min(16,h*.18);
+  x.save();roundRect(x,a,b,w,h,r);x.clip();
+  if(im)x.drawImage(im,a,b,w,h);
+  else{x.fillStyle="rgba(180,151,89,.16)";x.fillRect(a,b,w,h);
+    x.fillStyle="#e3d3a3";x.font="800 "+Math.round(h*.34)+"px 'Hanken Grotesk',sans-serif";x.textAlign="center";
+    x.fillText((c||team||"?").replace(/^gb-/,"").slice(0,3).toUpperCase(),a+w/2,b+h/2+h*.12);}
+  x.restore();
+  x.strokeStyle="rgba(244,238,227,.28)";x.lineWidth=2;roundRect(x,a,b,w,h,r);x.stroke();
+}
+/* web-share with download fallback + the flex moment — shareBrag()'s exact tail, shared */
+function cardShip(c,file,text){
+  c.toBlob(async function(b){
+    if(!b){toast("Couldn’t build the card");return;}
+    if(!(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches)){confettiBurst();try{navigator.vibrate&&navigator.vibrate([80,60,80]);}catch(e){}}
+    const f=new File([b],file+".png",{type:"image/png"});
+    if(navigator.canShare&&navigator.canShare({files:[f]})){
+      try{await navigator.share({files:[f],title:"Staff Challenge",text:text+" — staffchallenge26.com"});return;}catch(e){if(e&&e.name==="AbortError")return;}
+    }
+    const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=file+".png";a.click();
+    setTimeout(function(){URL.revokeObjectURL(a.href);},4000);toast("Card saved — drop it in the chat 📤");
+  },"image/png");
+}
+/* ===== 🎟️ The Lock-In Slip — tonight's calls, rendered ONLY once each match seals =====
+   Row rule IS the seal rule: a pick appears only when its match is locked (lockedM —
+   nobody can edit theirs either, so the image leaks nothing actionable). Unlocked
+   fixtures in the window show masked, so the slip still reads as the whole night. */
+function slipWindow(){
+  const now=Date.now()+CLOCK_OFFSET;
+  return FIXTURES.filter(function(m){
+    if(m.kn&&!koReady(m))return false;
+    const t=new Date(m.ko).getTime();
+    return t>=now-8*3600000&&t<=now+14*3600000;
+  }).sort(function(a,b){return new Date(a.ko)-new Date(b.ko);});
+}
+function slipEligible(){
+  if(!state.player)return false;
+  return slipWindow().some(function(m){const p=state.player.predictions[m.id];return lockedM(m)&&p&&(p.o||p.w);});
+}
+async function shareSlip(){
+  try{
+    if(!state.player){toast("Sign in first");return;}
+    const win=slipWindow(),rows=win.slice(0,3),extraN=win.length-rows.length;
+    if(!rows.some(function(m){const p=state.player.predictions[m.id];return lockedM(m)&&p&&(p.o||p.w);})){toast("Your slip appears once tonight’s picks are sealed 🎟️");return;}
+    await cardFonts();
+    const teams=[];rows.forEach(function(m){const mv=fxView(m);teams.push(mv.home.n,mv.away.n);});
+    const imgs=await cardFlagImgs(teams);
+    const W=1080,H=1350,c=document.createElement("canvas");c.width=W;c.height=H;
+    const x=c.getContext&&c.getContext("2d");
+    if(!x){toast("Sharing isn’t supported in this browser");return;}
+    cardScaffold(x,W,H,null,320);
+    cardSub(x,W,"M A T C H – N I G H T   S L I P");
+    const r0=rows[0];
+    x.fillStyle="#f4eee3";x.font="800 42px 'Hanken Grotesk',sans-serif";
+    x.fillText(((r0.kn?(RLABEL[r0.round]||r0.round):"Matchday")+" · "+fmtWk(r0.ko)).toUpperCase(),W/2,214);
+    /* armband line + haul (locked rows only) */
+    let armLine=null,haul=0;
+    rows.forEach(function(m){
+      if(!lockedM(m))return;
+      const p=state.player.predictions[m.id];if(!p||!(p.o||p.w))return;
+      if(m.kn){
+        let base=koPts(m)+((p.h!=null&&p.a!=null)?koBonus(m):0);
+        const rnd=puRound(+m.id.slice(1));
+        const armed=!!(puLive()&&rnd&&state.player.chips&&state.player.chips[rnd]===m.id);
+        if(armed){base*=2;armLine="⚡ ARMBAND ARMED ON "+(puRoundLabel(rnd)||"").toUpperCase()+" — POINTS DOUBLED";}
+        if(puLive()&&p.w){const t=koTeams(m),opp=(t.h&&t.h.n===p.w)?(t.a&&t.a.n):(t.h&&t.h.n);
+          if(opp&&PU_RANK[p.w]&&PU_RANK[opp]&&PU_RANK[p.w]>PU_RANK[opp])base+=PU_UPSET;}
+        haul+=base;
+      }else haul+=(p.h!=null&&p.a!=null)?5:3;
+    });
+    /* panel height from content */
+    const rowH=rows.length===3?176:210;
+    const ph=96+rows.length*rowH+(armLine?64:0)+(extraN>0?40:0)+44+96;
+    const P0=252;
+    x.fillStyle="rgba(0,0,0,.42)";roundRect(x,110,P0,860,ph,26);x.fill();
+    x.strokeStyle="rgba(244,238,227,.14)";x.lineWidth=2;roundRect(x,110,P0,860,ph,26);x.stroke();
+    x.fillStyle="rgba(180,151,89,.8)";x.fillRect(132,P0,816,2);
+    x.textAlign="left";x.fillStyle="rgba(180,151,89,.9)";x.font="800 23px 'Hanken Grotesk',sans-serif";x.fillText("MY CALLS",150,P0+56);x.textAlign="center";
+    const fw=rows.length===3?132:150,fh=rows.length===3?88:100;
+    let cy=P0+96+Math.round(rowH*.55);
+    rows.forEach(function(m){
+      const mv=fxView(m),p=state.player.predictions[m.id]||null,lk=lockedM(m);
+      x.fillStyle="rgba(244,238,227,.45)";x.font="700 22px 'Hanken Grotesk',sans-serif";
+      x.fillText(((m.kn?m.round:(m.round||""))+" · "+(lk?fmtTime(m.ko):("LOCKS "+fmtTime(m.ko)))).toUpperCase(),W/2,cy-Math.round(rowH*.38));
+      cardFlag(x,imgs,mv.home.n,330-fw/2,cy-Math.round(fh*.62),fw,fh);
+      cardFlag(x,imgs,mv.away.n,750-fw/2,cy-Math.round(fh*.62),fw,fh);
+      const hp=lk&&p&&(p.o||p.w);
+      if(hp&&p.h!=null&&p.a!=null){x.fillStyle=cardGold(x,cy-60,cy+30);x.font="400 "+(rows.length===3?66:78)+"px Anton,'Arial Narrow',sans-serif";x.fillText(p.h+" – "+p.a,W/2,cy+Math.round(rowH*.10));}
+      else if(hp){x.fillStyle="rgba(227,211,163,.9)";x.font="400 "+(rows.length===3?44:52)+"px Anton,'Arial Narrow',sans-serif";
+        x.fillText(m.kn?"✓":(p.o==="H"?"1":p.o==="D"?"X":"2"),W/2,cy+Math.round(rowH*.10));}
+      else{x.fillStyle="rgba(244,238,227,.4)";x.font="400 "+(rows.length===3?44:52)+"px 'Hanken Grotesk',sans-serif";
+        x.fillText(lk?"–":"🔒",W/2,cy+Math.round(rowH*.08));}
+      const pickN=hp?(m.kn?p.w:(p.o==="H"?mv.home.n:p.o==="A"?mv.away.n:null)):null;
+      x.font="800 "+(rows.length===3?24:27)+"px 'Hanken Grotesk',sans-serif";
+      x.fillStyle=(pickN===mv.home.n)?"#e3d3a3":"#f4eee3";x.fillText((pickN===mv.home.n?"✓ ":"")+mv.home.n.toUpperCase(),330,cy+Math.round(rowH*.42));
+      x.fillStyle=(pickN===mv.away.n)?"#e3d3a3":"#f4eee3";x.fillText((pickN===mv.away.n?"✓ ":"")+mv.away.n.toUpperCase(),750,cy+Math.round(rowH*.42));
+      cy+=rowH;
+    });
+    let yy=P0+96+rows.length*rowH;
+    if(armLine){cardPill(x,W/2,yy+26,armLine,24);yy+=64;}
+    if(extraN>0){x.fillStyle="rgba(244,238,227,.45)";x.font="600 24px 'Hanken Grotesk',sans-serif";x.fillText("+"+extraN+" more sealed later tonight",W/2,yy+26);yy+=40;}
+    yy+=24;
+    x.save();x.strokeStyle="rgba(244,238,227,.30)";x.lineWidth=3;x.setLineDash([12,14]);
+    x.beginPath();x.moveTo(140,yy);x.lineTo(940,yy);x.stroke();x.restore();
+    x.fillStyle="#0a0a0c";x.beginPath();x.arc(110,yy,16,0,2*Math.PI);x.fill();x.beginPath();x.arc(970,yy,16,0,2*Math.PI);x.fill();
+    x.textAlign="left";x.fillStyle="rgba(244,238,227,.5)";x.font="700 26px 'Hanken Grotesk',sans-serif";x.fillText("POTENTIAL HAUL",165,yy+66);
+    x.textAlign="right";x.fillStyle=cardGold(x,yy+16,yy+80);x.font="400 64px Anton,'Arial Narrow',sans-serif";x.fillText("UP TO +"+haul,915,yy+74);
+    x.textAlign="center";
+    x.save();x.translate(770,P0+62);x.rotate(-.11);x.globalAlpha=.92;
+    x.strokeStyle="rgba(227,211,163,.9)";x.lineWidth=5;roundRect(x,-160,-40,320,80,14);x.stroke();
+    x.fillStyle="rgba(227,211,163,.95)";x.font="400 40px Anton,'Arial Narrow',sans-serif";x.fillText("SEALED ✓",0,14);x.restore();
+    const fy=Math.min(1350-212,Math.max(1044,P0+ph+86)); /* short slips keep the foot anchored low */
+    cardFoot(x,W,state.player.name+(state.player.dept?(" · "+state.player.dept):""),"Receipts at full time → staffchallenge26.com",fy,fy+70,fy+132);
+    cardShip(c,"lock-in-slip","My sealed calls for tonight — come measure yours against them");
+  }catch(e){toast("Couldn’t build the card");}
+}
+/* ===== 🏟️ Match-Night Split — the collective rally poster (aggregate only, no names) =====
+   Reads the consensus counts tier (same data as the match-card split line), k-floor 8.
+   Callable pre-kickoff from the match card and in-play from the Room. */
+async function shareSplit(mid){
+  try{
+    const m=FIXBYID[mid||ROOM_SEL];if(!m){toast("Pick a match first");return;}
+    if(roomSettled(m)){bragOffice();return;} /* settled nights already have the office-story card */
+    try{await consensus();}catch(e){}
+    const cc=CONS.map&&CONS.map[m.id];
+    if(!cc){toast("The office split isn’t in yet");return;}
+    const mv=fxView(m);
+    let hN,dN=0,aN,tot;
+    if(m.kn){hN=cc.w[mv.home.n]||0;aN=cc.w[mv.away.n]||0;tot=hN+aN;}
+    else{hN=cc.H;dN=cc.D;aN=cc.A;tot=hN+dN+aN;}
+    if(tot<8){toast("Not enough office calls on this one yet");return;}
+    const hp=Math.round(hN/tot*100),dp=m.kn?0:Math.round(dN/tot*100),ap=m.kn?(100-hp):Math.round(aN/tot*100);
+    await cardFonts();
+    const imgs=await cardFlagImgs([mv.home.n,mv.away.n]);
+    const W=1080,H=1350,c=document.createElement("canvas");c.width=W;c.height=H;
+    const x=c.getContext&&c.getContext("2d");
+    if(!x){toast("Sharing isn’t supported in this browser");return;}
+    cardScaffold(x,W,H,null,320);
+    cardSub(x,W,"T H E   O F F I C E   C A L L S   I T");
+    cardPill(x,W/2,208,((m.kn?m.round:(RLABEL[m.round]||m.round))+" · "+fmtWk(m.ko)+" "+fmtTime(m.ko)).toUpperCase(),25);
+    cardFlag(x,imgs,mv.home.n,210,280,240,160);cardFlag(x,imgs,mv.away.n,630,280,240,160);
+    x.fillStyle="rgba(244,238,227,.5)";x.font="400 44px Anton,'Arial Narrow',sans-serif";x.fillText("VS",W/2,378);
+    x.fillStyle="#f4eee3";x.font="800 46px 'Hanken Grotesk',sans-serif";
+    x.fillText(mv.home.n.toUpperCase(),330,510);x.fillText(mv.away.n.toUpperCase(),750,510);
+    x.fillStyle=cardGold(x,560,790);x.font="400 230px Anton,'Arial Narrow',sans-serif";x.fillText(String(tot),W/2,780);
+    x.fillStyle="rgba(244,238,227,.5)";x.font="700 27px 'Hanken Grotesk',sans-serif";x.fillText("COLLEAGUES HAVE CALLED IT",W/2,828);
+    const bx=160,bw=760,by=872,bh=64;
+    x.save();roundRect(x,bx,by,bw,bh,32);x.clip();
+    x.fillStyle="rgba(244,238,227,.14)";x.fillRect(bx,by,bw,bh);
+    const sg=x.createLinearGradient(bx,0,bx+bw*Math.max(.08,hp/100),0);sg.addColorStop(0,"#e3d3a3");sg.addColorStop(1,"#8a734a");
+    x.fillStyle=sg;x.fillRect(bx,by,bw*hp/100,bh);x.restore();
+    x.strokeStyle="rgba(244,238,227,.22)";x.lineWidth=2;roundRect(x,bx,by,bw,bh,32);x.stroke();
+    x.textAlign="left";x.fillStyle="#14100a";x.font="800 30px 'Hanken Grotesk',sans-serif";
+    if(hp>=18)x.fillText(mv.home.n.toUpperCase()+" "+hp+"%",bx+26,by+42);
+    x.textAlign="right";x.fillStyle="rgba(244,238,227,.85)";
+    if(hp<=88)x.fillText(m.kn?(ap+"%"):(ap+"% · "+dp+"% draw"),bx+bw-26,by+42);
+    x.textAlign="center";
+    x.fillStyle="rgba(227,211,163,.85)";x.font="600 27px 'Hanken Grotesk',sans-serif";
+    const lk=lockedM(m);
+    x.fillText(lk?"Sealed — the names land at the final whistle":"Split is live until kick-off — no names, just the room",W/2,1000);
+    cardFoot(x,W,"One office · one story",lk?"Follow it in the Room → staffchallenge26.com":"Call yours before kick-off → staffchallenge26.com",1108,1178,1240);
+    cardShip(c,"office-split",tot+" of us have called "+mv.home.n+" v "+mv.away.n+" — where do you land?");
+  }catch(e){toast("Couldn’t build the card");}
+}
+/* ===== 🧾 The Rivalry Receipt — the H2H record, offered only while you lead =====
+   Same numbers as the Me-card panel (rivalH2HData below); winner-shares-it framing. */
+async function bragReceipt(){
+  try{
+    if(!state.player){toast("Sign in first");return;}
+    const rs=await getJSON("wc:rival",false);
+    if(!rs){toast("Pick a rival first 🎯");return;}
+    const d=await rivalH2HData(rs);
+    if(!d||!d.both){toast("No settled matches between you two yet");return;}
+    const diff=d.myPts-d.rvPts;
+    if(diff<=0){toast("The receipt prints when you’re ahead 😉");return;}
+    const st=await fetchStandings();
+    const rv=st.find(function(r){return r.slug===rs;});
+    const rname=(rv&&rv.name)||"my rival";
+    await cardFonts();
+    const W=1080,H=1350,c=document.createElement("canvas");c.width=W;c.height=H;
+    const x=c.getContext&&c.getContext("2d");
+    if(!x){toast("Sharing isn’t supported in this browser");return;}
+    cardScaffold(x,W,H,[138,21,56],300);
+    x.fillStyle="#f4eee3";x.font="400 64px 'Hanken Grotesk',sans-serif";x.fillText("🧾",W/2,212);
+    cardBadge(x,W,"THE RECEIPT",316);
+    x.fillStyle=cardGold(x,420,700);cardBig(x,W,"+"+diff,680,230);
+    x.fillStyle="rgba(244,238,227,.5)";x.font="700 28px 'Hanken Grotesk',sans-serif";x.fillText("POINTS CLEAR OF MY RIVAL",W/2,730);
+    x.fillStyle="#f4eee3";x.font="700 34px 'Hanken Grotesk',sans-serif";
+    wrapText(x,"vs "+rname+" · "+d.both+" settled match"+(d.both===1?"":"es"),W/2,806,W-140,42,2);
+    cardBoxes(x,W,860,[[d.win,"I EDGED"],[d.level,"LEVEL"],[d.loss,"THEY EDGED"]]);
+    cardFoot(x,W,state.player.name+(state.player.dept?(" · "+state.player.dept):""),"Every match night is a derby → staffchallenge26.com",1118,1188,1246);
+    cardShip(c,"the-receipt","Up +"+diff+" on "+rname+" across our settled matches");
+  }catch(e){toast("Couldn’t build the card");}
+}
+/* ===== 🏅 Title Belts — one per office honour, offered to the current holder ===== */
+function myTitles(){
+  const out=[];if(!state.player||state.demo||!HONOURS_FULL)return out;
+  ["frontrunner","oracle","trailblazer","hothand","perfectionist","climber"].forEach(function(k){
+    const h=HONOURS_FULL[k];if(h&&h.slug===state.meSlug)out.push(k);});
+  return out;
+}
+function beltValueLine(key,h){
+  const v=h.value;
+  if(key==="frontrunner")return "#1 ON THE BOARD · "+v+" PTS";
+  if(key==="oracle")return v+" EXACT SCORES · MOST IN THE BANK";
+  if(key==="trailblazer")return v+" UPSET"+(v===1?"":"S")+" THE OFFICE MISSED";
+  if(key==="hothand")return v+" CORRECT IN A ROW";
+  if(key==="perfectionist")return v+" PERFECT MATCHDAY"+(v===1?"":"S")+" · MOST";
+  if(key==="climber")return "▲ "+v+" PLACES SINCE YESTERDAY";
+  return String(v);
+}
+async function shareBelt(key){
+  try{
+    const def=TITLE_DEFS.find(function(t){return t.key===key;});
+    const h=HONOURS_FULL&&HONOURS_FULL[key];
+    if(!def||!h||!state.player||h.slug!==state.meSlug){toast("Titles are shared by their holder 🏅");return;}
+    await cardFonts();
+    const W=1080,H=1350,c=document.createElement("canvas");c.width=W;c.height=H;
+    const x=c.getContext&&c.getContext("2d");
+    if(!x){toast("Sharing isn’t supported in this browser");return;}
+    cardScaffold(x,W,H,null,420);
+    cardSub(x,W,"O F F I C E   H O N O U R S");
+    const cx=W/2,cym=430,R=175;
+    const mg=x.createRadialGradient(cx,cym,30,cx,cym,R+40);
+    mg.addColorStop(0,"rgba(180,151,89,.34)");mg.addColorStop(1,"rgba(180,151,89,0)");
+    x.fillStyle=mg;x.beginPath();x.arc(cx,cym,R+40,0,2*Math.PI);x.fill();
+    x.strokeStyle=cardGold(x,cym-R,cym+R);x.lineWidth=12;x.beginPath();x.arc(cx,cym,R,0,2*Math.PI);x.stroke();
+    x.save();x.globalAlpha=.5;x.lineWidth=2;x.beginPath();x.arc(cx,cym,R-24,0,2*Math.PI);x.stroke();x.restore();
+    for(let i=0;i<12;i++){const a=i*Math.PI/6;x.fillStyle="#8a734a";x.beginPath();x.arc(cx+R*Math.cos(a),cym+R*Math.sin(a),7,0,2*Math.PI);x.fill();}
+    x.font="400 120px 'Hanken Grotesk',sans-serif";x.fillText(def.emoji,cx,cym+44);
+    const bt=def.label.toUpperCase();
+    const g2=x.createLinearGradient(0,640,0,740);g2.addColorStop(0,"#e3d3a3");g2.addColorStop(1,"#b49759");
+    x.fillStyle=g2;let bf=100;x.font="400 "+bf+"px Anton,'Arial Narrow',sans-serif";
+    while(x.measureText(bt).width>W-140&&bf>56){bf-=6;x.font="400 "+bf+"px Anton,'Arial Narrow',sans-serif";}
+    x.fillText(bt,W/2,742);
+    cardPill(x,W/2,822,beltValueLine(key,h),26);
+    x.fillStyle="rgba(227,211,163,.85)";x.font="600 28px 'Hanken Grotesk',sans-serif";
+    let sub=def.desc;
+    if(key==="oracle"&&h.runnerUp!=null&&h.runnerUp>0)sub="Held outright · nearest chaser is on "+h.runnerUp;
+    wrapText(x,sub,W/2,916,W-160,36,2);
+    cardFoot(x,W,state.player.name+(state.player.dept?(" · "+state.player.dept):""),"Come take the title → staffchallenge26.com");
+    cardShip(c,"belt-"+key,def.emoji+" Current "+def.label+" of the office — "+def.desc.toLowerCase());
+  }catch(e){toast("Couldn’t build the card");}
+}
+/* ===== 🚀 The Climb — rank after each finished phase, mid-tournament =====
+   Same recompute as Wrapped's journey (REAL scoreFor over a growing results subset,
+   REAL cmpSt): parity with the board by construction. One analytics-class bulk pull,
+   user-initiated only (same cost class as Wrapped / the organizer picks viewer). */
+function climbCps(){
+  const res=state.results||{};
+  const done=function(a,b){for(let i=a;i<=b;i++){const r=res["k"+i];if(!(r&&r.w!=null))return false;}return true;};
+  const cps=[];
+  try{if(typeof groupStageComplete==="function"&&groupStageComplete())cps.push({lab:"GROUPS",max:0});}catch(e){}
+  if(cps.length===1&&done(1,16))cps.push({lab:"R32",max:16});
+  if(cps.length===2&&done(17,24))cps.push({lab:"R16",max:24});
+  if(cps.length===3&&done(25,28))cps.push({lab:"QF",max:28});
+  if(cps.length===4&&done(29,30))cps.push({lab:"SF",max:30});
+  return cps;
+}
+async function shareClimb(){
+  try{
+    if(!state.player){toast("Sign in first");return;}
+    const cps=climbCps();
+    if(!cps.length){toast("The climb charts once the groups wrap 🚀");return;}
+    const players=await sbulkJSON("wc:player:");
+    if(!players||!players.length){toast("Couldn’t chart the climb — try again");return;}
+    const res=state.results||{};
+    const lastMax=cps[cps.length-1].max;
+    const extra=Object.keys(res).some(function(id){return /^k[0-9]+$/.test(id)&&(+id.slice(1))>lastMax&&res[id]&&res[id].w!=null;});
+    const marks=cps.slice();
+    if(extra||marks.length===1)marks.push({lab:"TODAY",full:true});
+    else marks[marks.length-1]=Object.assign({},marks[marks.length-1],{lab:"TODAY"});
+    if(marks.length<2){toast("Not enough of the tournament yet — check back after the next round");return;}
+    const pl=players.filter(Boolean).map(function(p){return{slug:p.slug,name:p.name||"",preds:p.predictions||{},champ:p.champ,chips:p.chips||null,
+      predicted:Object.values(p.predictions||{}).filter(function(q){return q&&(q.o||q.w);}).length};});
+    const pts=[];
+    for(const mk of marks){
+      const sub={};
+      for(const id in res){
+        if(id.charAt(0)==="_"){if(mk.full)sub[id]=res[id];continue;}
+        if(/^k[0-9]+$/.test(id)){if(mk.full||(+id.slice(1))<=mk.max)sub[id]=res[id];}
+        else sub[id]=res[id];
+      }
+      const rws=pl.map(function(p){const sc=scoreFor(p.preds,sub,p.champ,p.chips);
+        return{slug:p.slug,name:p.name,pts:sc.pts,exact:sc.exact,correct:sc.correct,predicted:p.predicted};});
+      rws.sort(function(a,b){return cmpSt(a,b)||(a.name||"").localeCompare(b.name||"");});
+      let rk=null;rws.forEach(function(q,i){if(q.slug===state.meSlug&&rk===null)rk=i+1;});
+      if(rk===null){toast("Lock some picks to hit the board first");return;}
+      pts.push({lab:mk.lab,rank:rk});
+    }
+    const first=pts[0].rank,last=pts[pts.length-1].rank;
+    if(last>=first){toast("No net climb yet — go take some scalps 😉");return;}
+    await cardFonts();
+    const W=1080,H=1350,c=document.createElement("canvas");c.width=W;c.height=H;
+    const x=c.getContext&&c.getContext("2d");
+    if(!x){toast("Sharing isn’t supported in this browser");return;}
+    cardScaffold(x,W,H,null,300);
+    x.fillStyle="#f4eee3";x.font="400 64px 'Hanken Grotesk',sans-serif";x.fillText("🚀",W/2,212);
+    cardBadge(x,W,"THE CLIMB",316);
+    const n=pts.length,x0=n>2?190:280,x1=n>2?910:800;
+    const xs=function(i){return x0+i*((x1-x0)/(n-1));};
+    const mxr=Math.max.apply(null,pts.map(function(o){return o.rank;}));
+    const ys=function(rk){return 460+(rk/Math.max(1,mxr*1.08))*400;};
+    x.strokeStyle="rgba(244,238,227,.07)";x.lineWidth=2;
+    [500,650,800].forEach(function(gy){x.beginPath();x.moveTo(150,gy);x.lineTo(930,gy);x.stroke();});
+    x.beginPath();x.moveTo(xs(0),ys(pts[0].rank));
+    for(let i=1;i<n;i++)x.lineTo(xs(i),ys(pts[i].rank));
+    x.lineTo(xs(n-1),900);x.lineTo(xs(0),900);x.closePath();
+    x.fillStyle="rgba(180,151,89,.10)";x.fill();
+    x.strokeStyle=cardGold(x,500,860);x.lineWidth=9;x.lineJoin="round";x.lineCap="round";
+    x.beginPath();x.moveTo(xs(0),ys(pts[0].rank));
+    for(let i=1;i<n;i++)x.lineTo(xs(i),ys(pts[i].rank));
+    x.stroke();
+    for(let i=0;i<n-1;i++){x.fillStyle="#0a0a0c";x.strokeStyle="#b49759";x.lineWidth=5;x.beginPath();x.arc(xs(i),ys(pts[i].rank),10,0,2*Math.PI);x.fill();x.stroke();}
+    x.fillStyle="rgba(227,211,163,.28)";x.beginPath();x.arc(xs(n-1),ys(pts[n-1].rank),26,0,2*Math.PI);x.fill();
+    x.fillStyle="#e3d3a3";x.beginPath();x.arc(xs(n-1),ys(pts[n-1].rank),13,0,2*Math.PI);x.fill();
+    x.fillStyle="rgba(244,238,227,.5)";x.font="700 30px 'Hanken Grotesk',sans-serif";x.fillText("#"+first,xs(0),ys(first)+56);
+    x.textAlign="right";x.fillStyle="#e3d3a3";x.font="400 120px Anton,'Arial Narrow',sans-serif";
+    x.fillText("#"+last,Math.min(W-120,xs(n-1)+30),Math.max(430,ys(last)-40));x.textAlign="center";
+    x.font="700 23px 'Hanken Grotesk',sans-serif";
+    pts.forEach(function(o,i){x.fillStyle=i===n-1?"#e3d3a3":"rgba(244,238,227,.45)";x.fillText(o.lab,xs(i),944);});
+    x.fillStyle="rgba(227,211,163,.9)";x.font="600 30px 'Hanken Grotesk',sans-serif";
+    x.fillText("▲ "+(first-last)+" place"+(first-last===1?"":"s")+" since the group stage",W/2,1016);
+    cardFoot(x,W,state.player.name+(state.player.dept?(" · "+state.player.dept):""),"Still climbing → staffchallenge26.com");
+    cardShip(c,"the-climb","From #"+first+" to #"+last+" — still climbing");
+  }catch(e){toast("Couldn’t build the card");}
+}
+/* ===== 🛣️ Road to the Final — my champion's path (settled results + locked champ pick) =====
+   Everything on the card is settled or already-sealed: teamChain gives the path, settled
+   legs render solid with the score, the live front renders pending, my own projected
+   calls render dashed (the bracket view's real/proj grammar). Not offered once the
+   champion is out — the house never prints a shame card. */
+function roadState(){
+  try{
+    if(!champLocked()||!state.player||state.demo||!state.player.champ)return null;
+    const champ=state.player.champ;
+    const ids=teamChain(champ);
+    if(!ids.length)return null;
+    const nodes=ids.map(function(id){
+      const m=FXID[id],r=state.results[id],off=(r&&r.w)?r.w:null;
+      const t=koTeams(m);
+      const opp=(t.h&&t.h.n===champ)?(t.a?t.a.n:null):(t.h?t.h.n:null);
+      const pick=(state.player.predictions[id]&&state.player.predictions[id].w)||null;
+      return {id:id,m:m,r:r||null,off:off,opp:opp,pick:pick};
+    });
+    const lastN=nodes[nodes.length-1];
+    if(lastN.off&&lastN.off!==champ)return null;                    /* out by result */
+    if(!lastN.off&&lastN.pick&&lastN.pick!==champ)return null;      /* my own bracket turns on my champion */
+    let wins=0;nodes.forEach(function(nd){if(nd.off===champ)wins++;});
+    let rem=0,cur=null;
+    for(const nd of nodes){if(!nd.off){cur=nd.id;break;}}
+    if(cur){let k=cur;while(k){rem++;if(k==="k32")break;k=CHILD_OF[k];}}
+    return {champ:champ,nodes:nodes,wins:wins,rem:rem};
+  }catch(e){return null;}
+}
+async function shareRoad(){
+  try{
+    const rs=roadState();
+    if(!rs){toast(champLocked()?"The road card rides with a live champion pick 🏆":"Champion cards unlock once the pick locks 🏆");return;}
+    await cardFonts();
+    const teams=[rs.champ];rs.nodes.forEach(function(nd){if(nd.opp)teams.push(nd.opp);});
+    const imgs=await cardFlagImgs(teams);
+    /* display rows: last settled leg, the live/next leg, and the Final */
+    const settled=rs.nodes.filter(function(nd){return nd.off;});
+    const pending=rs.nodes.filter(function(nd){return !nd.off;});
+    const rows=[];
+    if(settled.length)rows.push(Object.assign({kind:"done"},settled[settled.length-1]));
+    if(pending.length)rows.push(Object.assign({kind:pending[0].opp?"next":"proj"},pending[0]));
+    const inChain=function(id){return rows.some(function(q){return q.id===id;});};
+    if(!inChain("k32"))rows.push({kind:"champ",id:"k32",m:FXID["k32"],off:null,opp:null,pick:null,synthetic:true});
+    else rows[rows.length-1].kind="champ";
+    const W=1080,H=1350,c=document.createElement("canvas");c.width=W;c.height=H;
+    const x=c.getContext&&c.getContext("2d");
+    if(!x){toast("Sharing isn’t supported in this browser");return;}
+    cardScaffold(x,W,H,null,300);
+    cardSub(x,W,"M Y   B R A C K E T   ·   S E A L E D");
+    const g2=x.createLinearGradient(0,190,0,280);g2.addColorStop(0,"#e3d3a3");g2.addColorStop(1,"#b49759");
+    x.fillStyle=g2;x.font="400 86px Anton,'Arial Narrow',sans-serif";x.fillText("ROAD TO THE FINAL",W/2,262);
+    if(rs.wins>0){x.fillStyle="rgba(227,211,163,.85)";x.font="600 26px 'Hanken Grotesk',sans-serif";
+      x.fillText(rs.wins+" win"+(rs.wins===1?"":"s")+" already banked on this road",W/2,318);}
+    const sx=270,rowYs=[430,640,860].slice(0,rows.length);
+    for(let i=0;i<rows.length-1;i++){
+      const a=rowYs[i]+34,b=rowYs[i+1]-34,solid=rows[i].kind==="done";
+      x.strokeStyle=solid?"rgba(180,151,89,.9)":"rgba(180,151,89,.55)";x.lineWidth=solid?6:5;x.lineCap="round";
+      x.save();if(!solid)x.setLineDash([4,16]);
+      x.beginPath();x.moveTo(sx,a);x.lineTo(sx,b);x.stroke();x.restore();
+    }
+    x.textAlign="left";
+    rows.forEach(function(nd,i){
+      const cy=rowYs[i],m=nd.m;
+      if(nd.kind==="done"){x.fillStyle="#b49759";x.beginPath();x.arc(sx,cy,25,0,2*Math.PI);x.fill();
+        x.strokeStyle="#0a0a0c";x.lineWidth=6;x.lineCap="round";
+        x.beginPath();x.moveTo(sx-10,cy+1);x.lineTo(sx-3,cy+9);x.lineTo(sx+11,cy-8);x.stroke();}
+      else if(nd.kind==="champ"){x.strokeStyle="#e3d3a3";x.lineWidth=4;x.beginPath();x.arc(sx,cy,27,0,2*Math.PI);x.stroke();
+        x.textAlign="center";x.fillStyle="#e3d3a3";x.font="400 30px 'Hanken Grotesk',sans-serif";x.fillText("🏆",sx,cy+11);x.textAlign="left";}
+      else{x.strokeStyle="rgba(180,151,89,.8)";x.lineWidth=4;x.beginPath();x.arc(sx,cy,23,0,2*Math.PI);x.stroke();
+        x.fillStyle="#b49759";x.beginPath();x.arc(sx,cy,8,0,2*Math.PI);x.fill();}
+      const big=nd.kind==="champ";
+      const roundLab=m?(m.tag==="final"?"THE FINAL":(m.tag==="third"?"THIRD PLACE":((RLABEL[m.round]||m.round)+"").toUpperCase())):"THE FINAL";
+      let tagTxt,main,sub;
+      if(nd.kind==="done"){
+        const hh=(nd.r&&nd.r.h!=null)?(nd.r.h+"–"+nd.r.a):"";
+        const myPk=state.player.predictions[nd.id]||null;
+        const vd=(myPk&&(myPk.w||myPk.h!=null))?rvVerdict(m,myPk,nd.r,puChips()):null;
+        const loser=nd.opp||"";
+        tagTxt=roundLab+" — SETTLED";
+        main=rs.champ+" beat "+(loser||"their tie");
+        sub=(hh?hh+" · ":"")+((vd&&vd.pts>0)?("called it · +"+vd.pts+" in the bank"):"the road holds");
+      }else if(nd.kind==="champ"){
+        tagTxt="THE FINAL"+(m&&m.ko?(" — "+fmtWk(m.ko).toUpperCase()):"");
+        main=rs.champ+(nd.opp?(" beat "+nd.opp):" lift it");
+        sub="MY CHAMPION · +"+CHAMP_PTS+" if it lands";
+      }else{
+        tagTxt=roundLab+(m&&m.ko?(" — "+fmtWk(m.ko).toUpperCase()):"");
+        main=rs.champ+(nd.opp?((nd.off?" v ":" over ")+nd.opp):" march on");
+        sub=nd.pick===rs.champ?"my call · to play":"to play";
+      }
+      x.fillStyle="rgba(180,151,89,.9)";x.font="800 21px 'Hanken Grotesk',sans-serif";x.fillText(tagTxt,370,cy-38);
+      cardFlag(x,imgs,rs.champ,370,cy-24,big?100:92,big?68:62);
+      x.fillStyle="#f4eee3";x.font="800 "+(big?37:34)+"px 'Hanken Grotesk',sans-serif";
+      let mt=main;x.font="800 "+(big?37:34)+"px 'Hanken Grotesk',sans-serif";
+      while(x.measureText(mt).width>W-540&&mt.length>8)mt=mt.slice(0,-2);
+      if(mt!==main)mt+="…";
+      x.fillText(mt,494,cy+6);
+      x.fillStyle=big?"rgba(227,211,163,.9)":"rgba(244,238,227,.5)";x.font="600 24px 'Hanken Grotesk',sans-serif";x.fillText(sub,494,cy+46);
+    });
+    x.textAlign="center";
+    x.fillStyle="rgba(227,211,163,.9)";x.font="600 30px 'Hanken Grotesk',sans-serif";
+    x.fillText("🏆 "+rs.champ+" — "+(rs.rem>0?(rs.rem+" win"+(rs.rem===1?"":"s")+" from the +"+CHAMP_PTS):("+"+CHAMP_PTS+" banked")),W/2,1008);
+    cardFoot(x,W,state.player.name+(state.player.dept?(" · "+state.player.dept):""),"Trace your road → staffchallenge26.com");
+    cardShip(c,"road-to-final","My road to the final runs through "+rs.champ);
+  }catch(e){toast("Couldn’t build the card");}
+}
+/* ===== 💯 Milestone clubs — one card per points threshold (board-authoritative) ===== */
+function meMilestone(st){
+  if(!state.player||!st||!st.find)return null;
+  const me=st.find(function(r){return r.slug===state.meSlug;});
+  const pts=me?me.pts:0;
+  const M=[{v:200,e:"👑"},{v:150,e:"🚀"},{v:100,e:"💯"}];
+  for(const mm of M)if(pts>=mm.v)return {v:mm.v,e:mm.e,pts:pts};
+  return null;
+}
+async function bragMilestone(){
+  try{
+    if(!state.player){toast("Sign in first");return;}
+    const st=(await fetchStandings()).slice().sort(cmpSt);
+    const ms=meMilestone(st);
+    if(!ms){toast("First stop: 100 points 💯");return;}
+    const club=st.filter(function(r){return r.pts>=ms.v;}).length;
+    const nxt=ms.v===100?150:(ms.v===150?200:null);
+    shareBrag({emoji:ms.e,badge:"THE "+ms.v+" CLUB",big:String(ms.v),bigLabel:"POINTS AND COUNTING",
+      line1:club<=1?"First one through the door":("One of just "+club+" players past "+ms.v),
+      line2:nxt?("Next stop: "+nxt):"Air up here",
+      accent:[180,151,89],file:"club-"+ms.v,shareText:ms.v+" points and counting in Staff Challenge 26"});
+  }catch(e){toast("Couldn’t build the card");}
+}
+/* ===== 🤝 Same Brain — you + your pick twin (both flattered, nobody shamed) ===== */
+async function shareTwin(){
+  try{
+    if(!state.player){toast("Sign in first");return;}
+    const tw=(CONS&&CONS.full&&CONS.twin&&CONS.twin.n>=5&&CONS.twin.slug&&CONS.twin.slug!==state.meSlug)?CONS.twin:null;
+    if(!tw){toast("Your pick twin shows once enough picks land 🤝");return;}
+    const st=await fetchStandings();
+    const trow=st.find(function(r){return r.slug===tw.slug;});
+    await cardFonts();
+    const W=1080,H=1350,c=document.createElement("canvas");c.width=W;c.height=H;
+    const x=c.getContext&&c.getContext("2d");
+    if(!x){toast("Sharing isn’t supported in this browser");return;}
+    cardScaffold(x,W,H,null,300);
+    x.fillStyle="#f4eee3";x.font="400 64px 'Hanken Grotesk',sans-serif";x.fillText("🤝",W/2,212);
+    cardBadge(x,W,"SAME BRAIN",316);
+    x.fillStyle=cardGold(x,420,660);cardBig(x,W,String(tw.n),640,230);
+    x.fillStyle="rgba(244,238,227,.5)";x.font="700 28px 'Hanken Grotesk',sans-serif";x.fillText("SHARED PICKS THIS TOURNAMENT",W/2,692);
+    const initials=function(nm){return String(nm||"?").trim().split(/\s+/).slice(0,2).map(function(w){return w.charAt(0);}).join("").toUpperCase()||"?";};
+    const plate=function(a,nm,dept){
+      x.fillStyle="rgba(0,0,0,.4)";roundRect(x,a,762,360,180,22);x.fill();
+      x.strokeStyle="rgba(244,238,227,.14)";x.lineWidth=2;roundRect(x,a,762,360,180,22);x.stroke();
+      x.fillStyle="rgba(180,151,89,.8)";x.fillRect(a+22,762,316,2);
+      const cx=a+180;
+      x.strokeStyle="#b49759";x.lineWidth=3;x.beginPath();x.arc(cx,826,32,0,2*Math.PI);x.stroke();
+      x.fillStyle="#e3d3a3";x.font="400 28px Anton,'Arial Narrow',sans-serif";x.fillText(initials(nm),cx,837);
+      x.fillStyle="#f4eee3";let nf=29;x.font="800 "+nf+"px 'Hanken Grotesk',sans-serif";
+      while(x.measureText(nm).width>330&&nf>20){nf-=1;x.font="800 "+nf+"px 'Hanken Grotesk',sans-serif";}
+      x.fillText(nm,cx,896);
+      x.fillStyle="rgba(244,238,227,.5)";x.font="600 22px 'Hanken Grotesk',sans-serif";x.fillText(dept||"",cx,928);
+    };
+    plate(150,state.player.name,state.player.dept||"");
+    plate(570,tw.name,(trow&&trow.dept)||"");
+    x.fillStyle="rgba(227,211,163,.9)";x.font="600 28px 'Hanken Grotesk',sans-serif";
+    x.fillText("The closest pick-twins in the office",W/2,1010);
+    cardFoot(x,W,"Two desks · one brain","Find your twin → staffchallenge26.com",1108,1178,1240);
+    cardShip(c,"same-brain",tw.n+" shared picks — "+tw.name+" and I are running the same brain");
+  }catch(e){toast("Couldn’t build the card");}
+}
+/* ===== 🏆 The Podium — the office's full-time poster (collective; ?wrapped previews it) ===== */
+async function sharePodium(){
+  try{
+    if(!(ftOver()||wrPreview())){toast("The podium card unlocks at full time 🏁");return;}
+    const st=(await fetchStandings()).slice().sort(function(a,b){return cmpSt(a,b)||(a.name||"").localeCompare(b.name||"");});
+    if(st.length<3){toast("Not enough players on the board");return;}
+    const champ=(state.results&&state.results._champ)||"—";
+    const lg=deptLeague(st),cup=lg.ranked.length?lg.ranked[0]:null;
+    const calls=st.reduce(function(s,r){return s+(r.predicted|0);},0);
+    await cardFonts();
+    const imgs=await cardFlagImgs([champ]);
+    const W=1080,H=1350,c=document.createElement("canvas");c.width=W;c.height=H;
+    const x=c.getContext&&c.getContext("2d");
+    if(!x){toast("Sharing isn’t supported in this browser");return;}
+    cardScaffold(x,W,H,null,260);
+    cardPill(x,W/2,160,"F U L L   T I M E",24);
+    drawCardTrophy(x,W/2,212,132);
+    x.font="800 46px 'Hanken Grotesk',sans-serif";
+    const t=(champ+" — WORLD CHAMPIONS").toUpperCase(),tw2=x.measureText(t).width,fw=104,gap=22;
+    let sxx=W/2-(fw+gap+tw2)/2;
+    if(sxx<70){sxx=70;}
+    cardFlag(x,imgs,champ,sxx,432-49,fw,70);
+    x.textAlign="left";x.fillStyle="#f4eee3";
+    let ct=t,cf=46;x.font="800 "+cf+"px 'Hanken Grotesk',sans-serif";
+    while(x.measureText(ct).width>W-sxx-fw-gap-70&&cf>30){cf-=2;x.font="800 "+cf+"px 'Hanken Grotesk',sans-serif";}
+    x.fillText(ct,sxx+fw+gap,432+16);x.textAlign="center";
+    const base=930;
+    const block=function(cx,w,h,fill,numFill,num){
+      x.fillStyle=fill;roundRect(x,cx-w/2,base-h,w,h,14);x.fill();
+      x.strokeStyle="rgba(244,238,227,.16)";x.lineWidth=2;roundRect(x,cx-w/2,base-h,w,h,14);x.stroke();
+      x.fillStyle=numFill;x.font="400 84px Anton,'Arial Narrow',sans-serif";x.fillText(num,cx,base-h+108);
+    };
+    const stack=function(cx,top,medal,name,dept,pts){
+      x.font="400 42px 'Hanken Grotesk',sans-serif";x.fillText(medal,cx,top-124);
+      x.fillStyle="rgba(244,238,227,.5)";x.font="600 21px 'Hanken Grotesk',sans-serif";x.fillText(dept||"",cx,top-86);
+      x.fillStyle="#f4eee3";let nf=27;x.font="800 "+nf+"px 'Hanken Grotesk',sans-serif";
+      while(x.measureText(name).width>236&&nf>18){nf-=1;x.font="800 "+nf+"px 'Hanken Grotesk',sans-serif";}
+      x.fillText(name,cx,top-52);
+      x.fillStyle="#e3d3a3";x.font="800 27px 'Hanken Grotesk',sans-serif";x.fillText(pts+" pts",cx,top-16);
+    };
+    const g1=x.createLinearGradient(0,base-250,0,base);g1.addColorStop(0,"#e3d3a3");g1.addColorStop(1,"#8a734a");
+    block(290,220,180,"rgba(244,238,227,.15)","rgba(244,238,227,.75)","2");
+    block(540,220,250,g1,"#14100a","1");
+    block(790,220,140,"rgba(176,108,63,.38)","rgba(244,238,227,.75)","3");
+    stack(290,base-180,"🥈",st[1].name,st[1].dept,st[1].pts);
+    stack(540,base-250,"🥇",st[0].name,st[0].dept,st[0].pts);
+    stack(790,base-140,"🥉",st[2].name,st[2].dept,st[2].pts);
+    x.fillStyle="rgba(180,151,89,.5)";x.fillRect(180,base,720,2);
+    x.fillStyle="rgba(227,211,163,.95)";x.font="700 31px 'Hanken Grotesk',sans-serif";
+    if(cup)x.fillText("🏆 Department Cup — "+cup.d,W/2,1006);
+    x.fillStyle="rgba(244,238,227,.5)";x.font="600 24px 'Hanken Grotesk',sans-serif";
+    x.fillText(st.length+" players · "+calls.toLocaleString("en")+" calls · one office",W/2,1052);
+    cardFoot(x,W,"One office · one story","See the final board → staffchallenge26.com",1118,1186,1244);
+    cardShip(c,"the-podium",champ+" are world champions — and the office story is in");
+  }catch(e){toast("Couldn’t build the card");}
 }
 function roundRect(x,a,b,w,h,r){x.beginPath();x.moveTo(a+r,b);x.arcTo(a+w,b,a+w,b+h,r);x.arcTo(a+w,b+h,a,b+h,r);x.arcTo(a,b+h,a,b,r);x.arcTo(a,b,a+w,b,r);x.closePath();}
 /* shared premium finish for every share canvas: corner vignette + gold inset frame + inner hairline */
@@ -5733,6 +6376,7 @@ function ftHero(){
     '<div class="ft-champ">'+flag+'<div class="ft-cn">'+esc(champ)+'</div><div class="ft-cl">WORLD CHAMPIONS 2026</div></div>'+
     '<div class="ft-body" id="ft-body"><div class="wr-loading">Counting the final points…</div></div>'+
     '<div class="ft-ctas"><button class="ft-btn" onclick="openWrapped()">🎁 Your Wrapped</button>'+
+    '<button class="ft-btn ghost" onclick="sharePodium()">📤 The podium</button>'+
     '<button class="ft-btn ghost" onclick="go(\'leaderboard\')">Final standings</button></div></div>';
 }
 async function ftFill(){
@@ -6316,6 +6960,7 @@ function consText(m,p){
       +'\ud83c\udfdf '+tot+' colleagues called it: '+seg(mv.home.n,hp,p&&p.w===mv.home.n)+' \u00b7 '+seg(mv.away.n,100-hp,p&&p.w===mv.away.n);
     if(res&&res.w&&tot>=8){const rp=Math.round((c.w[res.w]||0)/tot*100);
       if(rp<=25)kline+='<span class="c2">\ud83e\udde8 Upset \u2014 only '+rp+'% of the office saw it coming</span>';}
+    if(!res&&tot>=8)kline+='<button class="cons-share" onclick="event.stopPropagation();shareSplit(\''+m.id+'\')">\ud83d\udce4 Share the split</button>'; /* 2026-07-06 artifact pack */
     return kline;
   }
   const tot=c.H+c.D+c.A;if(tot<5)return "";
@@ -6479,7 +7124,7 @@ function toggleFaq(i){
    per player (localStorage-gated by version), deep-links into each new feature,
    and never nags. Persistent NEW dots on the Leaderboard nav + The Room toggle
    catch stragglers and self-clear once the surface is visited. */
-const WHATSNEW_VER="2026-07-06-trophy-room";
+const WHATSNEW_VER="2026-07-06-sharecards";
 function seenKey(k){try{return localStorage.getItem("wc:seen:"+k)==="1";}catch(e){return true;}}
 function markSeen(k){try{localStorage.setItem("wc:seen:"+k,"1");}catch(e){}updateNewDots();}
 function updateNewDots(){
@@ -6521,6 +7166,11 @@ function wnGoAwards(){ /* TROPHY ROOM — spotlight deep link straight into the 
   go("leaderboard");
 }
 function wnGoFaq(which){dismissWhatsNew();openFaq(which);} /* WAVE B — spotlight items deep-link into the FAQ */
+function wnGoBrags(){ /* 2026-07-06 artifact pack — land on the Me card's brag row */
+  dismissWhatsNew();
+  go("me");
+  setTimeout(function(){const el=document.querySelector(".me-brags");if(el&&el.scrollIntoView)el.scrollIntoView({behavior:"smooth",block:"center"});},350);
+}
 
 /* ===== juice: sounds + odometers ===== */
 function sndOn(){try{return localStorage.getItem("wc:snd")==="1";}catch(e){return false;}}

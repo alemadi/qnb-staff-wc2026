@@ -5,6 +5,34 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-07-06 (Doha) — SHARE-CARD PACK: the ten social artifacts ship (frontend-only, all surfaces gated)
+
+**Commits:** this commit (`index.html` + `tests/share-cards/run.mjs` + changelog), on `claude/social-artifacts-ideas-0ocr94`. **Frontend only — no DB, no scoring-math, no sync-protocol change, no new server reads beyond existing classes.** Implements all ten cards from the design preview below, on the existing canvas kit.
+
+**Why:** all ten existing artifacts are post-hoc; nothing shareable exists before a whistle, nothing uses the rival H2H / honours / Wave-B chips / trajectory data, and the room has no collective full-time artifact. QF nights (Thu) are the tournament's peak share moments; the Podium has a hard 19-Jul deadline.
+
+**What (new shared kit + ten cards, inserted after `meBrags()`):**
+- **Kit:** `cardScaffold/cardSub/cardGold/cardBadge/cardFoot/cardPill/cardBoxes/cardBig` mirror `shareCard()/shareBrag()` geometry; `cardShip()` is shareBrag's exact web-share/download tail, shared; `cardFlagImgs()/cardFlag()` draw flagcdn PNGs on canvas (`crossOrigin=anonymous`, ACAO:\* verified — canvas never taints) with a lettered-tile fallback so every card builds offline. Existing cards untouched.
+- **🎟️ Lock-In Slip** (`shareSlip`, chip in brag row + Room pre-settle): tonight's calls as a slip. **Row rule = seal rule:** a pick renders only once its match is `lockedM()` (nobody can edit theirs either); unlocked fixtures in the ±(-8h,+14h) window show masked 🔒. Armband line + "up to +N" haul from the scoring constants.
+- **🏟️ Match-Night Split** (`shareSplit`, chip on unsettled match-card consensus lines + Room pre-settle): aggregate split poster from the counts tier (`CONS.map`), k-floor 8, no names; settled matches route to the existing `bragOffice()`.
+- **🧾 Rivalry Receipt** (`bragReceipt`, button in the rival panel): `rivalH2H()` refactored into `rivalH2HData()` (numbers) + renderer; card offered **only while ahead** (diff>0), same winner-shares framing as `bragChase()`.
+- **🏅 Title Belts** (`shareBelt`, one brag-row chip per held title via `myTitles()`): medallion card for the six office-wide honours from `HONOURS_FULL` (captains keep Squad MVP).
+- **🚀 The Climb** (`shareClimb`): rank after each finished phase + today — Wrapped's exact recompute (REAL `scoreFor` over growing results subsets, REAL `cmpSt`), one user-initiated analytics-class bulk pull (same cost class as Wrapped). Offered only when net rank improved; chip gated on `climbCps()`.
+- **🛣️ Road to the Final** (`shareRoad`): champion's path via the bracket's own `teamChain()` — settled legs solid ✓ with score + my banked points, live front pending, my projected calls dashed (the bracket view's real/proj grammar). `roadState()` returns null (no card, no chip) the moment the champion is out or my own bracket turns on them — never a shame card.
+- **⚡ Armband Cashed** (branch inside `bragCall()`): when `puLive()` and my chip armed this settled match, the card becomes the doubling story ("8 became 16 at the whistle", base = chips-less `rvVerdict`). Zero new buttons; dormant while the flag is off.
+- **💯 Milestone clubs** (`bragMilestone`, chip via `meMilestone()`): 100/150/200-point clubs, count from the public board.
+- **🤝 Same Brain** (`shareTwin`, chip when `CONS.full` has a twin ≥5): duo plates card, both parties flattered; analytics-tier data.
+- **🏆 The Podium** (`sharePodium`, third CTA in `ftHero`): FT-gated (`ftOver()`; `?wrapped` previews) collective poster — champion flag, top-3 by the board's exact order, Department Cup (self-omits below `DEPT_MIN`), players+calls stat. Kiosk CTAs stay hidden as before.
+- **Entry points:** brag row grows the gated chips above; Room pre-settle gains slip+split buttons; rival panel gains the receipt; unsettled match cards gain a small `.cons-share` chip (one CSS rule). **What's-new** bumped to `2026-07-06-sharecards`: rebased onto the Trophy Room pass, the 📤 share-cards item joins the Trophy Room card (`wnGoBrags()` deep-links to the brag row); anyone who already dismissed today's card sees the combined one once more — intended.
+
+**Seal-safety:** every card reads settled results, public standings, aggregates over the k-floors, or the player's OWN post-lock picks; collective cards carry no names; loser-side cards don't exist (receipt/road/armband/belts all gate on winning/holding/alive).
+
+**Verified (headless Chromium over the REAL page, fully mocked Supabase REST, zero live traffic — `tests/share-cards/run.mjs`, 26/26):** signed-in boot into a seeded QF-week world (France path through k3→k18→k25, armed armband, settled QF, in-play QF, rival, twin, honours); all TEN cards build 1080×1350 with real engine numbers (armband card shows 12→24 = the chips-aware `rvVerdict` doubling; climb recomputes #12→#1 per phase over the seeded blobs; receipt sums 27 shared settled matches; road shows +24 banked & "2 wins from the +25"); every gate chip renders in the brag row; receipt button appears in the rival panel; Room pre-settle shows slip+split; `.cons-share` chip on upcoming match cards; what's-new shows the new item; podium builds after simulating FT in-page; **zero page errors**; `node --check` clean. Card PNGs eyeballed. `sql/` untouched.
+
+**Rollback:** `git revert` this commit — frontend-only. Player-visible state: the what's-new marker (`wc:whatsnew`) advances to `2026-07-06-sharecards`; reverting just means the power-ups card shows once more. Nothing else persists.
+
+---
+
 ## 2026-07-06 (Doha) — MAIN DEPLOY: Trophy Room ships to production
 
 **Commits:** this commit, then `main` fast-forwarded `f148d7a` → this tip and pushed **on the organizer's explicit "push main"**. Ships the TROPHY ROOM pass (entry below) to staffchallenge26.com via the Pages action: the 🏆 Awards leaderboard mode with live award races, the award contract in the FAQ, the rewritten What's-new spotlight (`WHATSNEW_VER` → `2026-07-06-trophy-room` — every player sees it once on next open), the Hot-Hand-is-the-record-run title change, and the FT ceremony roll aligned to the four announced titles. **Frontend only — the live DB is untouched by this push**; scoring proven unchanged (27/27 Wave-B vectors, entry below).
