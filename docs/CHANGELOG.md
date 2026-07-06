@@ -7,7 +7,7 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ## 2026-07-06 (Doha) — FULL TIME pass: podium home takeover + per-player "Wrapped" recap (dormant until the champion settles)
 
-**Commits:** this commit (`index.html` + changelog). **Frontend only — no DB / scoring-math / sync-protocol change.** Seal-safe: every read is settled results, public standings, or post-lock blobs (the same access class as the Room). New state: one localStorage key (`wc:wrapped:auto`, the one-shot auto-open marker). **Fully dormant today** — every surface below is gated on `ftOver()` = champion set (`_champ`) **AND** the Final result (`k32.w`) recorded, i.e. the standings are final and the +25 has paid. `?wrapped` / `#wrapped` previews the UI on current data for review (house pattern, like `?powerups`).
+**Commits:** `aa21fa9` (`index.html` + changelog) + its merge with the Wave-B launch tip `a4c4180` (concurrent session; changelog-only conflict). The merge also makes `tests/wave-b/run.mjs` locate the `<script>` tag instead of hardcoding line 1784 — this pass's overlay markup shifted the script start, which broke that extraction; both suites re-run green on the merged file (**27/27 Wave-B vectors, `wc_rank` === `PU_RANK`**; this pass's 50-assert harness). **Frontend only — no DB / scoring-math / sync-protocol change.** Seal-safe: every read is settled results, public standings, or post-lock blobs (the same access class as the Room). New state: one localStorage key (`wc:wrapped:auto`, the one-shot auto-open marker). **Fully dormant today** — every surface below is gated on `ftOver()` = champion set (`_champ`) **AND** the Final result (`k32.w`) recorded, i.e. the standings are final and the +25 has paid. `?wrapped` / `#wrapped` previews the UI on current data for review (house pattern, like `?powerups`).
 
 **Why:** the app had no terminal state. After the Final it would boot into `defaultRound()`'s "MD1" fallback — the finished group-stage list — with the header stuck on "Tournament underway", and 687 players' closure moment (final rank, best call, the office story) existed nowhere. The endgame IS the product's peak; this pass gives it a landing.
 
@@ -21,6 +21,98 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 **Verified:** `node --check` clean. A 50-assertion headless-Chromium harness drives the REAL page over a mocked Supabase REST layer (standings RPC 500s so the app exercises its real client-scoring fallback over 24 seeded blobs), six separate boots, **0 page errors**: DORMANT (today's exact shape — results→k20, no champion) renders nothing new and keeps today's filter/boot behaviour; ACTIVE (settled tournament, clock 2026-07-20) walks every slide asserting engine parity (odometer === `scoreFor` === board fallback pts; journey endpoint === board rank; dept slide === `deptLeague`; podium === board top-3 order; upset rarity/champion backer counts against the seeded population), auto-open once + no re-open on later visits, reveal→Wrapped handoff, share-card build, left-edge back-step, reduced-motion walk, `?wrapped` preview (champion slide self-omits pre-champion), `?tv` CTA hiding. 390px @2× screenshots on the podium home and all nine slides.
 
 **Rollback:** `git revert <this commit>` — frontend-only; removes the overlay markup, the FULL TIME JS/CSS blocks and the five hooks (boot chain, `renderMatches` host, `meBrags` chip, reveal-finale button, `defaultRound`/`tickCountdown` terminal fixes). If it was ever live: players lose the recap/podium; nothing else changes. Optional local-state cleanup: `localStorage.removeItem('wc:wrapped:auto')`.
+
+---
+
+## 2026-07-06 (Doha) — MAIN DEPLOY (launch step ③): Wave-B client ships to production
+
+**Commits:** this commit, then `main` fast-forwarded `c550879` → this tip and pushed **on the organizer's explicit "push main"**. Ships to staffchallenge26.com via the Pages action: the corrected **11-Jun-2026 FIFA `PU_RANK`** (client upset math now matches the deployed server `wc_rank` byte-for-byte), the committed `tests/wave-b/` parity harness, the server-side flag-gate SQL sources, the step-①/② deploy documentation + rollback dossier, and the revoke-hardened `sql/*.sql`. **No scoring or visual change for players**: `wc:powerups_live` is still unset, so client (`puLive()`) and server (`standings()`) both keep serving the pure base ladder — power-ups appear only at step ④.
+
+**Verified after push:** Pages action green; prod `index.html` (cache-busted) contains `"Argentina":1` in `PU_RANK`.
+
+**Rollback:** `git push origin +c550879:main` (client-only revert; the DB stays on the step-① state documented in the previous entry — the two are independently safe: flag-off keeps either combination byte-identical on output).
+
+---
+
+## 2026-07-06 (Doha) — WAVE B SQL DEPLOYED LIVE (launch step ① + ②): engine + walls on production, verified inert
+
+**Commits:** this commit (`docs/rollback/2026-07-06-pre-wave-b/*` + `sql/protect.sql` + `sql/standings.sql` revoke-hardening + changelog + handoff addendum). **The live DB change below is APPLIED (2026-07-06 ~07:00–07:30 Doha) — on the organizer's explicit instruction ("i want you to do it. the SQL"), via the Supabase connector instead of the SQL-editor paste.** Power-ups remain **OFF**: `wc:powerups_live` unset, 0 chips held, leaderboard byte-identical before/after.
+
+**What (DB, applied live):** `sql/protect.sql` then `sql/standings.sql`, emitted byte-exact from this branch (`ab3f6f8` content). Net live changes: `save_picks` → chips-aware (validate + kickoff-seal), `org_exec` → `wc:powerups_live` whitelisted (enables the ④ toggle), NEW `wc_chip_valid()` + `wc_rank` (48 teams, 11-Jun-2026 FIFA release), `standings()` → Wave-B engine (armband/upset/shield/streak-shield **all gated on the unset flag**). `org_check`/`wc_pin_hash`/`server_time` replaced with identical bodies. All DML in the files verified no-op against pre-state (`wc_locks` already byte-identical: 105 rows md5 `9900d989…`; 0 blobs with pins; org hash = file seed; `wc_auth` 688 before and after).
+
+**Plus 3 ACL revokes beyond the files** (found during verify): Supabase `ALTER DEFAULT PRIVILEGES` grants EXECUTE on every new function to `anon`/`authenticated` directly, so the files' `revoke … from public` alone left anon holding EXECUTE on the two internal helpers. Applied live:
+```sql
+revoke execute on function public.wc_pin_hash(text) from anon, authenticated;
+revoke execute on function public.wc_chip_valid(text,text) from anon, authenticated;
+revoke execute on function public.standings() from authenticated;  -- anon keeps its explicit grant
+```
+`sql/protect.sql` + `sql/standings.sql` revoke lines extended to name `anon, authenticated` so future re-runs are self-sufficient (repo-only edit; end-state unchanged).
+
+**Verified live (the full step-② battery):**
+- **Transcription byte-exact:** `md5(prosrc)` of all 7 deployed functions === the same files loaded from disk into the throwaway PG (`standings` `d35c05fb…` · `save_picks` `f9758ed1…` · `org_exec` `65fb143c…` · `org_check` `d80d5978…` · `wc_pin_hash` `025fd447…` · `wc_chip_valid` `c9175c3b…` · `server_time` `c6cc5aed…`).
+- **Zero drift:** `standings()` md5 `172cdcb4535f7841a52d17f6a2f1ea82` / 687 rows — identical before protect.sql, between the two files, and after standings.sql. (Also proven pre-deploy by running the revised body read-only on live in the same statement as the old function: identical md5, same snapshot, k20 included.)
+- **27/27 vectors against the DEPLOYED `standings()` on live PG 17.6** — zero-mutation method: session-local `pg_temp.kv` shadows the real `kv` (temp schema resolves first), probe row confirmed the shadow (0 players seen) before any vector counted; every got === want, including the 3 flag-OFF vectors.
+- **`wc_rank`:** 48 rows, md5 `db5db9d59a5cebc3020cd0f16bbb1880` (collate "C") === `PU_RANK` from `index.html` (run.mjs 27/27 + rank === on the throwaway).
+- **21-check privilege battery** all green (kv read-only for anon, all engine tables + `wc_ko_sched` walled, tick revoked, the five player-facing RPC grants intact).
+- **As the real anon key via REST:** `standings` 200/687 · `kv` flag read 200 `[]` · `wc_rank`/`wc_auth`/`wc_locks`/`wc_org_auth`/`wc_ko_sched` reads **401** · kv INSERT/PATCH **401** · `wc_autoconfirm_tick` **401** · `wc_pin_hash`/`wc_chip_valid` **404** (hidden) · `save_picks` junk probe → 400 `bad_slug` (alive, validating, nothing written) · `org_check` wrong code → `false`.
+- Robot green through it all (ticks 04:00/04:10Z succeeded); flag unset; 0 chips.
+
+**Remaining (gated):** ③ merge branch → `main` + push **on the organizer's explicit "push main"** (ships corrected `PU_RANK` to the client so upset math matches server the moment the flag flips) → ④ organizer flips ⚡ Power-ups in Organizer tools. Then optional `WHATSNEW_VER` bump.
+
+**Rollback (exact):** run the three files in `docs/rollback/2026-07-06-pre-wave-b/` (live `pg_get_functiondef()` captures, md5-verified against pre-deploy `prosrc`), then:
+```sql
+drop function if exists public.wc_chip_valid(text,text);
+drop table if exists public.wc_rank;
+-- inverse of the 3 ACL revokes, only if truly needed:
+grant execute on function public.wc_pin_hash(text) to anon, authenticated;
+grant execute on function public.wc_chip_valid(text,text) to anon, authenticated;  -- (if not dropped)
+grant execute on function public.standings() to authenticated;
+```
+`org_check`/`wc_pin_hash`/`server_time` need no restore (identical bodies). Repo edits: `git revert <this commit>`.
+
+---
+
+## 2026-07-06 (Doha) — Session handoff brief for the Wave-B launch
+
+**Commits:** this commit (`docs/HANDOFF-wave-b-launch.md` + changelog). **Docs only — no app or DB change.**
+
+Continuation brief for a fresh working session: current state (what's live on prod vs on this branch), the proofs (27/27 parity vectors · zero-drift 687/687 · rank tables identical), the four remaining launch steps with live-DB reference hashes for verification/rollback, and the ground rules (pushes to `main` and live SQL deploys happen only on the organizer's explicit go).
+
+**Rollback:** `git revert <this commit>`.
+
+---
+
+## 2026-07-06 (Doha) — WAVE B: server-side flag gate (deploy becomes truly inert until launch)
+
+**Commits:** this commit (`sql/standings.sql` + `tests/wave-b/*` + changelog). **Repo-only SQL + tests. No live change.**
+
+**Why (found while prepping the deploy):** `wc:powerups_live` was a **client-only** flag — the revised `standings()` computed the 🦅 upset +2 and 🛡 shield **automatically** for any k≥25 result (no chip needed). So merely *deploying* the SQL would have silently launched upset+shield on the server leaderboard at the first quarter-final, diverging from the flag-off client and committing an undecided organizer to the mechanics. "Deploy is safe, the toggle launches" was not actually true.
+
+**What changed — `sql/standings.sql`:** a `pu` CTE reads `wc:powerups_live` and **gates all three Wave-B terms server-side** — armband ×2, upset +2, and the shield's break-forgiveness. Flag off ⇒ the function returns the pure pre-power-up ladder for ANY results (not just pre-QF). Now the flag is the single switch for power-ups on **both** client (`puLive()`) and server (`standings()`), so deploying the SQL changes nothing until the organizer flips it.
+
+**What changed — `tests/wave-b/`:** 3 flag-OFF vectors added (armband ignored, upset ignored, shield does-not-forgive) asserting the gate yields base. Harness now sets `wc:powerups_live` per vector and mirrors it into the client `puLive`.
+
+**Verified (throwaway PG16, real sql/):** **27/27 vectors** expected === SQL === JS; `wc_rank` === `PU_RANK`; **zero-drift 687/687** with the flag unset — and now guaranteed for future k≥25 results too, not only pre-QF.
+
+**Rollback:** `git revert <this commit>` (repo/test only).
+
+---
+
+## 2026-07-06 (Doha) — WAVE B launch prep: parity proof rebuilt, real FIFA ranks, ready to deploy
+
+**Commits:** this commit (`index.html` PU_RANK + `sql/standings.sql` wc_rank/comments + `tests/wave-b/*` + changelog). **Frontend const + repo-only SQL + a test harness. No live scoring change in this commit** — the SQL deploy + toggle are separate, gated steps.
+
+**Why:** clearing the two blockers to launching the dormant Wave-B power-ups. (1) The changelog's parity guarantee rested on a `scratchpad/wave-b-vectors.json` that was throwaway and **never committed** — the launch-day proof couldn't be run. (2) The `wc_rank`/`PU_RANK` table was an admitted *plausible* placeholder, not the real ranking, and had **real order errors**.
+
+**What changed:**
+- **`tests/wave-b/`** — the parity proof, rebuilt and committed: `vectors.mjs` (24 vectors: armband double/never-create/+36-final, upset direction/never-doubled/k31, shield forgive-once/no-retro, streak 2·3·4·reset, champion never-doubled, group + today's-math base), `run.mjs` (scores each through the **real SQL `standings()` on a throwaway PG16 AND the real JS `scoreFor()`**, asserting expected === SQL === JS, plus `wc_rank === PU_RANK`), `bootstrap.sh`, `README.md`. **Result: 24/24, ranks match.**
+- **Real ranks** — `PU_RANK` (index.html) and `wc_rank` (standings.sql) both replaced with the **official FIFA/Coca-Cola men's ranking, 11 June 2026 release** (frozen going into the WC; next update 20 Jul), all 48 finalists, byte-identical. Notable corrections vs placeholder: **Argentina 1 / Spain 2** (were flipped), **Portugal 5 / Brazil 6** (were flipped), **Morocco 7** (was 11), USA 17 / Mexico 14 (order reversed), Türkiye 22, Ivory Coast 33, DR Congo 46. FIFA's own numbers, so ranks skip non-WC teams (12 Italy…) — only relative order feeds the +2 bonus, so gaps are harmless.
+
+**Verified (throwaway Postgres 16 loading the REAL sql/):** 24/24 vectors expected === SQL === JS with real ranks; `wc_rank` === `PU_RANK` (48). **Zero-drift on live data:** all `wc:results` + 687 player blobs scored by the **revised** `standings()` → **687/687 identical** to the live leaderboard (no chips + no k≥25 ⇒ Wave-B terms = 0). `node --check` clean.
+
+**Next (separate gated steps):** deploy revised `sql/protect.sql` + `sql/standings.sql` live with a before/after `standings()` snapshot diff (must be zero); then the organizer flips `wc:powerups_live`. `wc_rank` and `PU_RANK` must be live-consistent before the flag is on.
+
+**Rollback:** `git revert <this commit>` restores placeholder ranks and removes the harness (frontend/test only; no DB change in this commit).
 
 ---
 

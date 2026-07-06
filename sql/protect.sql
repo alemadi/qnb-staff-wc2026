@@ -423,11 +423,14 @@ alter table public.wc_fixtures   enable row level security;
 alter table public.wc_alias      enable row level security;
 alter table public.wc_poll_state enable row level security;
 
-revoke all on function public.save_picks(text,text,jsonb)        from public;
-revoke all on function public.org_check(text)                    from public;
-revoke all on function public.org_exec(text,text,text,text)      from public;
-revoke all on function public.wc_pin_hash(text)                  from public;
-revoke all on function public.wc_chip_valid(text,text)           from public;
+-- 'from public' alone is NOT enough on Supabase: ALTER DEFAULT PRIVILEGES grants
+-- EXECUTE on every new function directly to anon/authenticated — strip those too
+-- (the three player-facing functions get their grants right back below).
+revoke all on function public.save_picks(text,text,jsonb)        from public, anon, authenticated;
+revoke all on function public.org_check(text)                    from public, anon, authenticated;
+revoke all on function public.org_exec(text,text,text,text)      from public, anon, authenticated;
+revoke all on function public.wc_pin_hash(text)                  from public, anon, authenticated;
+revoke all on function public.wc_chip_valid(text,text)           from public, anon, authenticated;
 grant execute on function public.save_picks(text,text,jsonb)     to anon, authenticated;
 grant execute on function public.org_check(text)                 to anon, authenticated;
 grant execute on function public.org_exec(text,text,text,text)   to anon, authenticated;

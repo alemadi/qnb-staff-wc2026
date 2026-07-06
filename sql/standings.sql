@@ -53,27 +53,28 @@
 -- ============================================================================
 
 -- ----------------------------------------------------------------------------
--- wc_rank — fixed FIFA-ranking snapshot backing the 🦅 upset bonus. Published
--- in-app as the PU_RANK const in index.html: SAME 48 teams, SAME numbers.
+-- wc_rank — the official FIFA/Coca-Cola men's ranking, 11 June 2026 release (the
+-- one frozen going into the World Cup; next update 20 Jul), backing the 🦅 upset
+-- bonus. Published in-app as the PU_RANK const in index.html: SAME 48 teams, SAME
+-- numbers. FIFA's own numbers, so ranks skip non-WC teams (12 Italy, 21 Denmark…);
+-- only relative order matters to the bonus, so the gaps are harmless.
 --
--- >>> ORGANIZER-EDITABLE BEFORE LAUNCH <<<
--- The r values below are a plausible June-2026 FIFA ranking. Before pasting on
--- launch day, update them to the real 25-June-2026 FIFA release AND mirror any
--- change into PU_RANK in index.html (the two must stay identical). The seed is
--- idempotent (ON CONFLICT DO UPDATE): re-running this file re-applies whatever
--- numbers it currently holds, so the file is the single source of truth — edit
--- the values here and re-run to update the live ranks (no delete needed).
+-- >>> ORGANIZER-EDITABLE <<<
+-- To correct a rank, edit the value here AND mirror it into PU_RANK in index.html
+-- (the two must stay byte-identical). The seed is idempotent (ON CONFLICT DO
+-- UPDATE): re-running this file re-applies whatever numbers it holds, so the file
+-- is the single source of truth — edit and re-run to update the live ranks.
 -- ----------------------------------------------------------------------------
 create table if not exists wc_rank(team text primary key, r int not null);
 insert into wc_rank(team, r) values
- ('Spain',1),('Argentina',2),('France',3),('England',4),('Brazil',5),('Portugal',6),
- ('Netherlands',7),('Belgium',8),('Germany',9),('Croatia',10),('Morocco',11),('Colombia',13),
- ('USA',14),('Mexico',15),('Uruguay',16),('Switzerland',17),('Japan',18),('Senegal',19),
- ('Iran',20),('Austria',22),('South Korea',23),('Ecuador',24),('Australia',26),('Türkiye',27),
- ('Canada',28),('Norway',29),('Panama',31),('Egypt',33),('Algeria',35),('Scotland',38),
- ('Paraguay',40),('Tunisia',42),('Czechia',43),('Ivory Coast',44),('Sweden',45),('Uzbekistan',51),
- ('Qatar',54),('Iraq',57),('Saudi Arabia',59),('DR Congo',60),('South Africa',62),('Jordan',64),
- ('Bosnia & H.',69),('Ghana',71),('Cape Verde',73),('Curaçao',82),('Haiti',85),('New Zealand',87)
+ ('Argentina',1),('Spain',2),('France',3),('England',4),('Portugal',5),('Brazil',6),
+ ('Morocco',7),('Netherlands',8),('Belgium',9),('Germany',10),('Croatia',11),('Colombia',13),
+ ('Mexico',14),('Senegal',15),('Uruguay',16),('USA',17),('Japan',18),('Switzerland',19),
+ ('Iran',20),('Türkiye',22),('Ecuador',23),('Austria',24),('South Korea',25),('Australia',27),
+ ('Algeria',28),('Egypt',29),('Canada',30),('Norway',31),('Ivory Coast',33),('Panama',34),
+ ('Sweden',38),('Czechia',40),('Paraguay',41),('Scotland',42),('Tunisia',45),('DR Congo',46),
+ ('Uzbekistan',50),('Qatar',56),('Iraq',57),('South Africa',60),('Saudi Arabia',61),('Jordan',63),
+ ('Bosnia & H.',64),('Cape Verde',67),('Ghana',73),('Curaçao',82),('Haiti',83),('New Zealand',85)
 on conflict (team) do update set r=excluded.r;
 -- walled like the other engine tables; standings() reads it as definer
 alter table public.wc_rank enable row level security;
@@ -155,6 +156,13 @@ upset as materialized (
 champ as materialized (
   select r->>'_champ' as c from results_row
 ),
+-- WAVE B master switch (server side): the ⚡ armband ×2, 🦅 upset +2 and 🛡 shield apply
+-- ONLY when the organizer has flipped wc:powerups_live. Off ⇒ pure pre-power-up ladder, so
+-- this function stays byte-identical in output to the old one until launch — no silent
+-- upset/shield at the QF just because the SQL is deployed. Mirrors puLive() in index.html.
+pu as materialized (
+  select exists(select 1 from kv where key = 'wc:powerups_live' and value in ('true','1')) as live
+),
 players as materialized (
   select substring(key from 11)                       as pslug,   -- after 'wc:player:'
          value::jsonb                                  as j
@@ -213,7 +221,7 @@ ko_shielded as (
       from ko
     ) s1
   ) s2
-  where not (brk and nbrk = 1)
+  where not (brk and nbrk = 1 and (select live from pu))     -- 🛡 shield forgives only when power-ups are live
 ),
 -- gaps-and-islands: number each exact hit within its maximal consecutive run.
 -- Island id = row_number(over all KO by kn) - row_number(over same exact_hit by kn);
@@ -249,13 +257,13 @@ scored as (
           ( case when m.rh is not null and m.ra is not null
                   and pr.ph = m.rh and pr.pa = m.ra
              then m.kbonus else 0 end ) )
-        * ( case when (m.rnd = 'qf'  and c.c_qf  = m.id)
+        * ( case when (select live from pu) and ( (m.rnd = 'qf'  and c.c_qf  = m.id)
                    or (m.rnd = 'sf'  and c.c_sf  = m.id)
-                   or (m.rnd = 'fin' and c.c_fin = m.id)
-             then 2 else 1 end )                       -- ⚡ armband: multiplies, never creates
+                   or (m.rnd = 'fin' and c.c_fin = m.id) )
+             then 2 else 1 end )                       -- ⚡ armband: multiplies, never creates (flag-gated)
         +
-        ( case when m.kn >= 25 and pr.pw = m.rw and coalesce(u.up, false)
-           then 2 else 0 end )                         -- 🦅 upset: flat +2, never doubled
+        ( case when (select live from pu) and m.kn >= 25 and pr.pw = m.rw and coalesce(u.up, false)
+           then 2 else 0 end )                         -- 🦅 upset: flat +2, never doubled (flag-gated)
       when coalesce(pr.po,'') = '' then 0              -- group: outcome pick required
       else
         ( case when pr.po = (case when m.rh > m.ra then 'H'
@@ -307,7 +315,9 @@ left join streak_bonus sb on sb.pslug = p.pslug
 left join pred_counts  pc on pc.pslug = p.pslug
 $$;
 
-revoke all on function public.standings() from public;
+-- includes anon/authenticated: Supabase default privileges grant EXECUTE on new
+-- functions to the API roles directly, so 'from public' alone leaves them holding it
+revoke all on function public.standings() from public, anon, authenticated;
 grant execute on function public.standings() to anon;
 
 -- Sanity check after running:
