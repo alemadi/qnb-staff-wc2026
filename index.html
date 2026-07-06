@@ -1847,11 +1847,11 @@
     <div class="wn-card">
       <div class="wn-spark" aria-hidden="true">✨</div>
       <div class="wn-h">What’s new</div>
-      <div class="wn-sub">The <b>Trophy Room</b> is open — and every big moment now has a share card to match.</div>
-      <button class="wn-item" onclick="wnGoAwards()"><span class="wn-ic">🏆</span><span class="wn-tx"><b>The Trophy Room</b><span>Leaderboard → 🏆 Awards: the live top-3 in every race — and exactly how far you are from each crown.</span></span><span class="wn-go">›</span></button>
-      <button class="wn-item" onclick="wnGoFaq('titles')"><span class="wn-ic">🔮</span><span class="wn-tx"><b>Four office titles</b><span>Oracle · Trailblazer · Hot Hand · Perfectionist — awarded at full time. Most exacts is still winnable in the last week.</span></span><span class="wn-go">›</span></button>
+      <div class="wn-sub">⚡ Power-ups are <b>LIVE</b> for the Quarter-finals — arm before Thursday’s locks. Plus the 🏆 <b>Trophy Room</b> and new 📤 share cards.</div>
+      <button class="wn-item" onclick="wnGoFaq('power-up')"><span class="wn-ic">⚡</span><span class="wn-tx"><b>Captain’s Armband — arm it now</b><span>One per round from the QF. Arm a match before it locks and its advance + exact points count DOUBLE. On the QF cards.</span></span><span class="wn-go">›</span></button>
+      <button class="wn-item" onclick="wnGoAwards()"><span class="wn-ic">🏆</span><span class="wn-tx"><b>The Trophy Room</b><span>Five crowns at the final whistle — every race live under Leaderboard → 🏆 Awards, with your exact gap to each.</span></span><span class="wn-go">›</span></button>
       <button class="wn-item" onclick="wnGoBrags()"><span class="wn-ic">📤</span><span class="wn-tx"><b>New share cards</b><span>Tonight’s slip, the office split, title belts, your climb, the road to the final — in your brag row and the Room.</span></span><span class="wn-go">›</span></button>
-      <div class="wn-more">Titles never move points — the main board alone decides 🥇🥈🥉. Ties: higher total points, then the title is shared.</div>
+      <div class="wn-more">🛡 Streak Shield and 🦅 Upset Bonus run automatically from the QF — the same kit for every player, nothing to buy. Titles never move points — the board alone decides 🥇🥈🥉.</div>
       <button class="wn-ok" onclick="dismissWhatsNew()">Got it</button>
     </div>
   </div>
@@ -7116,7 +7116,7 @@ function toggleFaq(i){
    per player (localStorage-gated by version), deep-links into each new feature,
    and never nags. Persistent NEW dots on the Leaderboard nav + The Room toggle
    catch stragglers and self-clear once the surface is visited. */
-const WHATSNEW_VER="2026-07-06-sharecards";
+const WHATSNEW_VER="2026-07-06-powerups-live";
 function seenKey(k){try{return localStorage.getItem("wc:seen:"+k)==="1";}catch(e){return true;}}
 function markSeen(k){try{localStorage.setItem("wc:seen:"+k,"1");}catch(e){}updateNewDots();}
 function updateNewDots(){

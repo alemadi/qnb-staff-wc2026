@@ -5,6 +5,26 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-07-06 (Doha) — ⚡ POWER-UPS LIVE (launch step ④ complete) + combined launch spotlight
+
+**Commits:** this commit (`index.html` + changelog), rebased onto the share-card deploy tip (`1d5c866`; conflicts = changelog ordering + the What's-new card, resolved by merging the three announcements into ONE launch card), then `main` fast-forwarded and pushed — the whole sequence **on the organizer's explicit instruction** ("you flip it please" for the flag, then "push to main" for the spotlight). **The live DB change below is APPLIED (2026-07-06 evening Doha, via the connector).**
+
+**What (DB, applied live — the launch runbook's exact line):**
+```sql
+insert into kv(key,value) values('wc:powerups_live','true') on conflict (key) do update set value=excluded.value;
+```
+Wave-B power-ups are now ON for both halves at once: client `puLive()` (arm UI + chip-aware scoring paths) and server `standings()` (armband ×2 / upset +2 / shield, all still k≥25-gated). With **0 QF results**, the flip is inert on scoring **by proof, not just design**: `standings()` md5 `fd07d388148b9c2f395c03c1899cc545` / 688 rows — **byte-identical before and after** the insert.
+
+**Pre-flip battery (read-only, minutes before):** flag unset · robot `wc-autoconfirm` active `*/10` · standings 200/688 · R16 half done (k17–k20 in, k21–k24 pending — QF cards go armable as each settles) · **one pre-flip armband existed**: player `ang` holds `chips.qf="k27"`, stored by the chips-aware `save_picks` from a stale pre-gate tab this morning — legitimate under the announced mechanics (pre-lock arming, movable until k27 locks, scored 0 while the flag was off; flipping today gives everyone else the same window). **Post-flip:** flag `"true"` read back via the anon REST boot path (`key=in.("wc:powerups_live")` → 200, one row) — every player's next open loads the kit.
+
+**What (client, this push):** `WHATSNEW_VER` → `2026-07-06-powerups-live` with the spotlight as the single combined launch card — ⚡ **Armband "arm it now"** (FAQ deep link) · 🏆 **Trophy Room** (`wnGoAwards()`) · 📤 **share cards** (`wnGoBrags()`, the share-card pack's item kept) — with the 🛡+🦅 automatic pair and the fairness note in the footer line ("same kit for every player… titles never move points"). Players who consumed today's trophy-room or sharecards spotlight see the launch card once; nothing else changes.
+
+**Verified (client, on the rebased tree):** `node --check` clean; the Trophy-Room 50-assert headless suite green with the combined card (spotlight shows once → 🏆 item deep-links to Awards → version consumed → never re-shows; all Trophy Room / honours / FT-roll / kiosk / demo asserts unchanged; 0 page errors); the share-card suite (`tests/share-cards/run.mjs`) re-run green. After the main push: prod serves `2026-07-06-powerups-live`, `"Argentina":1` still in `PU_RANK` (client and server rank tables consistent at launch).
+
+**Rollback:** pause power-ups: `delete from kv where key='wc:powerups_live';` (or the Organizer-tools toggle) — client and server drop to the base ladder on the same flag; ang's stored armband simply scores 0 again. Spotlight: `git revert <this commit>` (players who consumed `2026-07-06-powerups-live` would re-see the sharecards card once — harmless).
+
+---
+
 ## 2026-07-06 (Doha) — MAIN DEPLOY: the share-card pack ships to production
 
 **Commits:** this commit, then `main` fast-forwarded to it and pushed **on the organizer's explicit "push to main"**. The two share-card commits were rebased onto the Trophy Room deploy tip (`bac9e9c`); conflicts were changelog ordering plus the What's-new card, resolved by **merging the two announcements** — the Trophy Room card keeps its 🏆/🔮 items and gains the 📤 share-cards item (`WHATSNEW_VER="2026-07-06-sharecards"`, so players who dismissed today's trophy-room card see the combined card once — intended). **Re-verified on the rebased tree:** `tests/share-cards/run.mjs` 26/26 (all ten cards build over the merged code, incl. the belts on the Trophy-Room-extended `computeHonours`), zero page errors, `node --check` clean. Frontend-only — the live DB is untouched by this push. Also ships `docs/social-artifacts-preview.html` (the branch's design-preview gallery; noindex, demo data only).
