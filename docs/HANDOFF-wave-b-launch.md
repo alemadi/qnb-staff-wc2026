@@ -1,5 +1,13 @@
 # HANDOFF — Wave-B power-ups launch (continue in a fresh session)
 
+> **ADDENDUM 2026-07-06 ~07:30 Doha (continuation session):** Steps **1–2 are COMPLETE** —
+> both SQL files deployed to live via the connector on the organizer's explicit instruction
+> and verified hard (zero drift `172cdcb4…`/687 · 27/27 vectors vs the DEPLOYED `standings()`
+> on live · prosrc md5s byte-exact · walls + REST battery green · flag still unset · 0 chips).
+> See the top CHANGELOG entry for the full battery + rollback dossier
+> (`docs/rollback/2026-07-06-pre-wave-b/`). Remaining: **③ push main (organizer's explicit
+> word) → ④ organizer flips ⚡ Power-ups.**
+
 **Written 2026-07-06 ~06:00 Doha by the previous Claude session.** Everything below is verified fact as of writing; re-verify live state before acting — matches settle continuously.
 
 ## Where things stand

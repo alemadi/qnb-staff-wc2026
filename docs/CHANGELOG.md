@@ -5,6 +5,44 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-07-06 (Doha) — WAVE B SQL DEPLOYED LIVE (launch step ① + ②): engine + walls on production, verified inert
+
+**Commits:** this commit (`docs/rollback/2026-07-06-pre-wave-b/*` + `sql/protect.sql` + `sql/standings.sql` revoke-hardening + changelog + handoff addendum). **The live DB change below is APPLIED (2026-07-06 ~07:00–07:30 Doha) — on the organizer's explicit instruction ("i want you to do it. the SQL"), via the Supabase connector instead of the SQL-editor paste.** Power-ups remain **OFF**: `wc:powerups_live` unset, 0 chips held, leaderboard byte-identical before/after.
+
+**What (DB, applied live):** `sql/protect.sql` then `sql/standings.sql`, emitted byte-exact from this branch (`ab3f6f8` content). Net live changes: `save_picks` → chips-aware (validate + kickoff-seal), `org_exec` → `wc:powerups_live` whitelisted (enables the ④ toggle), NEW `wc_chip_valid()` + `wc_rank` (48 teams, 11-Jun-2026 FIFA release), `standings()` → Wave-B engine (armband/upset/shield/streak-shield **all gated on the unset flag**). `org_check`/`wc_pin_hash`/`server_time` replaced with identical bodies. All DML in the files verified no-op against pre-state (`wc_locks` already byte-identical: 105 rows md5 `9900d989…`; 0 blobs with pins; org hash = file seed; `wc_auth` 688 before and after).
+
+**Plus 3 ACL revokes beyond the files** (found during verify): Supabase `ALTER DEFAULT PRIVILEGES` grants EXECUTE on every new function to `anon`/`authenticated` directly, so the files' `revoke … from public` alone left anon holding EXECUTE on the two internal helpers. Applied live:
+```sql
+revoke execute on function public.wc_pin_hash(text) from anon, authenticated;
+revoke execute on function public.wc_chip_valid(text,text) from anon, authenticated;
+revoke execute on function public.standings() from authenticated;  -- anon keeps its explicit grant
+```
+`sql/protect.sql` + `sql/standings.sql` revoke lines extended to name `anon, authenticated` so future re-runs are self-sufficient (repo-only edit; end-state unchanged).
+
+**Verified live (the full step-② battery):**
+- **Transcription byte-exact:** `md5(prosrc)` of all 7 deployed functions === the same files loaded from disk into the throwaway PG (`standings` `d35c05fb…` · `save_picks` `f9758ed1…` · `org_exec` `65fb143c…` · `org_check` `d80d5978…` · `wc_pin_hash` `025fd447…` · `wc_chip_valid` `c9175c3b…` · `server_time` `c6cc5aed…`).
+- **Zero drift:** `standings()` md5 `172cdcb4535f7841a52d17f6a2f1ea82` / 687 rows — identical before protect.sql, between the two files, and after standings.sql. (Also proven pre-deploy by running the revised body read-only on live in the same statement as the old function: identical md5, same snapshot, k20 included.)
+- **27/27 vectors against the DEPLOYED `standings()` on live PG 17.6** — zero-mutation method: session-local `pg_temp.kv` shadows the real `kv` (temp schema resolves first), probe row confirmed the shadow (0 players seen) before any vector counted; every got === want, including the 3 flag-OFF vectors.
+- **`wc_rank`:** 48 rows, md5 `db5db9d59a5cebc3020cd0f16bbb1880` (collate "C") === `PU_RANK` from `index.html` (run.mjs 27/27 + rank === on the throwaway).
+- **21-check privilege battery** all green (kv read-only for anon, all engine tables + `wc_ko_sched` walled, tick revoked, the five player-facing RPC grants intact).
+- **As the real anon key via REST:** `standings` 200/687 · `kv` flag read 200 `[]` · `wc_rank`/`wc_auth`/`wc_locks`/`wc_org_auth`/`wc_ko_sched` reads **401** · kv INSERT/PATCH **401** · `wc_autoconfirm_tick` **401** · `wc_pin_hash`/`wc_chip_valid` **404** (hidden) · `save_picks` junk probe → 400 `bad_slug` (alive, validating, nothing written) · `org_check` wrong code → `false`.
+- Robot green through it all (ticks 04:00/04:10Z succeeded); flag unset; 0 chips.
+
+**Remaining (gated):** ③ merge branch → `main` + push **on the organizer's explicit "push main"** (ships corrected `PU_RANK` to the client so upset math matches server the moment the flag flips) → ④ organizer flips ⚡ Power-ups in Organizer tools. Then optional `WHATSNEW_VER` bump.
+
+**Rollback (exact):** run the three files in `docs/rollback/2026-07-06-pre-wave-b/` (live `pg_get_functiondef()` captures, md5-verified against pre-deploy `prosrc`), then:
+```sql
+drop function if exists public.wc_chip_valid(text,text);
+drop table if exists public.wc_rank;
+-- inverse of the 3 ACL revokes, only if truly needed:
+grant execute on function public.wc_pin_hash(text) to anon, authenticated;
+grant execute on function public.wc_chip_valid(text,text) to anon, authenticated;  -- (if not dropped)
+grant execute on function public.standings() to authenticated;
+```
+`org_check`/`wc_pin_hash`/`server_time` need no restore (identical bodies). Repo edits: `git revert <this commit>`.
+
+---
+
 ## 2026-07-06 (Doha) — Session handoff brief for the Wave-B launch
 
 **Commits:** this commit (`docs/HANDOFF-wave-b-launch.md` + changelog). **Docs only — no app or DB change.**

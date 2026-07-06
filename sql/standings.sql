@@ -315,7 +315,9 @@ left join streak_bonus sb on sb.pslug = p.pslug
 left join pred_counts  pc on pc.pslug = p.pslug
 $$;
 
-revoke all on function public.standings() from public;
+-- includes anon/authenticated: Supabase default privileges grant EXECUTE on new
+-- functions to the API roles directly, so 'from public' alone leaves them holding it
+revoke all on function public.standings() from public, anon, authenticated;
 grant execute on function public.standings() to anon;
 
 -- Sanity check after running:
