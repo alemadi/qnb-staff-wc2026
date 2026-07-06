@@ -5,6 +5,38 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-07-06 (Doha) — SAFEGUARDS: daily kv backups + organizer audit journal + legacy kv-policy cleanup
+
+**Commits:** this commit on `claude/safeguards-failure-scenarios-9ytmve` (`sql/protect.sql` audit journal + policy drops · new `sql/backup.sql` · new `.github/workflows/backup.yml` · `docs/rollback/2026-07-06-safeguards/` · changelog). **The live DB changes below are APPLIED (2026-07-06 ~07:50 Doha) via the Supabase connector on the organizer's explicit go ("Go ahead with these").** No client change; no scoring change (`standings()` md5 `fd07d388…`/688 byte-identical before and after); `wc:powerups_live` untouched (still unset).
+
+**Why:** the safeguards review found three gaps: (1) the 688 player pick blobs — the one irreplaceable dataset — existed only in the live `kv` table (no snapshots, nothing off-site, platform backups unverified); (2) `org_exec` was last-write-wins with no history, so a fat-fingered result overwrite or player delete (which also destroys the PIN hash) was unrecoverable; (3) the pre-protect permissive kv write policies (`i`/`u`/`d`, `USING (true)` for PUBLIC) still existed — dead under the revoked grants, but one future well-meaning `GRANT` away from silently reopening direct browser writes.
+
+**What (DB, applied live):**
+- **`wc_org_log`** (append-only, PRIVATE — RLS on, zero API grants): every `org_exec` mutation journals, in the same transaction, the prior kv value, the value written, and — for player deletes/clearpin — the destroyed `wc_auth` PIN hash. Undo = `org_exec 'set'` the logged `old_value` back (+ re-insert the logged `pin_hash` into `wc_auth` for deletes).
+- **`org_exec` replaced** with the journaling version (behavior otherwise identical — same validation, same key whitelist, same pin-stripping; proven on the throwaway PG: set/overwrite/del/undo/clearpin/bad_code/bad_key vectors, failed calls journal nothing). md5(prosrc) `65fb143c…` → `87131d3e…` (=== the file loaded into throwaway PG — transcription byte-exact). Grants preserved (anon/authenticated EXECUTE verified post-replace).
+- **`sql/backup.sql`**: `wc_backup` + `wc_backup_auth` snapshot tables (PRIVATE — RLS on, zero API grants) + `wc_backup_tick()` (security definer, md5 `4a445ff5…`, EXECUTE revoked from public/anon/authenticated) + pg_cron **`wc-backup-daily` at 08:05 UTC** (11:05 Doha), 14-day retention. **First snapshot taken at apply time: kv 691 rows · 689 PIN hashes @ 04:51:24Z.**
+- **Legacy kv policies dropped:** `drop policy i / u / d on kv` (exact pre-drop shapes captured in the dossier). Safe by proof, not hope: `kv` has force-RLS **off** and owner `postgres`, so `save_picks`/`org_exec`/robot (definer/owner) never consulted those policies; anon writes were and remain blocked at the grant layer.
+
+**Verified live (full battery):** standings md5+count identical before/after each chunk (`fd07d388…`/688) · new function md5s === throwaway-loaded repo files · kv policies now `{kv_read_all, r}` · `wc-backup-daily` active `5 8 * * *` · robot succeeded at 04:40Z and 04:50Z, straight through the window · REST as the real anon key: kv read 200, kv INSERT **401**, `wc_org_log`/`wc_backup`/`wc_backup_auth` reads **401**, `wc_backup_tick` **401**, `org_check` wrong code → false, `org_exec` wrong code → `bad_code`, `save_picks` junk → `bad_slug`, `standings` 200/**688** (pool grew 687→688 overnight — new joiner). Throwaway parity: **27/27 vectors + rank table ===** with the revised `protect.sql` loaded.
+
+**What (repo only, arms later):** `.github/workflows/backup.yml` — nightly **off-site** kv dump (08:35 UTC) to the `backups` branch via PostgREST with the public anon key (the same key index.html ships; PIN hashes not reachable this way by design). Dated + `kv-latest.json` files, newest 21 kept; fails loudly under 600 rows (doubles as a daily API canary; GitHub emails the owner on failure). Never touches `main`, so it can never trigger a Pages deploy. **Scheduled workflows only run from the default branch — it arms when this branch merges to `main`** (manual `workflow_dispatch` available from then on too).
+
+**Rollback (exact):** run `docs/rollback/2026-07-06-safeguards/org_exec.sql` (pre-change source; verify md5s `65fb143c…`/`2d102e90…`), then:
+```sql
+drop table if exists public.wc_org_log;
+select cron.unschedule('wc-backup-daily');
+drop function if exists public.wc_backup_tick();
+drop table if exists public.wc_backup;
+drop table if exists public.wc_backup_auth;
+-- only for a true byte-exact policy restore (dead weight either way):
+create policy i on public.kv as permissive for insert to public with check (true);
+create policy u on public.kv as permissive for update to public using (true);
+create policy d on public.kv as permissive for delete to public using (true);
+```
+Repo: `git revert <this commit>`.
+
+---
+
 ## 2026-07-06 (Doha) — MAIN DEPLOY (launch step ③): Wave-B client ships to production
 
 **Commits:** this commit, then `main` fast-forwarded `c550879` → this tip and pushed **on the organizer's explicit "push main"**. Ships to staffchallenge26.com via the Pages action: the corrected **11-Jun-2026 FIFA `PU_RANK`** (client upset math now matches the deployed server `wc_rank` byte-for-byte), the committed `tests/wave-b/` parity harness, the server-side flag-gate SQL sources, the step-①/② deploy documentation + rollback dossier, and the revoke-hardened `sql/*.sql`. **No scoring or visual change for players**: `wc:powerups_live` is still unset, so client (`puLive()`) and server (`standings()`) both keep serving the pure base ladder — power-ups appear only at step ④.

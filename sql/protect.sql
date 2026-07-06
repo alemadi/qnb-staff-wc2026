@@ -8,8 +8,9 @@
 -- (PIN verified in Postgres, kicked-off matches sealed in Postgres);
 -- the organizer panel writes only through org_exec() (access code
 -- verified in Postgres). PIN hashes move out of the public player
--- rows into a private wc_auth table. The robot is unaffected — it
--- runs as the table owner.
+-- rows into a private wc_auth table. Every organizer write is
+-- journaled in wc_org_log (append-only, private) so it can be
+-- undone. The robot is unaffected — it runs as the table owner.
 --
 -- Rollback: see the matching docs/CHANGELOG.md entry.
 -- ============================================================
@@ -320,7 +321,22 @@ end $f$;
 --    (set / del on wc:results, wc:kteams, wc:player:* — plus
 --    clearpin). Wrong code costs a 0.4 s nap. Nothing else is
 --    reachable: ranksnap, fixtures, poll state stay server-only.
+--    Every org_exec mutation is journaled first, in the same
+--    transaction, into wc_org_log (append-only, PRIVATE): the
+--    prior kv value, the value written, and — for player deletes
+--    and clearpin — the wc_auth PIN hash being destroyed. That
+--    makes any fat-fingered overwrite/delete recoverable by
+--    reading the log and org_exec-'set'ing the old value back.
 -- ------------------------------------------------------------
+create table if not exists wc_org_log(
+  id           bigint generated always as identity primary key,
+  at           timestamptz not null default now(),
+  op           text not null,             -- set | del | clearpin
+  key          text,                      -- kv key ('set'/'del') or slug ('clearpin')
+  old_value    text,                      -- kv value before ('set'/'del'; null = key was absent)
+  new_value    text,                      -- kv value written ('set', post-sanitize)
+  old_pin_hash text                       -- wc_auth hash destroyed ('del' player / 'clearpin')
+);
 create or replace function public.org_check(p_code text)
 returns boolean
 language plpgsql
@@ -341,7 +357,7 @@ language plpgsql
 security definer
 set search_path = public, extensions
 as $f$
-declare v jsonb; v_slug text;
+declare v jsonb; v_slug text; v_old text; v_old_pin text;
 begin
   if not public.org_check(p_code) then
     raise exception 'bad_code';
@@ -366,6 +382,9 @@ begin
       end if;
       v := v || jsonb_build_object('slug', v_slug);
     end if;
+    select value into v_old from kv where key = p_key;      -- journal, same transaction
+    insert into wc_org_log(op, key, old_value, new_value)
+    values ('set', p_key, v_old, v::text);
     insert into kv(key, value, updated_at) values (p_key, v::text, now())
     on conflict (key) do update set value = excluded.value, updated_at = now();
     return 'ok';
@@ -374,6 +393,12 @@ begin
     if p_key is null or p_key !~ '^wc:(results|kteams|powerups_live|player:[a-z0-9._]{1,30})$' then
       raise exception 'bad_key';
     end if;
+    select value into v_old from kv where key = p_key;      -- journal, same transaction
+    if p_key like 'wc:player:%' then
+      select pin_hash into v_old_pin from wc_auth where slug = substring(p_key from 11);
+    end if;
+    insert into wc_org_log(op, key, old_value, old_pin_hash)
+    values ('del', p_key, v_old, v_old_pin);
     delete from kv where key = p_key;
     if p_key like 'wc:player:%' then
       delete from wc_auth where slug = substring(p_key from 11);
@@ -384,6 +409,9 @@ begin
     if p_key is null or p_key !~ '^[a-z0-9._]{1,30}$' then
       raise exception 'bad_key';
     end if;
+    select pin_hash into v_old_pin from wc_auth where slug = p_key;
+    insert into wc_org_log(op, key, old_pin_hash)           -- journal, same transaction
+    values ('clearpin', p_key, v_old_pin);
     delete from wc_auth where slug = p_key;
     return 'ok';
   end if;
@@ -405,17 +433,24 @@ as $$ select now() $$;
 --    owner, so none of this touches them.
 -- ------------------------------------------------------------
 alter table public.kv enable row level security;
+-- Legacy pre-protect write policies ('i'/'u'/'d', USING (true) for PUBLIC):
+-- dead since the grant revokes below, but a landmine — any future well-meaning
+-- GRANT on kv would sail straight through them. Remove them for good.
+drop policy if exists i on public.kv;
+drop policy if exists u on public.kv;
+drop policy if exists d on public.kv;
 drop policy if exists kv_read_all on public.kv;
 create policy kv_read_all on public.kv for select to anon, authenticated using (true);
 revoke insert, update, delete, truncate, references, trigger
   on table public.kv from anon, authenticated;
 grant select on table public.kv to anon, authenticated;
 
-revoke all on table public.wc_auth, public.wc_org_auth, public.wc_locks
+revoke all on table public.wc_auth, public.wc_org_auth, public.wc_locks, public.wc_org_log
   from anon, authenticated;
 alter table public.wc_auth     enable row level security;
 alter table public.wc_org_auth enable row level security;
 alter table public.wc_locks    enable row level security;
+alter table public.wc_org_log  enable row level security;
 
 revoke all on table public.wc_fixtures, public.wc_alias, public.wc_poll_state
   from anon, authenticated;
@@ -441,3 +476,7 @@ grant execute on function public.server_time()                   to anon, authen
 --   select count(*) from wc_auth;                           -- ≈ players with PINs
 --   select count(*) from kv where value like '%"pin"%'
 --     and key like 'wc:player:%';                           -- 0
+--   select polname from pg_policy
+--     where polrelid = 'public.kv'::regclass;               -- kv_read_all (+ legacy 'r') only
+--   select op, key, at from wc_org_log order by id desc
+--     limit 5;                                              -- journal of organizer writes

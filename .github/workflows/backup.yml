@@ -1,0 +1,71 @@
+# Nightly OFF-SITE backup of the pool's kv table (every player's picks +
+# results + kteams). Complements sql/backup.sql (daily in-DB snapshots):
+# this copy lives in GitHub, so it survives even the loss of the Supabase
+# project itself.
+#
+# How: pages the world-readable kv table via PostgREST using the same
+# PUBLIC anon key index.html ships to every visitor — nothing secret is
+# used or exposed, and wc_auth PIN hashes are NOT readable this way, by
+# design. The dump is committed to the `backups` branch as
+# backups/kv-YYYY-MM-DD.json plus kv-latest.json (stable name → day-to-day
+# git diffs). Keeps the newest 21 dated dumps. It never touches `main`,
+# so it can never trigger a Pages deploy.
+#
+# The run FAILS if the dump looks short (<600 rows vs ~690 expected) and
+# GitHub then emails the repo owner — doubling as a daily API-health canary.
+#
+# NOTE: scheduled workflows only run from the DEFAULT branch — this arms
+# when merged to main. Manual run: Actions tab → this workflow → Run
+# workflow. Restore: organizer panel → Restore backup with the JSON file,
+# or org_exec 'set' per key (docs/CHANGELOG.md entry for this file).
+name: Nightly kv backup
+on:
+  schedule:
+    - cron: '35 8 * * *'   # 11:35 Doha, after the 08:05 UTC in-DB snapshot
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: kv-backup
+jobs:
+  dump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch kv via PostgREST (paged)
+        run: |
+          URL="https://fzybuasvhzhmkbhxbton.supabase.co"
+          KEY="sb_publishable_j513MlmOZHxhiGpII0uSYA_ijs2PpXV"   # public anon key — same one index.html ships
+          rm -rf /tmp/kvdump && mkdir -p /tmp/kvdump
+          off=0; page=1000
+          while :; do
+            curl -fsS "$URL/rest/v1/kv?select=key,value,updated_at&order=key.asc&limit=$page&offset=$off" \
+              -H "apikey: $KEY" -H "Authorization: Bearer $KEY" > "/tmp/kvdump/page-$off.json"
+            n=$(jq 'length' "/tmp/kvdump/page-$off.json")
+            [ "$n" -lt "$page" ] && break
+            off=$((off+page))
+          done
+          jq -s 'add | sort_by(.key)' /tmp/kvdump/page-*.json > /tmp/kvdump/kv.json
+          rows=$(jq 'length' /tmp/kvdump/kv.json)
+          echo "rows=$rows"
+          # canary: ~690 keys expected; a short dump means the API or the walls broke
+          [ "$rows" -ge 600 ] || { echo "::error::kv dump too short ($rows rows) — refusing to save"; exit 1; }
+      - name: Commit to backups branch
+        run: |
+          git config user.name "kv-backup bot"
+          git config user.email "actions@users.noreply.github.com"
+          if git fetch --depth=1 origin backups:backups 2>/dev/null; then
+            git switch backups
+          else
+            git switch --orphan backups
+          fi
+          mkdir -p backups
+          d=$(date -u +%F)
+          cp /tmp/kvdump/kv.json "backups/kv-$d.json"
+          cp /tmp/kvdump/kv.json "backups/kv-latest.json"
+          # keep the newest 21 dated dumps
+          ls backups/kv-????-??-??.json 2>/dev/null | sort | head -n -21 | xargs -r rm -f --
+          git add -A backups
+          if git diff --cached --quiet; then echo "no changes"; exit 0; fi
+          git commit -m "kv backup $d ($(jq 'length' backups/kv-latest.json) rows)"
+          git push origin backups
