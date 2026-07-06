@@ -5,6 +5,23 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-07-06 (Doha) — MAIN DEPLOY: power-ups banner (`#xbanner`) layout cleanup
+
+**Commits:** this commit (`index.html` + changelog) on `claude/banner-styling-e5hazp`, **fast-forwarded to `main`** on the organizer's explicit "push to main" — main was at `286d482` and had not moved, so a clean FF (no rebase). **Frontend only — CSS + one copy string; no JS / DB / scoring change.** Organizer ask: "fix this banner, it doesn't look good."
+
+**What (expanded card only; the collapsed `.mini` strip is untouched):**
+- **Dropped the duplicate ⚡ (and the redundant 📤) from the heading.** The animated ⚡ badge already anchors the left edge, so `.xb-h` was rendering a *second* lightning bolt right next to it. Heading is now the clean "Power-ups are LIVE · share cards are here" (was "⚡ Power-ups are LIVE · 📤 share cards are here"). Copy still contains "share cards are here", so the share-cards test assertion holds.
+- **Chips now sit on an even grid** (`.xb-chips`): `flex-wrap` — which stranded a lonely "SHARE CARDS" on its own row at ~440–470px and gave four ragged widths on desktop — becomes a 2-column grid that reads as a clean 2×2 on phones and switches to a 4-across row at ≥600px. Equal column widths, equal row heights; added the missing `nth-child(4)` cascade delay so all four badges stagger in.
+- **Chip + heading finish:** chips centred with a soft `box-shadow` + inset highlight (tactile gold-badge look), slightly rounder; heading `line-height` 1.08→1.15 and `text-wrap:balance` so it no longer orphans a word when it wraps on narrow phones.
+
+**Verified:** headless Chromium render of the expanded banner at 390 / 470 / 720px — single ⚡, balanced heading, even 2×2 (390/470) and 1×4 (720) chips, no 3+1 wrap; the collapsed `.mini` strip still renders as a 52px one-liner (⚡ · heading · "How power-ups work ›" · ▾). Full page boots with zero console errors. Before/after screenshots reviewed. Pages deploy action runs on the push to `main`.
+
+**Rollback:** `git push origin +286d482:main` (client-only — nothing server-side changed). A stale shell may need one hard reload / app reopen to pick up the new `index.html` (the app ships a service worker from the prior perf pack).
+
+**Follow-up (organizer, same session):** "I don't like the mailbox — give me other options." The 📤 outbox-tray glyph is the app-wide share/brag icon (~14 rendered spots + the generated share cards); a replacement is being chosen and will ship as its own deploy.
+
+---
+
 ## 2026-07-06 (Doha) — MAIN DEPLOY: share-entry redesign (deck FAB) + preview-before-send ship to production
 
 **Commits:** this commit (changelog), then `main` fast-forwarded `aa45220` → this tip and pushed **on the organizer's explicit "push to main this one"**. **Clean fast-forward — main had not moved; no rebase.** Ships the three branch commits below: the header hub → home-feed row (`206c433`), row → **thumb-zone deck FAB** (`9d6f210`), and **preview-before-send** (`5dc032a`), plus the handoff note. **Frontend only — no DB / scoring / sync change.**

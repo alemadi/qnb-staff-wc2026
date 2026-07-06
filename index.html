@@ -148,11 +148,12 @@
   .xbanner .xb-ic{font-size:20px;line-height:1.1;flex:none;animation:xbflame 2.2s ease-in-out infinite;transform-origin:50% 80%}
   @keyframes xbflame{0%,100%{transform:scale(1) rotate(-3deg);filter:brightness(1)}50%{transform:scale(1.13) rotate(3deg);filter:brightness(1.28)}}
   .xbanner .xb-tx{flex:1;min-width:0}
-  .xbanner .xb-h{font-family:var(--font-d);letter-spacing:.4px;font-size:15.5px;color:var(--gold-bright);line-height:1.08;display:block;margin-bottom:3px}
+  .xbanner .xb-h{font-family:var(--font-d);letter-spacing:.4px;font-size:15.5px;color:var(--gold-bright);line-height:1.15;display:block;margin-bottom:4px;text-wrap:balance}
   .xbanner .xb-sub{color:var(--cream)}
   .xbanner .xb-quiet{color:var(--muted);font-size:11px}
-  .xbanner .xb-chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 7px}
-  .xbanner .xb-chip{font-family:var(--font-d);font-size:14px;letter-spacing:.3px;color:#15120a;background:linear-gradient(170deg,var(--gold-bright),var(--gold));border-radius:8px;padding:4px 9px 3px;line-height:1.05;text-align:center}
+  .xbanner .xb-chips{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin:9px 0 8px}
+  @media(min-width:600px){.xbanner:not(.mini) .xb-chips{grid-template-columns:repeat(4,1fr)}}
+  .xbanner .xb-chip{font-family:var(--font-d);font-size:14px;letter-spacing:.3px;color:#15120a;background:linear-gradient(170deg,var(--gold-bright),var(--gold));border-radius:9px;padding:5px 9px 4px;line-height:1.05;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;box-shadow:0 1px 2px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.35)}
   .xbanner .xb-chip small{font-family:var(--font-b);font-weight:800;font-size:8.5px;opacity:.72;display:block;letter-spacing:.4px}
   .xbanner a.xb-cta{display:inline-block;margin-top:1px;color:var(--gold-bright);font-weight:800;white-space:nowrap;text-decoration:none}
   .xbanner{cursor:pointer}
@@ -1229,6 +1230,7 @@
   .xbanner:not(.mini) .xb-chip:nth-child(1){animation-delay:.05s}
   .xbanner:not(.mini) .xb-chip:nth-child(2){animation-delay:.14s}
   .xbanner:not(.mini) .xb-chip:nth-child(3){animation-delay:.23s}
+  .xbanner:not(.mini) .xb-chip:nth-child(4){animation-delay:.32s}
   .xbanner.mini{border-left:3px solid var(--gold)}
 
   /* ===================================================================
@@ -1699,7 +1701,7 @@
   <div class="xbanner" id="xbanner" style="display:none" role="status" aria-label="Power-ups are live · new share cards" onclick="if(!event.target.closest('a,button'))toggleBanner()" title="Tap to expand or shrink">
     <div class="xb-ic" aria-hidden="true">⚡</div>
     <div class="xb-tx">
-      <b class="xb-h">⚡ Power-ups are LIVE · 📤 share cards are here</b>
+      <b class="xb-h">Power-ups are LIVE · share cards are here</b>
       <span class="xb-sub">Arm your Quarter-final armband before Thursday’s locks — and every big moment now has a card to drop in the chat, one tap from the 📤 button up top:</span>
       <div class="xb-chips" aria-hidden="true"><span class="xb-chip">×2<small>CAPTAIN’S ARMBAND</small></span><span class="xb-chip">🛡<small>STREAK SHIELD</small></span><span class="xb-chip">+2<small>UPSET BONUS</small></span><span class="xb-chip">📤<small>SHARE CARDS</small></span></div>
       <span class="xb-quiet">Slips seal at kick-off · brag cards land at the final whistle.</span><br>
