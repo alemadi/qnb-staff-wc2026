@@ -552,12 +552,102 @@ await pg.waitForTimeout(400);
   const w1=oracleArr.filter(x=>oracleArr[0].v-x.v===1).length;
   const expectPulse = co>=2 ? (co+'-way dead heat') : (w1>=1 ? (w1+' challenger') : null);
   const awTxt = await pg.evaluate(()=>{ const hd=Array.from(document.querySelectorAll('.aw-card .aw-t b')).find(b=>b.textContent.trim()==='Oracle');
-    const c=hd&&hd.closest('.aw-card'); const p=c&&c.querySelector('.aw-race'); return p?p.textContent.replace(/\s+/g,' ').trim():null; });
+    const c=hd&&hd.closest('.aw-card'); const p=c&&Array.from(c.querySelectorAll('.aw-race')).find(x=>x.textContent.includes('🔥')); return p?p.textContent.replace(/\s+/g,' ').trim():null; });
   if(expectPulse===null){ if(awTxt===null) pass('trophy race pulse: correctly absent for Oracle'); else fail('race pulse should be absent, got "'+awTxt+'"'); }
   else if(awTxt && awTxt.includes(expectPulse)) pass('trophy race pulse: "'+expectPulse+'" shown on Oracle'); else fail('race pulse "'+awTxt+'" expected to include "'+expectPulse+'"');
 }
 
-/* screenshot for the eyeball pass */
+/* ---- Trophy Room pass 2: cabinet · chasing packs · race depth/pace · dept ladder · race distance ---- */
+const ordinal_=n=>{const s=['th','st','nd','rd'],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0]);};
+// expected dept ladder (mirrors deptLeague: avg desc → sum desc → name; min 5 players)
+const dmap={}; standings.forEach(r=>{ (dmap[r.dept]=dmap[r.dept]||[]).push(r.pts); });
+const expDL=Object.keys(dmap).map(d=>{ const a=dmap[d], sum=a.reduce((p,q)=>p+q,0); return {d, n:a.length, sum, avg:sum/a.length}; })
+  .filter(x=>x.n>=5).sort((a,b)=>b.avg-a.avg||b.sum-a.sum||a.d.localeCompare(b.d));
+// expected podium leader (mirrors cmpSt → name)
+const podTop=standings.slice().sort((a,b)=>(b.pts-a.pts)||(b.predicted-a.predicted)||(b.exact-a.exact)||(b.correct-a.correct)||a.name.localeCompare(b.name))[0];
+// THE CABINET
+{
+  const cab=await pg.evaluate(()=>Array.from(document.querySelectorAll('.aw-cab .aw-slot')).map(s=>({
+    id:((s.getAttribute('onclick')||'').match(/awJump\('([^']+)'\)/)||[])[1]||'',
+    who:(s.querySelector('b')||{textContent:''}).textContent.trim(),
+    val:(s.querySelector('.vv')||{textContent:''}).textContent.trim()})));
+  if(cab.length===6 && cab.map(s=>s.id).join(',')==='aw-podium,aw-oracle,aw-trailblazer,aw-hothand,aw-perfectionist,aw-dept')
+    pass('cabinet: 6 shelves in honour order'); else fail('cabinet shelves: '+JSON.stringify(cab.map(s=>s.id)));
+  const oSlot=cab[1], expWho=(oracleArr[0].name||'').split(' ')[0];
+  if(oSlot && oSlot.who===expWho && oSlot.val===oracleArr[0].v+' exact') pass('cabinet Oracle shelf: '+oSlot.who+' · '+oSlot.val);
+  else fail('cabinet Oracle shelf '+JSON.stringify(oSlot)+' want '+expWho+' / '+oracleArr[0].v+' exact');
+  const pSlot=cab[0];
+  if(pSlot && pSlot.who===podTop.name.split(' ')[0] && pSlot.val===podTop.pts+' pts') pass('cabinet Podium shelf: '+pSlot.who+' · '+pSlot.val);
+  else fail('cabinet Podium shelf '+JSON.stringify(pSlot)+' want '+podTop.name.split(' ')[0]+' / '+podTop.pts+' pts');
+  const dSlot=cab[5];
+  if(dSlot && dSlot.who===expDL[0].d && dSlot.val===(Math.round(expDL[0].avg*10)/10)+' avg') pass('cabinet Dept Cup shelf: '+dSlot.who+' · '+dSlot.val);
+  else fail('cabinet Dept shelf '+JSON.stringify(dSlot)+' want '+expDL[0].d+' / '+(Math.round(expDL[0].avg*10)/10)+' avg');
+  const targets=await pg.evaluate(()=>['aw-podium','aw-oracle','aw-trailblazer','aw-hothand','aw-perfectionist','aw-dept','aw-dist'].filter(id=>!document.getElementById(id)));
+  if(!targets.length) pass('every cabinet shelf has a jump target card'); else fail('missing jump targets: '+targets.join(','));
+}
+// CHASING PACK on Oracle
+{
+  const expPack=Math.min(5,Math.max(0,oracleArr.length-3));
+  const st=await pg.evaluate(()=>{ const c=document.getElementById('aw-oracle'); const b=c&&c.querySelector('.aw-more'); const p=c&&c.querySelector('.aw-pack');
+    return {btn:b?b.textContent.replace(/\s+/g,' ').trim():null, hidden:p?p.hidden:null, rows:p?p.querySelectorAll('.aw-row').length:0,
+      firstRk:p&&p.querySelector('.aw-rk')?p.querySelector('.aw-rk').textContent.trim():null}; });
+  if(oracleArr.length>3){
+    if(st.btn && st.btn.includes(String(oracleArr.length-3)) && st.hidden===true && st.rows===expPack && st.firstRk==='#4')
+      pass('oracle chasing pack: '+st.rows+' rows behind the fold, ranks from #4');
+    else fail('oracle pack state '+JSON.stringify(st)+' want '+expPack+' rows from #4');
+    await pg.evaluate(()=>document.getElementById('aw-oracle').querySelector('.aw-more').click());
+    const openSt=await pg.evaluate(()=>{ const c=document.getElementById('aw-oracle');
+      return {hidden:c.querySelector('.aw-pack').hidden, aria:c.querySelector('.aw-more').getAttribute('aria-expanded')}; });
+    if(openSt.hidden===false && openSt.aria==='true') pass('oracle chasing pack opens on tap'); else fail('pack did not open: '+JSON.stringify(openSt));
+  } else if(st.btn===null) pass('oracle pack correctly absent (race ≤3 deep)'); else fail('unexpected pack on a shallow race');
+}
+// RACE DEPTH + WINNING PACE lines on Oracle
+{
+  const T=world.fixtures.length, S=settledIds.length;
+  const proj=Math.round(oracleArr[0].v*T/S);
+  const expDepth=oracleArr.length>3, expPace=(S>=20&&S<T&&proj>oracleArr[0].v);
+  const races=await pg.evaluate(()=>Array.from(document.getElementById('aw-oracle').querySelectorAll('.aw-race')).map(x=>x.textContent.replace(/\s+/g,' ').trim()));
+  const depthLine=races.find(t=>t.includes('in this race'))||null;
+  const paceLine=races.find(t=>t.includes('winning pace'))||null;
+  if(expDepth ? (depthLine&&depthLine.includes(String(oracleArr.length))) : depthLine===null)
+    pass('race depth line: '+(depthLine||'absent, correctly')); else fail('depth line "'+depthLine+'" want n='+oracleArr.length);
+  if(expPace ? (paceLine&&paceLine.includes(String(proj))) : paceLine===null)
+    pass('pace line: '+(paceLine||'absent, correctly ('+S+'/'+T+' proj '+proj+' vs '+oracleArr[0].v+')')); else fail('pace line "'+paceLine+'" want proj='+proj+' (S='+S+')');
+}
+// YOUR RANK in the race (me = Khalid)
+{
+  const meIdx=oracleArr.findIndex(x=>x.name==='Khalid Al-Mannai');
+  const you=await pg.evaluate(()=>{ const y=document.getElementById('aw-oracle').querySelector('.aw-you'); return y?y.textContent.replace(/\s+/g,' ').trim():null; });
+  if(meIdx===0){ if(you&&you.includes('You hold it')) pass('oracle you-line: leader crown'); else fail('you-line "'+you+'" want You hold it'); }
+  else if(meIdx>0){ if(you&&you.includes(ordinal_(meIdx+1)+' of '+oracleArr.length+' in the race')) pass('oracle you-line rank: '+ordinal_(meIdx+1)+' of '+oracleArr.length);
+    else fail('you-line "'+you+'" want rank '+ordinal_(meIdx+1)+' of '+oracleArr.length); }
+  else { if(you===null||!you.includes('in the race')) pass('oracle you-line: no rank (me holds no exact)'); else fail('unexpected rank on you-line: '+you); }
+}
+// DEPT CUP ladder: bars on every ranked squad, chasing squads behind the fold
+{
+  const d=await pg.evaluate(()=>{ const c=document.getElementById('aw-dept'); if(!c)return null; const p=c.querySelector('.aw-pack'); const b=c.querySelector('.aw-more');
+    return {rows:c.querySelectorAll('.aw-row').length, bars:c.querySelectorAll('.aw-dbar').length,
+      btn:b?b.textContent.replace(/\s+/g,' ').trim():null, packRows:p?p.querySelectorAll('.aw-row').length:0}; });
+  const expTop=Math.min(3,expDL.length), expPackD=Math.max(0,Math.min(12,expDL.length)-3);
+  if(d && d.rows===expTop+expPackD && d.bars===d.rows) pass('dept ladder: '+d.rows+' squads, every one with an avg bar ('+expTop+' up + '+expPackD+' folded)');
+  else fail('dept ladder '+JSON.stringify(d)+' want rows='+(expTop+expPackD)+' with bars');
+  if(expDL.length>3){ if(d && d.btn && d.btn.includes(String(expDL.length-3))) pass('chasing squads button: "'+d.btn+'"'); else fail('dept pack button "'+(d&&d.btn)+'" want '+(expDL.length-3)); }
+  else if(d && d.btn===null) pass('dept pack correctly absent (≤3 squads)'); else fail('unexpected dept pack button');
+}
+// RACE DISTANCE meter
+{
+  const T=world.fixtures.length, S=settledIds.length, expPct=Math.round(S/T*100)+'%';
+  const rd=await pg.evaluate(()=>{ const c=document.getElementById('aw-dist'); if(!c)return null;
+    return {prz:c.querySelector('.aw-prz').textContent.trim(), pct:c.querySelector('.nrd-meter .lab b').textContent.trim(),
+      line:(c.querySelector('.nrd-line')||{textContent:''}).textContent.replace(/\s+/g,' ').trim()}; });
+  if(rd && rd.prz===S+' / '+T && rd.pct===expPct && rd.line.includes(String(T-S))) pass('race distance: '+rd.prz+' · '+rd.pct);
+  else fail('race distance '+JSON.stringify(rd)+' want '+S+' / '+T+' · '+expPct);
+}
+
+/* screenshots for the eyeball pass — Awards first (we're already in it, oracle pack open) */
+await pg.waitForTimeout(300);
+await pg.screenshot({ path: `${SCRATCH}/awards-390.png`, fullPage: true });
+console.log('screenshot:', `${SCRATCH}/awards-390.png`);
 await pg.locator('#lbmode button[data-m="nerds"]').click();
 await pg.waitForSelector('.nrd-quad', {timeout:8000}).catch(()=>{});
 await pg.waitForTimeout(700);

@@ -1676,6 +1676,28 @@
   .aw-pend .pulse{margin-right:6px}
   .aw-unclaimed{margin-top:7px;font-size:10.5px;font-weight:700;color:var(--faint)}
   .tv .aw-you{display:none} /* kiosk: races read, personal lines hide */
+  /* Trophy Room pass 2 — the cabinet + chasing packs + dept ladder + race distance */
+  .aw-cab{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:6px}
+  .aw-slot{border:1px solid rgba(180,151,89,.28);background:linear-gradient(160deg,rgba(180,151,89,.07),var(--glass) 70%);border-radius:12px;padding:9px 5px 8px;text-align:center;cursor:pointer;color:inherit;font:inherit;min-width:0}
+  .aw-slot .ic{display:block;font-size:17px;line-height:1}
+  .aw-slot .lb{display:block;margin-top:4px;font-size:7.5px;letter-spacing:1.1px;text-transform:uppercase;color:var(--faint);font-weight:800;white-space:nowrap;overflow:hidden}
+  .aw-slot b{display:block;margin-top:2px;font-size:11px;color:var(--cream);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .aw-slot .vv{display:block;margin-top:1px;font-size:9px;font-weight:800;color:var(--gold-bright);white-space:nowrap;overflow:hidden}
+  .aw-slot:active{transform:scale(.97)}
+  .aw-slot.vac{border-color:var(--line);background:var(--glass)}
+  .aw-slot.vac b,.aw-slot.vac .vv{color:var(--faint)}
+  .aw-cabnote{font-size:9.5px;color:var(--faint);font-weight:700;text-align:center;margin:0 0 10px}
+  .aw-card{scroll-margin-top:64px}
+  .aw-row.lead{background:linear-gradient(90deg,rgba(180,151,89,.10),transparent 72%);border-radius:9px;margin:0 -6px;padding-left:6px;padding-right:6px}
+  .aw-rk.num{font-size:10px;color:var(--faint)}
+  .aw-more{display:block;width:100%;text-align:left;background:none;border:0;border-top:1px solid rgba(255,255,255,.05);color:var(--muted);font:inherit;font-size:10.5px;font-weight:800;padding:8px 0 3px;cursor:pointer}
+  .aw-more b{color:var(--gold-bright)}
+  .aw-more i{font-style:normal;display:inline-block;transition:transform .2s;color:var(--faint)}
+  .aw-more.open i{transform:rotate(90deg)}
+  .aw-dbar{display:block;height:4px;border-radius:99px;background:rgba(255,255,255,.06);margin-top:4px;overflow:hidden}
+  .aw-dbar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--gold-deep),var(--gold-bright))}
+  .aw-nm small{color:var(--faint);font-weight:700}
+  .tv .aw-more{display:none} /* kiosk cycles modes on a timer — no one is there to tap */
 
   /* ===== STATS FOR NERDS (Leaderboard → 🤓 Nerds) =====
      One quiet visual system: gold = office data, blue = reality/benchmark, marks stay
@@ -5296,7 +5318,26 @@ function awValChip(unit,v){
 }
 function awRowHTML(i,name,slug,valHTML){
   const me=!!state.meSlug&&slug===state.meSlug;
-  return '<div class="aw-row'+(me?' me':'')+'"><span class="aw-rk">'+['\ud83e\udd47','\ud83e\udd48','\ud83e\udd49'][i]+'</span><div class="avatar">'+avatarFill(name)+'</div><div class="aw-nm">'+esc(name)+(me?'<span class="youtag">YOU</span>':'')+'</div>'+valHTML+'</div>';
+  /* pass 2: rows past the medals (the chasing pack) wear a plain rank; the belt holder's row gets a quiet gold wash */
+  const rk=i<3?['\ud83e\udd47','\ud83e\udd48','\ud83e\udd49'][i]:('#'+(i+1));
+  return '<div class="aw-row'+(me?' me':'')+(i===0?' lead':'')+'"><span class="aw-rk'+(i>=3?' num':'')+'">'+rk+'</span><div class="avatar">'+avatarFill(name)+'</div><div class="aw-nm">'+esc(name)+(me?'<span class="youtag">YOU</span>':'')+'</div>'+valHTML+'</div>';
+}
+/* Chasing packs stay open across the leaderboard's silent re-renders (consensus enrich, heartbeat) */
+const AW_OPEN={};
+function awMore(btn,key){
+  const d=btn.nextElementSibling;if(!d)return;
+  const open=!!d.hidden;d.hidden=!open;AW_OPEN[key]=open;
+  btn.classList.toggle('open',open);btn.setAttribute('aria-expanded',open?'true':'false');
+}
+function awJump(id){const el=document.getElementById(id);if(el)el.scrollIntoView({behavior:'smooth',block:'start'});}
+function awPackHTML(key,arr,unit){ /* rows 4\u20138 of a race behind a tap \u2014 the pack is real, not implied */
+  if(arr.length<=3)return '';
+  const open=!!AW_OPEN[key];
+  let h='<button class="aw-more'+(open?' open':'')+'" aria-expanded="'+(open?'true':'false')+'" onclick="awMore(this,\''+key+'\')">The chasing pack \u2014 <b>'+(arr.length-3)+'</b> more in this race <i>\u203a</i></button>';
+  h+='<div class="aw-pack"'+(open?'':' hidden')+'>';
+  arr.slice(3,8).forEach(function(x,j){h+=awRowHTML(j+3,x.name,x.slug,awValChip(unit,x.v));});
+  if(arr.length>8)h+='<div class="aw-unclaimed">\u2026and '+(arr.length-8)+' more chasing</div>';
+  return h+'</div>';
 }
 async function renderAwards(body){
   const rows=await fetchStandings();
@@ -5308,9 +5349,39 @@ async function renderAwards(body){
   const meRow=state.meSlug?rows.find(function(r){return r.slug===state.meSlug;}):null;
   const c=(CONS.full&&CONS.tops)?CONS:null;
   if(!c&&CONFIGURED&&!state.demo)consensusFull().then(function(){if(state.view==="leaderboard"&&LB_MODE==="awards")renderLeaderboard();}).catch(function(){});
+  /* pass 2: build every race list up front so the cabinet and the cards read ONE source.
+     Same locked sources as before \u2014 standings for Oracle, CONS.tops for the rest. */
+  const AW_TOPKEY={trailblazer:'upset',hothand:'streak',perfectionist:'perfect'};
+  const raceArr={};
+  AW_RACES.forEach(function(rc){
+    if(rc.key==='oracle')raceArr[rc.key]=sortRace(rows.filter(function(r){return (r.exact|0)>0;}).map(function(r){return{slug:r.slug,name:r.name,v:r.exact|0};}));
+    else raceArr[rc.key]=c?sortRace(c.tops[AW_TOPKEY[rc.key]].slice()):null;
+  });
+  const lg=deptLeague(rows);
+  const settledN=FIXTURES.filter(function(f){const r=state.results[f.id];return r&&(f.kn?r.w!=null:r.h!=null);}).length;
   let html='<div class="dept-note">\ud83c\udfc6 <b>The Trophy Room</b> \u2014 everything on offer at the final whistle, every race live. Titles are honours on top: they never move points, and the main board alone decides \ud83e\udd47\ud83e\udd48\ud83e\udd49.</div>';
+  /* THE CABINET \u2014 every honour on one shelf, whoever holds it right now; tap to jump to its race */
+  const cabSlot=function(id,ic,lb,who,val,vac){
+    return '<button class="aw-slot'+(vac?' vac':'')+'" onclick="awJump(\''+id+'\')"><span class="ic">'+ic+'</span><span class="lb">'+lb+'</span><b>'+who+'</b><span class="vv">'+val+'</span></button>';
+  };
+  const cabVal=function(unit,v){
+    if(unit==='run')return '\u00d7'+v+' run';
+    if(unit==='exact')return v+' exact';
+    if(unit==='shock')return v+(v===1?' shock':' shocks');
+    return v+' perfect';
+  };
+  let cab=cabSlot('aw-podium','\ud83c\udfdd\ufe0f','Podium',first(sorted[0].name),(sorted[0].pts|0)+' pts',false);
+  AW_RACES.forEach(function(rc){
+    const arr=raceArr[rc.key];
+    if(arr===null)cab+=cabSlot('aw-'+rc.key,rc.emoji,rc.label,'\u2026','counting',true);
+    else if(!arr.length||arr[0].v<rc.floor)cab+=cabSlot('aw-'+rc.key,rc.emoji,rc.label,'Unclaimed','\u2014',true);
+    else cab+=cabSlot('aw-'+rc.key,rc.emoji,rc.label,first(arr[0].name),cabVal(rc.unit,arr[0].v),false);
+  });
+  cab+=lg.ranked.length?cabSlot('aw-dept','\u2b50','Dept Cup',esc(lg.ranked[0].d),(Math.round(lg.ranked[0].avg*10)/10)+' avg',false):cabSlot('aw-dept','\u2b50','Dept Cup','Unranked','\u2014',true);
+  html+='<div class="aw-cab" aria-label="The cabinet \u2014 who holds every honour right now">'+cab+'</div>';
+  html+='<div class="aw-cabnote">The cabinet as it stands \u2014 tap a shelf for its full race</div>';
   /* the podium \u2014 main prizes, straight from the board */
-  html+='<div class="aw-card crowned"><div class="aw-hd"><span class="aw-ic">\ud83c\udfdd\ufe0f</span><div class="aw-t"><b>The Podium</b><span>\ud83e\udd47 Maldives trip \u00b7 \ud83e\udd48 60,000 pts \u00b7 \ud83e\udd49 40,000 pts \u2014 decided by the main board alone</span></div><span class="aw-prz">QNB LIFE REWARDS</span></div>';
+  html+='<div class="aw-card crowned" id="aw-podium"><div class="aw-hd"><span class="aw-ic">\ud83c\udfdd\ufe0f</span><div class="aw-t"><b>The Podium</b><span>\ud83e\udd47 Maldives trip \u00b7 \ud83e\udd48 60,000 pts \u00b7 \ud83e\udd49 40,000 pts \u2014 decided by the main board alone</span></div><span class="aw-prz">QNB LIFE REWARDS</span></div>';
   for(let i=0;i<3&&i<sorted.length;i++){const r=sorted[i];html+=awRowHTML(i,r.name,r.slug,'<b class="aw-v">'+r.pts+'<small>PTS</small></b>');}
   if(state.player&&meRow){
     const meIdx=sorted.findIndex(function(r){return r.slug===state.meSlug;});
@@ -5321,14 +5392,13 @@ async function renderAwards(body){
   html+='</div>';
   /* the four office titles */
   AW_RACES.forEach(function(rc){
-    html+='<div class="aw-card"><div class="aw-hd"><span class="aw-ic">'+rc.emoji+'</span><div class="aw-t"><b>'+rc.label+'</b><span>'+rc.desc+'</span></div><span class="aw-prz">CROWNED AT FT</span></div>';
-    let arr=null;
-    if(rc.key==='oracle')arr=sortRace(rows.filter(function(r){return (r.exact|0)>0;}).map(function(r){return{slug:r.slug,name:r.name,v:r.exact|0};}));
-    else if(c)arr=sortRace(c.tops[{trailblazer:'upset',hothand:'streak',perfectionist:'perfect'}[rc.key]].slice());
+    html+='<div class="aw-card" id="aw-'+rc.key+'"><div class="aw-hd"><span class="aw-ic">'+rc.emoji+'</span><div class="aw-t"><b>'+rc.label+'</b><span>'+rc.desc+'</span></div><span class="aw-prz">CROWNED AT FT</span></div>';
+    const arr=raceArr[rc.key];
     if(arr===null)html+='<div class="aw-pend"><span class="pulse"></span>Counting every call in the office\u2026</div>';
     else if(!arr.length)html+='<div class="aw-pend">Unclaimed \u2014 the race is wide open. First to '+rc.floorTxt+' takes it.</div>';
     else{
       arr.slice(0,3).forEach(function(x,i){html+=awRowHTML(i,x.name,x.slug,awValChip(rc.unit,x.v));});
+      html+=awPackHTML(rc.key,arr,rc.unit); /* pass 2: the race past the medals, one tap deep */
       /* race pulse \u2014 display-only tension read; the race rules themselves are locked */
       if(arr[0].v>=rc.floor&&arr.length>=2){
         const co=arr.filter(function(x){return x.v===arr[0].v;}).length;
@@ -5337,30 +5407,54 @@ async function renderAwards(body){
         else{const w1=arr.filter(function(x){return arr[0].v-x.v===1;}).length;
           if(w1>=1)html+='<span class="aw-race">\ud83d\udd25 <b>'+w1+'</b> challenger'+(w1===1?'':'s')+' within one '+uw+' of the belt</span>';}
       }
+      /* pass 2: race depth + winning pace \u2014 commentary on the locked numbers, nothing more.
+         Pace scales the leader's count by matches settled; runs don't scale, so Hot Hand sits out. */
+      {
+        const bits=[];
+        if(arr.length>3)bits.push('\ud83c\udf9f\ufe0f <b>'+arr.length+'</b> colleagues in this race');
+        if(rc.key!=='hothand'&&arr[0].v>=rc.floor&&settledN>=20&&settledN<FIXTURES.length){
+          const proj=Math.round(arr[0].v*FIXTURES.length/settledN);
+          if(proj>arr[0].v)bits.push('\ud83d\udcc8 winning pace points at <b>'+awValTxt(rc.unit,proj)+'</b> by FT');
+        }
+        if(bits.length)html+='<span class="aw-race">'+bits.join(' \u00b7 ')+'</span>';
+      }
       if(arr[0].v<rc.floor)html+='<div class="aw-unclaimed">Still unclaimed \u2014 the title needs '+rc.floorTxt+'.</div>';
-      const myV=rc.key==='oracle'?(meRow?(meRow.exact|0):null):((c&&c.mine)?c.mine[{trailblazer:'upset',hothand:'streak',perfectionist:'perfect'}[rc.key]]:null);
+      const myV=rc.key==='oracle'?(meRow?(meRow.exact|0):null):((c&&c.mine)?c.mine[AW_TOPKEY[rc.key]]:null);
       if(state.player&&myV!=null){
         const lead=arr[0];
+        const myIdx=arr.findIndex(function(x){return x.slug===state.meSlug;});
+        const rkTxt=myIdx>0?(' \u00b7 '+ordinal(myIdx+1)+' of '+arr.length+' in the race'):'';
         if(lead.slug===state.meSlug){
           const snd=arr.find(function(x){return x.slug!==state.meSlug;});
           html+='<span class="aw-you">\ud83d\udc51 <b>You hold it</b>'+(snd?((lead.v-snd.v)>0?(' \u00b7 '+awValTxt(rc.unit,lead.v-snd.v)+' clear of '+first(snd.name)):(' \u00b7 level with '+first(snd.name)+' \u2014 points break the tie')):'')+'</span>';
         }else{
           const g=lead.v-myV;
-          html+='<span class="aw-you">You: <b>'+awValTxt(rc.unit,myV)+'</b> \u00b7 '+(g>0?(awValTxt(rc.unit,g)+' behind '+first(lead.name)):('level with '+first(lead.name)+' \u2014 points break the tie'))+'</span>';
+          html+='<span class="aw-you">You: <b>'+awValTxt(rc.unit,myV)+'</b> \u00b7 '+(g>0?(awValTxt(rc.unit,g)+' behind '+first(lead.name)):('level with '+first(lead.name)+' \u2014 points break the tie'))+rkTxt+'</span>';
         }
       }
     }
     html+='</div>';
   });
-  /* the Department Cup */
-  const lg=deptLeague(rows);
-  html+='<div class="aw-card"><div class="aw-hd"><span class="aw-ic">\u2b50</span><div class="aw-t"><b>Department Cup</b><span>Best average points per player \u2014 every pick lifts your whole squad</span></div><span class="aw-prz">CROWNED AT FT</span></div>';
+  /* the Department Cup \u2014 pass 2: the whole ladder (top 3 + the chasing squads), each with its
+     avg as a bar against the leader's, so the squad race reads at a glance */
+  html+='<div class="aw-card" id="aw-dept"><div class="aw-hd"><span class="aw-ic">\u2b50</span><div class="aw-t"><b>Department Cup</b><span>Best average points per player \u2014 every pick lifts your whole squad</span></div><span class="aw-prz">CROWNED AT FT</span></div>';
   if(!lg.ranked.length)html+='<div class="aw-pend">No squads ranked yet \u2014 departments join with '+DEPT_MIN+'+ players.</div>';
   else{
-    lg.ranked.slice(0,3).forEach(function(x,i){
+    const dRow=function(x,i){
       const mine=!!(state.player&&deptKey(state.player.dept)===x.d);
-      html+='<div class="aw-row'+(mine?' me':'')+'"><span class="aw-rk">'+['\ud83e\udd47','\ud83e\udd48','\ud83e\udd49'][i]+'</span><div class="avatar deptbadge">'+deptAvatarFill(x.d)+'</div><div class="aw-nm">'+esc(x.d)+(mine?'<span class="youtag">YOUR SQUAD</span>':'')+'</div><b class="aw-v">'+(Math.round(x.avg*10)/10)+'<small>AVG</small></b></div>';
-    });
+      const w=lg.ranked[0].avg>0?Math.max(3,Math.round(x.avg/lg.ranked[0].avg*100)):0;
+      return '<div class="aw-row'+(mine?' me':'')+(i===0?' lead':'')+'"><span class="aw-rk'+(i>=3?' num':'')+'">'+(i<3?['\ud83e\udd47','\ud83e\udd48','\ud83e\udd49'][i]:'#'+(i+1))+'</span><div class="avatar deptbadge">'+deptAvatarFill(x.d)+'</div><div class="aw-nm">'+esc(x.d)+' <small>\u00b7 '+x.n+'</small>'+(mine?'<span class="youtag">YOUR SQUAD</span>':'')+'<span class="aw-dbar"><i style="width:'+w+'%"></i></span></div><b class="aw-v">'+(Math.round(x.avg*10)/10)+'<small>AVG</small></b></div>';
+    };
+    lg.ranked.slice(0,3).forEach(function(x,i){html+=dRow(x,i);});
+    if(lg.ranked.length>3){
+      const open=!!AW_OPEN.dept;
+      html+='<button class="aw-more'+(open?' open':'')+'" aria-expanded="'+(open?'true':'false')+'" onclick="awMore(this,\'dept\')">The chasing squads \u2014 <b>'+(lg.ranked.length-3)+'</b> more in the cup <i>\u203a</i></button>';
+      html+='<div class="aw-pack"'+(open?'':' hidden')+'>';
+      lg.ranked.slice(3,12).forEach(function(x,j){html+=dRow(x,j+3);});
+      if(lg.ranked.length>12)html+='<div class="aw-unclaimed">\u2026and '+(lg.ranked.length-12)+' more squads chasing</div>';
+      html+='</div>';
+    }
+    if(lg.small.length)html+='<div class="aw-unclaimed">'+lg.small.length+' smaller squad'+(lg.small.length===1?'':'s')+' below the '+DEPT_MIN+'-player line</div>';
     if(state.player){
       const myD=deptKey(state.player.dept);
       const mi=lg.ranked.findIndex(function(x){return x.d===myD;});
@@ -5371,6 +5465,14 @@ async function renderAwards(body){
     }
   }
   html+='</div>';
+  /* RACE DISTANCE \u2014 pass 2: one honest meter for how much racing is left (display only) */
+  {
+    const dist=FIXTURES.length?Math.round(settledN/FIXTURES.length*100):0;
+    html+='<div class="aw-card" id="aw-dist"><div class="aw-hd"><span class="aw-ic">\u23f1\ufe0f</span><div class="aw-t"><b>Race distance</b><span>Every race runs over all '+FIXTURES.length+' matches \u2014 settled so far</span></div><span class="aw-prz">'+settledN+' / '+FIXTURES.length+'</span></div>'
+      +'<div class="nrd-meter"><div class="lab"><span>Distance run</span><b>'+dist+'%</b></div><div class="nrd-track"><i style="width:'+dist+'%"></i></div></div>'
+      +(settledN>=FIXTURES.length?'<div class="nrd-line">\ud83c\udfc1 Full time everywhere \u2014 the cabinet above is final</div>':'<div class="nrd-line">\ud83c\udfc1 <b>'+(FIXTURES.length-settledN)+'</b> matches of racing left \u2014 every belt can still change hands</div>')
+      +'</div>';
+  }
   html+='<div class="dept-note" style="margin-top:12px">Crowned at the <b>final whistle</b> over all 104 matches. Ties: level numbers \u2192 higher total points \u2192 a dead heat shares the title. Definitions locked 6 Jul \u2014 no moving goalposts.</div>'+
     '<button class="faq-link" onclick="openFaq(\'titles\')">See the full definitions \u203a</button>';
   body.innerHTML=html;

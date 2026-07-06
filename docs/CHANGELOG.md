@@ -5,6 +5,29 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-07-06 (Doha) — MAIN DEPLOY: TROPHY ROOM pass 2 — the cabinet + chasing packs + dept ladder + race distance
+
+**Commits:** this commit (`index.html` + `tests/nerd-stats/run.mjs` + changelog) on `claude/trophy-room-improvements-k87hgr`, cut from `1441487` and **rebased onto `main` `9163d81` (Nerds batch five)** after main moved in flight — `index.html` and the nerd suite auto-merged (disjoint regions: this pass lives in `renderAwards`, batch five in `renderNerds`/`consensusCompute`); this changelog was the only conflict, both entries kept. **Fast-forwarded to `main` on the organizer's explicit "Push to main".** **Frontend only — no DB / scoring / sync change, zero new backend traffic.** Organizer ask: make the Trophy Room more interesting.
+
+**The contract stays locked:** no title, floor, or tie-break moved — definitions as announced 6 Jul. Everything below is display over the same two sources the room already reads (slim standings + the `consensusFull()` analytics tier); no new pull, no new CONS field, seal rules unchanged (the only names rendered are race leaders — now a tap deeper — and "you").
+
+**What (all in `renderAwards`, one shared-helper touch below):**
+- **The cabinet** (top): six shelves — Podium, the four titles, Dept Cup — each with the current holder's first name and number, as it stands right now. Vacant shelves read "Unclaimed"; consensus-tier shelves show "counting" until the tier lands. Tapping a shelf jumps to its race card (cards now carry ids + `scroll-margin-top`).
+- **Chasing packs:** a race deeper than 3 folds ranks #4–#8 behind "The chasing pack — N more in this race" (`.aw-more` toggle; open state survives silent re-renders via `AW_OPEN`); deeper than 8 closes with "…and N more chasing". The Dept Cup gets the same fold for squads #4–#12.
+- **Race depth + winning pace** per title (one `.aw-race` line): "🎟️ N colleagues in this race · 📈 winning pace points at X by FT" — pace = the leader's count scaled by matches settled, shown only when ≥20 matches are settled, racing is left, and the projection actually moves. Hot Hand sits out: runs don't scale.
+- **Your rank in the race:** the personal line gains "· 10th of 48 in the race" (leader crown line unchanged).
+- **Department Cup ladder:** every ranked squad now renders (top 3 up, the rest folded), each with its player count and its average as a bar against the leader's, plus "N smaller squads below the 5-player line".
+- **Race distance** (bottom card): matches settled over all 104 as one meter — "N matches of racing left — every belt can still change hands".
+- **Leader shine:** the #1 row in every race wears a quiet gold wash (`.aw-row.lead`).
+- Shared-helper touch: `awRowHTML` learned plain ranks past the medals (`#4`+) and the lead wash — the Trophy Room is its only caller.
+- Kiosk: `.aw-more` hidden under `?tv` (nobody there to tap — packs stay folded); personal lines already hidden.
+
+**Verified on the shipped (rebased) tree:** `nerd-stats` **ALL GREEN (all 27 batch-five cards + this pass together)** — 13 new assertions recomputed independently from the seed (cabinet shelf order + Oracle/Podium/Dept holders and numbers, pack size/ranks/fold toggle, depth n=48 + pace-31-by-FT line, my rank 10th of 48, dept ladder 5 squads all barred + fold button, distance 97/104 · 93%); the existing race-pulse assertion now targets the 🔥 line specifically (a card can carry two `.aw-race` lines). Regression: `perf-boot` ALL GREEN · `share-cards` green except the **pre-existing** 340px header overlap · `node --check` clean on both inline blocks. Awards + Nerds 390px full-page screenshots eyeballed (the test now saves `awards-390.png` too).
+
+**Rollback:** `git push origin +9163d81:main` (client-only — nothing server-side changed; reverts `main` to the batch-five tip, the parent of this deploy). The app ships a service worker: a stale shell may need one hard reload / app reopen.
+
+---
+
 ## 2026-07-06 (Doha) — MAIN DEPLOY: STATS FOR NERDS · batch five — six fresh-angle cards + sticky jump chips
 
 **Commits:** this commit (`index.html` + `tests/nerd-stats/run.mjs` + changelog) on `claude/stats-for-nerds-3yajyc`, rebased onto `main` `1441487` (the banner-rework deploy — disjoint), **fast-forwarded to `main` on the organizer's explicit "Push"**. `main` had not moved since the rebase — clean FF. **Frontend only — no DB / scoring / sync change, zero new backend traffic.**
