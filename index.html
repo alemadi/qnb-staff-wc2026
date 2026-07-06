@@ -744,6 +744,25 @@
   /* ===== UX wave 2: stats ===== */
   .cons .c2{display:block;margin-top:4px}
   .cons-share{display:block;margin:7px auto 0;font:700 11.5px var(--font-b);color:var(--gb);background:none;border:1px solid rgba(180,151,89,.4);border-radius:99px;padding:5px 11px;cursor:pointer}
+  /* ===== 📤 share hub — the always-visible door to every card ===== */
+  .sharehub{position:relative;display:flex;align-items:center;justify-content:center;width:40px;height:40px;margin-right:9px;border-radius:12px;background:var(--glass);border:1px solid var(--line);font-size:17px;cursor:pointer;flex:none}
+  .sharehub .navnew{position:absolute;top:-3px;right:-3px;left:auto}
+  .sharehub:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+  body.tv .sharehub{display:none!important}
+  .shov{position:fixed;inset:0;z-index:355;display:flex;align-items:flex-end;justify-content:center;background:rgba(5,5,7,.72);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+  .sh-card{width:100%;max-width:430px;max-height:82vh;overflow-y:auto;background:linear-gradient(180deg,#16130c,#0c0b08);border:1px solid rgba(180,151,89,.5);border-radius:22px 22px 0 0;padding:18px 16px 22px}
+  @media(min-width:560px){.shov{align-items:center;padding:22px}.sh-card{border-radius:22px}}
+  .sh-h{display:flex;align-items:center;gap:8px;font-weight:800;font-size:15px;margin:2px 2px 4px}
+  .sh-h .x{margin-left:auto;background:none;border:none;color:rgba(244,238,227,.55);font-size:16px;cursor:pointer;padding:6px;font-family:inherit}
+  .sh-sub{font-size:11.5px;color:rgba(244,238,227,.55);margin:0 2px 12px;line-height:1.45}
+  .sh-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+  .sh-tile{display:flex;flex-direction:column;align-items:flex-start;gap:3px;text-align:left;background:linear-gradient(120deg,rgba(180,151,89,.14),var(--glass));border:1px solid rgba(180,151,89,.4);border-radius:14px;padding:11px 12px;cursor:pointer;color:inherit;font-family:inherit}
+  .sh-tile .em{font-size:20px;line-height:1.15}
+  .sh-tile b{font-size:12.5px;font-weight:800;line-height:1.25}
+  .sh-tile span{font-size:10.5px;color:rgba(244,238,227,.55);line-height:1.35}
+  .sh-tile:active{transform:scale(.98)}
+  .sh-tile.lk{opacity:.55;background:var(--glass);border-color:var(--line)}
+  .sh-div{grid-column:1/-1;font-size:10px;font-weight:800;letter-spacing:.14em;color:rgba(244,238,227,.45);margin:6px 2px 0}
   .rv-of{margin-top:13px;font-size:11.5px;color:var(--muted);font-weight:700;line-height:1.85;letter-spacing:.2px}
   .champ-soc .fl-img{width:15px;height:11px;border-radius:2px;vertical-align:-1px}
   /* ===== UX wave 3: fun stats sprinkle ===== */
@@ -1600,6 +1619,7 @@
         <div class="divider"></div>
         <div class="wc"><b>World Cup 26</b><em>predict · climb · win</em></div>
       </div>
+      <button class="sharehub" id="sharehub" style="display:none" onclick="openShareTray()" aria-label="Share cards" title="Share cards">📤<i class="navnew" id="share-new" style="display:none" aria-hidden="true"></i></button>
       <div class="userchip" id="userchip" style="display:none" onclick="go('me')" onpointerdown="try{navigator.vibrate&&navigator.vibrate(8)}catch(e){}">
         <div class="avatar" id="chip-av">--</div>
         <div class="who"><b id="chip-name">—</b><span id="chip-pts">0 PTS</span></div>
@@ -1853,6 +1873,13 @@
       <button class="wn-item" onclick="wnGoBrags()"><span class="wn-ic">📤</span><span class="wn-tx"><b>New share cards</b><span>Tonight’s slip, the office split, title belts, your climb, the road to the final — in your brag row and the Room.</span></span><span class="wn-go">›</span></button>
       <div class="wn-more">🛡 Streak Shield and 🦅 Upset Bonus run automatically from the QF — the same kit for every player, nothing to buy. Titles never move points — the board alone decides 🥇🥈🥉.</div>
       <button class="wn-ok" onclick="dismissWhatsNew()">Got it</button>
+    </div>
+  </div>
+  <div id="sharetray" class="shov" style="display:none" role="dialog" aria-modal="true" aria-label="Share cards" onclick="if(event.target===this)closeShareTray()">
+    <div class="sh-card">
+      <div class="sh-h">📤 Share cards<button class="x" onclick="closeShareTray()" aria-label="Close">✕</button></div>
+      <div class="sh-sub">Every card you've earned right now — tap one to build it. More unlock as the tournament turns.</div>
+      <div class="sh-grid" id="sh-grid"><div class="sh-div">Loading…</div></div>
     </div>
   </div>
   <div id="reveal" class="reveal" style="display:none" role="dialog" aria-modal="true" aria-label="Results reveal">
@@ -6318,6 +6345,90 @@ async function sharePodium(){
     cardShip(c,"the-podium",champ+" are world champions — and the office story is in");
   }catch(e){toast("Couldn’t build the card");}
 }
+/* ===== 📤 The Share Tray — the one always-visible door to every card =====
+   The cards themselves are moment-gated; discovery shouldn't be. The header hub
+   (NEW-dotted until first open) opens this sheet: every card the player qualifies
+   for RIGHT NOW as a tappable tile, plus a short "still to unlock" rack so the
+   gates read as goals, not absences. Tiles call the existing share functions —
+   the tray adds zero new data paths (standings + consensus reads are the cached
+   ones every view already uses). */
+function closeShareTray(){const ov=document.getElementById("sharetray");if(ov)ov.style.display="none";document.body.style.overflow="";}
+async function openShareTray(){
+  if(!state.player||state.demo){toast("Join the pool first");return;}
+  const ov=document.getElementById("sharetray"),grid=document.getElementById("sh-grid");
+  if(!ov||!grid)return;
+  markSeen("share");
+  ov.style.display="flex";document.body.style.overflow="hidden";
+  grid.innerHTML='<div class="sh-div">SETTING THE RACK…</div>';
+  try{
+    const st=(await fetchStandings()).slice().sort(cmpSt);
+    try{await consensus();}catch(e){}
+    if(CONFIGURED&&!state.demo)consensusFull().catch(function(){}); /* twin tile on next open if not in yet */
+    const av=[],lk=[];
+    const add=function(em,l,sub,act){av.push({em:em,l:l,sub:sub,act:act});};
+    const lock=function(em,l,sub){lk.push({em:em,l:l,sub:sub});};
+    /* tonight */
+    if(slipEligible())add("🎟️","Tonight’s slip","Your sealed calls for the night","shareSlip()");
+    else lock("🎟️","Tonight’s slip","Appears on match nights, once kick-off seals your picks");
+    try{
+      const now=Date.now()+CLOCK_OFFSET;let sp=null;
+      if(CONS.map)FIXTURES.forEach(function(m){
+        if(sp||roomSettled(m)||(m.kn&&!koReady(m)))return;
+        if(new Date(m.ko).getTime()<now-3*3600000)return;
+        const cc=CONS.map[m.id];if(!cc)return;
+        const mv=fxView(m);
+        const tot=m.kn?((cc.w[mv.home.n]||0)+(cc.w[mv.away.n]||0)):(cc.H+cc.D+cc.A);
+        if(tot>=8)sp={m:m,mv:mv,tot:tot};
+      });
+      if(sp)add("🏟️","Office split",esc(sp.mv.home.n)+" v "+esc(sp.mv.away.n)+" · "+sp.tot+" calls in","shareSplit('"+sp.m.id+"')");
+    }catch(e){}
+    /* form */
+    add("📇","My standing card","Rank · points · exacts","shareCard()");
+    try{const n=koStreakCurrent(state.player.predictions,state.results,true);if(n>=2)add("🔥","On fire ×"+n,"Exact scores back to back","bragStreak()");}catch(e){}
+    if(mePerfectDay())add("💎","Perfect day","Every pick scored on one night","bragPerfectDay()");
+    try{const ms=meMilestone(st);if(ms)add(ms.e,"The "+ms.v+" club","Points milestone, board-official","bragMilestone()");
+      else{const meR=st.find(function(r){return r.slug===state.meSlug;});if(meR)lock("💯","The 100 club",(100-meR.pts)+" points away");}}catch(e){}
+    try{if(climbCps().length)add("🚀","The climb","Your rank, phase by phase","shareClimb()");}catch(e){}
+    /* titles & status */
+    try{const ts=myTitles();
+      if(ts.length)ts.forEach(function(k){const d=TITLE_DEFS.find(function(t){return t.key===k;});if(d)add(d.emoji,d.label+" belt",d.desc,"shareBelt('"+k+"')");});
+      else lock("🏅","Title belts","Hold an office honour to wear its belt");}catch(e){}
+    try{const myDept=deptKey(state.player.dept),mates=st.filter(function(r){return deptKey(r.dept)===myDept;}).slice().sort(cmpSt);
+      if(mates.length>=3&&mates[0]&&mates[0].slug===state.meSlug)add("⭐","Squad MVP","Top scorer in "+esc(myDept),"bragSquadMVP()");
+      if(mates.length>=3)add("🏢","Squad card",esc(myDept)+" in the department league","shareSquad()");}catch(e){}
+    if(st.findIndex(function(r){return r.slug===state.meSlug;})>=0){
+      add("👀","Catch me","Your rank, as a taunt","bragChase()");
+      add("✈️","Road to Maldives","How far the islands are","bragMaldives()");
+    }
+    /* the road */
+    if(champLocked()&&state.player.champ)add("🏆","My champion",esc(state.player.champ)+" · sealed since the groups","bragChampion()");
+    try{const rd=roadState();
+      if(rd)add("🛣️","Road to the final",esc(rd.champ)+" — "+(rd.rem>0?(rd.rem+" win"+(rd.rem===1?"":"s")+" from the +"+CHAMP_PTS):"+"+CHAMP_PTS+" banked"),"shareRoad()");
+      else if(champLocked()&&state.player.champ)lock("🛣️","Road to the final","Rides again with a live champion pick");}catch(e){}
+    /* rivalry & friends */
+    try{const rs=await getJSON("wc:rival",false);
+      if(!rs)lock("🧾","The receipt","Pick a rival on your Me card first");
+      else{const d=await rivalH2HData(rs);
+        if(d&&d.myPts>d.rvPts)add("🧾","The receipt","+"+(d.myPts-d.rvPts)+" clear across "+d.both+" settled","bragReceipt()");
+        else lock("🧾","The receipt","Prints the moment you lead your rival");}}catch(e){}
+    try{if(CONS&&CONS.full&&CONS.twin&&CONS.twin.n>=5&&CONS.twin.slug&&CONS.twin.slug!==state.meSlug)
+      add("🤝","Same brain",esc(CONS.twin.name)+" · "+CONS.twin.n+" shared picks","shareTwin()");}catch(e){}
+    /* the office */
+    try{let last=null;
+      FIXTURES.forEach(function(m){const r=state.results[m.id];if(!r||(m.kn?r.w==null:r.h==null))return;
+        const pk=(state.player.predictions||{})[m.id];if(!pk||!(pk.o||pk.w))return;
+        if(rvVerdict(m,pk,r,puChips()).pts<=0)return;
+        if(!last||new Date(m.ko)>new Date(last.ko))last=m;});
+      if(last){const lv=fxView(last);add("🎯","Brag my last call",esc(lv.home.n)+" v "+esc(lv.away.n),"ROOM_SEL='"+last.id+"';bragCall()");}}catch(e){}
+    if(ftOver()||wrPreview())add("🏆","The podium","The office's full-time poster","sharePodium()");
+    else lock("🏆","The podium","The office poster — unlocks at full time");
+    /* render */
+    let html=av.map(function(t){return '<button class="sh-tile" onclick="closeShareTray();'+t.act+'"><i class="em">'+t.em+'</i><b>'+t.l+'</b><span>'+t.sub+'</span></button>';}).join("");
+    if(lk.length)html+='<div class="sh-div">STILL TO UNLOCK</div>'+
+      lk.slice(0,4).map(function(t){return '<button class="sh-tile lk" onclick="toast(\''+t.em+' '+String(t.sub).replace(/'/g,"\\'")+'\')"><i class="em">'+t.em+'</i><b>'+t.l+'</b><span>'+t.sub+'</span></button>';}).join("");
+    grid.innerHTML=html||'<div class="sh-div">Lock some picks first — the cards follow the points.</div>';
+  }catch(e){grid.innerHTML='<div class="sh-div">Couldn’t set the rack — try again.</div>';}
+}
 function roundRect(x,a,b,w,h,r){x.beginPath();x.moveTo(a+r,b);x.arcTo(a+w,b,a+w,b+h,r);x.arcTo(a+w,b+h,a,b+h,r);x.arcTo(a,b+h,a,b,r);x.arcTo(a,b,a+w,b,r);x.closePath();}
 /* shared premium finish for every share canvas: corner vignette + gold inset frame + inner hairline */
 function cardFrame(x,W,H){
@@ -7123,6 +7234,7 @@ function updateNewDots(){
   const on=!!state.player&&!state.demo;
   const ld=document.getElementById("lb-new");if(ld)ld.style.display=(on&&!seenKey("lb"))?"":"none";
   const rn=document.getElementById("room-new");if(rn)rn.style.display=(on&&!seenKey("room"))?"":"none";
+  const sn=document.getElementById("share-new");if(sn)sn.style.display=(on&&!seenKey("share"))?"":"none"; /* 📤 hub dot — clears on first open */
   const an=document.getElementById("aw-new");if(an)an.style.display=(on&&!seenKey("awards"))?"":"none";
 }
 function maybeWhatsNew(){
@@ -7158,10 +7270,9 @@ function wnGoAwards(){ /* TROPHY ROOM — spotlight deep link straight into the 
   go("leaderboard");
 }
 function wnGoFaq(which){dismissWhatsNew();openFaq(which);} /* WAVE B — spotlight items deep-link into the FAQ */
-function wnGoBrags(){ /* 2026-07-06 artifact pack — land on the Me card's brag row */
+function wnGoBrags(){ /* 2026-07-06 artifact pack — open the share tray (the one door to every card) */
   dismissWhatsNew();
-  go("me");
-  setTimeout(function(){const el=document.querySelector(".me-brags");if(el&&el.scrollIntoView)el.scrollIntoView({behavior:"smooth",block:"center"});},350);
+  openShareTray();
 }
 
 /* ===== juice: sounds + odometers ===== */
@@ -7844,6 +7955,7 @@ function tvLoop(){
   if(TV)document.body.classList.add("tv");
   if(state.player){
     document.getElementById("userchip").style.display="flex";
+    {const sh=document.getElementById("sharehub");if(sh&&!state.demo)sh.style.display="flex";} /* 📤 share hub — every view, signed-in only */
     document.getElementById("countdown").style.display="flex";
     const h=(location.hash||"").slice(1);
     updateChip();go(TV?"leaderboard":(["matches","bracket","leaderboard","me"].indexOf(h)>=0?h:"matches"));

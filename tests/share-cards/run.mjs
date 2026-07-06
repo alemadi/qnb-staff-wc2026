@@ -276,6 +276,46 @@ const roomBtns = await pg.evaluate(async (mid)=>{ try{
 }catch(e){return {err:String(e)};} }, qfs[1].id);
 if(roomBtns.slip&&roomBtns.split) pass('Room pre-settle buttons'); else fail('Room buttons: '+JSON.stringify(roomBtns));
 
+/* 📤 Share tray — the always-visible discovery door */
+const hub = await pg.evaluate(()=>{ const sh=document.getElementById('sharehub');
+  const dot=document.getElementById('share-new');
+  return { visible: !!(sh && sh.style.display!=='none'), dot: !!(dot && dot.style.display!=='none') }; });
+if(hub.visible) pass('share hub visible in header'); else fail('share hub hidden');
+if(hub.dot) pass('share hub NEW dot shows pre-open'); else fail('share hub NEW dot missing');
+const tray = await pg.evaluate(async ()=>{ try{
+  /* earlier tests ran consensusFull() over the 12 seeded blobs, dropping QF counts below
+     the k-floor — reset so the tray reads the counts RPC, as a fresh prod session would */
+  CONS={t:0,map:null,busy:null,busyF:null,full:false};
+  await openShareTray();
+  await new Promise(r=>setTimeout(r,300));
+  const tiles=Array.from(document.querySelectorAll('#sh-grid .sh-tile:not(.lk) b')).map(b=>b.textContent.trim());
+  const locked=Array.from(document.querySelectorAll('#sh-grid .sh-tile.lk b')).map(b=>b.textContent.trim());
+  const dotGone=document.getElementById('share-new').style.display==='none';
+  return {tiles, locked, dotGone};
+}catch(e){ return {err:String(e)}; } });
+if(tray.err) fail('tray: '+tray.err);
+else{
+  console.log('tray tiles:', JSON.stringify(tray.tiles), 'locked:', JSON.stringify(tray.locked));
+  ['Tonight’s slip','Office split','My standing card','The climb','Road to the final','The 100 club','The receipt','Oracle belt','Brag my last call'].forEach(w=>{
+    if(tray.tiles.some(t=>t.includes(w))) pass('tray tile: '+w); else fail('tray tile missing: '+w); });
+  if(tray.locked.some(t=>t.includes('The podium'))) pass('tray locked rack shows podium'); else fail('tray locked rack missing podium');
+  if(tray.dotGone) pass('NEW dot clears on first open'); else fail('NEW dot did not clear');
+}
+await pg.screenshot({ path: `${SCRATCH}/live-tray.png` });
+/* tap a tile end-to-end: slip via the tray */
+const tapped = await pg.evaluate(async ()=>{ 
+  const filt=()=>window.__cvs.filter(c=>c.width===1080&&c.height===1350);
+  const before=filt().length;
+  const tile=Array.from(document.querySelectorAll('#sh-grid .sh-tile')).find(b=>b.textContent.includes('Tonight’s slip'));
+  if(!tile)return 'no tile';
+  tile.click();
+  const t0=Date.now();
+  while(Date.now()-t0<9000){ if(filt().length>before) return true; await new Promise(r=>setTimeout(r,120)); }
+  return 'no canvas';
+});
+if(tapped===true) pass('tray tile tap builds the card + closes'); else fail('tray tap: '+tapped);
+await pg.evaluate(()=>closeShareTray());
+
 /* Podium — simulate full time in-page, then build */
 await grabCard('podium', 'state.results._champ="France"; state.results.k32={w:"France",h:2,a:1}; bustStandings(); await sharePodium();');
 
