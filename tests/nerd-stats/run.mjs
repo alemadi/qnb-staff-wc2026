@@ -31,7 +31,8 @@ await pgA.waitForTimeout(800);
 const world = await pgA.evaluate(()=>({
   fixtures: FIXTURES.map(f=>({id:f.id,ko:f.ko,kn:!!f.kn,round:f.round,tag:f.tag||null,h:f.home&&f.home.n,a:f.away&&f.away.n})),
   bracket: BRACKET, fl: FL, wnVer: (typeof WHATSNEW_VER!=='undefined')?WHATSNEW_VER:'',
-  KO_PTS: (typeof KO_PTS!=='undefined')?KO_PTS:null, KO_BONUS: (typeof KO_BONUS!=='undefined')?KO_BONUS:null
+  KO_PTS: (typeof KO_PTS!=='undefined')?KO_PTS:null, KO_BONUS: (typeof KO_BONUS!=='undefined')?KO_BONUS:null,
+  PU_RANK: (typeof PU_RANK!=='undefined')?PU_RANK:{}, QZ: (typeof QZ!=='undefined')?QZ:'Asia/Qatar'
 }));
 await ctxA.close();
 console.log('scraped fixtures:', world.fixtures.length, '· KO_PTS', JSON.stringify(world.KO_PTS));
@@ -173,6 +174,62 @@ const champMap={}; blobs.forEach(b=>{ if(b.champ)champMap[b.champ]=(champMap[b.c
 const champN=blobs.filter(b=>b.champ).length;
 let expDeadN=0; Object.keys(champMap).forEach(t=>{ if(beaten.has(t)||!koField.has(t))expDeadN+=champMap[t]; });
 const expDeadPct=Math.round(expDeadN/champN*100);
+/* ---- batch-3 expectations ---- */
+const RANK = world.PU_RANK;
+// FAVOURITE TAX: delivery over ranked settled matches; office backing over floored ones
+let favW=0,favT=0,backN=0,backTot=0;
+settledFx.forEach(f=>{ const r=results_[f.id];
+  const hN_=f.kn?kteams[f.id].h:f.h, aN_=f.kn?kteams[f.id].a:f.a;
+  const rh=RANK[hN_], ra=RANK[aN_]; if(!rh||!ra||rh===ra)return;
+  const favHome=rh<ra;
+  favT++;
+  const favWon = f.kn ? (r.w===(favHome?hN_:aN_)) : (favHome?(r.h>r.a):(r.a>r.h));
+  if(favWon)favW++;
+  const c=officeCounts(f);
+  if(f.kn){ if(c.tot<8)return; backN+=favHome?c.hN:c.aN; backTot+=c.tot; }
+  else{ if(c.tot<5)return; backN+=favHome?c.H:c.A; backTot+=c.tot; } });
+const expBack=Math.round(backN/backTot*100), expDeliv=Math.round(favW/favT*100);
+// HERD-O-METER: average top-pick share over floored settled matches
+let hsum=0,hn=0;
+settledFx.forEach(f=>{ const c=officeCounts(f);
+  if(f.kn){ if(c.tot<8)return; hsum+=Math.max(c.hN,c.aN)/c.tot; hn++; }
+  else{ if(c.tot<5)return; hsum+=Math.max(c.H,c.D,c.A)/c.tot; hn++; } });
+const expHerd=Math.round(hsum/hn*100);
+// MARKETS LAB: Over 2.5 called vs happened (group)
+let mTot=0,mOv=0,aTot2=0,aOv=0;
+settledFx.forEach(f=>{ if(f.kn)return; const r=results_[f.id];
+  aTot2++; if(r.h+r.a>=3)aOv++;
+  const c=officeCounts(f); if(c.tot<5)return;
+  blobs.forEach(b=>{ const v=b.predictions[f.id]; if(!v||v.h==null||v.a==null)return; mTot++; if((+v.h)+(+v.a)>=3)mOv++; }); });
+const expOvCalled=Math.round(mOv/mTot*100), expOvHappened=Math.round(aOv/aTot2*100);
+// STREAK SPECTRUM: per-player best run over settled engaged picks in kickoff order (mirrors consensusCompute)
+const doneSorted = settledFx.slice().sort((a,b)=>new Date(a.ko)-new Date(b.ko));
+const runsAll=[];
+blobs.forEach(b=>{ let runBest=0,runCur=0;
+  doneSorted.forEach(f=>{ const v=b.predictions[f.id]; if(!v)return; if(f.kn?!v.w:!v.o)return;
+    const r=results_[f.id];
+    const hit=f.kn?(v.w===r.w):(v.o===outcomeOf(r));
+    if(hit){runCur++;if(runCur>runBest)runBest=runCur;}else runCur=0; });
+  if(runBest>0)runsAll.push(runBest); });
+const runsAsc=runsAll.slice().sort((a,b)=>a-b);
+const expRunN=runsAll.length, expRunMed=runsAsc[runsAll.length>>1];
+// STAGE WINS: dayTop replicated (players in slug order = sbulkJSON key order; strict > keeps the first)
+const dayKeyOf=(()=>{ const f=new Intl.DateTimeFormat('en-CA',{timeZone:world.QZ,year:'numeric',month:'2-digit',day:'2-digit'}); return iso=>f.format(new Date(iso)); })();
+const blobsBySlug = blobs.slice().sort((a,b)=>('wc:player:'+a.slug).localeCompare('wc:player:'+b.slug));
+const dayTop={};
+blobsBySlug.forEach(b=>{ const ptsBy={};
+  doneSorted.forEach(f=>{ const v=b.predictions[f.id]; if(!v)return; if(f.kn?!v.w:!v.o)return;
+    const r=results_[f.id];
+    const hit=f.kn?(v.w===r.w):(v.o===outcomeOf(r));
+    let vp=0;
+    if(f.kn){ if(hit)vp=koPtsOf(f); }
+    else{ if(hit)vp=3; if(v.h!=null&&v.a!=null&&(+v.h)===r.h&&(+v.a)===r.a)vp+=2; }
+    if(vp)ptsBy[dayKeyOf(f.ko)]=(ptsBy[dayKeyOf(f.ko)]||0)+vp; });
+  for(const k in ptsBy){ const cur=dayTop[k]; if(!cur||ptsBy[k]>cur.pts)dayTop[k]={slug:b.slug,pts:ptsBy[k]}; } });
+const stageDays=Object.keys(dayTop).length;
+const stageHolders=new Set(Object.values(dayTop).map(x=>x.slug)).size;
+console.log('EXPECTED b3:', JSON.stringify({expBack,expDeliv,favT,expHerd,hn,expOvCalled,expOvHappened,expRunN,expRunMed,stageDays,stageHolders}));
+
 const meRow = standings.find(r=>r.slug==='khalid-almannai');
 console.log('EXPECTED:', JSON.stringify({settled:settledIds.length, crowd:expCrowdPct+'% /'+expCrowdTot, payTotal, expRideS, expFadeS, expVolPct, peak:expPeak, remMax:expRemMax, aliveN:expAliveN+'/'+playingRows.length, desks:expDesks, deadPct:expDeadPct, mePts:meRow.pts, drawPct:expDrawPct, gpm:(expGoals/expGN).toFixed(2)}));
 if(payTotal<150){ fail('SEED too thin: payoff total '+payTotal+' <150'); }
@@ -261,6 +318,17 @@ const got = await pg.evaluate(()=>{
              tiles: cardByTitle('Still alive')?Array.from(cardByTitle('Still alive').querySelectorAll('.nrd-tile b')).map(x=>x.textContent.replace(/\s+/g,' ').trim()):[] },
     swing: { txt: cardTxt('Swing matches'), pend: cardPend('Swing matches'),
              rows: cardByTitle('Swing matches')?cardByTitle('Swing matches').querySelectorAll('.nrd-swing').length:0 },
+    herd: { txt: cardTxt('The herd-o-meter'), pend: cardPend('The herd-o-meter'),
+            meter: cardByTitle('The herd-o-meter')?text(cardByTitle('The herd-o-meter').querySelector('.nrd-meter .lab')):null },
+    markets: { txt: cardTxt('The markets lab'), pend: cardPend('The markets lab'),
+               rows: cardByTitle('The markets lab')?Array.from(cardByTitle('The markets lab').querySelectorAll('.nrd-duo .lab')).map(x=>text(x)):[] },
+    favtax: { txt: cardTxt('The favourite tax'), pend: cardPend('The favourite tax'),
+              meters: cardByTitle('The favourite tax')?Array.from(cardByTitle('The favourite tax').querySelectorAll('.nrd-meter .lab')).map(x=>text(x)):[] },
+    streak: { txt: cardTxt('The streak spectrum'), pend: cardPend('The streak spectrum'),
+              n: cardByTitle('The streak spectrum')?text(cardByTitle('The streak spectrum').querySelector('.aw-prz')):null,
+              bars: (cardByTitle('The streak spectrum')&&cardByTitle('The streak spectrum').querySelector('.nrd-plot'))?cardByTitle('The streak spectrum').querySelector('.nrd-plot').children.length:0 },
+    stage: { txt: cardTxt('Stage wins'), pend: cardPend('Stage wins'),
+             rows: cardByTitle('Stage wins')?cardByTitle('Stage wins').querySelectorAll('.nrd-crown').length:0 },
     yous: $$('.aw-you').map(y=>text(y)),
   };
 });
@@ -270,9 +338,25 @@ console.log(JSON.stringify(got,null,1).slice(0,3600));
 if(got.onPill && got.onPill.includes('Nerds')) pass('mode pill switched'); else fail('mode pill not on');
 if(got.badgeAfter===false) pass('NEW badge cleared after visit'); else fail('NEW badge still on after click');
 if(got.tiles===6) pass('6 KPI tiles'); else fail('tiles='+got.tiles);
-['The points curve','Desk spread','The hive mind','The payoff matrix','The overconfidence curve','The scoreline lab','Goals by round','The form curve','The champion market','Still alive','Swing matches','Nerd corner'].forEach(t=>{
+['The points curve','Desk spread','The hive mind','The payoff matrix','The overconfidence curve','The herd-o-meter','The scoreline lab','The markets lab','Goals by round','The favourite tax','The form curve','The streak spectrum','Stage wins','The champion market','Still alive','Swing matches','Nerd corner'].forEach(t=>{
   if(got.titles.includes(t)) pass('card present: '+t); else fail('card MISSING: '+t);
 });
+// batch 3 numeric checks
+if(!got.herd.pend && got.herd.meter && got.herd.meter.includes(expHerd+'%') && got.herd.meter.includes(hn+' matches'))
+  pass('herd-o-meter avg = '+expHerd+'% over '+hn); else fail('herd meter "'+got.herd.meter+'" expected '+expHerd+'% / '+hn);
+const ovRow = got.markets.rows.find(x=>/Over 2.5/.test(x));
+if(!got.markets.pend && ovRow && ovRow.includes(expOvCalled+'% called') && ovRow.includes(expOvHappened+'% happened'))
+  pass('markets Over 2.5 = '+expOvCalled+'% called / '+expOvHappened+'% happened'); else fail('markets row "'+ovRow+'" expected '+expOvCalled+'/'+expOvHappened);
+const backM = got.favtax.meters.find(x=>/backing the favourite/.test(x));
+const delM = got.favtax.meters.find(x=>/actually winning/.test(x));
+if(!got.favtax.pend && backM && backM.includes(expBack+'%')) pass('favourite-tax backing = '+expBack+'%'); else fail('favtax back "'+backM+'" expected '+expBack+'%');
+if(delM && delM.includes(expDeliv+'%') && delM.includes(favT+' matches')) pass('favourite-tax delivery = '+expDeliv+'% over '+favT); else fail('favtax deliver "'+delM+'" expected '+expDeliv+'% / '+favT);
+if(!got.streak.pend && got.streak.n==='n = '+expRunN && got.streak.bars===8)
+  pass('streak spectrum: n = '+expRunN+', 8 bins'); else fail('streak n="'+got.streak.n+'" bars='+got.streak.bars+' expected n='+expRunN);
+if(got.streak.txt && got.streak.txt.includes('Median best run: ×'+expRunMed)) pass('streak median = ×'+expRunMed); else fail('streak median missing ×'+expRunMed+' in: '+(got.streak.txt||'').slice(0,200));
+if(!got.stage.pend && got.stage.rows===Math.min(8,stageDays)) pass('stage wins: '+got.stage.rows+' crown rows'); else fail('stage rows='+got.stage.rows+' expected '+Math.min(8,stageDays));
+if(got.stage.txt && got.stage.txt.includes(stageHolders+' different crown-holders in '+stageDays+' matchdays'))
+  pass('stage wins: '+stageHolders+' holders / '+stageDays+' days'); else fail('stage holders line missing '+stageHolders+'/'+stageDays+': '+(got.stage.txt||'').slice(-260));
 // desk spread
 if(got.desk.rows===expDesks) pass('desk spread: '+expDesks+' department box-plots'); else fail('desk rows='+got.desk.rows+' expected '+expDesks);
 if(got.desk.meRow) pass('desk spread highlights your desk'); else fail('desk spread: your desk not highlighted');

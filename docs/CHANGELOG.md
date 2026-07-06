@@ -5,6 +5,25 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-07-06 (Doha) — MAIN DEPLOY: STATS FOR NERDS · batch three — five more cards
+
+**Commits:** this commit (`index.html` + `tests/nerd-stats/run.mjs` + changelog) on `claude/stats-for-nerds-3yajyc`, on top of the deployed batch two (`366051b`), **fast-forwarded to `main`** on the organizer's explicit "Push" (in direct reply to "'push to main' ships all five"). `main` had not moved — clean FF, no rebase. **Frontend only — no DB / scoring / sync change, zero new backend traffic** (same standings + `consensusFull()` caches; `consensusCompute` itself untouched).
+
+**What:** five more cards in `renderNerds()` (panel now 17), drawn from the vetted bench of the earlier 20-idea design panel:
+- **The herd-o-meter** (🐑, meter + tiles) — average top-pick share across floored settled matches, landslide (80%+) vs genuine-split (≤55%) counts, and the single most divided match. Pairs with the overconfidence curve: one measures *agreement*, the other whether agreement is *justified*.
+- **The markets lab** (🧾, duo bars) — the office's scoreline calls reduced to the classic markets: BTTS, Over 2.5, routs (margin 3+), office-scripted vs full-time reality, with an Under-bettor/goal-drunk verdict. Same floors as the scoreline lab (per-match ≥5, ≥50 total calls).
+- **The favourite tax** (🏷️, meters) — the only FIFA-rank lens: office calls backing the higher-ranked side vs how often favourites actually win, plus the biggest humbling (lowest-rank-number team beaten outright) and a your-chalk-appetite line. Delivery reads public results only; backing shares are k-floored.
+- **The streak spectrum** (🔥, histogram) — everyone's best-ever run (`CONS.tops.streak`, already computed, previously only the leader shown) as a ×1…×8+ distribution with your bin highlighted, the office median, and the Hot Hand record for scale. ≥10 runs to render.
+- **Stage wins** (👑, crown roll) — `CONS.dayTop` played as a stage race: the last 8 matchday winners (names are per-day *winners* — sanctioned positive leaders), distinct crown-holder count as a volatility tell, most-crowns leader, and your crown count.
+
+Seal posture unchanged: settled-only, k-anon floors (5 group / 8 knockout), names only positive leaders + "you"; personal lines wear `.aw-you` (hidden on `?tv`). New CSS is just the `.nrd-crown` row; everything else reuses the existing `nrd-*` idiom.
+
+**Verified on this tree:** `node tests/nerd-stats/run.mjs` **ALL GREEN** — all 17 cards render (none stuck pending), and each new card's numbers are **recomputed independently in the test from the same ~48-player seed**: herd average (66% over 97 floored matches), markets Over 2.5 called/happened (25/25), favourite-tax backing (42%) vs delivery (47% over 97 ranked matches), streak spectrum n=48 + median ×4 (best-run replication in kickoff order, mirroring `consensusCompute`), stage wins 9 distinct holders / 28 matchdays + 8 crown rows (dayTop replicated in slug order with strict-> tie rule and Doha dayKey). Regression: `tests/perf-boot/run.mjs` ALL GREEN; `tests/share-cards/run.mjs` green except the **pre-existing** 340px header failure (identical count on the deployed base). `node --check` clean on both inline blocks. 390px full-page screenshot of all seventeen cards eyeballed.
+
+**Rollback:** `git push origin +366051b:main` (client-only — nothing server-side changed; reverts `main` to the batch-two tip, the parent of this commit). The app ships a service worker (prior perf pack): a stale shell may need one hard reload / app reopen to pick up the new `index.html`.
+
+---
+
 ## 2026-07-06 (Doha) — MAIN DEPLOY: STATS FOR NERDS · batch two — six more cards
 
 **Commits:** this commit (`index.html` + `tests/nerd-stats/run.mjs` + changelog) on `claude/stats-for-nerds-3yajyc`, on top of the already-deployed `🤓 Nerds` mode (`a9af420`), **rebased onto `main` (`3cea386`, the knockout round-picker caret fix) then fast-forwarded to `main`** on the organizer's explicit "push to main". Clean rebase — `3cea386` touches only the round-picker caret CSS, disjoint from the Nerds code, no changelog conflict. **Frontend only — no DB / scoring / sync change, zero new backend traffic** (same standings + `consensusFull()` caches).

@@ -1744,6 +1744,13 @@
   .nrd-swing .sh{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:11.5px;font-weight:700;color:var(--cream);margin-bottom:5px}
   .nrd-swing .mt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .nrd-swing .stk{flex:none;font-size:10px;font-weight:800;color:#181106;background:linear-gradient(115deg,var(--gd),var(--gold));border-radius:5px;padding:1px 6px}
+  /* batch 3: stage-wins crown roll */
+  .nrd-crown{display:flex;align-items:center;gap:9px;padding:5.5px 0;border-top:1px solid rgba(255,255,255,.05);font-size:11.5px;font-weight:700;color:var(--cream)}
+  .nrd-crown:first-of-type{border-top:0}
+  .nrd-crown .dt{width:52px;flex:none;font-size:9.5px;letter-spacing:.8px;text-transform:uppercase;color:var(--faint);font-weight:800}
+  .nrd-crown .nm{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .nrd-crown.me .nm{color:var(--gold-bright)}
+  .nrd-crown .pt{flex:none;font-size:10px;font-weight:800;color:#181106;background:linear-gradient(115deg,var(--gd),var(--gold));border-radius:5px;padding:1px 6px}
   /* ===== PERF ===== */
   /* Long lists: skip layout+paint for offscreen cards (104 matches / 100+ board rows).
      contain-intrinsic-size ≈ a typical card so the scrollbar stays honest; the `auto`
@@ -5541,6 +5548,31 @@ async function renderNerds(body){
     }
   }
   html+='</div>';
+  /* THE HERD-O-METER — how much does the office actually agree? (settled, floored, aggregate) */
+  html+='<div class="aw-card"><div class="aw-hd"><span class="aw-ic">🐑</span><div class="aw-t"><b>The herd-o-meter</b><span>How united the office really is, match by match</span></div></div>';
+  if(!c)html+=pend;
+  else{
+    let hsum=0,hn=0,land=0,coin=0,divided=null;
+    settled.forEach(function(f){const cc=c.map[f.id];if(!cc)return;const v=fxView(f);
+      let top;
+      if(f.kn){const hN=cc.w[v.home.n]||0,aN=cc.w[v.away.n]||0,tot=hN+aN;if(tot<8)return;top=Math.max(hN,aN)/tot;}
+      else{const tot=cc.H+cc.D+cc.A;if(tot<5)return;top=Math.max(cc.H,cc.D,cc.A)/tot;}
+      hsum+=top;hn++;
+      if(top>=0.8)land++;if(top<=0.55)coin++;
+      if(!divided||top<divided.top)divided={top:top,f:f};});
+    if(hn<5)html+='<div class="aw-pend">Not enough settled matches past the floors to read the herd yet.</div>';
+    else{
+      const avg=Math.round(hsum/hn*100);
+      html+='<div class="nrd-meter"><div class="lab"><span>Average herd strength · '+hn+' matches</span><b>'+avg+'%</b></div><div class="nrd-track"><i style="width:'+avg+'%"></i></div></div>';
+      html+='<div class="nrd-tiles" style="grid-template-columns:1fr 1fr;margin-top:10px">'
+        +'<div class="nrd-tile"><b>'+land+'</b><span>landslides · 80%+ one way</span></div>'
+        +'<div class="nrd-tile"><b>'+coin+'</b><span>genuine splits · top pick ≤55%</span></div>'
+        +'</div>';
+      if(divided)html+='<div class="nrd-line">🪓 Most divided match: '+nrdVs(divided.f)+' — the top pick had just <b>'+Math.round(divided.top*100)+'%</b> of the room</div>';
+      html+='<div class="nrd-line">'+(avg>=75?'🐑 Proper groupthink — the office mostly moves as one flock':avg>=60?'🐏 A herd with opinions — solid majorities, real dissent':'🐈 Herding cats — the office barely agrees on anything')+'</div>';
+    }
+  }
+  html+='</div>';
   /* THE SCORELINE LAB — what the office scripts vs what football serves (settled group only) */
   html+='<div class="aw-card"><div class="aw-hd"><span class="aw-ic">🔬</span><div class="aw-t"><b>The scoreline lab</b><span>Predicted scorelines vs full-time reality — settled group matches</span></div></div>';
   if(!c)html+=pend;
@@ -5574,6 +5606,32 @@ async function renderNerds(body){
     }
   }
   html+='</div>';
+  /* THE MARKETS LAB — the office's scoreline calls reduced to the classic betting markets (settled group only) */
+  html+='<div class="aw-card"><div class="aw-hd"><span class="aw-ic">🧾</span><div class="aw-t"><b>The markets lab</b><span>BTTS · Over 2.5 · routs — what the office scripts vs what lands</span></div></div>';
+  if(!c)html+=pend;
+  else{
+    let mTot=0,mBt=0,mOv=0,mRt=0,aTot=0,aBt=0,aOv=0,aRt=0;
+    settled.forEach(function(f){if(f.kn)return;const cc=c.map[f.id];const r=state.results[f.id];
+      aTot++;if(r.h>0&&r.a>0)aBt++;if(r.h+r.a>=3)aOv++;if(Math.abs(r.h-r.a)>=3)aRt++;
+      if(!cc)return;const tot=cc.H+cc.D+cc.A;if(tot<5)return;
+      for(const k in cc.sc){const p=k.split("-"),h=+p[0],a=+p[1],n=cc.sc[k];
+        mTot+=n;if(h>0&&a>0)mBt+=n;if(h+a>=3)mOv+=n;if(Math.abs(h-a)>=3)mRt+=n;}});
+    if(mTot<50)html+='<div class="aw-pend">Too few settled scoreline calls to open the markets yet.</div>';
+    else{
+      const mk=[{l:'Both teams score',a:mBt/mTot*100,b:aTot?aBt/aTot*100:0},
+                {l:'Over 2.5 goals',a:mOv/mTot*100,b:aTot?aOv/aTot*100:0},
+                {l:'A rout · margin 3+',a:mRt/mTot*100,b:aTot?aRt/aTot*100:0}];
+      let mMax=1;mk.forEach(function(d){mMax=Math.max(mMax,d.a,d.b);});
+      html+='<div class="nrd-key"><span class="a"><i></i>office scripts</span><span class="b"><i></i>full-time reality</span></div>';
+      mk.forEach(function(d){
+        html+='<div class="nrd-duo"><div class="lab"><span>'+d.l+'</span><span><b>'+Math.round(d.a)+'%</b> called · <b>'+Math.round(d.b)+'%</b> happened</span></div>'
+          +'<div class="bar a"><i style="width:'+(d.a/mMax*100).toFixed(1)+'%"></i></div>'
+          +'<div class="bar b"><i style="width:'+(d.b/mMax*100).toFixed(1)+'%"></i></div></div>';});
+      const dOv=mOv/mTot-(aTot?aOv/aTot:0);
+      html+='<div class="nrd-line">'+(dOv<-0.05?'🧊 The office is an Under bettor at heart — reality out-scores its script':dOv>0.05?'🍾 The office is goal-drunk — it scripts more goals than football delivers':'⚖️ Sharp bookies — the office prices the goal markets about right')+'</div>';
+    }
+  }
+  html+='</div>';
   /* GOALS BY ROUND — the tournament tightening (or blowing open) as the stakes climb; public scores only */
   {
     const rb={};
@@ -5600,6 +5658,49 @@ async function renderNerds(body){
       html+='</div>';
     }
   }
+  /* THE FAVOURITE TAX — how hard the office backs the FIFA favourite vs how often favourites deliver */
+  html+='<div class="aw-card"><div class="aw-hd"><span class="aw-ic">🏷️</span><div class="aw-t"><b>The favourite tax</b><span>Office chalk appetite vs what favourites actually deliver — FIFA ranks, 11 Jun</span></div></div>';
+  if(!c)html+=pend;
+  else{
+    let backN=0,backTot=0,favW=0,favT=0,humble=null;
+    settled.forEach(function(f){const v=fxView(f),r=state.results[f.id];
+      const rh=PU_RANK[v.home.n],ra=PU_RANK[v.away.n];if(!rh||!ra||rh===ra)return;
+      const favHome=rh<ra,fav=favHome?v.home.n:v.away.n,dog=favHome?v.away.n:v.home.n;
+      /* delivery: public results only — no floor needed */
+      favT++;
+      let favWon;
+      if(f.kn)favWon=(r.w===fav);
+      else favWon=favHome?(r.h>r.a):(r.a>r.h);
+      if(favWon)favW++;
+      else{const dr=PU_RANK[fav]; /* favourite failed — strongest team humbled (KO loss or group defeat/draw counts only on defeat) */
+        const beatenOutright=f.kn?(r.w===dog):(favHome?(r.h<r.a):(r.a<r.h));
+        if(beatenOutright&&(!humble||dr<humble.r))humble={r:dr,f:f,t:fav};}
+      /* office backing: floored pick shares */
+      const cc=c.map[f.id];if(!cc)return;
+      if(f.kn){const hN=cc.w[v.home.n]||0,aN=cc.w[v.away.n]||0,tot=hN+aN;if(tot<8)return;
+        backN+=favHome?hN:aN;backTot+=tot;}
+      else{const tot=cc.H+cc.D+cc.A;if(tot<5)return;
+        backN+=favHome?cc.H:cc.A;backTot+=tot;}});
+    if(favT<5||backTot<50)html+='<div class="aw-pend">Not enough ranked, settled matches to price the tax yet.</div>';
+    else{
+      const bp=nrdPct(backN,backTot),dp=nrdPct(favW,favT);
+      const meter=function(lab,pcv,alt){return '<div class="nrd-meter"><div class="lab"><span>'+lab+'</span><b>'+pcv+'%</b></div><div class="nrd-track"><i'+(alt?' class="alt"':'')+' style="width:'+pcv+'%"></i></div></div>';};
+      html+=meter('Office calls backing the favourite',bp,false)+meter('Favourites actually winning · '+favT+' matches',dp,true);
+      html+='<div class="nrd-line">'+(bp>dp+4?('💸 The favourite tax is real — the office backs chalk <b>'+(bp-dp)+'</b> points harder than it pays'):dp>bp+4?('🦊 The office under-prices chalk — favourites deliver <b>'+(dp-bp)+'</b> points more than it backs them'):'⚖️ Fair odds — the office backs favourites about as often as they deliver')+'</div>';
+      if(humble)html+='<div class="nrd-line">🫅 Biggest humbling: '+nrdVs(humble.f)+' — the world No. <b>'+humble.r+'</b> sent home the hard way</div>';
+      if(state.player&&state.player.predictions){
+        let yb=0,yt=0;const pr=state.player.predictions;
+        settled.forEach(function(f){const v=fxView(f),r=state.results[f.id],p=pr[f.id];if(!p)return;
+          const rh=PU_RANK[v.home.n],ra=PU_RANK[v.away.n];if(!rh||!ra||rh===ra)return;
+          const favHome=rh<ra;
+          if(f.kn){if(!p.w)return;yt++;if(p.w===(favHome?v.home.n:v.away.n))yb++;}
+          else{if(!p.o)return;yt++;if(p.o===(favHome?"H":"A"))yb++;}});
+        if(yt>=10){const yp=nrdPct(yb,yt);
+          html+='<span class="aw-you">You back the favourite <b>'+yp+'%</b> of the time — '+(yp>bp?'chalkier than the office':yp<bp?'braver than the office':'exactly the office appetite')+'</span>';}
+      }
+    }
+  }
+  html+='</div>';
   /* THE FORM CURVE — office hit rate, matchday by matchday */
   html+='<div class="aw-card"><div class="aw-hd"><span class="aw-ic">📈</span><div class="aw-t"><b>The form curve</b><span>Office hit rate, matchday by matchday</span></div></div>';
   if(!c)html+=pend;
@@ -5614,6 +5715,52 @@ async function renderNerds(body){
         return '<i class="'+(k===bestD?'hot':'')+'" style="height:'+Math.max(2,pc)+'%">'+(k===bestD?'<em>'+pc+'%</em>':'')+'</i>';}).join('')
         +'</div><div class="nrd-ax"><span>'+dfmt(days[0])+'</span><span>'+dfmt(days[days.length-1])+'</span></div>';
       html+='<div class="nrd-line">🗓 Sharpest matchday: <b>'+dfmt(bestD)+'</b> — the office hit <b>'+nrdPct(c.dayHit[bestD].hit,c.dayHit[bestD].tot)+'%</b> over '+nrdN(c.dayHit[bestD].tot)+' calls</div>';
+    }
+  }
+  html+='</div>';
+  /* THE STREAK SPECTRUM — every player's best-ever run as a distribution (Hot Hand shows only the peak) */
+  html+='<div class="aw-card"><div class="aw-hd"><span class="aw-ic">🔥</span><div class="aw-t"><b>The streak spectrum</b><span>Everyone’s best run of correct calls — not just the record holder’s</span></div>'+(c&&c.tops&&c.tops.streak?'<span class="aw-prz">n = '+c.tops.streak.length+'</span>':'')+'</div>';
+  if(!c||!c.tops||!c.tops.streak)html+=pend;
+  else if(c.tops.streak.length<10)html+='<div class="aw-pend">Too few runs on the board to draw the spectrum yet.</div>';
+  else{
+    const runs=c.tops.streak.map(function(x){return x.v;});     /* already desc */
+    const CAP=8;
+    const sb=[];for(let i=0;i<CAP;i++)sb.push(0);
+    runs.forEach(function(v){sb[Math.min(CAP-1,v-1)]++;});
+    const sMax=Math.max.apply(null,sb.concat([1]));
+    const myRun=(c.mine&&c.mine.streak)?c.mine.streak:0;
+    const myBin=myRun>0?Math.min(CAP-1,myRun-1):-1;
+    const sMed=runs.slice().sort(function(a,b){return a-b;})[runs.length>>1];
+    html+='<div class="nrd-plot" style="height:72px">'+sb.map(function(n,i){
+        const h=Math.max(2,Math.round(n/sMax*100));
+        const em=(i===myBin)?'<em>you</em>':(n===sMax?'<em>'+n+'</em>':'');
+        return '<i class="'+(i===myBin?'hot':'')+'" style="height:'+h+'%">'+em+'</i>';}).join('')
+      +'</div><div class="nrd-ax"><span>×1</span><span>×'+CAP+'+</span></div>';
+    html+='<div class="nrd-line">📏 Median best run: <b>×'+sMed+'</b> · <b>'+runs.filter(function(v){return v>=5;}).length+'</b> colleagues have hit ×5 or better</div>';
+    const lead=c.tops.streak[0];
+    html+='<div class="nrd-line">👑 The record: <b>×'+lead.v+'</b> by <b>'+esc((lead.name||"").split(" ")[0])+'</b> — that’s what the Hot Hand belt costs</div>';
+    if(myRun>0)html+='<span class="aw-you">Your best run: <b>×'+myRun+'</b> — '+(myRun>=lead.v?'you ARE the record':myRun>sMed?'above the office median':myRun===sMed?'dead on the office median':'the median is ×'+sMed+' · one hot night fixes it')+'</span>';
+  }
+  html+='</div>';
+  /* STAGE WINS — the daily crown roll: who topped each matchday (dayTop is built but only ever showed the latest) */
+  html+='<div class="aw-card"><div class="aw-hd"><span class="aw-ic">👑</span><div class="aw-t"><b>Stage wins</b><span>Who topped each matchday — the tournament as a stage race</span></div></div>';
+  if(!c||!c.dayTop)html+=pend;
+  else{
+    const cdays=Object.keys(c.dayTop).sort();
+    if(!cdays.length)html+='<div class="aw-pend">No matchday has crowned a winner yet.</div>';
+    else{
+      const dfmt2=function(k){const p=k.split("-");return (+p[2])+' '+["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][(+p[1])-1];};
+      const SHOW=8,shownD=cdays.slice(-SHOW);
+      if(cdays.length>SHOW)html+='<div class="nrd-line" style="border-top:0;padding-top:0">Last '+SHOW+' of '+cdays.length+' matchdays:</div>';
+      shownD.forEach(function(k){const t=c.dayTop[k],me=!!state.meSlug&&t.slug===state.meSlug;
+        html+='<div class="nrd-crown'+(me?' me':'')+'"><span class="dt">'+dfmt2(k)+'</span><span class="nm">'+esc(t.name)+(me?'<span class="youtag">YOU</span>':'')+'</span><span class="pt">+'+t.pts+'</span></div>';});
+      const holders={};cdays.forEach(function(k){const s=c.dayTop[k].slug;holders[s]=(holders[s]||0)+1;});
+      const hArr=Object.keys(holders);
+      let kingS=hArr[0];hArr.forEach(function(s){if(holders[s]>holders[kingS])kingS=s;});
+      const kingDay=cdays.find(function(k){return c.dayTop[k].slug===kingS;});
+      html+='<div class="nrd-line" style="margin-top:4px">🎗 <b>'+hArr.length+'</b> different crown-holders in <b>'+cdays.length+'</b> matchdays — '+(hArr.length/cdays.length>=0.75?'the crown won’t sit still':hArr.length/cdays.length>=0.45?'a healthy scramble':'a dynasty is forming')+'</div>';
+      if(kingDay&&holders[kingS]>=2)html+='<div class="nrd-line">🏵 Most crowns: <b>'+esc((c.dayTop[kingDay].name||"").split(" ")[0])+'</b> with <b>'+holders[kingS]+'</b></div>';
+      if(state.meSlug&&holders[state.meSlug])html+='<span class="aw-you">You’ve worn the crown <b>'+holders[state.meSlug]+'</b> time'+(holders[state.meSlug]===1?'':'s')+'</span>';
     }
   }
   html+='</div>';
