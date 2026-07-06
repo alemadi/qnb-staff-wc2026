@@ -774,19 +774,19 @@
   .cons .c2{display:block;margin-top:4px}
   .cons-share{display:block;margin:7px auto 0;font:700 11.5px var(--font-b);color:var(--gb);background:none;border:1px solid rgba(180,151,89,.4);border-radius:99px;padding:5px 11px;cursor:pointer}
   /* ===== 📤 share hub — the always-visible door to every card ===== */
-  /* ===== 📤 share-cards entry — slim self-explaining row in the home feed (scrolls away) ===== */
-  .cardscta{position:relative;display:flex;align-items:center;gap:11px;width:100%;margin:14px 0 2px;padding:11px 13px;border-radius:13px;border:1px solid transparent;background:linear-gradient(90deg,rgba(180,151,89,.10),rgba(180,151,89,.02) 60%,transparent),var(--glass);background-clip:padding-box;color:var(--cream);font-family:inherit;text-align:left;cursor:pointer;-webkit-appearance:none;appearance:none;transition:transform .12s ease,background .2s ease}
-  .cardscta::before{content:"";position:absolute;inset:0;border-radius:13px;padding:1px;background:linear-gradient(90deg,rgba(180,151,89,.55),rgba(180,151,89,.16) 55%,var(--line));-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none}
-  .cardscta:active{transform:scale(.988);background:linear-gradient(90deg,rgba(180,151,89,.16),rgba(180,151,89,.03) 60%,transparent),var(--glass-2)}
-  .cardscta:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
-  .cc-ic{flex:none;width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;color:var(--gold-bright);background:linear-gradient(150deg,rgba(227,211,163,.14),rgba(180,151,89,.05));border:1px solid rgba(180,151,89,.28)}
-  .cc-ic svg{width:17px;height:17px;display:block;stroke-width:1.8;fill:none;stroke:currentColor}
-  .cc-txt{flex:1 1 auto;min-width:0;display:flex;align-items:baseline;gap:8px;font-size:13px;font-weight:600;letter-spacing:.2px;color:var(--cream);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .cc-dot{color:var(--faint);font-weight:700}
-  .cc-num{font-size:13px;font-weight:800;color:var(--gold-bright);letter-spacing:.3px;flex:none}
-  .cc-go{flex:none;color:var(--gold);opacity:.9;display:flex}
-  .cc-go svg{width:16px;height:16px;display:block;stroke-width:1.85;fill:none;stroke:currentColor}
-  body.tv .cardscta{display:none!important}
+  /* ===== 📤 share-cards entry — crafted "deck" FAB in the thumb zone, above the nav ===== */
+  .deck-fab{position:fixed;right:16px;bottom:calc(var(--nav-h) + 16px + env(safe-area-inset-bottom,0px));width:60px;height:60px;border-radius:20px;border:1px solid rgba(227,211,163,.42);background:radial-gradient(130% 130% at 30% 18%,rgba(227,211,163,.18),rgba(255,255,255,.05) 46%,rgba(0,0,0,.28));-webkit-backdrop-filter:blur(9px);backdrop-filter:blur(9px);display:none;flex-direction:column;align-items:center;justify-content:center;gap:5px;color:var(--gold-bright);cursor:pointer;z-index:45;box-shadow:0 12px 28px -8px rgba(0,0,0,.72),inset 0 1px 0 rgba(255,255,255,.14),0 0 24px -6px rgba(227,211,163,.42);transition:transform .18s cubic-bezier(.34,1.56,.64,1),box-shadow .18s,border-color .18s}
+  .deck-fab:hover{transform:translateY(-2px);border-color:rgba(227,211,163,.68);box-shadow:0 16px 34px -8px rgba(0,0,0,.78),inset 0 1px 0 rgba(255,255,255,.18),0 0 30px -4px rgba(227,211,163,.6)}
+  .deck-fab:active{transform:scale(.95);transition-duration:.05s}
+  .deck-fab:focus-visible{outline:2px solid var(--gold-bright);outline-offset:3px}
+  .deck-fab svg{width:25px;height:25px;display:block}
+  .deck-fab .front{fill:#0e0e10}
+  .deck-fab .spark{fill:var(--gold-bright);stroke:none}
+  .deck-fab .tri{width:20px;height:3px;border-radius:2px;background:var(--tiles);opacity:.92}
+  .deck-fab .cnt{position:absolute;top:-6px;right:-6px;min-width:20px;height:20px;padding:0 5px;border-radius:10px;display:flex;align-items:center;justify-content:center;font:800 11px/1 var(--font-b);font-style:normal;letter-spacing:.3px;color:#191204;background:linear-gradient(140deg,var(--gold-deep),var(--gold-bright));box-shadow:0 0 0 2.5px #0a0a0c,0 2px 6px rgba(0,0,0,.55)}
+  body.share-fab-on .jumpnext{bottom:calc(var(--nav-h) + 16px + 72px + env(safe-area-inset-bottom,0px))} /* lift "next unpicked" clear of the FAB when both show */
+  body.tv .deck-fab{display:none!important}
+  @media(prefers-reduced-motion:reduce){.deck-fab{transition:none}}
   .shov{position:fixed;inset:0;z-index:355;display:flex;align-items:flex-end;justify-content:center;background:rgba(5,5,7,.72);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
   .sh-card{width:100%;max-width:430px;max-height:82vh;overflow-y:auto;background:linear-gradient(180deg,#16130c,#0c0b08);border:1px solid rgba(180,151,89,.5);border-radius:22px 22px 0 0;padding:18px 16px 22px}
   @media(min-width:560px){.shov{align-items:center;padding:22px}.sh-card{border-radius:22px}}
@@ -1778,11 +1778,6 @@
 
   <!-- MATCHES -->
   <section class="view" id="view-matches">
-    <button class="cardscta" id="share-cta" type="button" style="display:none" onclick="openShareTray()" aria-label="Your share cards">
-      <span class="cc-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7.4" width="12" height="13.1" rx="2.4"/><path d="M7 12.4h4M7 15.6h2.6"/><path d="M14 10 20.5 3.5"/><path d="M15.6 3.5h4.9v4.9"/></svg></span>
-      <span class="cc-txt">Your share cards<span class="cc-dot">·</span><b class="cc-num">ready</b></span>
-      <span class="cc-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12h13.5M12 6l6 6-6 6"/></svg></span>
-    </button>
     <div class="sec-title"><h2>Matches</h2><div class="tag" id="match-tag">104 fixtures</div></div>
     <div id="pulsebar" class="pulsebar" style="display:none" onclick="pulseJump()" title="Jump to the live match" role="button"></div>
     <div id="daybanner" class="daybanner" style="display:none"></div>
@@ -1899,6 +1894,15 @@
   </footer>
 </div>
 
+<button class="deck-fab" id="share-fab" type="button" onclick="openShareTray()" aria-label="Share cards">
+  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <rect x="8.5" y="3.5" width="11.5" height="15.5" rx="2.6" stroke="currentColor" stroke-width="1.8"/>
+    <rect class="front" x="4" y="6.5" width="11.5" height="15.5" rx="2.6" stroke="currentColor" stroke-width="1.8"/>
+    <path class="spark" d="M9.75 10.5 L10.85 12.95 L13.3 14.05 L10.85 15.15 L9.75 17.6 L8.65 15.15 L6.2 14.05 L8.65 12.95 Z"/>
+  </svg>
+  <span class="tri" aria-hidden="true"></span>
+  <i class="cnt" id="share-fab-cnt">0</i>
+</button>
 <nav class="bottom">
   <button class="navbtn on" id="nav-matches" onclick="go('matches')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3v4M12 17v4M3 12h4M17 12h4M7 7l2.5 2.5M17 7l-2.5 2.5M7 17l2.5-2.5M17 17l-2.5-2.5"/></svg>Matches</button>
   <button class="navbtn" id="nav-bracket" onclick="go('bracket')"><svg viewBox="0 0 24 24"><path d="M3 5h4v6h5"/><path d="M3 19h4v-6"/><path d="M12 11h4V7h5"/><path d="M16 11v4h5"/></svg>Bracket</button>
@@ -3106,7 +3110,7 @@ function meChampLine(){
 }
 function renderMatches(){
   if(!state.player)return;
-  try{refreshShareCta();}catch(e){} /* 📤 keep the home-feed share row's count fresh with the view */
+  try{refreshShareFab();}catch(e){} /* 📤 keep the share-deck FAB count fresh */
   KO_AUTO=null; /* re-derive knockout teams from the latest standings/results this render */
   const fth=document.getElementById("ft-hero-host");if(fth)fth.innerHTML=ftHero(); /* FULL TIME — the podium leads the view once the champion settles */
   renderChampCard();
@@ -6564,18 +6568,23 @@ async function openShareTray(){
     if(t.lk.length)html+='<div class="sh-div">STILL TO UNLOCK</div>'+
       t.lk.slice(0,4).map(function(x){return '<button class="sh-tile lk" onclick="toast(\''+x.em+' '+String(x.sub).replace(/'/g,"\\'")+'\')"><i class="em">'+x.em+'</i><b>'+x.l+'</b><span>'+x.sub+'</span></button>';}).join("");
     grid.innerHTML=html||'<div class="sh-div">Lock some picks first — the cards follow the points.</div>';
-    refreshShareCta();
+    refreshShareFab();
   }catch(e){grid.innerHTML='<div class="sh-div">Couldn’t set the rack — try again.</div>';}
 }
-/* the home-feed share row: shows how many cards are ready to share right now */
-async function refreshShareCta(){
-  const el=document.getElementById("share-cta");if(!el)return;
-  if(!state.player||state.demo||tvMode()){el.style.display="none";return;}
+/* the share-deck FAB: a thumb-zone button showing how many cards are ready to share now */
+async function refreshShareFab(){
+  const el=document.getElementById("share-fab");if(!el)return;
+  const hide=function(){el.style.display="none";document.body.classList.remove("share-fab-on");};
+  if(!state.player||state.demo||tvMode()){hide();return;}
   try{
     const t=await shareTiles(true);
     const n=t.av.length;
-    if(n>0){const num=el.querySelector(".cc-num");if(num)num.textContent=n+" ready";el.style.display="flex";}
-    else el.style.display="none";
+    if(n>0){
+      const c=document.getElementById("share-fab-cnt");
+      if(c)c.textContent=n>99?"99+":String(n);
+      el.setAttribute("aria-label","Share cards — "+n+" ready to send");
+      el.style.display="flex";document.body.classList.add("share-fab-on");
+    }else hide();
   }catch(e){}
 }
 function roundRect(x,a,b,w,h,r){x.beginPath();x.moveTo(a+r,b);x.arcTo(a+w,b,a+w,b+h,r);x.arcTo(a+w,b+h,a,b+h,r);x.arcTo(a,b+h,a,b,r);x.arcTo(a,b,a+w,b,r);x.closePath();}
@@ -7383,7 +7392,7 @@ function updateNewDots(){
   const on=!!state.player&&!state.demo;
   const ld=document.getElementById("lb-new");if(ld)ld.style.display=(on&&!seenKey("lb"))?"":"none";
   const rn=document.getElementById("room-new");if(rn)rn.style.display=(on&&!seenKey("room"))?"":"none";
-  try{refreshShareCta();}catch(e){} /* 📤 home-feed share row — async over cached reads */
+  try{refreshShareFab();}catch(e){} /* 📤 share-deck FAB — async over cached reads */
   const an=document.getElementById("aw-new");if(an)an.style.display=(on&&!seenKey("awards"))?"":"none";
 }
 function maybeWhatsNew(){
@@ -7522,7 +7531,7 @@ function closeReveal(){
   document.getElementById("reveal").style.display="none";
   document.body.style.overflow="";
   updateMeBadge();
-  try{refreshShareCta();}catch(e){} /* 📤 fresh results usually mint fresh cards — refresh the row count */
+  try{refreshShareFab();}catch(e){} /* 📤 fresh results usually mint fresh cards — refresh the FAB count */
   if(state.view==="me")renderMe();
 }
 function renderRevealCard(){
@@ -8107,7 +8116,7 @@ function tvLoop(){
     state.filter=defaultRound();
     if(state.player){
       document.getElementById("userchip").style.display="flex";
-      setTimeout(function(){try{refreshShareCta();}catch(e){}},1200); /* 📤 home-feed share row, once boot's standings cache is warm */
+      setTimeout(function(){try{refreshShareFab();}catch(e){}},1200); /* 📤 share-deck FAB, once boot's standings cache is warm */
       document.getElementById("countdown").style.display="flex";
       const h=(location.hash||"").slice(1);
       updateChip();go(TV?"leaderboard":(["matches","bracket","leaderboard","me"].indexOf(h)>=0?h:"matches"));

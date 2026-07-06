@@ -5,6 +5,23 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-07-06 (Doha) — REDESIGN v2: share entry is now a thumb-zone "deck" FAB (organizer picked it from the gallery; branch-only, not deployed)
+
+**Commits:** this commit (`index.html` + `tests/share-cards/run.mjs` + changelog) on `claude/social-artifacts-ideas-0ocr94`. **NOT pushed to main** — awaiting the organizer's go. **Frontend only, CSS + small JS.** Supersedes the home-feed row from the entry below (the organizer chose the Share-Deck-FAB tile from the redesign gallery).
+
+**What changed vs the row:**
+- **Removed** the `.cardscta` in-feed row (markup + CSS).
+- **Added** `.deck-fab` — a fixed 60px gold squircle in the bottom-right thumb zone, above the nav (`bottom:calc(var(--nav-h) + 16px + safe-area)`), z-index 45 (below the tray sheet z-355 and all overlays, above content). Crafted SVG card-stack + sparkle icon, a tricolor micro-bar (the wordmark's identity thread), and a quiet gold count jewel. `refreshShareFab()` (renamed from `refreshShareCta`) shows it only when signed-in / non-demo / non-`?tv` and ≥1 card is available, sets the count (99+ cap) and the aria-label, and toggles `body.share-fab-on`; refreshed on boot (+1.2s), `renderMatches`, reveal close, and `updateNewDots`. Tap → `openShareTray()` (unchanged).
+- **Collision handling:** `.jumpnext` ("Next unpicked") is also bottom-right; `body.share-fab-on .jumpnext` lifts it +72px. Verified there's no overlap in any state — and because `.jumpnext`'s containing block is the animated `.view` section (not the viewport), it actually rides in the content flow near the list bottom, so even at MAX SCROLL it sits ~200px clear of the viewport-fixed FAB.
+- **Header + bottom nav unchanged** (organizer constraint): header stays the clean wordmark + userchip (439px wc-hide breakpoint kept); every nav icon/label is exactly as before.
+- The power-ups banner still owns power-ups (its CTA was already pointed back there).
+
+**Verified:** `tests/share-cards/run.mjs` ALL GREEN — hub confirmed removed; FAB shows its count; **FAB click** (real DOM click, not a direct call) opens the tray; FAB clears the bottom nav and the "next unpicked" button; 6-width header-integrity sweep clean 340–1024px; all ten cards + prior surfaces still build; zero page errors; `node --check` clean. 430px screenshots of the FAB home, the max-scroll coexist case, and the pressed (tray-open) state reviewed.
+
+**Rollback:** `git revert` this commit (branch-only; nothing deployed).
+
+---
+
 ## 2026-07-06 (Doha) — REDESIGN: share entry moves from the header hub to a home-feed row (branch-only, not deployed)
 
 **Commits:** this commit (`index.html` + `tests/share-cards/run.mjs` + changelog) on `claude/social-artifacts-ideas-0ocr94`. **NOT pushed to main** — awaiting organizer review of the visual. **Frontend only, CSS + small JS.**

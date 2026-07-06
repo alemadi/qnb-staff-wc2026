@@ -295,38 +295,46 @@ await pg.waitForTimeout(200);
 
 /* 📤 Share tray — the always-visible discovery door */
 await pg.evaluate(()=>go('matches'));
-await pg.waitForTimeout(1600); /* boot row refresh kicks at +1.2s */
-const row = await pg.evaluate(()=>{ const el=document.getElementById('share-cta');
-  const num=el&&el.querySelector('.cc-num'); const hub=document.getElementById('sharehub');
-  return { visible: !!(el && el.style.display!=='none'), num: num?num.textContent:'', hubGone: !hub }; });
-if(row.hubGone) pass('floating header hub removed'); else fail('header hub still present');
-if(row.visible && /^[1-9]\d* ready$/.test(row.num)) pass('home share row shows count ('+row.num+')'); else fail('share row: shown='+row.visible+' num="'+row.num+'"');
-/* persistent banner repointed at the tray */
+await pg.waitForTimeout(1600); /* boot FAB refresh kicks at +1.2s */
+const fab = await pg.evaluate(()=>{ const el=document.getElementById('share-fab');
+  const num=document.getElementById('share-fab-cnt'); const hub=document.getElementById('sharehub');
+  return { visible: !!(el && el.style.display!=='none'), num: num?num.textContent:'', hubGone: !hub,
+    opensTray: !!(el && /openShareTray/.test(el.getAttribute('onclick')||'')) }; });
+if(fab.hubGone) pass('floating header hub removed'); else fail('header hub still present');
+if(fab.visible && /^[1-9]\d*$/.test(fab.num)) pass('share-deck FAB shows count ('+fab.num+')'); else fail('share FAB: shown='+fab.visible+' num="'+fab.num+'"');
+if(fab.opensTray) pass('the FAB (not the banner) owns the tray'); else fail('FAB->tray wiring: '+JSON.stringify(fab));
+/* FAB must not collide with the bottom nav or the "next unpicked" button */
+const clash = await pg.evaluate(()=>{ const bx=id=>{const e=document.getElementById(id);if(!e||getComputedStyle(e).display==='none')return null;const r=e.getBoundingClientRect();return {l:r.left,r:r.right,t:r.top,b:r.bottom};};
+  const inter=(a,b)=>a&&b&&!(a.r<=b.l||b.r<=a.l||a.b<=b.t||b.b<=a.t);
+  const f=bx('share-fab'), nav=document.querySelector('nav.bottom'), j=bx('jumpnext');
+  const nr=nav?nav.getBoundingClientRect():null;
+  return { navOverlap: !!(f&&nr&&!(f.r<=nr.left||nr.right<=f.l||f.b<=nr.top||nr.bottom<=f.t)),
+    jumpOverlap: inter(f,j), fabBottom: f?Math.round(f.b):null, vh: window.innerHeight }; });
+if(!clash.navOverlap) pass('FAB clears the bottom nav'); else fail('FAB overlaps nav: '+JSON.stringify(clash));
+if(!clash.jumpOverlap) pass('FAB clears the "next unpicked" button'); else fail('FAB overlaps jumpnext: '+JSON.stringify(clash));
+/* persistent banner stays about power-ups; the FAB owns the tray */
 const xb = await pg.evaluate(()=>{ const b=document.getElementById('xbanner');
-  const row=document.getElementById('share-cta');
-  return { shown: !!(b && b.style.display!=='none'), copy: !!(b && b.textContent.includes('share cards are here')),
-    rowOpensTray: !!(row && /openShareTray/.test(row.getAttribute('onclick')||'')) }; });
+  return { shown: !!(b && b.style.display!=='none'), copy: !!(b && b.textContent.includes('share cards are here')) }; });
 if(xb.shown && xb.copy) pass('banner shows every visit with the share-cards copy'); else fail('banner: '+JSON.stringify(xb));
-if(xb.rowOpensTray) pass('the home row (not the banner) owns the tray'); else fail('row->tray wiring: '+JSON.stringify(xb));
 await pg.screenshot({ path: `${SCRATCH}/live-header.png`, clip:{x:0,y:0,width:1280,height:300} });
 const tray = await pg.evaluate(async ()=>{ try{
   /* earlier tests ran consensusFull() over the 12 seeded blobs, dropping QF counts below
      the k-floor — reset so the tray reads the counts RPC, as a fresh prod session would */
   CONS={t:0,map:null,busy:null,busyF:null,full:false};
-  await openShareTray();
-  await new Promise(r=>setTimeout(r,300));
+  document.getElementById('share-fab').click();   /* real click path, not a direct call */
+  await new Promise(r=>setTimeout(r,400));
+  const open=document.getElementById('sharetray').style.display!=='none';
   const tiles=Array.from(document.querySelectorAll('#sh-grid .sh-tile:not(.lk) b')).map(b=>b.textContent.trim());
   const locked=Array.from(document.querySelectorAll('#sh-grid .sh-tile.lk b')).map(b=>b.textContent.trim());
-  const dotGone=true; /* hub removed */
-  return {tiles, locked, dotGone};
+  return {tiles, locked, open};
 }catch(e){ return {err:String(e)}; } });
 if(tray.err) fail('tray: '+tray.err);
 else{
   console.log('tray tiles:', JSON.stringify(tray.tiles), 'locked:', JSON.stringify(tray.locked));
+  if(tray.open) pass('FAB click opens the tray'); else fail('FAB click did not open the tray');
   ['Tonight’s slip','Office split','My standing card','The climb','Road to the final','The 100 club','The receipt','Oracle belt','Brag my last call'].forEach(w=>{
     if(tray.tiles.some(t=>t.includes(w))) pass('tray tile: '+w); else fail('tray tile missing: '+w); });
   if(tray.locked.some(t=>t.includes('The podium'))) pass('tray locked rack shows podium'); else fail('tray locked rack missing podium');
-  if(tray.dotGone!==undefined) pass('tray opened from the row');
 }
 await pg.screenshot({ path: `${SCRATCH}/live-tray.png` });
 /* tap a tile end-to-end: slip via the tray */
