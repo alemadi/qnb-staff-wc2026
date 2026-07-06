@@ -1,9 +1,14 @@
 -- ============================================================================
--- MATCHDAY · standings() RPC — server-side leaderboard (slim payload)
+-- MATCHDAY · standings engine — wc_standings_compute() (slim payload)
 -- Paste this whole file into the Supabase SQL editor and click Run.
 -- Safe to re-run any time (CREATE OR REPLACE) — no DROP, signature unchanged,
--- grant re-applied at the bottom. Run AFTER sql/robot.sql (needs wc_ko_teams)
--- and sql/protect.sql (chips are validated + lock-guarded in save_picks there).
+-- grants re-applied at the bottom. Run AFTER sql/robot.sql (needs wc_ko_teams)
+-- and sql/protect.sql (chips are validated + lock-guarded in save_picks there),
+-- and BEFORE sql/perf.sql — since PERF ② the public standings() RPC is a thin
+-- caching wrapper defined THERE; this file holds the actual engine, renamed
+-- wc_standings_compute() (internal, definer-called by the wrapper; body is the
+-- deployed Wave-B engine, untouched by the rename). Re-running this file never
+-- touches the wrapper.
 --
 -- Scoring mirrors scoreFor() in index.html exactly (agreed ladder + exact-score streak):
 --   Group (UNCHANGED): +3 correct outcome (requires an outcome pick),
@@ -47,7 +52,7 @@
 --   and the PU_RANK const are generated from ONE list — edit them together.
 --   Cross-half test vectors: scratchpad wave-b-vectors.json (launch-day proof).
 --
--- NOTE: standings() is now SECURITY DEFINER — the upset join reads wc_fixtures /
+-- NOTE: the engine is SECURITY DEFINER — the upset join reads wc_fixtures /
 -- wc_ko_sched / wc_rank, which are RLS-walled from the anon role by
 -- sql/protect.sql. Body is a single read-only SELECT; search_path pinned.
 -- ============================================================================
@@ -76,11 +81,11 @@ insert into wc_rank(team, r) values
  ('Uzbekistan',50),('Qatar',56),('Iraq',57),('South Africa',60),('Saudi Arabia',61),('Jordan',63),
  ('Bosnia & H.',64),('Cape Verde',67),('Ghana',73),('Curaçao',82),('Haiti',83),('New Zealand',85)
 on conflict (team) do update set r=excluded.r;
--- walled like the other engine tables; standings() reads it as definer
+-- walled like the other engine tables; the engine reads it as definer
 alter table public.wc_rank enable row level security;
 revoke all on table public.wc_rank from anon, authenticated;
 
-create or replace function public.standings()
+create or replace function public.wc_standings_compute()
 returns table(slug text, name text, dept text, pts int, exact int, correct int, predicted int)
 language sql
 stable
@@ -316,12 +321,12 @@ left join pred_counts  pc on pc.pslug = p.pslug
 $$;
 
 -- includes anon/authenticated: Supabase default privileges grant EXECUTE on new
--- functions to the API roles directly, so 'from public' alone leaves them holding it
-revoke all on function public.standings() from public, anon, authenticated;
-grant execute on function public.standings() to anon;
+-- functions to the API roles directly, so 'from public' alone leaves them holding it.
+-- The engine is INTERNAL — only the sql/perf.sql wrapper (owner) may call it.
+revoke all on function public.wc_standings_compute() from public, anon, authenticated;
 
--- Sanity check after running:
--- select * from standings() order by pts desc limit 10;
+-- Sanity check after running (and after sql/perf.sql for the public wrapper):
+-- select * from wc_standings_compute() order by pts desc limit 10;
 -- Launch-day proof: re-run the wave-b-vectors.json cases (synthetic kv rows in a
 -- transaction → select standings() → assert → rollback) and assert ZERO drift on
 -- all real pre-QF rows vs a pre-deploy snapshot of standings().

@@ -5,6 +5,36 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-07-06 (Doha) — PERF ②: slim RPCs kill the 236 KB bulk pulls + standings() served from cache
+
+**Commits:** this commit (`index.html` + new `sql/perf.sql` + `sql/standings.sql` rename + changelog). Second slice of the app-optimization pass. **NOT yet applied to the live DB** — the client is deploy-safe FIRST (every new path falls back to today's behaviour when an RPC 404s); apply `sql/standings.sql` then `sql/perf.sql` when ready, ideally before Thursday's QF crowd.
+
+**Why (measured live, 2026-07-06):** the client pulled EVERY player blob — 688 × ~1.9 KB = 1.33 MB raw, **236 KB gzipped, ~2 s** — to draw the per-card "office split" lines (DEFAULT view, every 10 min per device), the Room board (60 s cache: the match-night kiosk re-pulled it **once a minute**), the rival H2H card and the brag cards. Separately, `standings()` costs **241 ms of DB CPU per call** and every leaderboard viewer calls it every 60 s — on a QF night with ~200 boards open that's ~80% of a core, continuously, at the exact peak moment (the Wave-B launch).
+
+**What (client — all RPC-first with the classic bulk pull kept verbatim as fallback):**
+- `consensus()` split into two tiers. **Counts tier** (`consensus()`): per-card split + champ aggregates now come from the new `consensus_counts()` RPC (~a few KB) — this is all the Matches view ever needed. **Analytics tier** (`consensusFull()`): streak/upset/perfect leaders, day tops, pick twin, office hit rate stay client-computed over the bulk pull — porting that scoring logic to SQL mid-tournament is pure parity risk — but re-keyed on the settled-results count (+1 h cap) instead of a flat 10 min, so it re-pulls when a result lands, not 6×/hour forever. Consumers re-routed: `fillConsensus` → counts; honours / facts ticker / Me extras / reveal lines → analytics. Field readers untouched (both tiers fill the one `CONS`).
+- **Room family** (`renderRoomBody`, `bragCall`, `bragOffice`): new `roomPlayers(m)` calls `room_board(match)` — {slug,name,dept,chips,o,w,h,a} for ONE match (~15 KB gz) instead of every blob, re-shaped into pseudo-player blobs so `roomConsensus`/`roomAsIs`/`roomHero`/`roomTable`/brag counters run **byte-identical**. 60 s per-match cache (kiosk cadence unchanged, ~6% of the bytes). Demo previews keep today's path.
+- **`rivalH2H`**: fetches exactly the two blobs it needs via the PERF-① `sbatchJSON` (in.()) — not all 688.
+- Organizer picks viewer keeps the bulk pull (org-only, rare).
+
+**What (DB — `sql/perf.sql`, run AFTER `sql/standings.sql`):**
+- `consensus_counts()` — pure counting (no scoring): per-match {H,D,A,w,sc} + champMap/champN/n, mirroring consensus()'s counting passes field-for-field. Aggregates only — **no names/slugs**; exposes strictly less than the openly-readable blobs it replaces.
+- `room_board(p_match)` — per-player picks for ONE match, **zero rows before kickoff on the DATABASE clock** (`wc_locks`, the same wall save_picks uses). The Room's seal was client-side convention; it is now server-enforced. Never touches PINs (they don't live in blobs).
+- `standings()` becomes a caching wrapper: `sql/standings.sql`'s engine is renamed `wc_standings_compute()` (body untouched — the deployed Wave-B engine), revoked from the API roles; the public `standings()` serves a `wc_stand_cache` copy that self-invalidates on ANY kv change (fingerprint = max(updated_at)+count — every engine writer bumps updated_at) with a 10-min TTL backstop and an advisory-lock stampede guard. N viewers/min now cost ONE compute per data change. Grants preserved exactly (anon only, per the Wave-B revoke-hardening).
+
+**Verified (throwaway PG 16 + headless Chromium; live DB untouched, one read-only snapshot pull):**
+- `sudo tests/wave-b/bootstrap.sh` + `sql/perf.sql` + `node tests/wave-b/run.mjs` → **27/27 vectors** `expected === SQL standings() === JS scoreFor()` **through the new wrapper+cache+engine chain**, `wc_rank === PU_RANK` (48).
+- Live-snapshot proof (688 real blobs seeded locally): wrapper === engine **both EXCEPT directions empty**; cache hit path (computed_at stable), kv-write and kv-delete invalidation, **222 ms cold → 17 ms cached** (incl. psql round-trip).
+- `consensus_counts()` vs the REAL page computing classic consensus over the same snapshot: **n, champN, champMap exact; map identical across all 98 match ids** (H/D/A + winner + exact-score distributions).
+- `room_board()` vs the client's selection over the same blobs: k20 **318/318** rows field-identical, m1 **269/269**; **k21 and k25 return 0 rows pre-kickoff** (server seal, real wc_locks times).
+- Client wiring: Matches view fed by the RPC with **zero bulk pulls** (sample line rendered: "🏟 309 colleagues called it: Canada 7% · Morocco 93%"); Room renders from RPC rows, zero bulk; RPC 404 → classic fallback boots identically; PERF-① boot suite re-run **27/27**; `node --check` clean; zero page errors throughout.
+
+**Deploy order (when instructed):** ① paste `sql/standings.sql` (engine rename — the public standings() keeps working through it… momentarily as the raw function until ②), ② paste `sql/perf.sql` (wrapper + the two new RPCs + grants), ③ verify: `select count(*) from standings()` twice (2nd ~instant), `select json_typeof(consensus_counts())`, `select count(*) from room_board('k20')` > 0 and `room_board('k25')` = 0 until Thu, standings md5 vs pre-paste snapshot identical. Client needs no redeploy coordination — it falls back per-call either way.
+
+**Rollback:** `git revert` this commit (client falls back by itself). Live-DB inverse (also at the bottom of `sql/perf.sql`): recreate `standings()` as `select * from wc_standings_compute()` (sql, stable, definer, anon grant), `drop function consensus_counts()`, `drop function room_board(text)`, `drop table wc_stand_cache`.
+
+---
+
 ## 2026-07-06 (Doha) — PERF ①: boot in one round trip + results freshness for long-open tabs
 
 **Commits:** this commit (`index.html` + changelog). **Frontend-only — no DB, scoring, sync-protocol or lock-logic change.** First slice of the app-optimization pass on `claude/app-optimization-dh4i0e`; the slim-RPC + standings-cache slice (server side) follows as its own commit with its own SQL.

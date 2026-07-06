@@ -3552,7 +3552,7 @@ async function renderLeaderboard(){
   }
   if(!rows.length){body.innerHTML='<div class="empty"><div class="ic">🏆</div><b>No predictions yet</b><span>Be the first to lock in your picks under “Matches”.</span></div>'+ffInline();return;}
   computeHonours(rows);
-  if(CONFIGURED&&!state.demo&&!CONS.map){consensus().then(function(){if(state.view==="leaderboard"&&LB_MODE==="people")renderLeaderboard();}).catch(function(){});}
+  if(CONFIGURED&&!state.demo&&!CONS.full){consensusFull().then(function(){if(state.view==="leaderboard"&&LB_MODE==="people")renderLeaderboard();}).catch(function(){});} /* honours read the analytics tier */
   const PT=predTotal();
   let html="";
   if(rows.length>=3){
@@ -3608,7 +3608,7 @@ function startLbTicker(rows){
     const avg=dm[d].reduce(function(a,b){return a+b;},0)/dm[d].length;
     if(avg>0&&(!bd||avg>bd.avg))bd={d:d,avg:avg};}
   if(bd)facts.push('\ud83c\udfe2 Sharpest department: <b>'+esc(bd.d)+'</b> \u2014 '+bd.avg.toFixed(1)+' pts avg');
-  if(CONFIGURED)consensus().then(function(c){
+  if(CONFIGURED)consensusFull().then(function(c){
     if(c.best&&c.best.streak>=3)facts.push('\ud83d\udd25 Hot hand: <b>'+esc((c.best.name||"").split(" ")[0])+'</b> \u2014 '+c.best.streak+' correct in a row');
     if(c.bestUpset&&c.bestUpset.n>=2)facts.push('\ud83d\udde1 Upset hunter: <b>'+esc(c.bestUpset.name)+'</b> \u2014 '+c.bestUpset.n+' shocks called');
     if(c.perfectN>=1)facts.push('\ud83d\udd2e <b>'+c.perfectN+'</b> colleague'+(c.perfectN===1?'':'s')+' still perfect \u2014 not a single miss');
@@ -3852,7 +3852,7 @@ function rtmStrip(g){
 }
 async function renderMe(){
   if(!state.player){go("join");return;}
-  if(CONFIGURED&&!state.demo)consensus().catch(function(){});
+  if(CONFIGURED&&!state.demo)consensusFull().catch(function(){});
   const s=scoreFor(state.player.predictions,state.results,state.player.champ,puChips()); /* WAVE B — power-up-aware (identical pre-QF) */
   const pc=predCount();
   const st=(await fetchStandings()).slice().sort(cmpSt);
@@ -3922,7 +3922,7 @@ async function renderMe(){
     meBrags(st)+
     await rivalHTML(s,st);
   updateMeBadge();
-  if(CONFIGURED&&!state.demo)consensus().then(function(c){
+  if(CONFIGURED&&!state.demo)consensusFull().then(function(c){
     try{const cbs=document.getElementById("champ-bets-slot");if(cbs&&!cbs.innerHTML)cbs.innerHTML=champBetsLine();}catch(e){}
     try{computeHonours(st);const hs=document.getElementById("me-honours-slot");if(hs)hs.innerHTML=meHonours(s);}catch(e){}
     const f=document.getElementById("me-fun");if(!f||!c.map||f.dataset.agree)return;
@@ -5046,6 +5046,33 @@ function roomTable(rows,mv,m){
   if(!ROOM_SHOWALL&&N>TOP+6)html+='<button class="lb-more" onclick="roomShowAll()">Show all '+N+' players</button>';
   return html;
 }
+/* PERF ② — Room slim reads: room_board(match) returns {slug,name,dept,chips,o,w,h,a}
+   per office pick on ONE match instead of every player's full blob (~236 KB gz →
+   ~15 KB), and the seal moves into Postgres: zero rows before kickoff on the DB
+   clock (wc_locks) — the old client-side gate was convention. Rows are re-shaped
+   into pseudo-player blobs so roomConsensus/roomAsIs/roomHero/roomTable and the
+   brag counters run byte-identical. Classic bulk pull stays as the fallback (RPC
+   not installed / hiccup). 60 s cache per match — same cadence PP_CACHE gave the
+   kiosk, at ~6% of the bytes. */
+let ROOM_CACHE={id:null,t:0,players:null};
+async function roomPlayers(m){
+  if(!CONFIGURED)return [];
+  if(state.demo)return ppPlayers();                /* demo previews keep today's path */
+  if(ROOM_CACHE.players&&ROOM_CACHE.id===m.id&&Date.now()-ROOM_CACHE.t<60000)return ROOM_CACHE.players;
+  let players=null;
+  const res=await rpc("room_board",{p_match:m.id});
+  if(res.ok&&Array.isArray(res.j)){
+    players=res.j.map(function(x){
+      const pk={};if(x.o!=null)pk.o=x.o;if(x.w!=null)pk.w=x.w;if(x.h!=null)pk.h=x.h;if(x.a!=null)pk.a=x.a;
+      const p={slug:x.slug,name:x.name,dept:x.dept,predictions:{}};
+      if(x.chips)p.chips=x.chips;
+      p.predictions[m.id]=pk;
+      return p;});
+  }
+  if(!players)players=await ppPlayers();
+  ROOM_CACHE={id:m.id,t:Date.now(),players:players};
+  return players;
+}
 async function renderRoomBody(){
   const host=document.getElementById("room-body");if(!host)return;
   const m=FIXBYID[ROOM_SEL];if(!m){host.innerHTML="";return;}
@@ -5053,7 +5080,7 @@ async function renderRoomBody(){
   const mv=fxView(m),settled=roomSettled(m),r=state.results[m.id]||null;
   const myPk=(state.player&&state.player.predictions||{})[m.id]||null;
   host.innerHTML='<div class="org-note">Loading the room…</div>';
-  const players=(CONFIGURED&&!state.demo)?await ppPlayers():[];   /* ONE ~1MB pull, 60s cache, never on a timer */
+  const players=(CONFIGURED&&!state.demo)?await roomPlayers(m):[];   /* PERF ② — slim one-match rows (server-sealed), 60s cache, never on a timer */
   let html='';
   if(settled){
     html+='<div class="room-res land"><span class="rh">FULL TIME</span><b>'+esc(mv.home.n)+' '+(r.h!=null?r.h:'')+'–'+(r.a!=null?r.a:'')+' '+esc(mv.away.n)+'</b>'+(m.kn&&r.w?'<span class="rw">'+esc(r.w)+' advance</span>':'')+'</div>';
@@ -5127,8 +5154,11 @@ function roomHero(m,r,rows){
 async function rivalH2H(rivalSlug){
   try{
     if(!state.meSlug||!rivalSlug)return "";
-    const players=await ppPlayers();
-    const me=players.find(p=>p&&p.slug===state.meSlug),rv=players.find(p=>p&&p.slug===rivalSlug);
+    /* PERF ② — exactly the two blobs this card needs, not all 687 */
+    const bm=await sbatchJSON(["wc:player:"+state.meSlug,"wc:player:"+rivalSlug]);
+    let me,rv;
+    if(bm){me=bm["wc:player:"+state.meSlug];rv=bm["wc:player:"+rivalSlug];}
+    else{const players=await ppPlayers();me=players.find(p=>p&&p.slug===state.meSlug);rv=players.find(p=>p&&p.slug===rivalSlug);}
     if(!me||!rv)return "";
     const mp=me.predictions||{},rp=rv.predictions||{};
     let win=0,loss=0,level=0,both=0,myPts=0,rvPts=0;
@@ -5385,7 +5415,7 @@ async function bragCall(){
     if(m.kn?r.w==null:r.h==null){toast("Wait for the final whistle 🙂");return;}
     const vd=rvVerdict(m,pk,r,puChips()); /* chips-aware: the card must match the Room's powered figure */
     if(vd.pts<=0){toast("Brag cards are for the calls you nail 😉");return;}
-    const mv=fxView(m),players=await ppPlayers();
+    const mv=fxView(m),players=await roomPlayers(m);   /* PERF ② — slim one-match rows */
     let tot=0,gotIt=0,exactC=0;
     const exOK=r.h!=null&&r.a!=null;
     if(m.kn){players.forEach(p=>{const v=(p.predictions||{})[m.id];if(!v||!v.w)return;tot++;if(v.w===r.w)gotIt++;if(exOK&&Number(v.h)===Number(r.h)&&Number(v.a)===Number(r.a))exactC++;});}
@@ -5413,7 +5443,7 @@ async function bragOffice(){
     const m=FIXBYID[ROOM_SEL];if(!m)return;
     const r=state.results[m.id];
     if(!r||(m.kn?r.w==null:r.h==null)){toast("Wait for the final whistle 🙂");return;}
-    const mv=fxView(m),players=await ppPlayers();
+    const mv=fxView(m),players=await roomPlayers(m);   /* PERF ② — slim one-match rows */
     let tot=0,gotIt=0,exactC=0;
     const exOK=r.h!=null&&r.a!=null;
     if(m.kn){players.forEach(p=>{const v=(p.predictions||{})[m.id];if(!v||!v.w)return;tot++;if(v.w===r.w)gotIt++;if(exOK&&Number(v.h)===Number(r.h)&&Number(v.a)===Number(r.a))exactC++;});}
@@ -6023,11 +6053,42 @@ function jumpToNext(){
    fallback already uses) and aggregates pick splits client-side. Only ever
    DISPLAYED for matches that are locked \u2014 never a herding tool before kickoff.
    Future optimisation: have the robot write a wc:consensus key instead. */
-let CONS={t:0,map:null,n:0,champN:0,busy:null};
+let CONS={t:0,map:null,n:0,champN:0,busy:null,busyF:null,full:false,fullT:0,rk:-1};
+/* PERF ② — two tiers. consensus() = the COUNTS tier: per-card office split + champ
+   aggregates via the slim consensus_counts() RPC (a few KB) instead of every blob
+   (~236 KB gzipped) — all the DEFAULT view needs. consensusFull() = the ANALYTICS
+   tier (streak/upset/perfect leaders, day tops, pick twin, office hit rate): still
+   the classic bulk pull + the SAME JS passes (porting that scoring logic to SQL
+   mid-tournament is pure parity risk for zero card-level gain), but keyed on the
+   settled-results count with a 1 h cap instead of a flat 10 min — it re-pulls when
+   a result lands, not six times an hour forever. Field readers (consText /
+   champBetsLine / maverick / reveal lines) are untouched: both tiers fill the one
+   CONS object, and a lite refresh preserves analytics fields a full run left. */
 function consensus(){
   if(CONS.map&&Date.now()-CONS.t<600000)return Promise.resolve(CONS);
+  if(CONS.busyF)return CONS.busyF;               /* a full run is in flight — it supersedes */
   if(CONS.busy)return CONS.busy;
   CONS.busy=(async function(){
+    if(CONFIGURED){
+      const res=await rpc("consensus_counts",null);
+      const j=res.ok&&res.j;
+      if(j&&j.map){
+        CONS=Object.assign({},CONS,{t:Date.now(),map:j.map,n:j.n|0,champN:j.champN|0,champMap:j.champMap||{},busy:null});
+        return CONS;
+      }
+    }
+    return consensusCompute();                   /* RPC not installed yet / hiccup → classic path */
+  })();
+  return CONS.busy;
+}
+function consensusFull(){
+  const rk=Object.keys(state.results).length;
+  if(CONS.full&&CONS.rk===rk&&Date.now()-CONS.fullT<3600000)return Promise.resolve(CONS);
+  if(CONS.busyF)return CONS.busyF;
+  CONS.busyF=consensusCompute();
+  return CONS.busyF;
+}
+async function consensusCompute(){
     const players=await sbulkJSON("wc:player:");
     const map={};let champN=0;const cm={};
     const done=FIXTURES.filter(function(f){const r=state.results[f.id];return r&&(f.kn?r.w!=null:r.h!=null);})
@@ -6093,10 +6154,8 @@ function consensus(){
           if(m.kn){if(a.w&&a.w===bq.w)nn++;}
           else{if(a.o&&a.o===bq.o)nn++;}}
         if(nn>twin.n)twin={name:p.name||p.slug||"",slug:p.slug||"",n:nn};}});
-    CONS={t:Date.now(),map:map,n:players.length,champN:champN,champMap:cm,best:best,bestPerfect:bestPerfect,perfectByDay:pday,bestUpset:bestUp,deptByDay:deptDay,dayTop:dayTop,dayHit:dayHit,twin:twin,perfectN:perfectN,officeHit:{h:officeHits,t:officeTot},busy:null};
+    CONS={t:Date.now(),map:map,n:players.length,champN:champN,champMap:cm,best:best,bestPerfect:bestPerfect,perfectByDay:pday,bestUpset:bestUp,deptByDay:deptDay,dayTop:dayTop,dayHit:dayHit,twin:twin,perfectN:perfectN,officeHit:{h:officeHits,t:officeTot},full:true,fullT:Date.now(),rk:Object.keys(state.results).length,busy:null,busyF:null};
     return CONS;
-  })();
-  return CONS.busy;
 }
 function consText(m,p){
   if(state.demo||!CONS.map)return "";
@@ -6395,7 +6454,7 @@ const RV={q:[],i:0,total:0,open:false,timer:null,quick:false};
 function openReveal(){
   const q=revealQueue();if(!q.length)return false;
   RV.q=q;RV.i=0;RV.total=0;RV.open=true;RV.quick=q.length>=7;
-  if(CONFIGURED&&!state.demo)consensus().catch(function(){});
+  if(CONFIGURED&&!state.demo)consensusFull().catch(function(){});
   document.getElementById("reveal").style.display="flex";
   document.body.style.overflow="hidden";
   const o=document.getElementById("rv-odo");if(o)o.textContent="0";
