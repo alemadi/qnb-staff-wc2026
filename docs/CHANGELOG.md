@@ -5,6 +5,20 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-07-06 (Doha) — MAIN DEPLOY · SQUAD BOARD, discoverability pass: an obvious front door + button-shaped rows
+
+**Commits:** this commit (`index.html` + `tests/squad-board/run.mjs` + changelog), pushed to `main` on the organizer's standing "Push to main". **Frontend only — no DB / scoring / sync change, zero new backend traffic.** Organizer feedback on the squad board: "it's not clear that it's tappable. And hard to discover."
+
+**What:**
+- **The front door (`.sq-cta`)** — a gold-framed card at the top of the Departments board (below the derby cup, above the league): your squad's crest, "**Your squad board — {dept}**", the tease "You're **#4** of 78 — see who's above you" (or "All N players, ranked" if you're not on the board yet) and an explicit "**Open ›**". One obvious tap into your own department's table — the primary ask. Signed-in, non-demo only; hidden when your squad has nobody on the board.
+- **Rows now look pressable:** the faint `›` chevron becomes a **bordered circular disclosure button** (the `.sq-share` visual language: glass fill, `--line` border, gold on hover) with an `:active` press-down; the league note now reads "Tap **any squad row** to open that department's own board."
+
+**Verified:** `node --check` clean. `tests/squad-board/run.mjs` extended to 36 checks — the CTA renders with the right dept/crest/position tease, opens MY board, and the league returns on close; ALL GREEN. Regressions: `nerd-stats` ALL GREEN. League + board screenshots eyeballed at 390px.
+
+**Rollback:** `git revert <this commit>` — frontend-only; one CSS block + the `cta` string in `renderDept`.
+
+---
+
 ## 2026-07-06 (Doha) — MAIN DEPLOY · RENAME: "Stats for nerds" → 🧪 "The Lab" + corporate-copy sweep (ships the sickos→diehards fix below too)
 
 **Commits:** this commit (`index.html` + `tests/nerd-stats/run.mjs` + `tests/share-cards/run.mjs` + changelog) and the diehards fix below on `claude/stats-for-nerds-3yajyc`, **rebased onto `main` `c0e840c`** (the squad-board + Trophy-pass-2 deploys; one changelog conflict, both sides kept) **then fast-forwarded to `main` on the organizer's explicit "Push"**. **Frontend copy only — no logic, no layout, no data change.** Organizer raised corporate-appropriateness ("Would someone be offended in corporate by this"); the fix is to name the *place*, not the *person*. Also updates the share-cards suite's banner assertion to the new name (it was checking for the literal string "Stats for nerds").

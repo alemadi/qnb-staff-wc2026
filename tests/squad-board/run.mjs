@@ -113,12 +113,24 @@ const lg=await pg.evaluate(()=>({
   taps: document.querySelectorAll('.dept-row.tap[data-d][role="button"]').length,
   chevrons: document.querySelectorAll('.dept-row .dept-go').length,
   minis: Array.from(document.querySelectorAll('.sq-mini')).map(b=>b.dataset.d),
-  note: (document.querySelector('.dept-note')||{}).textContent||''
+  note: (document.querySelector('.dept-note')||{}).textContent||'',
+  cta:(()=>{const b=document.querySelector('button.sq-cta');return b?{d:b.dataset.d,txt:b.textContent.replace(/\s+/g,' ').trim(),crest:!!b.querySelector('.avatar.deptbadge'),go:!!b.querySelector('.go')}:null;})()
 }));
 if(lg.order.join('|')===league.map(x=>x.d).join('|')) pass('league order = '+lg.order.join(' → ')); else fail('league order '+lg.order+' expected '+league.map(x=>x.d));
 if(lg.taps===3 && lg.chevrons===3) pass('all 3 ranked rows tappable with chevrons'); else fail('taps='+lg.taps+' chevrons='+lg.chevrons);
 if(lg.minis.includes('Executive Office')) pass('small squad listed as a tappable pill'); else fail('sq-mini missing: '+JSON.stringify(lg.minis));
-if(/Tap a squad/.test(lg.note)) pass('league note carries the tap hint'); else fail('tap hint missing from note');
+if(/Tap any squad/.test(lg.note)) pass('league note carries the tap hint'); else fail('tap hint missing from note');
+const meSquadIdx=gr.findIndex(r=>r.slug==='khalid-almannai');
+if(lg.cta && lg.cta.d==='Group Risk' && lg.cta.crest && lg.cta.go && lg.cta.txt.includes('Your squad board — Group Risk') && lg.cta.txt.includes('#'+(meSquadIdx+1)+' of '+gr.length))
+  pass('front-door CTA: "'+lg.cta.txt+'"'); else fail('sq-cta '+JSON.stringify(lg.cta));
+await pg.locator('button.sq-cta').click();
+await pg.waitForSelector('.sqb-hd', {timeout:8000});
+const ctaLand=await pg.evaluate(()=>(document.querySelector('.sqb-hd .sq-name')||{}).textContent);
+if(ctaLand==='Group Risk') pass('CTA opens MY squad board'); else fail('CTA landed on "'+ctaLand+'"');
+await pg.evaluate(()=>closeSquad());
+await pg.waitForSelector('.dept-row', {timeout:8000});
+await pg.waitForTimeout(600);
+await pg.locator('#view-leaderboard').screenshot({ path: `${SCRATCH}/dept-league-390.png` }).catch(()=>{});
 
 /* ---------- 2 · tap Compliance → its inner board ---------- */
 await pg.locator('.dept-row[data-d="Compliance"]').click();
