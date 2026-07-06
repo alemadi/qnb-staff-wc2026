@@ -746,7 +746,7 @@
   .cons-share{display:block;margin:7px auto 0;font:700 11.5px var(--font-b);color:var(--gb);background:none;border:1px solid rgba(180,151,89,.4);border-radius:99px;padding:5px 11px;cursor:pointer}
   /* ===== 📤 share hub — the always-visible door to every card ===== */
   .sharehub{position:relative;display:flex;align-items:center;justify-content:center;width:40px;height:40px;margin-right:9px;border-radius:12px;background:var(--glass);border:1px solid var(--line);font-size:17px;cursor:pointer;flex:none}
-  .sharehub .navnew{position:absolute;top:-3px;right:-3px;left:auto}
+  .hubcnt{position:absolute;top:-6px;right:-7px;min-width:17px;height:17px;border-radius:9px;padding:0 4px;display:flex;align-items:center;justify-content:center;font:800 10px var(--font-b);font-style:normal;color:#181106;background:linear-gradient(115deg,var(--gold-deep),var(--gold-bright));box-shadow:0 0 0 2px rgba(10,10,12,.95),0 0 8px rgba(227,211,163,.55)}
   .sharehub:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
   body.tv .sharehub{display:none!important}
   .shov{position:fixed;inset:0;z-index:355;display:flex;align-items:flex-end;justify-content:center;background:rgba(5,5,7,.72);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
@@ -1619,7 +1619,7 @@
         <div class="divider"></div>
         <div class="wc"><b>World Cup 26</b><em>predict · climb · win</em></div>
       </div>
-      <button class="sharehub" id="sharehub" style="display:none" onclick="openShareTray()" aria-label="Share cards" title="Share cards">📤<i class="navnew" id="share-new" style="display:none" aria-hidden="true"></i></button>
+      <button class="sharehub" id="sharehub" style="display:none" onclick="openShareTray()" aria-label="Share cards" title="Share cards">📤<i class="hubcnt" id="share-new" style="display:none" aria-hidden="true"></i></button>
       <div class="userchip" id="userchip" style="display:none" onclick="go('me')" onpointerdown="try{navigator.vibrate&&navigator.vibrate(8)}catch(e){}">
         <div class="avatar" id="chip-av">--</div>
         <div class="who"><b id="chip-name">—</b><span id="chip-pts">0 PTS</span></div>
@@ -1633,15 +1633,15 @@
   </header>
 
   <div id="xb-sent" aria-hidden="true"></div>
-  <div class="xbanner" id="xbanner" style="display:none" role="status" aria-label="New: Quarter-final power-ups" onclick="if(!event.target.closest('a,button'))toggleBanner()" title="Tap to expand or shrink">
+  <div class="xbanner" id="xbanner" style="display:none" role="status" aria-label="Power-ups are live · new share cards" onclick="if(!event.target.closest('a,button'))toggleBanner()" title="Tap to expand or shrink">
     <div class="xb-ic" aria-hidden="true">⚡</div>
     <div class="xb-tx">
-      <b class="xb-h">New: Quarter-final power-ups</b>
-      <span class="xb-sub">Three power-ups land from the Quarter-finals — the same kit for every player, automatically:</span>
-      <div class="xb-chips" aria-hidden="true"><span class="xb-chip">×2<small>CAPTAIN’S ARMBAND</small></span><span class="xb-chip">🛡<small>STREAK SHIELD</small></span><span class="xb-chip">+2<small>UPSET BONUS</small></span></div>
-      <span class="xb-quiet">Nothing already scored changes · live from the Quarter-finals.</span><br>
-      <a class="xb-cta" href="javascript:void 0" onclick="openFaq('power-up');return false">See how power-ups work ›</a>
-      <a class="xb-cta2" href="javascript:void 0" onclick="openFaq('power-up');return false">How it works ›</a>
+      <b class="xb-h">⚡ Power-ups are LIVE · 📤 share cards are here</b>
+      <span class="xb-sub">Arm your Quarter-final armband before Thursday’s locks — and every big moment now has a card to drop in the chat, one tap from the 📤 button up top:</span>
+      <div class="xb-chips" aria-hidden="true"><span class="xb-chip">×2<small>CAPTAIN’S ARMBAND</small></span><span class="xb-chip">🛡<small>STREAK SHIELD</small></span><span class="xb-chip">+2<small>UPSET BONUS</small></span><span class="xb-chip">📤<small>SHARE CARDS</small></span></div>
+      <span class="xb-quiet">Slips seal at kick-off · brag cards land at the final whistle.</span><br>
+      <a class="xb-cta" href="javascript:void 0" onclick="openFaq('power-up');return false">How power-ups work ›</a>
+      <a class="xb-cta2" href="javascript:void 0" onclick="openShareTray();return false">Open the share tray ›</a>
     </div>
     <button class="xb-min" onclick="toggleBanner()" aria-label="Shrink announcement"><span class="xb-col" aria-hidden="true">▴</span><span class="xb-exp" aria-hidden="true">▾</span></button>
   </div>
@@ -6353,6 +6353,74 @@ async function sharePodium(){
    the tray adds zero new data paths (standings + consensus reads are the cached
    ones every view already uses). */
 function closeShareTray(){const ov=document.getElementById("sharetray");if(ov)ov.style.display="none";document.body.style.overflow="";}
+/* one composer for tray + hub badge — every card the player qualifies for RIGHT NOW,
+   each with a stable key so the badge can count what this player hasn't seen yet.
+   light=true is the badge path: identical gates minus the network-read ones (receipt). */
+async function shareTiles(light){
+  const av=[],lk=[];
+  if(!state.player||state.demo)return {av:av,lk:lk};
+  let st=[];try{st=(await fetchStandings()).slice().sort(cmpSt);}catch(e){}
+  try{await consensus();}catch(e){}
+  const add=function(key,em,l,sub,act){av.push({key:key,em:em,l:l,sub:sub,act:act});};
+  const lock=function(em,l,sub){lk.push({em:em,l:l,sub:sub});};
+  const now=Date.now()+CLOCK_OFFSET;
+  /* tonight */
+  if(slipEligible())add("slip-"+dayKey(new Date(now).toISOString()),"🎟️","Tonight’s slip","Your sealed calls for the night","shareSlip()");
+  else lock("🎟️","Tonight’s slip","Appears on match nights, once kick-off seals your picks");
+  try{
+    let sp=null;
+    if(CONS.map)FIXTURES.forEach(function(m){
+      if(sp||roomSettled(m)||(m.kn&&!koReady(m)))return;
+      if(new Date(m.ko).getTime()<now-3*3600000)return;
+      const cc=CONS.map[m.id];if(!cc)return;
+      const mv=fxView(m);
+      const tot=m.kn?((cc.w[mv.home.n]||0)+(cc.w[mv.away.n]||0)):(cc.H+cc.D+cc.A);
+      if(tot>=8)sp={m:m,mv:mv,tot:tot};
+    });
+    if(sp)add("split-"+sp.m.id,"🏟️","Office split",esc(sp.mv.home.n)+" v "+esc(sp.mv.away.n)+" · "+sp.tot+" calls in","shareSplit('"+sp.m.id+"')");
+  }catch(e){}
+  /* form */
+  add("card","📇","My standing card","Rank · points · exacts","shareCard()");
+  try{const n=koStreakCurrent(state.player.predictions,state.results,true);if(n>=2)add("streak","🔥","On fire ×"+n,"Exact scores back to back","bragStreak()");}catch(e){}
+  if(mePerfectDay())add("pday","💎","Perfect day","Every pick scored on one night","bragPerfectDay()");
+  try{const ms=meMilestone(st);if(ms)add("club-"+ms.v,ms.e,"The "+ms.v+" club","Points milestone, board-official","bragMilestone()");
+    else{const meR=st.find(function(r){return r.slug===state.meSlug;});if(meR)lock("💯","The 100 club",(100-meR.pts)+" points away");}}catch(e){}
+  try{const cps=climbCps();if(cps.length)add("climb-"+cps[cps.length-1].lab,"🚀","The climb","Your rank, phase by phase","shareClimb()");}catch(e){}
+  /* titles & status */
+  try{const ts=myTitles();
+    if(ts.length)ts.forEach(function(k){const d=TITLE_DEFS.find(function(t){return t.key===k;});if(d)add("belt-"+k,d.emoji,d.label+" belt",d.desc,"shareBelt('"+k+"')");});
+    else lock("🏅","Title belts","Hold an office honour to wear its belt");}catch(e){}
+  try{const myDept=deptKey(state.player.dept),mates=st.filter(function(r){return deptKey(r.dept)===myDept;}).slice().sort(cmpSt);
+    if(mates.length>=3&&mates[0]&&mates[0].slug===state.meSlug)add("mvp","⭐","Squad MVP","Top scorer in "+esc(myDept),"bragSquadMVP()");
+    if(mates.length>=3)add("squad","🏢","Squad card",esc(myDept)+" in the department league","shareSquad()");}catch(e){}
+  if(st.findIndex(function(r){return r.slug===state.meSlug;})>=0){
+    add("chase","👀","Catch me","Your rank, as a taunt","bragChase()");
+    add("mald","✈️","Road to Maldives","How far the islands are","bragMaldives()");
+  }
+  /* the road */
+  if(champLocked()&&state.player.champ)add("champ","🏆","My champion",esc(state.player.champ)+" · sealed since the groups","bragChampion()");
+  try{const rd=roadState();
+    if(rd)add("road","🛣️","Road to the final",esc(rd.champ)+" — "+(rd.rem>0?(rd.rem+" win"+(rd.rem===1?"":"s")+" from the +"+CHAMP_PTS):"+"+CHAMP_PTS+" banked"),"shareRoad()");
+    else if(champLocked()&&state.player.champ)lock("🛣️","Road to the final","Rides again with a live champion pick");}catch(e){}
+  /* rivalry & friends — the receipt reads two blobs, so the badge path skips it */
+  if(!light)try{const rs=await getJSON("wc:rival",false);
+    if(!rs)lock("🧾","The receipt","Pick a rival on your Me card first");
+    else{const d=await rivalH2HData(rs);
+      if(d&&d.myPts>d.rvPts)add("receipt","🧾","The receipt","+"+(d.myPts-d.rvPts)+" clear across "+d.both+" settled","bragReceipt()");
+      else lock("🧾","The receipt","Prints the moment you lead your rival");}}catch(e){}
+  try{if(CONS&&CONS.full&&CONS.twin&&CONS.twin.n>=5&&CONS.twin.slug&&CONS.twin.slug!==state.meSlug)
+    add("twin","🤝","Same brain",esc(CONS.twin.name)+" · "+CONS.twin.n+" shared picks","shareTwin()");}catch(e){}
+  /* the office */
+  try{let last=null;
+    FIXTURES.forEach(function(m){const r=state.results[m.id];if(!r||(m.kn?r.w==null:r.h==null))return;
+      const pk=(state.player.predictions||{})[m.id];if(!pk||!(pk.o||pk.w))return;
+      if(rvVerdict(m,pk,r,puChips()).pts<=0)return;
+      if(!last||new Date(m.ko)>new Date(last.ko))last=m;});
+    if(last){const lv=fxView(last);add("call-"+last.id,"🎯","Brag my last call",esc(lv.home.n)+" v "+esc(lv.away.n),"ROOM_SEL='"+last.id+"';bragCall()");}}catch(e){}
+  if(ftOver()||wrPreview())add("podium","🏆","The podium","The office's full-time poster","sharePodium()");
+  else lock("🏆","The podium","The office poster — unlocks at full time");
+  return {av:av,lk:lk};
+}
 async function openShareTray(){
   if(!state.player||state.demo){toast("Join the pool first");return;}
   const ov=document.getElementById("sharetray"),grid=document.getElementById("sh-grid");
@@ -6361,73 +6429,27 @@ async function openShareTray(){
   ov.style.display="flex";document.body.style.overflow="hidden";
   grid.innerHTML='<div class="sh-div">SETTING THE RACK…</div>';
   try{
-    const st=(await fetchStandings()).slice().sort(cmpSt);
-    try{await consensus();}catch(e){}
+    const t=await shareTiles(false); /* counts tier first — the full-tier kick below must not preempt consensus() */
     if(CONFIGURED&&!state.demo)consensusFull().catch(function(){}); /* twin tile on next open if not in yet */
-    const av=[],lk=[];
-    const add=function(em,l,sub,act){av.push({em:em,l:l,sub:sub,act:act});};
-    const lock=function(em,l,sub){lk.push({em:em,l:l,sub:sub});};
-    /* tonight */
-    if(slipEligible())add("🎟️","Tonight’s slip","Your sealed calls for the night","shareSlip()");
-    else lock("🎟️","Tonight’s slip","Appears on match nights, once kick-off seals your picks");
-    try{
-      const now=Date.now()+CLOCK_OFFSET;let sp=null;
-      if(CONS.map)FIXTURES.forEach(function(m){
-        if(sp||roomSettled(m)||(m.kn&&!koReady(m)))return;
-        if(new Date(m.ko).getTime()<now-3*3600000)return;
-        const cc=CONS.map[m.id];if(!cc)return;
-        const mv=fxView(m);
-        const tot=m.kn?((cc.w[mv.home.n]||0)+(cc.w[mv.away.n]||0)):(cc.H+cc.D+cc.A);
-        if(tot>=8)sp={m:m,mv:mv,tot:tot};
-      });
-      if(sp)add("🏟️","Office split",esc(sp.mv.home.n)+" v "+esc(sp.mv.away.n)+" · "+sp.tot+" calls in","shareSplit('"+sp.m.id+"')");
-    }catch(e){}
-    /* form */
-    add("📇","My standing card","Rank · points · exacts","shareCard()");
-    try{const n=koStreakCurrent(state.player.predictions,state.results,true);if(n>=2)add("🔥","On fire ×"+n,"Exact scores back to back","bragStreak()");}catch(e){}
-    if(mePerfectDay())add("💎","Perfect day","Every pick scored on one night","bragPerfectDay()");
-    try{const ms=meMilestone(st);if(ms)add(ms.e,"The "+ms.v+" club","Points milestone, board-official","bragMilestone()");
-      else{const meR=st.find(function(r){return r.slug===state.meSlug;});if(meR)lock("💯","The 100 club",(100-meR.pts)+" points away");}}catch(e){}
-    try{if(climbCps().length)add("🚀","The climb","Your rank, phase by phase","shareClimb()");}catch(e){}
-    /* titles & status */
-    try{const ts=myTitles();
-      if(ts.length)ts.forEach(function(k){const d=TITLE_DEFS.find(function(t){return t.key===k;});if(d)add(d.emoji,d.label+" belt",d.desc,"shareBelt('"+k+"')");});
-      else lock("🏅","Title belts","Hold an office honour to wear its belt");}catch(e){}
-    try{const myDept=deptKey(state.player.dept),mates=st.filter(function(r){return deptKey(r.dept)===myDept;}).slice().sort(cmpSt);
-      if(mates.length>=3&&mates[0]&&mates[0].slug===state.meSlug)add("⭐","Squad MVP","Top scorer in "+esc(myDept),"bragSquadMVP()");
-      if(mates.length>=3)add("🏢","Squad card",esc(myDept)+" in the department league","shareSquad()");}catch(e){}
-    if(st.findIndex(function(r){return r.slug===state.meSlug;})>=0){
-      add("👀","Catch me","Your rank, as a taunt","bragChase()");
-      add("✈️","Road to Maldives","How far the islands are","bragMaldives()");
-    }
-    /* the road */
-    if(champLocked()&&state.player.champ)add("🏆","My champion",esc(state.player.champ)+" · sealed since the groups","bragChampion()");
-    try{const rd=roadState();
-      if(rd)add("🛣️","Road to the final",esc(rd.champ)+" — "+(rd.rem>0?(rd.rem+" win"+(rd.rem===1?"":"s")+" from the +"+CHAMP_PTS):"+"+CHAMP_PTS+" banked"),"shareRoad()");
-      else if(champLocked()&&state.player.champ)lock("🛣️","Road to the final","Rides again with a live champion pick");}catch(e){}
-    /* rivalry & friends */
-    try{const rs=await getJSON("wc:rival",false);
-      if(!rs)lock("🧾","The receipt","Pick a rival on your Me card first");
-      else{const d=await rivalH2HData(rs);
-        if(d&&d.myPts>d.rvPts)add("🧾","The receipt","+"+(d.myPts-d.rvPts)+" clear across "+d.both+" settled","bragReceipt()");
-        else lock("🧾","The receipt","Prints the moment you lead your rival");}}catch(e){}
-    try{if(CONS&&CONS.full&&CONS.twin&&CONS.twin.n>=5&&CONS.twin.slug&&CONS.twin.slug!==state.meSlug)
-      add("🤝","Same brain",esc(CONS.twin.name)+" · "+CONS.twin.n+" shared picks","shareTwin()");}catch(e){}
-    /* the office */
-    try{let last=null;
-      FIXTURES.forEach(function(m){const r=state.results[m.id];if(!r||(m.kn?r.w==null:r.h==null))return;
-        const pk=(state.player.predictions||{})[m.id];if(!pk||!(pk.o||pk.w))return;
-        if(rvVerdict(m,pk,r,puChips()).pts<=0)return;
-        if(!last||new Date(m.ko)>new Date(last.ko))last=m;});
-      if(last){const lv=fxView(last);add("🎯","Brag my last call",esc(lv.home.n)+" v "+esc(lv.away.n),"ROOM_SEL='"+last.id+"';bragCall()");}}catch(e){}
-    if(ftOver()||wrPreview())add("🏆","The podium","The office's full-time poster","sharePodium()");
-    else lock("🏆","The podium","The office poster — unlocks at full time");
-    /* render */
-    let html=av.map(function(t){return '<button class="sh-tile" onclick="closeShareTray();'+t.act+'"><i class="em">'+t.em+'</i><b>'+t.l+'</b><span>'+t.sub+'</span></button>';}).join("");
-    if(lk.length)html+='<div class="sh-div">STILL TO UNLOCK</div>'+
-      lk.slice(0,4).map(function(t){return '<button class="sh-tile lk" onclick="toast(\''+t.em+' '+String(t.sub).replace(/'/g,"\\'")+'\')"><i class="em">'+t.em+'</i><b>'+t.l+'</b><span>'+t.sub+'</span></button>';}).join("");
+    let html=t.av.map(function(x){return '<button class="sh-tile" onclick="closeShareTray();'+x.act+'"><i class="em">'+x.em+'</i><b>'+x.l+'</b><span>'+x.sub+'</span></button>';}).join("");
+    if(t.lk.length)html+='<div class="sh-div">STILL TO UNLOCK</div>'+
+      t.lk.slice(0,4).map(function(x){return '<button class="sh-tile lk" onclick="toast(\''+x.em+' '+String(x.sub).replace(/'/g,"\\'")+'\')"><i class="em">'+x.em+'</i><b>'+x.l+'</b><span>'+x.sub+'</span></button>';}).join("");
     grid.innerHTML=html||'<div class="sh-div">Lock some picks first — the cards follow the points.</div>';
+    try{localStorage.setItem("wc:shareseen",JSON.stringify(t.av.map(function(x){return x.key;})));}catch(e){} /* overwrite-on-open: a card that lapses and returns re-lights the hub */
+    refreshShareBadge();
   }catch(e){grid.innerHTML='<div class="sh-div">Couldn’t set the rack — try again.</div>';}
+}
+/* the hub badge: how many available cards this player hasn't been shown yet */
+async function refreshShareBadge(){
+  const el=document.getElementById("share-new");if(!el)return;
+  if(!state.player||state.demo){el.style.display="none";return;}
+  try{
+    const t=await shareTiles(true);
+    let seen=[];try{seen=JSON.parse(localStorage.getItem("wc:shareseen")||"[]");}catch(e){}
+    const n=t.av.filter(function(x){return seen.indexOf(x.key)<0;}).length;
+    if(n>0){el.textContent=n>9?"9+":String(n);el.style.display="flex";}
+    else el.style.display="none";
+  }catch(e){}
 }
 function roundRect(x,a,b,w,h,r){x.beginPath();x.moveTo(a+r,b);x.arcTo(a+w,b,a+w,b+h,r);x.arcTo(a+w,b+h,a,b+h,r);x.arcTo(a,b+h,a,b,r);x.arcTo(a,b,a+w,b,r);x.closePath();}
 /* shared premium finish for every share canvas: corner vignette + gold inset frame + inner hairline */
@@ -7234,7 +7256,7 @@ function updateNewDots(){
   const on=!!state.player&&!state.demo;
   const ld=document.getElementById("lb-new");if(ld)ld.style.display=(on&&!seenKey("lb"))?"":"none";
   const rn=document.getElementById("room-new");if(rn)rn.style.display=(on&&!seenKey("room"))?"":"none";
-  const sn=document.getElementById("share-new");if(sn)sn.style.display=(on&&!seenKey("share"))?"":"none"; /* 📤 hub dot — clears on first open */
+  try{refreshShareBadge();}catch(e){} /* 📤 hub count — async over cached reads; shows the cards this player hasn't seen yet */
   const an=document.getElementById("aw-new");if(an)an.style.display=(on&&!seenKey("awards"))?"":"none";
 }
 function maybeWhatsNew(){
@@ -7373,6 +7395,7 @@ function closeReveal(){
   document.getElementById("reveal").style.display="none";
   document.body.style.overflow="";
   updateMeBadge();
+  try{refreshShareBadge();}catch(e){} /* 📤 fresh results usually mint fresh cards — re-light the hub */
   if(state.view==="me")renderMe();
 }
 function renderRevealCard(){
@@ -7544,7 +7567,11 @@ function revealSummary(){
   document.getElementById("rv-stage").innerHTML=html;
   RV.total=total;RV.i=RV.q.length;
   odo(document.getElementById("rv-odo"),0,total,500);
-  document.getElementById("rv-foot").innerHTML='<button class="sw-b sw-done-b" onclick="revealFinale()">Continue</button>';
+  /* 📤 earn-moment handoff — the reveal is the app's highest-attention beat; when the night
+     scored, the tray is one tap away (celebration-only: no button on a blank night) */
+  document.getElementById("rv-foot").innerHTML=
+    (total>0?'<button class="sw-b" onclick="closeReveal();openShareTray()">📤 Cards earned</button>':'')+
+    '<button class="sw-b sw-done-b" onclick="revealFinale()">Continue</button>';
 }
 
 /* ===== live stakes ===== */
@@ -7956,6 +7983,7 @@ function tvLoop(){
   if(state.player){
     document.getElementById("userchip").style.display="flex";
     {const sh=document.getElementById("sharehub");if(sh&&!state.demo)sh.style.display="flex";} /* 📤 share hub — every view, signed-in only */
+    setTimeout(function(){try{refreshShareBadge();}catch(e){}},1200); /* hub count, once boot's standings cache is warm */
     document.getElementById("countdown").style.display="flex";
     const h=(location.hash||"").slice(1);
     updateChip();go(TV?"leaderboard":(["matches","bracket","leaderboard","me"].indexOf(h)>=0?h:"matches"));

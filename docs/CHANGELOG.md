@@ -5,6 +5,22 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-07-06 (Doha) — AWARENESS PASS: the one-shot spotlight gets three persistent companions
+
+**Commits:** this commit (`index.html` + `tests/share-cards/run.mjs` + changelog), on `claude/social-artifacts-ideas-0ocr94`. **Frontend only — no DB change.** Organizer's feedback: the What's-new spotlight "shows once then disappears" — one dismissal and the share cards are invisible again.
+
+**What (three surfaces, all riding existing machinery):**
+- **① Persistent banner repointed** (`xbanner` — shows every visit until 15 Jul, shrink-only by design): copy was still pre-launch power-ups; now "⚡ Power-ups are LIVE · 📤 share cards are here", a fourth 📤 chip, and the CTAs split by mode — the **shrunk strip (the default most players see) opens the share tray**; the expanded card keeps the power-ups FAQ link.
+- **② Reveal earn-moment handoff:** the results-reveal summary (the app's highest-attention beat) gains a "📤 Cards earned" button beside Continue — only on nights the player actually scored (celebration-only, house rule). One tap: reveal closes, tray opens.
+- **③ Hub count badge:** the 📤 hub's one-shot NEW dot becomes a live count of cards this player hasn't seen (`.hubcnt`, gold pill, "9+" cap). Tray composition refactored into one `shareTiles(light)` composer shared by tray + badge (badge path skips the receipt's two-blob read); opening the tray writes the seen-set (`wc:shareseen`, overwrite-on-open so a card that lapses and returns re-lights the hub). Badge refreshes at boot (+1.2s, warm cache), on `updateNewDots`, and on reveal close — so Thursday's settled QFs re-light every scorer's hub by themselves.
+- Fix caught by the harness mid-pass: `openShareTray` must await the counts tier **before** kicking `consensusFull()`, or `consensus()` piggybacks the in-flight full compute (ordering regression from the refactor; also the correct/cheaper source in prod).
+
+**Verified (`tests/share-cards/run.mjs`, now 42 checks, ALL GREEN ×3 runs):** banner visible every boot with tray CTA + new copy; hub badge shows a numeric count pre-open ("9+" in the seeded world), clears on open, seen-set written (17 keys); reveal summary on a scoring night shows "📤 Cards earned" → tap closes reveal and opens the tray; all ten cards + tray + every prior surface still green; zero page errors; `node --check` clean. Header screenshot in the run output (`live-header.png`).
+
+**Rollback:** `git revert` this commit — frontend-only. Local state: `wc:shareseen` only.
+
+---
+
 ## 2026-07-06 (Doha) — MAIN DEPLOY: 📤 Share Tray — the always-visible door to every card
 
 **Commits:** this commit (changelog) on top of the tray commit, then `main` fast-forwarded and pushed — the immediate follow-up to today's share-card-pack deploy, on the organizer's feedback that the cards **"aren't visible and they wouldn't know of it"**. Rebased onto the ⚡ power-ups-LIVE spotlight tip (`0a35119`; clean — the spotlight card had already kept the 📤 item, and the cons-bar removal didn't touch the split chip). **Frontend only — no DB change.**

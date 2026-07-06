@@ -277,11 +277,17 @@ const roomBtns = await pg.evaluate(async (mid)=>{ try{
 if(roomBtns.slip&&roomBtns.split) pass('Room pre-settle buttons'); else fail('Room buttons: '+JSON.stringify(roomBtns));
 
 /* 📤 Share tray — the always-visible discovery door */
+await pg.waitForTimeout(1600); /* boot badge kicks at +1.2s */
 const hub = await pg.evaluate(()=>{ const sh=document.getElementById('sharehub');
   const dot=document.getElementById('share-new');
-  return { visible: !!(sh && sh.style.display!=='none'), dot: !!(dot && dot.style.display!=='none') }; });
+  return { visible: !!(sh && sh.style.display!=='none'), dot: !!(dot && dot.style.display!=='none'), n: dot?dot.textContent:'' }; });
 if(hub.visible) pass('share hub visible in header'); else fail('share hub hidden');
-if(hub.dot) pass('share hub NEW dot shows pre-open'); else fail('share hub NEW dot missing');
+if(hub.dot && /^([1-9]|9\+)/.test(hub.n)) pass('hub badge counts unseen cards ('+hub.n+')'); else fail('hub badge: shown='+hub.dot+' n="'+hub.n+'"');
+/* persistent banner repointed at the tray */
+const xb = await pg.evaluate(()=>{ const b=document.getElementById('xbanner');
+  return { shown: !!(b && b.style.display!=='none'), tray: !!(b && b.innerHTML.includes('openShareTray()')), copy: !!(b && b.textContent.includes('share cards are here')) }; });
+if(xb.shown && xb.tray && xb.copy) pass('banner shows every visit + opens the tray'); else fail('banner: '+JSON.stringify(xb));
+await pg.screenshot({ path: `${SCRATCH}/live-header.png`, clip:{x:0,y:0,width:1280,height:300} });
 const tray = await pg.evaluate(async ()=>{ try{
   /* earlier tests ran consensusFull() over the 12 seeded blobs, dropping QF counts below
      the k-floor — reset so the tray reads the counts RPC, as a fresh prod session would */
@@ -299,7 +305,9 @@ else{
   ['Tonight’s slip','Office split','My standing card','The climb','Road to the final','The 100 club','The receipt','Oracle belt','Brag my last call'].forEach(w=>{
     if(tray.tiles.some(t=>t.includes(w))) pass('tray tile: '+w); else fail('tray tile missing: '+w); });
   if(tray.locked.some(t=>t.includes('The podium'))) pass('tray locked rack shows podium'); else fail('tray locked rack missing podium');
-  if(tray.dotGone) pass('NEW dot clears on first open'); else fail('NEW dot did not clear');
+  if(tray.dotGone) pass('hub badge clears on first open'); else fail('hub badge did not clear');
+  const seenSet = await pg.evaluate(()=>{ try{ return JSON.parse(localStorage.getItem('wc:shareseen')||'[]').length; }catch(e){ return 0; } });
+  if(seenSet>=8) pass('seen-set written on open ('+seenSet+' keys)'); else fail('seen-set too small: '+seenSet);
 }
 await pg.screenshot({ path: `${SCRATCH}/live-tray.png` });
 /* tap a tile end-to-end: slip via the tray */
@@ -315,6 +323,25 @@ const tapped = await pg.evaluate(async ()=>{
 });
 if(tapped===true) pass('tray tile tap builds the card + closes'); else fail('tray tap: '+tapped);
 await pg.evaluate(()=>closeShareTray());
+
+/* reveal earn-moment handoff: un-reveal the settled QF, walk the ritual, tap through to the tray */
+const rev = await pg.evaluate(async (qf)=>{ try{
+  closeShareTray();
+  const seen=JSON.parse(localStorage.getItem('wc:revealed')||'[]').filter(id=>id!==qf);
+  localStorage.setItem('wc:revealed', JSON.stringify(seen));
+  if(!openReveal()) return {err:'reveal did not open'};
+  revealSummary();
+  await new Promise(r=>setTimeout(r,200));
+  const foot=document.getElementById('rv-foot');
+  const btn=foot&&Array.from(foot.querySelectorAll('button')).find(b=>b.textContent.includes('Cards earned'));
+  if(!btn) return {err:'no Cards earned button', foot: foot?foot.textContent:'-'};
+  btn.click();
+  await new Promise(r=>setTimeout(r,700));
+  const trayOpen=document.getElementById('sharetray').style.display!=='none';
+  closeShareTray();
+  return {ok:true, trayOpen};
+}catch(e){ return {err:String(e)}; } }, qf0.id);
+if(rev.ok && rev.trayOpen) pass('reveal summary hands off to the tray on a scoring night'); else fail('reveal handoff: '+JSON.stringify(rev));
 
 /* Podium — simulate full time in-page, then build */
 await grabCard('podium', 'state.results._champ="France"; state.results.k32={w:"France",h:2,a:1}; bustStandings(); await sharePodium();');
