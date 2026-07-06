@@ -5,6 +5,33 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-07-06 (Doha) — Live DB walls: wc_ko_sched (was anon-writable) + robot tick · branch ready → main
+
+**Commits:** this changelog commit on `claude/code-readiness-updates-zofscq`, which — with `84dc9ec` (launch gate) · `8bb85a4` (knockout hardening) · `ebcc341` (review hardening) — fast-forwards cleanly into `main` on merge (base `07773c5`). **The live DB change below is ALREADY APPLIED (2026-07-06 ~05:30 Doha, via SQL) and is documented here per the changelog contract.**
+
+**Why (DB):** the Supabase security advisor flagged `wc_ko_sched` at ERROR level — inspection showed it was **worse than flagged**: the `anon` role held **full DML (SELECT/INSERT/UPDATE/DELETE/TRUNCATE) on the robot's knockout schedule, with RLS disabled** (Supabase default-privilege grants; the table was added by robot.sql after protect.sql's walls were written). Anyone with the page's public anon key could rewrite bracket feeders/kickoff times and the robot would then place real results on the wrong ties. `wc_autoconfirm_tick()` was likewise executable by `anon` via `/rest/v1/rpc/`.
+
+**What (DB, applied live):**
+```sql
+alter table public.wc_ko_sched enable row level security;
+revoke all on table public.wc_ko_sched from anon, authenticated;
+revoke execute on function public.wc_autoconfirm_tick() from public, anon, authenticated;
+```
+The robot (`SECURITY DEFINER`, run by pg_cron as owner) and the Wave-B `standings()` (definer) are unaffected — this matches how every other engine table (`wc_fixtures`, `wc_locks`, …) is walled.
+
+**Verified live, as the real anon role via REST:** `standings` RPC → 200, 687 rows · `kv` `wc:results` read → 200 · `wc_ko_sched` select → **401 permission denied** · `wc_autoconfirm_tick` → **401 permission denied**. Same night, full-population parity re-verified: **687/687 players** — JS `scoreFor()` recomputed from every prediction blob === live `standings()` (pts, exact, correct), across all 91 recorded results including 3 penalty-decided ties.
+
+**What (merging this branch ships):** the three branch commits — the Wave-B **launch gate** (power-ups organizer-switched via `wc:powerups_live`, dormant by default; the un-gated ⚡ arm row that had gone live on the QF1 card disappears), the **stale-tab result-merge guard** (fail-closed), **score-only bracket advance**, and the **ET/penalties live layer** (also fixes the k20 card that showed no live score after its real kickoff drifted 00:00→01:00 UTC — the widened knockout match window absorbs such drift).
+
+**Rollback:** app: `git revert` the three commits on main (or reset to `07773c5` pre-merge). DB — exact inverse of the walls:
+```sql
+alter table public.wc_ko_sched disable row level security;
+grant all on table public.wc_ko_sched to anon, authenticated;
+grant execute on function public.wc_autoconfirm_tick() to public, anon, authenticated;
+```
+
+---
+
 ## 2026-07-05 (Doha) — Knockout hardening: no stale-tab result wipes, score-only entries advance the bracket, live layer survives ET/penalties
 
 **Commits:** this commit (`index.html` + changelog). **Frontend only — no DB / scoring-math / sync-protocol change.** Seal-safe.
