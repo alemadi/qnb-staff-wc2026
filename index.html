@@ -1146,7 +1146,7 @@
   .lbmode button .tnew{display:inline-block;margin-left:6px;font-size:8px;font-weight:800;letter-spacing:.08em;background:var(--qatar);color:#fff;border-radius:5px;padding:1px 5px;vertical-align:middle}
   .lbmode button.on .tnew{background:rgba(0,0,0,.28);color:#fff}
   .wnov{position:fixed;inset:0;z-index:360;display:flex;align-items:center;justify-content:center;padding:22px;background:rgba(5,5,7,.72);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
-  .wn-card{width:100%;max-width:380px;background:linear-gradient(180deg,#16130c,#0c0b08);border:1px solid rgba(180,151,89,.5);border-radius:22px;padding:24px 20px 20px;text-align:center;box-shadow:0 30px 80px -20px rgba(0,0,0,.8),inset 0 0 0 1px rgba(255,255,255,.03)}
+  .wn-card{width:100%;max-width:380px;max-height:calc(100dvh - 44px);overflow:auto;background:linear-gradient(180deg,#16130c,#0c0b08);border:1px solid rgba(180,151,89,.5);border-radius:22px;padding:24px 20px 20px;text-align:center;box-shadow:0 30px 80px -20px rgba(0,0,0,.8),inset 0 0 0 1px rgba(255,255,255,.03)}
   .wn-spark{font-size:34px;line-height:1}
   .wn-h{font-family:var(--font-d);font-size:30px;color:var(--gold-bright);letter-spacing:.02em;margin-top:4px}
   .wn-sub{font-size:12.5px;color:var(--muted);margin:4px 0 16px}
@@ -2028,11 +2028,11 @@
     <div class="wn-card">
       <div class="wn-spark" aria-hidden="true">✨</div>
       <div class="wn-h">What’s new</div>
-      <div class="wn-sub">⚡ Power-ups are <b>LIVE</b> for the Quarter-finals — arm before Thursday’s locks. Plus the 🏆 <b>Trophy Room</b> and new 📤 share cards.</div>
+      <div class="wn-sub">⚡ Power-ups are <b>LIVE</b> for the Quarter-finals — arm before Thursday’s locks. Plus a new 🤓 stats corner and your 📤 share-card deck.</div>
       <button class="wn-item" onclick="wnGoFaq('power-up')"><span class="wn-ic">⚡</span><span class="wn-tx"><b>Captain’s Armband — arm it now</b><span>One per round from the QF. Arm a match before it locks and its advance + exact points count DOUBLE. On the QF cards.</span></span><span class="wn-go">›</span></button>
-      <button class="wn-item" onclick="wnGoAwards()"><span class="wn-ic">🏆</span><span class="wn-tx"><b>The Trophy Room</b><span>Five crowns at the final whistle — every race live under Leaderboard → 🏆 Awards, with your exact gap to each.</span></span><span class="wn-go">›</span></button>
-      <button class="wn-item" onclick="wnGoBrags()"><span class="wn-ic">📤</span><span class="wn-tx"><b>New share cards</b><span>Tonight’s slip, the office split, title belts, your climb, the road to the final — in your brag row and the Room.</span></span><span class="wn-go">›</span></button>
-      <div class="wn-more">🛡 Streak Shield and 🦅 Upset Bonus run automatically from the QF — the same kit for every player, nothing to buy. Titles never move points — the board alone decides 🥇🥈🥉.</div>
+      <button class="wn-item" onclick="wnGoNerds()"><span class="wn-ic">🤓</span><span class="wn-tx"><b>Stats for nerds</b><span>The whole office as one dataset — hit rates, the points curve, the hive mind, dead champion tickets. Leaderboard → 🤓 Nerds.</span></span><span class="wn-go">›</span></button>
+      <button class="wn-item" onclick="wnGoBrags()"><span class="wn-ic">📤</span><span class="wn-tx"><b>Your share-card deck</b><span>Every brag you’ve earned, one tap on the gold 📤 button by your thumb. Cards preview first — nothing sends until you say so.</span></span><span class="wn-go">›</span></button>
+      <div class="wn-more">🛡 Streak Shield and 🦅 Upset Bonus run automatically from the QF — the same kit for every player, nothing to buy. 🏆 Title races run live under Leaderboard → Awards; titles never move points.</div>
       <button class="wn-ok" onclick="dismissWhatsNew()">Got it</button>
     </div>
   </div>
@@ -8041,7 +8041,7 @@ function toggleFaq(i){
    per player (localStorage-gated by version), deep-links into each new feature,
    and never nags. Persistent NEW dots on the Leaderboard nav + The Room toggle
    catch stragglers and self-clear once the surface is visited. */
-const WHATSNEW_VER="2026-07-06-powerups-live";
+const WHATSNEW_VER="2026-07-06-nerds-deck";
 function seenKey(k){try{return localStorage.getItem("wc:seen:"+k)==="1";}catch(e){return true;}}
 function markSeen(k){try{localStorage.setItem("wc:seen:"+k,"1");}catch(e){}updateNewDots();}
 function updateNewDots(){
@@ -8082,6 +8082,13 @@ function wnGoAwards(){ /* TROPHY ROOM — spotlight deep link straight into the 
   LB_MODE="awards";
   const lm=document.getElementById("lbmode");if(lm)lm.querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.m==="awards"));
   markSeen("lb");markSeen("awards");
+  go("leaderboard");
+}
+function wnGoNerds(){ /* NUDGE pass — spotlight deep link straight into the stats corner */
+  dismissWhatsNew();
+  LB_MODE="nerds";
+  const lm=document.getElementById("lbmode");if(lm)lm.querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.m==="nerds"));
+  markSeen("lb");markSeen("nerds");
   go("leaderboard");
 }
 function wnGoFaq(which){dismissWhatsNew();openFaq(which);} /* WAVE B — spotlight items deep-link into the FAQ */

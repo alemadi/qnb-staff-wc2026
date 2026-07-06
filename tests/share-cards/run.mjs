@@ -205,7 +205,7 @@ if(!flags.road) fail('roadState null'); else pass('roadState alive');
 /* what's-new shows the share-cards item */
 const wn = await pg.evaluate(()=>{ const ov=document.getElementById('wnov');
   const shown = ov && ov.style.display!=='none';
-  const has = !!(ov && ov.textContent.includes('New share cards'));
+  const has = !!(ov && ov.textContent.includes('share-card deck'));
   try{ dismissWhatsNew(); }catch(e){}
   return {shown, has}; });
 if(wn.shown && wn.has) pass('whatsnew shows share-cards item'); else fail('whatsnew: shown='+wn.shown+' hasItem='+wn.has);

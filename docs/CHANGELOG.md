@@ -5,6 +5,27 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-07-06 (Doha) — NUDGE PASS: What's-new spotlight refreshed to today's feature set (branch-only, NOT deployed)
+
+**Commits:** this commit (`index.html` + `tests/share-cards/run.mjs` + changelog) on `claude/nudge-users-new-features-qubl0y`, cut from `main` tip `3cea386`. **NOT pushed to main** — deploying is the organizer's call ("push to main"). **Frontend only — no DB / scoring / sync change, zero new backend traffic.** Organizer ask: "slightly nudge the users to the new features."
+
+**Why:** the live spotlight version (`2026-07-06-powerups-live`) predates two of today's deploys — 🤓 Stats for nerds shipped *after* it (its only awareness is the NEW dot inside the Leaderboard mode row, invisible from the nav for anyone who cleared `wc:seen:lb` back in Wave A), and the 📤 item's copy still described the old brag-row entry, not the deck FAB. The spotlight is the house once-per-player nudge (localStorage-gated, never re-shows) — the "slight" part is built in.
+
+**What (all in the existing `#wnov` card — no new surfaces, no repeat shows, no banners):**
+- `WHATSNEW_VER` → `"2026-07-06-nerds-deck"` — the refreshed card shows **once** to everyone (including this morning's dismissers, who'd otherwise never hear of Nerds) and stamps itself seen on dismiss, as always.
+- **Items are now today's top three:** ⚡ Captain's Armband (unchanged — still the time-sensitive one, QF locks Thursday) · **🤓 Stats for nerds** (new item, new `wnGoNerds()` deep link: selects the Nerds pill, `markSeen("lb"/"nerds")` so both NEW dots self-clear, lands on Leaderboard) · **📤 Your share-card deck** (copy now points at the gold deck FAB + preview-before-send; deep link unchanged → `openShareTray()`).
+- **🏆 Trophy Room** dropped from the item list (announced in the previous version) but kept as a pointer in the `wn-more` footer line ("Title races run live under Leaderboard → Awards; titles never move points"); the `aw-new` pill dot still catches stragglers in-place.
+- **Fit fix (pre-existing bug):** `.wn-card` had no scroll guard — on short phones (375×667) the 745px card center-clipped and the "Got it" button was unreachable. Added `max-height:calc(100dvh - 44px);overflow:auto`. Browsers without `dvh` ignore the declaration (status quo, no regression).
+- Test kept in sync: `tests/share-cards/run.mjs` whatsnew assertion `'New share cards'` → `'share-card deck'`.
+
+**Verified on this tree:** `node tests/share-cards/run.mjs` — 106 PASS, sole failure is the **pre-existing** "header overlap at 340px" (identical on base `3cea386`; the organizer's known pending header issue, untouched here). `tests/nerd-stats/run.mjs` ALL GREEN · `tests/perf-boot/run.mjs` ALL GREEN. One-off headless proof of the new wiring (spotlight opens for the new version → real click on the 🤓 item → overlay closes, version stamped, `LB_MODE="nerds"`, pill selected, both seen-keys set, NEW dot cleared, leaderboard shown, body scroll restored, no re-show after dismissal, zero page errors). `node --check` clean on both inline script blocks. Card screenshots eyeballed at 390×844 (fits, 728px) and 375×667 (scrolls, "Got it" reachable).
+
+**Deploy note (when the organizer says push main):** fast-forward/rebase onto `main` as usual; the SW may need one hard reload / app reopen to pick up the new shell. Bumping `WHATSNEW_VER` costs each player exactly one modal — don't bump again for minor copy tweaks.
+
+**Rollback:** branch-only — `git revert` this commit, nothing server-side. If deployed: `git push origin +3cea386:main` (or the then-current parent).
+
+---
+
 ## 2026-07-06 (Doha) — MAIN DEPLOY: STATS FOR NERDS · batch three — five more cards
 
 **Commits:** this commit (`index.html` + `tests/nerd-stats/run.mjs` + changelog) on `claude/stats-for-nerds-3yajyc`, on top of the deployed batch two (`366051b`), **fast-forwarded to `main`** on the organizer's explicit "Push" (in direct reply to "'push to main' ships all five"). `main` had not moved — clean FF, no rebase. **Frontend only — no DB / scoring / sync change, zero new backend traffic** (same standings + `consensusFull()` caches; `consensusCompute` itself untouched).
