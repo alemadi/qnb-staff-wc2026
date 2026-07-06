@@ -1938,16 +1938,17 @@ function koBonus(m){return m.tag==="final"?KO_BONUS.final:(m.tag==="third"?KO_BO
 const PU_FROM_K=25;   // mechanics live from the QF onward (k25..k32); k31 third place: upset yes, armband no
 const PU_UPSET=2;     // 🦅 flat upset bonus — never doubled by the armband
 function puRound(kn){return (kn>=25&&kn<=28)?"qf":((kn===29||kn===30)?"sf":(kn===32?"fin":null));}
-/* PU_RANK — fixed FIFA-ranking snapshot (June 2026) for all 48 teams in FL; published in-app;
-   lower number = higher ranked. SAME numbers as the wc_rank seed in sql/standings.sql. */
+/* PU_RANK — official FIFA/Coca-Cola men's ranking, 11 June 2026 release (frozen through the
+   tournament; next update 20 Jul), for all 48 finalists; lower number = higher ranked. FIFA's own
+   numbers, so ranks skip teams not in the WC (12 Italy, 21 Denmark…). SAME numbers as the wc_rank
+   seed in sql/standings.sql — edit the two together. */
 const PU_RANK={
- "Spain":1,"Argentina":2,"France":3,"England":4,"Brazil":5,"Portugal":6,"Netherlands":7,"Belgium":8,
- "Germany":9,"Croatia":10,"Morocco":11,"Colombia":13,"USA":14,"Mexico":15,"Uruguay":16,"Switzerland":17,
- "Japan":18,"Senegal":19,"Iran":20,"Austria":22,"South Korea":23,"Ecuador":24,"Australia":26,"Türkiye":27,
- "Canada":28,"Norway":29,"Panama":31,"Egypt":33,"Algeria":35,"Scotland":38,"Paraguay":40,"Tunisia":42,
- "Czechia":43,"Ivory Coast":44,"Sweden":45,"Uzbekistan":51,"Qatar":54,"Iraq":57,"Saudi Arabia":59,
- "DR Congo":60,"South Africa":62,"Jordan":64,"Bosnia & H.":69,"Ghana":71,"Cape Verde":73,"Curaçao":82,
- "Haiti":85,"New Zealand":87
+ "Argentina":1,"Spain":2,"France":3,"England":4,"Portugal":5,"Brazil":6,"Morocco":7,"Netherlands":8,
+ "Belgium":9,"Germany":10,"Croatia":11,"Colombia":13,"Mexico":14,"Senegal":15,"Uruguay":16,"USA":17,
+ "Japan":18,"Switzerland":19,"Iran":20,"Türkiye":22,"Ecuador":23,"Austria":24,"South Korea":25,"Australia":27,
+ "Algeria":28,"Egypt":29,"Canada":30,"Norway":31,"Ivory Coast":33,"Panama":34,"Sweden":38,"Czechia":40,
+ "Paraguay":41,"Scotland":42,"Tunisia":45,"DR Congo":46,"Uzbekistan":50,"Qatar":56,"Iraq":57,"South Africa":60,
+ "Saudi Arabia":61,"Jordan":63,"Bosnia & H.":64,"Cape Verde":67,"Ghana":73,"Curaçao":82,"Haiti":83,"New Zealand":85
 };
 /* 🦅 upset test: the recorded winner was the LOWER-ranked side of the tie (rank number strictly
    greater than the loser's). Tie teams resolve via koTeams (organizer override wins); an

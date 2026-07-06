@@ -5,6 +5,24 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-07-06 (Doha) — WAVE B launch prep: parity proof rebuilt, real FIFA ranks, ready to deploy
+
+**Commits:** this commit (`index.html` PU_RANK + `sql/standings.sql` wc_rank/comments + `tests/wave-b/*` + changelog). **Frontend const + repo-only SQL + a test harness. No live scoring change in this commit** — the SQL deploy + toggle are separate, gated steps.
+
+**Why:** clearing the two blockers to launching the dormant Wave-B power-ups. (1) The changelog's parity guarantee rested on a `scratchpad/wave-b-vectors.json` that was throwaway and **never committed** — the launch-day proof couldn't be run. (2) The `wc_rank`/`PU_RANK` table was an admitted *plausible* placeholder, not the real ranking, and had **real order errors**.
+
+**What changed:**
+- **`tests/wave-b/`** — the parity proof, rebuilt and committed: `vectors.mjs` (24 vectors: armband double/never-create/+36-final, upset direction/never-doubled/k31, shield forgive-once/no-retro, streak 2·3·4·reset, champion never-doubled, group + today's-math base), `run.mjs` (scores each through the **real SQL `standings()` on a throwaway PG16 AND the real JS `scoreFor()`**, asserting expected === SQL === JS, plus `wc_rank === PU_RANK`), `bootstrap.sh`, `README.md`. **Result: 24/24, ranks match.**
+- **Real ranks** — `PU_RANK` (index.html) and `wc_rank` (standings.sql) both replaced with the **official FIFA/Coca-Cola men's ranking, 11 June 2026 release** (frozen going into the WC; next update 20 Jul), all 48 finalists, byte-identical. Notable corrections vs placeholder: **Argentina 1 / Spain 2** (were flipped), **Portugal 5 / Brazil 6** (were flipped), **Morocco 7** (was 11), USA 17 / Mexico 14 (order reversed), Türkiye 22, Ivory Coast 33, DR Congo 46. FIFA's own numbers, so ranks skip non-WC teams (12 Italy…) — only relative order feeds the +2 bonus, so gaps are harmless.
+
+**Verified (throwaway Postgres 16 loading the REAL sql/):** 24/24 vectors expected === SQL === JS with real ranks; `wc_rank` === `PU_RANK` (48). **Zero-drift on live data:** all `wc:results` + 687 player blobs scored by the **revised** `standings()` → **687/687 identical** to the live leaderboard (no chips + no k≥25 ⇒ Wave-B terms = 0). `node --check` clean.
+
+**Next (separate gated steps):** deploy revised `sql/protect.sql` + `sql/standings.sql` live with a before/after `standings()` snapshot diff (must be zero); then the organizer flips `wc:powerups_live`. `wc_rank` and `PU_RANK` must be live-consistent before the flag is on.
+
+**Rollback:** `git revert <this commit>` restores placeholder ranks and removes the harness (frontend/test only; no DB change in this commit).
+
+---
+
 ## 2026-07-06 (Doha) — Live DB walls: wc_ko_sched (was anon-writable) + robot tick · branch ready → main
 
 **Commits:** this changelog commit on `claude/code-readiness-updates-zofscq`, which — with `84dc9ec` (launch gate) · `8bb85a4` (knockout hardening) · `ebcc341` (review hardening) — fast-forwards cleanly into `main` on merge (base `07773c5`). **The live DB change below is ALREADY APPLIED (2026-07-06 ~05:30 Doha, via SQL) and is documented here per the changelog contract.**
