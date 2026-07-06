@@ -5,6 +5,16 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-07-06 (Doha) — MAIN DEPLOY: PERF ① + ② client ships to production (SQL apply still pending)
+
+**Commits:** this commit, then `main` fast-forwarded to it and pushed **on the organizer's explicit "merge to main"**. The two PERF commits were rebased onto the FULL TIME pass tip (`130c92e`; changelog-only conflict) and **all three suites re-ran green on the rebased tree**: 27/27 Wave-B vectors through the new standings wrapper chain, 23/23 live-snapshot parity + cache checks, 27/27 boot/refresh checks, `node --check` clean. Ships PERF ① (batched one-round-trip boot + live results refresh for kiosk/long-open tabs) and PERF ②'s client half (RPC-first consensus/Room/rival reads) plus the SQL sources. **The live DB is untouched by this push**: `consensus_counts()`/`room_board()` 404 today, so every player runs the classic fallback paths byte-identically; `standings()` stays the direct engine until `sql/standings.sql` + `sql/perf.sql` are applied (deploy order + verify battery in the PERF ② entry below — target before Thursday's QF lock).
+
+**Verify after push:** Pages action green; prod `index.html` (cache-busted) contains `sbatchJSON` (PERF ①), `roomPlayers` (PERF ②) and `ftHero` (FULL TIME pass) together.
+
+**Rollback:** `git push origin +130c92e:main` (client-only — nothing server-side changed with this push).
+
+---
+
 ## 2026-07-06 (Doha) — PERF ②: slim RPCs kill the 236 KB bulk pulls + standings() served from cache
 
 **Commits:** this commit (`index.html` + new `sql/perf.sql` + `sql/standings.sql` rename + changelog). Second slice of the app-optimization pass. **NOT yet applied to the live DB** — the client is deploy-safe FIRST (every new path falls back to today's behaviour when an RPC 404s); apply `sql/standings.sql` then `sql/perf.sql` when ready, ideally before Thursday's QF crowd.
