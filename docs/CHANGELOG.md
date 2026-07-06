@@ -33,6 +33,15 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 **Verified:** `node --check` clean (script extracted the run.mjs way). **50-assert headless-Chromium suite** driving the REAL page over a fully mocked Supabase REST layer (zero live traffic; 13 crafted players over 3 real matchdays with hand-computed expectations): per-race ordering AND pts tie-breaks (Oracle 7/7 split, Trailblazer 2/2 split, Perfectionist 2/2 split), the best-ever-vs-current distinction (a broken ×7 outranks a live ×6 — and `CONS.best` still holds the live ×6 for the pulse line), every "you" gap line, `CONS.mine`, honours === race winners === FT roll (and no Frontrunner/Climber in the roll), spotlight shows once → deep-links to Awards → never re-shows, NEW-dot lifecycle, FAQ contract text, signed-out (no personal lines) / kiosk (`.tv` hides them, spotlight suppressed) / demo (pills hidden, no leakage) all clean, **0 page errors** across five boots; 390px@2× screenshots of the Trophy Room + spotlight. **Wave-B parity re-run** on the throwaway PG (bootstrap + `sql/perf.sql`, per the PERF-② procedure): **27/27 vectors** expected === SQL `standings()` === JS `scoreFor()`, `wc_rank === PU_RANK` (48) — scoring paths untouched by this pass, proven not assumed.
 
 **Rollback:** `git revert <this commit>` — frontend-only, no DB change to reverse. Optional local-state cleanup: `localStorage.removeItem('wc:seen:awards')`. Note: a revert restores `WHATSNEW_VER="2026-07-02-powerups"`, so players who consumed the trophy-room spotlight would see the power-ups spotlight once — harmless.
+## 2026-07-06 (Doha) — DESIGN PREVIEW: 10 proposed social artifacts (branch-only, nothing wired in)
+
+**Commits:** this commit (`docs/social-artifacts-preview.html` + changelog), on `claude/social-artifacts-ideas-0ocr94` only — **NOT for main**. Zero app change: `index.html` untouched, no DB, no scoring, no new state.
+
+**What:** a self-contained mock-up gallery of ten proposed share cards, drawn with faithful copies of the house canvas kit (`cardFrame`/`drawCardTrophy`/`shareBrag` geometry, Anton + Hanken Grotesk embedded as data URIs, 1080×1350) over invented demo data: ① Lock-In Slip (pre-match, own sealed picks) ② Match-Night Split (pre-match collective, consensus aggregate) ③ Rivalry Receipt (rivalH2H record, offered only while ahead) ④ Title Belts (one per honour) ⑤ The Climb (per-phase rank line) ⑥ Road to the Final (sealed bracket path) ⑦ Chip Cashed (Wave-B armband payoff) ⑧ 100 Club (milestones) ⑨ Same Brain (pick twins) ⑩ The Podium (full-time collective), plus a 9:16 story-format demo. Every design keeps the house seal rules (settled/sealed/public-standings data only, k-floors, never a shame card). Open the file directly in a browser to review; PNG download per card.
+
+**Verified:** headless Chromium — 11/11 canvases render, 0 page errors; per-card screenshots eyeballed; inline JS `node --check` clean.
+
+**Rollback:** `git revert <this commit>` (or simply never merge — the branch is the preview).
 
 ---
 
