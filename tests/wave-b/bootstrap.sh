@@ -25,5 +25,6 @@ BRAIN=$(grep -n "create or replace function wc_autoconfirm_tick" "$SQL/robot.sql
 sed -n "1,$((BRAIN-1))p" "$SQL/robot.sql" | $Q -d wc -f - >/dev/null
 $Q -d wc -f "$SQL/standings.sql" >/dev/null
 $Q -d wc -f "$SQL/protect.sql"   >/dev/null
+$Q -d wc -f "$SQL/perf.sql"      >/dev/null   # PERF ②: public standings() is a cached wrapper here — without it the suite has no standings() to call
 echo "bootstrap OK — wc_rank=$($Q -d wc -tA -c 'select count(*) from wc_rank'), wc_ko_sched=$($Q -d wc -tA -c 'select count(*) from wc_ko_sched')"
 echo "now run:  node tests/wave-b/run.mjs"

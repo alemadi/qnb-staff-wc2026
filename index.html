@@ -25,7 +25,30 @@
 <title>Staff Challenge · World Cup 2026</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<!-- PERF: warm the two origins that gate first render/first cards — the Supabase boot
+     read and the flag PNGs — so DNS+TLS is done before the requests fire -->
+<link rel="preconnect" href="https://fzybuasvhzhmkbhxbton.supabase.co" crossorigin />
+<link rel="preconnect" href="https://flagcdn.com" />
+<!-- PERF: Hanken Grotesk as ONE variable file (was five static weights) and loaded
+     off the critical path (media=print → all on load): text paints immediately in the
+     fallback stack, fonts swap in. display=swap already allowed the swap; this stops
+     the CSS from blocking first paint too. -->
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Hanken+Grotesk:wght@400..800&display=swap" rel="stylesheet" media="print" onload="this.media='all';this.onload=null" />
+<noscript><link href="https://fonts.googleapis.com/css2?family=Anton&family=Hanken+Grotesk:wght@400..800&display=swap" rel="stylesheet" /></noscript>
+<script>/* PERF: early boot — start the ONE Supabase batch read the app boots on NOW,
+   while the browser is still parsing the ~600 KB below. sbatchJSON() picks up this
+   in-flight promise (same keys) instead of fetching again. Fail-safe: any error here
+   leaves window.__BOOT unset and boot proceeds exactly as before. Keys mirror init(). */
+(function(){try{
+  var U="https://fzybuasvhzhmkbhxbton.supabase.co",K="sb_publishable_j513MlmOZHxhiGpII0uSYA_ijs2PpXV";
+  var me=null;try{me=JSON.parse(localStorage.getItem("wc:me")||"null");}catch(e){}
+  var ks=["wc:results","wc:kteams","wc:powerups_live"];if(me)ks.push("wc:player:"+me);
+  var q=ks.map(function(k){return '"'+String(k).replace(/\\/g,"\\\\").replace(/"/g,'\\"')+'"';}).join(",");
+  window.__BOOT={k:ks.join("|"),used:false,
+    p:fetch(U+"/rest/v1/kv?key=in."+encodeURIComponent("("+q+")")+"&select=key,value",
+      {headers:{apikey:K,Authorization:"Bearer "+K}})
+      .then(function(r){return r.json();}).catch(function(){return null;})};
+}catch(e){}})();</script>
 <link rel="manifest" href="manifest.json" />
 <link rel="apple-touch-icon" href="apple-touch-icon.png" />
 <style>
@@ -118,7 +141,7 @@
   @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(239,51,64,.55)}70%{box-shadow:0 0 0 9px rgba(239,51,64,0)}100%{box-shadow:0 0 0 0 rgba(239,51,64,0)}}
   .xbanner{display:flex;align-items:flex-start;gap:11px;margin-top:14px;padding:12px 38px 12px 14px;border-radius:15px;
     border:1px solid var(--gold);background:linear-gradient(96deg,rgba(180,151,89,.22),rgba(227,211,163,.07)),rgba(13,13,17,.86);
-    -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+    -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px); /* PERF: sticky blur repaints every scrolled frame on mid-range GPUs — 10px reads the same over this ~.86-opaque base */
     font-size:12.5px;line-height:1.5;color:var(--cream);position:sticky;top:calc(env(safe-area-inset-top,0px) + 4px);z-index:35;overflow:hidden;animation:xbrise .5s both;
     transition:padding .2s ease,gap .2s ease,border-radius .2s ease}
   @keyframes xbrise{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
@@ -232,7 +255,7 @@
   .lockin{margin-top:9px;font-size:10.5px;font-weight:800;color:var(--gold);letter-spacing:.3px;text-align:center;opacity:.85}
   .lockin.soon{color:var(--bad);opacity:1}
 
-  .filters{display:flex;gap:8px;overflow-x:auto;padding:12px 16px 9px;scrollbar-width:none;position:sticky;top:3px;z-index:30;margin:0 -16px;background:rgba(10,10,12,.9);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-bottom:1px solid var(--line-2)}
+  .filters{display:flex;gap:8px;overflow-x:auto;padding:12px 16px 9px;scrollbar-width:none;position:sticky;top:3px;z-index:30;margin:0 -16px;background:rgba(10,10,12,.9);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-bottom:1px solid var(--line-2)} /* PERF: 8px blur — cheaper per scrolled frame, indistinguishable over a .9-opaque base */
   .filters::-webkit-scrollbar{display:none}
   .chip{flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;min-height:44px;border:1px solid var(--line);background:var(--glass);color:var(--cream);
     padding:8px 15px;border-radius:30px;font-size:12.5px;font-weight:700;cursor:pointer;transition:.18s;white-space:nowrap;touch-action:manipulation}
@@ -494,7 +517,7 @@
   .empty b{color:var(--cream);font-size:14px;display:block;margin-bottom:4px}
   .empty span{font-size:12px}
 
-  nav.bottom{position:fixed;left:0;right:0;bottom:0;height:calc(var(--nav-h) + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);z-index:50;background:linear-gradient(0deg,rgba(8,8,10,.97),rgba(16,16,19,.9));border-top:1px solid var(--line);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);display:flex;align-items:stretch;padding-left:max(16px,calc((100% - 760px)/2));padding-right:max(16px,calc((100% - 760px)/2))}
+  nav.bottom{position:fixed;left:0;right:0;bottom:0;height:calc(var(--nav-h) + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);z-index:50;background:linear-gradient(0deg,rgba(8,8,10,.97),rgba(16,16,19,.9));border-top:1px solid var(--line);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);display:flex;align-items:stretch;padding-left:max(16px,calc((100% - 760px)/2));padding-right:max(16px,calc((100% - 760px)/2))} /* PERF: 10px blur — the gradient behind is ~.9-opaque, radius past that is pure GPU cost */
   .navbtn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:none;border:none;color:var(--faint);cursor:pointer;font-family:var(--font-b);font-weight:700;font-size:10.5px;letter-spacing:.4px;transition:.2s;position:relative}
   .navbtn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;transition:.2s}
   .navbtn.on{color:var(--gold)}
@@ -1612,6 +1635,16 @@
   .aw-pend .pulse{margin-right:6px}
   .aw-unclaimed{margin-top:7px;font-size:10.5px;font-weight:700;color:var(--faint)}
   .tv .aw-you{display:none} /* kiosk: races read, personal lines hide */
+  /* ===== PERF ===== */
+  /* Long lists: skip layout+paint for offscreen cards (104 matches / 100+ board rows).
+     contain-intrinsic-size ≈ a typical card so the scrollbar stays honest; the `auto`
+     keyword remembers each card's real height once it has rendered. */
+  .match-card{content-visibility:auto;contain-intrinsic-size:auto 230px}
+  .lb-row{content-visibility:auto;contain-intrinsic-size:auto 54px}
+  .gcard{content-visibility:auto;contain-intrinsic-size:auto 240px}
+  /* Entrance animations play when a view is ENTERED, not when a timer/refresh re-renders
+     it in place — animGate() stamps .noanim on the host for same-signature re-renders. */
+  .noanim .match-card,.noanim .lb-row,.noanim .pod,.noanim .gcard,.noanim .badges .badge{animation:none}
 </style>
 </head>
 <body>
@@ -1937,7 +1970,7 @@ const FL = {
  "Iraq":"iq","Norway":"no","Argentina":"ar","Algeria":"dz","Austria":"at","Jordan":"jo","Portugal":"pt",
  "DR Congo":"cd","England":"gb-eng","Croatia":"hr","Ghana":"gh","Panama":"pa","Uzbekistan":"uz","Colombia":"co"
 };
-function flagTag(c){return '<img class="fl-img" src="https://flagcdn.com/w40/'+c+'.png" srcset="https://flagcdn.com/w80/'+c+'.png 2x" alt="" loading="lazy">';}
+function flagTag(c){return '<img class="fl-img" src="https://flagcdn.com/w40/'+c+'.png" srcset="https://flagcdn.com/w80/'+c+'.png 2x" alt="" loading="lazy" decoding="async">';}
 function T(n){const c=FL[n];return {n:n, f:c?flagTag(c):""};}
 
 /* [id, round, home, away, kickoffUTC, venue, tag, isKnockout] */
@@ -2445,7 +2478,7 @@ async function savePicksRPC(){
   const pin=lsGet("wc:pin")||"";
   if(!/^\d{4}$/.test(pin)){needPin();return false;}
   const res=await rpc("save_picks",{p_slug:state.meSlug,p_pin:pin,p_payload:state.player});
-  if(res.ok&&res.j){bustStandings();reconcilePicks(res.j);return true;}
+  if(res.ok&&res.j){bustStandings();reconcilePicks(res.j);saveBootSnap();return true;}
   if(res.err==="wrong_pin"){lsDel("wc:pin");needPin();return false;}
   return false;
 }
@@ -2543,9 +2576,17 @@ async function sbulkJSON(pre){
 async function sbatchJSON(keys){
   if(!CONFIGURED||!keys.length)return null;
   try{
-    const q=keys.map(k=>'"'+String(k).replace(/\\/g,"\\\\").replace(/"/g,'\\"')+'"').join(",");
-    const r=await fetch(SUPABASE_URL+"/rest/v1/kv?key=in."+encodeURIComponent("("+q+")")+"&select=key,value",{headers:SBH});
-    const j=await r.json();
+    let j=null;
+    /* PERF: the head snippet may have started this exact batch read before the app
+       finished parsing — adopt the in-flight response instead of fetching twice.
+       One-shot (used flag) and key-matched, so any other caller still fetches fresh. */
+    const eb=window.__BOOT;
+    if(eb&&!eb.used&&eb.k===keys.join("|")){eb.used=true;j=await eb.p;}
+    if(!Array.isArray(j)){
+      const q=keys.map(k=>'"'+String(k).replace(/\\/g,"\\\\").replace(/"/g,'\\"')+'"').join(",");
+      const r=await fetch(SUPABASE_URL+"/rest/v1/kv?key=in."+encodeURIComponent("("+q+")")+"&select=key,value",{headers:SBH});
+      j=await r.json();
+    }
     if(!Array.isArray(j))return null;
     const out={};
     j.forEach(x=>{try{out[x.key]=(typeof x.value==="string")?JSON.parse(x.value):x.value;}catch(e){}});
@@ -2629,6 +2670,20 @@ setInterval(function(){
 function champLocked(){if(/[?&]champlock\b/.test(location.search))return true;return new Date(CHAMP_LOCK).getTime()<=Date.now()+CLOCK_OFFSET;}
 
 let state={view:"matches",meSlug:null,player:null,results:{},kteams:{},org:false,demo:false,puLive:false,filter:"MD1"};
+
+/* PERF: boot snapshot — the last server payload this device saw, kept locally so
+   init() can paint the app instantly and reconcile against the network in the
+   background (a Doha↔server round-trip used to sit between tap and first render).
+   Refreshed after every boot reconcile, results fold-in and successful save.
+   PLAYER_TOUCHED guards the reconcile: a pick tapped while the boot read was in
+   flight must never be clobbered by the (older) server blob — the queued save is
+   already carrying it to the server, and reconcilePicks remains the seal authority. */
+const SNAP_KEY="wc:bootsnap";
+let PLAYER_TOUCHED=false;
+function saveBootSnap(){
+  if(state.demo)return;
+  try{lsSet(SNAP_KEY,JSON.stringify({me:state.meSlug,player:state.player,results:state.results,kteams:state.kteams,puLive:state.puLive,t:Date.now()}));}catch(e){}
+}
 
 function slug(s){return s.trim().toLowerCase().replace(/[\s"'\/\\]+/g,"-").replace(/-+/g,"-").slice(0,60);}
 function initials(name){const p=name.trim().split(/\s+/);return ((p[0]||"")[0]||"?").toUpperCase()+((p[1]||"")[0]||"").toUpperCase();}
@@ -2794,18 +2849,30 @@ function toggleBanner(){
 function go(view){
   if((view==="matches"||view==="me")&&!state.player){toast("Join the pool to make picks \u26bd");view="join";}
   state.view=view;showView(view);}
-function showView(view){
+/* PERF: entrance animations replay only when a view is ENTERED. Every render host calls
+   animGate(host,signature) before rebuilding: same signature (a timer refresh, a results
+   fold-in, a pick re-render) \u2192 .noanim on the host and the cards skip the rise/stagger;
+   a new signature (tab entered, filter or board-mode switched) \u2192 full entrance. showView
+   clears the stamps on a view CHANGE so re-entering a tab always animates fresh. */
+let LAST_VIEW=null;
+function animGate(host,sig){
+  if(!host)return;
+  host.classList.toggle("noanim",host.dataset.rsig===sig);
+  host.dataset.rsig=sig;
+}
+function showView(view,keepScroll){
   document.body.classList.toggle("in",!!state.player);
   document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
   const el=document.getElementById("view-"+view);if(el)el.classList.add("active");
   ["matches","bracket","leaderboard","me"].forEach(n=>{const b=document.getElementById("nav-"+n);if(b){const a=n===view;b.classList.toggle("on",a);a?b.setAttribute("aria-current","page"):b.removeAttribute("aria-current");}});
+  if(view!==LAST_VIEW){LAST_VIEW=view;document.querySelectorAll("[data-rsig]").forEach(h=>{delete h.dataset.rsig;h.classList.remove("noanim");});}
   if(view==="matches"){renderFilters();renderMatches();}
   if(view==="bracket"){renderBracket();var _fb=document.getElementById("ff-bracket");if(_fb)mountFact(_fb,"bracket");}
   if(view==="leaderboard"){renderLeaderboard();markSeen("lb");}
   if(view==="me"){renderMe();showOrg();}
   if(view==="join"){rollBoard();var _fj=document.getElementById("ff-join");if(_fj)mountFact(_fj,"join");}
   updateMeBadge();updateNewDots();
-  window.scrollTo({top:0,behavior:"smooth"});
+  if(!keepScroll)window.scrollTo(0,0); /* PERF: instant \u2014 a smooth scroll used to fight the incoming view's rise animation */
 }
 
 /* Solari roll: cells step through their character set to the target, then settle.
@@ -3037,6 +3104,7 @@ function renderMatches(){
   _mtag.textContent=(lblMap[state.filter]||RLABEL[state.filter])+" · "+list.length+" match"+(list.length===1?"":"es");
   _mtag.classList.toggle("live-now",FIXTURES.some(f=>isLive(f))); /* live beacon at the top of the list */
   const host=document.getElementById("match-list");
+  animGate(host,"m:"+state.filter); /* entrance stagger on tab/filter entry; silent for timer & results re-renders */
   if(!list.length){host.innerHTML='<div class="empty"><div class="ic">📅</div><b>No matches here</b><span>Nothing scheduled for this filter today — try another tab.</span></div>'+ffInline();return;}
   const nowL=Date.now()+CLOCK_OFFSET;
   const liveNow=list.filter(m=>isLive(m)&&!isFinished(m));
@@ -3238,10 +3306,7 @@ function chipRowHTML(id){
 function rerenderChips(id){
   const host=document.querySelector('.chips[data-ch="'+id+'"]');
   if(!host)return;
-  host.innerHTML=chipRowHTML(id);
-  const cb=host.querySelector(".chipb.custom");
-  if(cb)cb.addEventListener("click",()=>{const f=document.querySelector('[data-bf="'+id+'"]');if(!f)return;f.classList.toggle("show");if(f.classList.contains("show")){const ih=f.querySelector("[data-sh]");if(ih)ih.focus();}});
-  host.querySelectorAll(".chipb[data-cid]").forEach(b=>b.addEventListener("click",()=>chipPick(b.dataset.cid,+b.dataset.h,+b.dataset.a)));
+  host.innerHTML=chipRowHTML(id); /* clicks ride the delegated #match-list listener (bindMatchEvents) */
 }
 function chipPick(id,h,a){
   if(!state.player.predictions[id])state.player.predictions[id]={};
@@ -3273,16 +3338,10 @@ function koChipRowHTML(id,mv){
   const P=state.player.predictions[id]||{};
   return koChipSet(mv,P).map(c=>'<button class="chipb'+((P.h===c[0]&&P.a===c[1])?' sel':'')+'" data-kcid="'+id+'" data-h="'+c[0]+'" data-a="'+c[1]+'">'+c[0]+'–'+c[1]+'</button>').join('')+'<button class="chipb custom" data-kbt="'+id+'">custom…</button>';
 }
-function bindKoChipRow(host){
-  host.querySelectorAll(".chipb[data-kcid]").forEach(b=>b.addEventListener("click",()=>koChipPick(b.dataset.kcid,+b.dataset.h,+b.dataset.a)));
-  const cb=host.querySelector(".chipb.custom");
-  if(cb)cb.addEventListener("click",()=>{const f=document.querySelector('[data-kbf="'+cb.dataset.kbt+'"]');if(!f)return;f.classList.toggle("show");if(f.classList.contains("show")){const ih=f.querySelector("[data-ksh]");if(ih)ih.focus();}});
-}
 function rerenderKoChips(id){
   const host=document.querySelector('.chips[data-kch="'+id+'"]');
   if(!host)return;
-  host.innerHTML=koChipRowHTML(id);
-  bindKoChipRow(host);
+  host.innerHTML=koChipRowHTML(id); /* clicks ride the delegated #match-list listener (bindMatchEvents) */
 }
 function koChipPick(id,h,a){
   if(!state.player.predictions[id])state.player.predictions[id]={};
@@ -3320,29 +3379,74 @@ function wireScorePair(hi,ai,next){
   hi.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();ai.focus();}});
   ai.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();if(next)next();else ai.blur();}});
 }
+/* PERF: ONE delegated listener set on #match-list replaces the ~1k per-button bindings
+   a full-list render used to attach (and re-attach on every re-render). Installed once;
+   innerHTML rebuilds just swap the children under it. Scoped to the list host on
+   purpose: the swipe deck, fine-tune sheet and organizer editors keep their own wiring
+   (fine-tune chips carry data-cid too — document-level delegation would double-fire
+   them). Behavior preserved from the per-element version: sanitize-first, home→away
+   auto-advance, select-on-focus, Enter walks home→away→commit, 450ms save-while-typing. */
+let MEV_ON=false;
 function bindMatchEvents(){
-  document.querySelectorAll(".picks").forEach(row=>{row.querySelectorAll(".pick").forEach(btn=>btn.addEventListener("click",()=>{
-    if(btn.dataset.w!=null)pickWinner(row.dataset.mid,btn.dataset.w);
-    else pickOutcome(row.dataset.mid,btn.dataset.o);
-  }));});
-  document.querySelectorAll(".chipb.custom[data-bt]").forEach(b=>b.addEventListener("click",()=>{const f=document.querySelector('[data-bf="'+b.dataset.bt+'"]');if(!f)return;f.classList.toggle("show");if(f.classList.contains("show")){const ih=f.querySelector("[data-sh]");if(ih)ih.focus();}}));
-  document.querySelectorAll(".chipb[data-cid]").forEach(b=>b.addEventListener("click",()=>chipPick(b.dataset.cid,+b.dataset.h,+b.dataset.a)));
-  document.querySelectorAll(".chips[data-kch]").forEach(bindKoChipRow);
-  /* pair wiring first — its sanitizer must run before the debounced saves below */
-  document.querySelectorAll("[data-sh]").forEach(hi=>wireScorePair(hi,document.querySelector('[data-sa="'+hi.dataset.sh+'"]')));
-  document.querySelectorAll("[data-ksh]").forEach(hi=>wireScorePair(hi,document.querySelector('[data-ksa="'+hi.dataset.ksh+'"]')));
-  document.querySelectorAll(".scorein").forEach(inp=>{
-    const fire=()=>{const id=inp.dataset.sh||inp.dataset.sa;if(!id)return; /* group score; knockout inputs use data-ks* below */
-      saveScore(id,document.querySelector('[data-sh="'+id+'"]').value,document.querySelector('[data-sa="'+id+'"]').value);};
-    inp.addEventListener("change",fire);
-    let t;inp.addEventListener("input",()=>{clearTimeout(t);t=setTimeout(fire,450);}); /* save while typing — blur no longer required */
+  if(MEV_ON)return;
+  const list=document.getElementById("match-list");if(!list)return;
+  MEV_ON=true;
+  list.addEventListener("click",function(e){
+    const pk=e.target.closest(".pick");
+    if(pk){const row=pk.closest(".picks[data-mid]");if(!row)return;
+      if(pk.dataset.w!=null)pickWinner(row.dataset.mid,pk.dataset.w);
+      else pickOutcome(row.dataset.mid,pk.dataset.o);
+      return;}
+    const b=e.target.closest(".chipb");
+    if(!b)return;
+    if(b.dataset.bt!=null||b.dataset.kbt!=null){       /* custom… toggles the score fields */
+      const ko=b.dataset.kbt!=null,id=ko?b.dataset.kbt:b.dataset.bt;
+      const f=document.querySelector(ko?('[data-kbf="'+id+'"]'):('[data-bf="'+id+'"]'));
+      if(!f)return;f.classList.toggle("show");
+      if(f.classList.contains("show")){const ih=f.querySelector(ko?"[data-ksh]":"[data-sh]");if(ih)ih.focus();}
+      return;}
+    if(b.dataset.cid)chipPick(b.dataset.cid,+b.dataset.h,+b.dataset.a);
+    else if(b.dataset.kcid)koChipPick(b.dataset.kcid,+b.dataset.h,+b.dataset.a);
   });
-  document.querySelectorAll("[data-ksh],[data-ksa]").forEach(inp=>{
-    const id=inp.dataset.ksh||inp.dataset.ksa;
-    const fire=()=>koSaveScore(id);
-    inp.addEventListener("change",fire);
-    let t;inp.addEventListener("input",()=>{clearTimeout(t);t=setTimeout(fire,450);});
+  list.addEventListener("focusin",function(e){
+    const i=e.target;
+    if(i.classList&&i.classList.contains("scorein"))requestAnimationFrame(function(){try{i.select();}catch(err){}});
   });
+  list.addEventListener("input",function(e){
+    const i=e.target;
+    if(!i.classList||!i.classList.contains("scorein"))return;
+    const v=i.value.replace(/\D/g,"").slice(0,2);      /* sanitize FIRST — the save below reads the cleaned value */
+    i.value=(+v>20)?"20":v;
+    const hid=i.dataset.sh||i.dataset.ksh;
+    if(hid&&i.value.length){                            /* home→away auto-advance while away is still empty */
+      const ai=document.querySelector(i.dataset.sh?('[data-sa="'+hid+'"]'):('[data-ksa="'+hid+'"]'));
+      if(ai&&ai.value==="")ai.focus();
+    }
+    clearTimeout(i.__sT);i.__sT=setTimeout(function(){fireScore(i);},450); /* save while typing — blur not required */
+  });
+  list.addEventListener("change",function(e){
+    const i=e.target;
+    if(i.classList&&i.classList.contains("scorein")){clearTimeout(i.__sT);fireScore(i);}
+  });
+  list.addEventListener("keydown",function(e){
+    if(e.key!=="Enter")return;
+    const i=e.target;
+    if(!i.classList||!i.classList.contains("scorein"))return;
+    e.preventDefault();
+    const hid=i.dataset.sh||i.dataset.ksh;
+    if(hid){const ai=document.querySelector(i.dataset.sh?('[data-sa="'+hid+'"]'):('[data-ksa="'+hid+'"]'));if(ai)ai.focus();}
+    else i.blur();                                      /* away box: Enter commits (change fires on blur) */
+  });
+}
+function fireScore(i){
+  const gid=i.dataset.sh||i.dataset.sa;
+  if(gid){ /* group score; knockout inputs use data-ks* below */
+    const h=document.querySelector('[data-sh="'+gid+'"]'),a=document.querySelector('[data-sa="'+gid+'"]');
+    if(h&&a)saveScore(gid,h.value,a.value);
+    return;
+  }
+  const kid=i.dataset.ksh||i.dataset.ksa;
+  if(kid)koSaveScore(kid);
 }
 /* Optional knockout score prediction. Each field parses independently and h/a only
    persist once BOTH boxes are filled — the debounced save used to coerce the untouched
@@ -3387,7 +3491,7 @@ function syncProgress(){
   _lastPredC=c;
 }
 let saveChain=Promise.resolve();
-function queueSave(){saveChain=saveChain.then(()=>persistPlayer());}
+function queueSave(){PLAYER_TOUCHED=true;saveChain=saveChain.then(()=>persistPlayer());}
 /* --- reward layer: pop + stakes float + completion confetti (frontend-only, all guarded) --- */
 function stakeText(id){
   try{
@@ -3583,6 +3687,7 @@ function lbRowHTML(r,i,PT){
 function lbMore(){LB_SHOWN+=200;renderLeaderboard();}
 async function renderLeaderboard(){
   const body=document.getElementById("lb-body");
+  animGate(body,"lb:"+LB_MODE+(state.demo?":demo":"")); /* mode switches animate; the consensus enrich + live heartbeat re-render silently */
   document.getElementById("demo-banner").style.display=state.demo?"flex":"none";
   const lbl=document.getElementById("lb-live");   /* honest Live tag: pulse only while a match is actually live */
   if(lbl)lbl.innerHTML=FIXTURES.some(isLive)?'<span class="pulse"></span> Live':'Standings';
@@ -3913,6 +4018,7 @@ function rtmStrip(g){
 }
 async function renderMe(){
   if(!state.player){go("join");return;}
+  animGate(document.getElementById("mecard"),"me"); /* badges pop on entry, not on every results refresh */
   if(CONFIGURED&&!state.demo)consensusFull().catch(function(){});
   const s=scoreFor(state.player.predictions,state.results,state.player.champ,puChips()); /* WAVE B — power-up-aware (identical pre-QF) */
   const pc=predCount();
@@ -4137,6 +4243,7 @@ function computeGroupTable(g){
 }
 function renderGroups(){
   const host=document.getElementById("grp-body");
+  animGate(host,"grp"); /* rides along with every renderBracket — stagger only on entry */
   if(!host)return;
   let html="",totDone=0;
   GROUPS.forEach(g=>{
@@ -4203,6 +4310,7 @@ function nextHint(m){
 }
 function renderBracket(){
   const host=document.getElementById("brk-body");if(!host)return;
+  animGate(host,"brk"); /* a knockout pick re-renders the tree — no entrance replay mid-interaction */
   KO_AUTO=null; /* re-derive knockout teams from the latest standings/results this render */
   let kp=0,kc=0,ktot=0;
   if(state.player)FIXTURES.forEach(m=>{if(!m.kn)return;const r=state.results[m.id],p=state.player.predictions[m.id];if(!r||!r.w||!p)return;if(p.w){ktot++;if(p.w===r.w){kc++;kp+=koPts(m);}}if(koScoreHit(p,r))kp+=koBonus(m);});
@@ -4828,6 +4936,7 @@ let LB_MODE="people";
 })();
 
 function renderPulse(){
+  if(document.hidden)return; /* PERF: pocketed tab — the visibilitychange hook re-runs this on return */
   const el=document.getElementById("pulsebar");if(!el)return;
   KO_AUTO=null; /* re-derive knockout teams from the latest standings/results this tick */
   const now=Date.now()+CLOCK_OFFSET;
@@ -7815,12 +7924,14 @@ async function refreshResults(){
   }
   if(!added)return;
   bustStandings();                                   /* scoring inputs changed — next standings/KO read recomputes */
+  saveBootSnap();                                    /* keep the instant-boot snapshot as fresh as this tab */
   if(state.view==="matches"){renderFilters();renderMatches();}
   else if(state.view==="bracket")renderBracket();
   else if(state.view==="leaderboard")renderLeaderboard();
   else if(state.view==="me")renderMe();
 }
 function liveTick(){
+  if(document.hidden)return; /* PERF: no ESPN/results polling from a pocketed tab — visibilitychange refreshes on return */
   const now=Date.now()+CLOCK_OFFSET;
   const active=FIXTURES.some(m=>{const k=new Date(m.ko).getTime();return now>k-15*60e3&&now<k+(m.kn?210:150)*60e3;});
   if(active){fetchLive();refreshResults();}
@@ -7962,45 +8073,98 @@ function tvLoop(){
 }
 
 (async function init(){
-  /* Boot reads collapsed into ONE request (results+kteams+flag+own blob used to be
-     four serial awaits = four Doha→Sydney round-trips before first render). The
-     serial path below is kept verbatim as the fallback for any batch hiccup. */
+  /* Boot, three layers (fastest first):
+     ① SNAPSHOT — the last payload this device saw (wc:bootsnap) paints the app
+        immediately, with no network in front of first render.
+     ② BATCH — the ONE request (head-started; results+kteams+flag+own blob used to be
+        four serial awaits = four Doha→Sydney round-trips before first render) lands
+        and reconciles: anything that changed since last visit re-renders in place.
+     ③ SERIAL — the per-key path below is kept verbatim as the fallback for any
+        batch hiccup.
+     A first-ever visit has no snapshot and boots exactly as before: batch → paint. */
   const me=await getJSON("wc:me",false);
   const bkeys=["wc:results","wc:kteams","wc:powerups_live"];if(me)bkeys.push("wc:player:"+me);
-  const boot=await sbatchJSON(bkeys);
-  if(boot){
-    state.results=boot["wc:results"]||{};
-    state.kteams=boot["wc:kteams"]||{};
-    state.puLive=!!boot["wc:powerups_live"];                 /* WAVE B launch gate — off until the organizer flips it (see runbook) */
-    if(me&&boot["wc:player:"+me]){state.player=boot["wc:player:"+me];state.meSlug=me;}
-  }else{
-    state.results=await getJSON("wc:results",true)||{};
-    state.kteams=await getJSON("wc:kteams",true)||{};
-    state.puLive=!!(await getJSON("wc:powerups_live",true)); /* WAVE B launch gate — off until the organizer flips it (see runbook) */
-    if(me){const p=await getJSON("wc:player:"+me,true);if(p){state.player=p;state.meSlug=me;}}
-  }
-  state.resultsSeen=new Set(Object.keys(state.results));     /* keys this tab has ever seen — so an org save can't wipe robot results it never loaded */
-  state.org=false; /* org actions are server-verified per call — unlock fresh each load */
-  state.filter=defaultRound();
   const TV=tvMode();                                 /* MATCHNIGHT F4 — kiosk board */
   if(TV)document.body.classList.add("tv");
-  if(state.player){
-    document.getElementById("userchip").style.display="flex";
-    {const sh=document.getElementById("sharehub");if(sh&&!state.demo)sh.style.display="flex";} /* 📤 share hub — every view, signed-in only */
-    setTimeout(function(){try{refreshShareBadge();}catch(e){}},1200); /* hub count, once boot's standings cache is warm */
-    document.getElementById("countdown").style.display="flex";
-    const h=(location.hash||"").slice(1);
-    updateChip();go(TV?"leaderboard":(["matches","bracket","leaderboard","me"].indexOf(h)>=0?h:"matches"));
-    if(!TV){if(!openReveal()){if(!maybeWrapped()){if(!maybeWhatsNew())welcomeDelta();}}}  /* TV: no boot popups on the office screen · Wrapped auto-opens once at full time */
-  }else{go(TV?"leaderboard":"join");}                /* the board reads fine signed-out */
+  let painted=false;
+  const paint=function(){                            /* first render — shared by ① and ② */
+    state.resultsSeen=new Set(Object.keys(state.results)); /* keys this tab has ever seen — so an org save can't wipe robot results it never loaded */
+    state.org=false; /* org actions are server-verified per call — unlock fresh each load */
+    state.filter=defaultRound();
+    if(state.player){
+      document.getElementById("userchip").style.display="flex";
+      {const sh=document.getElementById("sharehub");if(sh&&!state.demo)sh.style.display="flex";} /* 📤 share hub — every view, signed-in only */
+      setTimeout(function(){try{refreshShareBadge();}catch(e){}},1200); /* hub count, once boot's standings cache is warm */
+      document.getElementById("countdown").style.display="flex";
+      const h=(location.hash||"").slice(1);
+      updateChip();go(TV?"leaderboard":(["matches","bracket","leaderboard","me"].indexOf(h)>=0?h:"matches"));
+    }else{go(TV?"leaderboard":"join");}              /* the board reads fine signed-out */
+    painted=true;
+  };
+  let snap=null;
+  try{const s=lsGet(SNAP_KEY);if(s)snap=JSON.parse(s);}catch(e){snap=null;}
+  if(snap&&typeof snap==="object"&&snap.me===(me||null)){ /* identity must match — a signed-out or re-claimed device never paints someone else's picks */
+    state.results=snap.results||{};state.kteams=snap.kteams||{};state.puLive=!!snap.puLive;
+    if(me&&snap.player){state.player=snap.player;state.meSlug=me;}
+    paint();
+  }
+  const boot=await sbatchJSON(bkeys);
+  const srv={ok:!!boot,results:null,kteams:null,puLive:false,player:null};
+  if(boot){
+    srv.results=boot["wc:results"]||{};
+    srv.kteams=boot["wc:kteams"]||{};
+    srv.puLive=!!boot["wc:powerups_live"];           /* WAVE B launch gate — off until the organizer flips it (see runbook) */
+    if(me&&boot["wc:player:"+me])srv.player=boot["wc:player:"+me];
+  }else{
+    srv.results=await getJSON("wc:results",true);
+    srv.kteams=await getJSON("wc:kteams",true);
+    srv.puLive=!!(await getJSON("wc:powerups_live",true)); /* WAVE B launch gate — off until the organizer flips it (see runbook) */
+    if(me)srv.player=await getJSON("wc:player:"+me,true);
+    srv.ok=srv.results!=null||srv.kteams!=null||srv.player!=null; /* any read landing proves the server was reachable */
+  }
+  if(!painted){                                      /* no snapshot — the classic path: server truth, then first paint */
+    state.results=srv.results||{};
+    state.kteams=srv.kteams||{};
+    state.puLive=srv.puLive;
+    if(me&&srv.player){state.player=srv.player;state.meSlug=me;}
+    paint();
+    if(srv.ok)saveBootSnap();
+  }else if(srv.ok){                                  /* snapshot painted — fold in server truth; re-render only if something changed */
+    const nr=srv.results||{},nk=srv.kteams||{},npl=(me&&srv.player)||null;
+    let chg=(JSON.stringify(nr)!==JSON.stringify(state.results))
+          ||(JSON.stringify(nk)!==JSON.stringify(state.kteams))
+          ||(srv.puLive!==state.puLive);
+    state.results=nr;state.kteams=nk;state.puLive=srv.puLive;
+    state.resultsSeen=new Set(Object.keys(nr));      /* server truth — same set the classic boot would have held */
+    if(!PLAYER_TOUCHED){                             /* untouched → server blob is canonical (mirrors the classic boot); touched → the queued save is already carrying the newer picks up */
+      if(JSON.stringify(npl)!==JSON.stringify(state.player))chg=true;
+      state.player=npl;
+      if(me&&!npl)state.meSlug=null;                 /* blob gone server-side (re-claim/reset) → sign-in, exactly as a fresh boot would */
+    }
+    if(chg){
+      bustStandings();
+      if(me&&!state.player)paint();                  /* player dropped → the join flow owns the screen */
+      else if(state.view!=="join"){updateChip();showView(state.view,true);} /* repaint in place — same view+scroll, animGate skips the entrance replay */
+    }
+    saveBootSnap();
+  }
+  /* boot popups only once server truth has settled — reveal/wrapped read results */
+  if(state.player&&!TV){if(!openReveal()){if(!maybeWrapped()){if(!maybeWhatsNew())welcomeDelta();}}}  /* TV: no boot popups on the office screen · Wrapped auto-opens once at full time */
   if(TV)tvLoop();
   setupBanner();
   renderPulse();setInterval(renderPulse,30000);
   fetchLive();setInterval(liveTick,60000);
-  document.addEventListener("visibilitychange",function(){if(document.hidden)return;if(LIVEF.on)fetchLive();refreshResults();}); /* tab-return: live scores + any results settled while pocketed */
+  document.addEventListener("visibilitychange",function(){if(document.hidden)return;renderPulse();if(LIVEF.on)fetchLive();refreshResults();}); /* tab-return: pulse + live scores + any results settled while pocketed */
   if(!CONFIGURED){const w=document.getElementById("cfg-warn");if(w)w.style.display="block";}
   syncClock();setInterval(syncClock,600000);
   tickCountdown();setInterval(tickCountdown,1000);
+  /* PWA: repeat opens serve the shell from cache (stale-while-revalidate) and the
+     installed app works offline. Registered at/after load so it never competes with
+     boot (init awaits the network, so load may already be behind us — check first). */
+  try{if("serviceWorker" in navigator){
+    const reg=function(){navigator.serviceWorker.register("sw.js").catch(function(){});};
+    if(document.readyState==="complete")reg();else addEventListener("load",reg);
+  }}catch(e){}
 })();
 </script>
 </body>

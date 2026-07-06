@@ -5,6 +5,42 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-07-06 (Doha) — PERF PACK: instant boot + offline shell + buttery lists (frontend & test-infra only)
+
+**Commits:** this commit (`index.html` + `watch.html` + NEW `sw.js` + NEW `tests/perf-boot/run.mjs` + wave-b harness fixes + changelog), on `claude/app-responsiveness-performance-hwsqee`, **rebased onto the awareness-pass tip (`3e7c14c`)** — one conflict in `init()` (the share-hub boot lines vs the restructured snapshot boot), resolved by folding the hub display + badge refresh into the shared `paint()` path, so the hub shows on the instant snapshot paint too. **Frontend + test infra only — no DB change, no scoring-math change, no sync-protocol change: every Supabase read and write is byte-identical to before** (same endpoints, same payloads; boot even reuses the exact `key=in.(…)` batch read, just started earlier).
+
+**What (loading — the network is no longer in front of first paint):**
+- **Service worker (`sw.js`, NEW):** app shell (`/`, `watch.html`, manifest, icons) served stale-while-revalidate — repeat opens paint from cache and refresh in the background; a deploy reaches a device on its **second** open (same order of staleness GitHub Pages' 10-min HTML cache already allowed). Font files / flag PNGs / versioned cdnjs libs are cache-first. **Supabase, ESPN and Carto tiles are never intercepted** — live data stays live. The installed PWA now opens offline instead of a white page.
+- **Boot snapshot (`wc:bootsnap`):** init() paints immediately from the last payload this device saw, then reconciles when the real batch read lands — re-rendering in place only if something changed. Identity-guarded (`snap.me` must match `wc:me`), and a pick tapped while the read was in flight is never clobbered (`PLAYER_TOUCHED` — the queued save carries it up; `reconcilePicks` remains the seal authority). Snapshot refreshed after boot reconcile, results fold-in (`refreshResults`) and every successful `save_picks`. First-ever visits have no snapshot and boot exactly as before.
+- **Early boot fetch:** a tiny head snippet starts the existing batch read while the browser is still parsing the ~600 KB page; `sbatchJSON` adopts the in-flight promise (key-matched, one-shot) instead of fetching again. Any error leaves `window.__BOOT` unset and boot proceeds unchanged.
+- **Preconnects** for the Supabase origin (it gated first render and was never preconnected) and flagcdn; **fonts** collapsed to one variable file (was five static weights) and moved off the critical path (`media=print` → `all` on load, `<noscript>` fallback) — text paints immediately in the fallback stack.
+
+**What (rendering — steadier frames on mid-range phones):**
+- `content-visibility:auto` + `contain-intrinsic-size` on `.match-card` / `.lb-row` / `.gcard` — offscreen cards in the 104-match list and 100-row board skip layout+paint entirely.
+- **ONE delegated listener set on `#match-list`** (`bindMatchEvents`) replaces the ~1k per-button bindings a full render used to attach and re-attach. Scoped to the list host on purpose: swipe deck, fine-tune sheet and organizer editors keep their own wiring (fine-tune chips carry `data-cid` too — document-level delegation would double-fire them). Sanitize-first / home→away auto-advance / select-on-focus / Enter-walk / 450 ms save-while-typing all preserved; `wireScorePair` stays for the organizer editors.
+- **animGate():** entrance animations (rise/stagger/badge pop) play when a view is ENTERED or its mode/filter switches — never on the 30 s lock-flip re-render, the consensus enrich, the live-board heartbeat, a results fold-in or a knockout pick re-render. Re-entering a tab still animates fresh.
+- Tab switches scroll instantly (the smooth scroll used to fight the incoming view's rise animation); sticky/fixed backdrop blurs trimmed (14/12/16 → 10/8/10 px over ~.9-opaque bases — GPU cost per scrolled frame, invisible difference); flag `<img>`s decode async; `renderPulse`/`liveTick` skip pocketed tabs (visibilitychange already refreshes on return, now including the pulse bar).
+
+**What (watch.html):** Leaflet + markercluster load `defer`red (they blocked parse/paint of the whole list); the map builds in `initMap()` at DOMContentLoaded with a pin re-sync if someone filtered before it landed, and degrades exactly as before if the CDN is unreachable (map hidden, list fine). Same font treatment + SW registration + pocketed-tab guard on its 60 s refresh.
+
+**Test infra (pre-existing breakage fixed + new proof):**
+- `tests/wave-b/run.mjs`: the script-block extractor took the FIRST `</script>` in the file — the new head snippet closes earlier, so it now finds the first close AFTER the app block opens (head one-liners open as `<script>/*…` so `start` never matches them).
+- `tests/wave-b/bootstrap.sh`: loads `sql/perf.sql` — since PERF ② the public `standings()` RPC is the cached wrapper defined THERE; the throwaway PG had no `standings()` at all and the suite died on vector 0 (pre-existing, unrelated to this push).
+- NEW `tests/perf-boot/run.mjs`: serves the repo on localhost (SW needs a secure context) and proves, fully mocked: snapshot paint beats a 2.5 s-throttled network (~100 ms), delegated pick tap selects + persists via `save_picks`, the reconcile keeps that pick, and an OFFLINE reload still boots to match cards (SW shell + snapshot).
+
+**Verified (on the REBASED tree, share-tray + awareness code included):** `node --check` clean on every script block (app, head snippet, both watch.html blocks, sw.js) · share-cards suite (42 checks incl. tray + hub badge) **ALL GREEN, zero page errors** · wave-b **27/27 vectors, `wc_rank === PU_RANK`** (SQL === JS on the modified extraction) · perf-boot **ALL GREEN** · watch.html headless: deferred map builds (44 markers clustered, zero errors) and CDN-dead fallback intact.
+
+**Rollback (git):** `git revert <this commit>`. Two operational notes: (1) devices that already installed the service worker keep serving the LAST cached shell until their next successful revalidation — after a revert they self-heal on the second open, same as any deploy; (2) to actively unregister deployed workers instead, don't just delete `sw.js` — ship a kill-switch in its place:
+```js
+self.addEventListener("install",e=>self.skipWaiting());
+self.addEventListener("activate",e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.map(k=>caches.delete(k)))).then(()=>self.registration.unregister()))});
+```
+
+**Rollback (DB), if applicable:**
+    none — no database or kv change in this push
+
+---
+
 ## 2026-07-06 (Doha) — AWARENESS PASS: the one-shot spotlight gets three persistent companions
 
 **Commits:** this commit (`index.html` + `tests/share-cards/run.mjs` + changelog), on `claude/social-artifacts-ideas-0ocr94`. **Frontend only — no DB change.** Organizer's feedback: the What's-new spotlight "shows once then disappears" — one dismissal and the share cards are invisible again.

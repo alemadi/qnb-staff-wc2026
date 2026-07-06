@@ -30,8 +30,8 @@ for (const line of out.split("\n")) { const m = line.match(/^VEC\|(\d+)\|(-?\d+)
 
 // ---- JS side: real scoreFor, puLive=true, chips ?? null (mirrors live puChips post-launch) ----
 const html = readFileSync(INDEX, "utf8").split("\n");
-const end = html.findIndex(l => l.includes("</script>"));
-const start = html.findIndex(l => l.trim() === "<script>"); // located, not hardcoded — markup above the script moves as the app grows
+const start = html.findIndex(l => l.trim() === "<script>"); // located, not hardcoded — markup above the script moves as the app grows (head one-liner scripts open as "<script>/*…" so they never match)
+const end = html.findIndex((l, i) => i > start && l.includes("</script>")); // first close AFTER the app block opens — the head perf snippet closes earlier on its own line
 let appSrc = html.slice(start + 1, end).join("\n");
 const ii = appSrc.indexOf("(async function init(){"); if (ii > 0) appSrc = appSrc.slice(0, ii);
 const chain = new Proxy(function () {}, { get(_t, p) { if (p === "length") return 0; if (p === Symbol.toPrimitive) return () => 0; return chain; }, apply() { return chain; }, set() { return true; }, construct() { return chain; } });

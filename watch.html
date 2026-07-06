@@ -11,7 +11,11 @@
 <meta property="og:type" content="website">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+<link rel="preconnect" href="https://flagcdn.com">
+<!-- PERF: one variable file (was five weights), loaded off the critical path — matches index.html -->
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Hanken+Grotesk:wght@400..800&display=swap" rel="stylesheet" media="print" onload="this.media='all';this.onload=null">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Anton&family=Hanken+Grotesk:wght@400..800&display=swap" rel="stylesheet"></noscript>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.css">
@@ -573,8 +577,10 @@
 
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
+<!-- PERF: deferred — Leaflet no longer blocks parse/paint of the list above; the map
+     builds at DOMContentLoaded (deferred scripts are guaranteed to run first) -->
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
 <script>
 
 
@@ -646,8 +652,12 @@ function havKm(la1, lo1, la2, lo2){
 const fmtKm = km => km < 10 ? km.toFixed(1) : String(Math.round(km));
 
 /* ---- the map (Leaflet + Carto dark tiles, no API key needed) ---- */
+/* PERF: Leaflet loads with `defer` now, so it isn't here yet while this inline script
+   parses — the whole build moved into initMap(), called at DOMContentLoaded (deferred
+   scripts run first). Everything below already null-guards map/cluster. */
 let map = null, cluster = null;
 const markers = {};
+function initMap(){
 if (window.L && L.markerClusterGroup) {
   map = L.map("map", { scrollWheelZoom: false });
   L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
@@ -722,6 +732,12 @@ if (window.L && L.markerClusterGroup) {
   const mb = document.getElementById("map"); if (mb) mb.style.display = "none";
   const lg = document.getElementById("legend"); if (lg) lg.style.display = "none";
 }
+}
+document.addEventListener("DOMContentLoaded", function(){
+  initMap();
+  /* someone can filter/search in the sub-second before the map lands — re-sync the pins */
+  try{ if (map && (q.value || typ !== "all")) render(q.value); }catch(e){}
+});
 
 /* ---- list + filter (drives the map too) ---- */
 const grid  = document.getElementById("venues");
@@ -1195,7 +1211,14 @@ renderPicker();
 renderMatches();
 renderTonight();
 loadBracket();
-setInterval(function(){ renderMatches(); renderTonight(); }, 60000); // keep "Up next / Live now" fresh
+setInterval(function(){ if(document.hidden)return; renderMatches(); renderTonight(); }, 60000); // keep "Up next / Live now" fresh (PERF: not from a pocketed tab)
+document.addEventListener("visibilitychange", function(){ if(!document.hidden){ renderMatches(); renderTonight(); } });
+
+/* PWA: same worker as the main app — repeat opens serve this shell from cache */
+try{ if("serviceWorker" in navigator){
+  const swReg = function(){ navigator.serviceWorker.register("sw.js").catch(function(){}); };
+  if (document.readyState === "complete") swReg(); else addEventListener("load", swReg);
+}}catch(e){}
 
 })();
 </script>
