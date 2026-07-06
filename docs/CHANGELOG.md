@@ -5,6 +5,20 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-07-06 (Doha) — DECLUTTER: quieter top-of-app — brand yields, power-ups strip calms + can now be dismissed
+
+**Commits:** this commit (`index.html` + changelog), on `claude/frontend-update-feedback-c6z5k0` — organizer feedback that the new front-end update read loud/cluttered. **Frontend only — no DB, scoring or sync change.**
+
+**Why:** the awareness/share/power-ups additions stacked a gold "Power-ups are LIVE" strip, the 📤 hub + count badge and the user chip above the matches. Two real problems under the loudness: (1) the big "STAFF CHALLENGE" wordmark still overflowed onto the hub for signed-in phone players — the header-integrity check was in fact **RED at 340/390/460px before this commit** (the hotfix's bounding-box test cleared at its checked widths, but the wordmark's own glyphs bled past its flex box), and 340px also carried a horizontal overflow from the room match-`<select>`; (2) even calmed, the strip was permanent gold that could only be shrunk, never dismissed.
+
+**What:**
+- **Header — the brand yields instead of colliding:** signed-in wordmark drops to `clamp(15px,4.3vw,20px)` at ≤699px (replacing the fixed 21px step that only kicked in at ≤349px) and `.mark` gets `overflow:hidden` so it can never bleed onto the hub; the name chip tightens in three steps (84 / 72 / 60px) to hold the brand's room down to relic widths; wordmark glow softened (`.22`→`.12`).
+- **Power-ups strip — dismissible + quiet:** the strip's corner button is now a **✕ that dismisses it for good** (remembered in `wc:banner:hide`); tapping the strip still expands the full detail card, whose ▴ collapses back to the strip. Styling calmed from a gold billboard to a subtle dark strip — border `var(--gold)`→`rgba(180,151,89,.28)`, background flat `rgba(18,18,24,.92)`, the flame animation dropped, one ⚡ instead of two, headline goes `--cream`, and the hub count badge loses its glow.
+- **Overflow fix:** `select.input{max-width:100%}` — the room match-selector no longer forces a horizontal scrollbar on ≤340px phones (was the second half of the 340px header-integrity failure).
+
+**Verified:** share-cards suite **ALL GREEN** including the 6-width header-integrity sweep (340→1024) — clean where 340/390/460 were failing immediately before this commit (reproduced red, then green); perf-boot green; zero page errors. Banner still shows by default and opens the tray (existing assertions untouched); the ✕ dismiss (hides + persists `wc:banner:hide`) and tap-to-expand were exercised headless.
+
+**Rollback:** `git revert` this commit — restores the louder gold strip (shrink-only, no dismiss) and the 340/390/460px header-integrity failures.
 ## 2026-07-06 (Doha) — HOTFIX: header collision — the 📤 hub broke the brand row on 440–699px phones
 
 **Commits:** this commit (`index.html` + `tests/share-cards/run.mjs` + changelog), deployed to `main` immediately — **live regression, reported by the organizer with a player screenshot** (~460px viewport: the hub sat on top of "WORLD CUP 26", wordmark wrapped vertically). **CSS-only.**

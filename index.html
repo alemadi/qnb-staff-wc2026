@@ -103,10 +103,10 @@
   /* Header */
   header.app{padding:calc(24px + env(safe-area-inset-top)) 0 14px;position:relative}
   .brandrow{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
-  .mark{display:flex;align-items:baseline;gap:12px;min-width:0}
+  .mark{display:flex;align-items:baseline;gap:12px;min-width:0;overflow:hidden}
   .mark .wm{font-family:var(--font-d);font-size:clamp(25px,7.4vw,42px);line-height:.84;letter-spacing:.5px;
     background:linear-gradient(96deg,var(--gold-deep),var(--gold-bright) 45%,var(--gold));
-    -webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 2px 14px rgba(180,151,89,.22))}
+    -webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 2px 10px rgba(180,151,89,.12))}
   .mark .divider{width:3px;align-self:stretch;background:var(--tiles-v);border-radius:2px;opacity:.9;margin-top:4px}
   .mark .wc{display:flex;flex-direction:column;gap:2px;padding-top:2px;min-width:0}
   .mark .wc b{font-weight:800;font-size:clamp(13px,3.4vw,16px);letter-spacing:3px;text-transform:uppercase}
@@ -140,15 +140,15 @@
   .pulse{width:7px;height:7px;border-radius:50%;background:var(--magenta-2);box-shadow:0 0 0 0 rgba(239,51,64,.6);animation:pulse 1.8s infinite}
   @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(239,51,64,.55)}70%{box-shadow:0 0 0 9px rgba(239,51,64,0)}100%{box-shadow:0 0 0 0 rgba(239,51,64,0)}}
   .xbanner{display:flex;align-items:flex-start;gap:11px;margin-top:14px;padding:12px 38px 12px 14px;border-radius:15px;
-    border:1px solid var(--gold);background:linear-gradient(96deg,rgba(180,151,89,.22),rgba(227,211,163,.07)),rgba(13,13,17,.86);
-    -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px); /* PERF: sticky blur repaints every scrolled frame on mid-range GPUs — 10px reads the same over this ~.86-opaque base */
+    border:1px solid rgba(180,151,89,.28);background:rgba(18,18,24,.92);
+    -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px); /* PERF: sticky blur repaints every scrolled frame on mid-range GPUs — 10px reads the same over this ~.92-opaque base */
     font-size:12.5px;line-height:1.5;color:var(--cream);position:sticky;top:calc(env(safe-area-inset-top,0px) + 4px);z-index:35;overflow:hidden;animation:xbrise .5s both;
     transition:padding .2s ease,gap .2s ease,border-radius .2s ease}
   @keyframes xbrise{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
-  .xbanner .xb-ic{font-size:20px;line-height:1.1;flex:none;animation:xbflame 2.2s ease-in-out infinite;transform-origin:50% 80%}
+  .xbanner .xb-ic{font-size:18px;line-height:1.1;flex:none;opacity:.9;transform-origin:50% 80%}
   @keyframes xbflame{0%,100%{transform:scale(1) rotate(-3deg);filter:brightness(1)}50%{transform:scale(1.13) rotate(3deg);filter:brightness(1.28)}}
   .xbanner .xb-tx{flex:1;min-width:0}
-  .xbanner .xb-h{font-family:var(--font-d);letter-spacing:.4px;font-size:15.5px;color:var(--gold-bright);line-height:1.08;display:block;margin-bottom:3px}
+  .xbanner .xb-h{font-family:var(--font-d);letter-spacing:.4px;font-size:15.5px;color:var(--cream);line-height:1.08;display:block;margin-bottom:3px}
   .xbanner .xb-sub{color:var(--cream)}
   .xbanner .xb-quiet{color:var(--muted);font-size:11px}
   .xbanner .xb-chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 7px}
@@ -464,7 +464,7 @@
   .input{flex:1;background:rgba(0,0,0,.3);border:1px solid var(--line);border-radius:12px;color:var(--cream);padding:12px 14px;font-family:var(--font-b);font-size:16px;font-weight:600}
   button,select,input,.switch{touch-action:manipulation}
   .input:focus{outline:none;border-color:var(--gold)}
-  select.input{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23e3d3a3'%3E%3Cpath d='M2 4l4 4 4-4'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center}
+  select.input{appearance:none;max-width:100%;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23e3d3a3'%3E%3Cpath d='M2 4l4 4 4-4'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center}
   .switch-row{display:flex;align-items:center;gap:12px;background:var(--glass);border:1px solid var(--line);border-radius:14px;padding:13px 15px;margin-bottom:13px}
   .switch-row .txt{flex:1}
   .switch-row .txt b{font-size:13px;font-weight:800;display:block}
@@ -731,7 +731,9 @@
   /* ===== UX wave: header fit, slim sticky bar, consensus, welcome-back, swipe score-at-end ===== */
   /* signed-in: the 📤 hub + userchip own the right side, so the wordmark block needs ~700px of
      row to coexist — below that it yields (was 439px pre-hub, which left a broken 440–699 band) */
-  @media(max-width:699px){body.in .mark .wc,body.in .mark .divider{display:none}}
+  @media(max-width:699px){body.in .mark .wc,body.in .mark .divider{display:none}
+    body.in .mark .wm{font-size:clamp(15px,4.3vw,20px);line-height:.9}   /* signed-in: brand yields to the hub+chip so nothing collides */
+    body.in .userchip .who b{max-width:84px}}
   #prog-sent{height:1px}
   #prog-spacer{height:0} /* grows to exactly the height the progress panel sheds on collapse — keeps the list from jumping */
   #view-matches{overflow-anchor:none} /* stop scroll anchoring fighting the sticky collapse (jitter loop) */
@@ -775,10 +777,10 @@
   .cons-share{display:block;margin:7px auto 0;font:700 11.5px var(--font-b);color:var(--gb);background:none;border:1px solid rgba(180,151,89,.4);border-radius:99px;padding:5px 11px;cursor:pointer}
   /* ===== 📤 share hub — the always-visible door to every card ===== */
   .sharehub{position:relative;display:flex;align-items:center;justify-content:center;width:40px;height:40px;margin-right:9px;border-radius:12px;background:var(--glass);border:1px solid var(--line);font-size:17px;cursor:pointer;flex:none}
-  .hubcnt{position:absolute;top:-6px;right:-7px;min-width:17px;height:17px;border-radius:9px;padding:0 4px;display:flex;align-items:center;justify-content:center;font:800 10px var(--font-b);font-style:normal;color:#181106;background:linear-gradient(115deg,var(--gold-deep),var(--gold-bright));box-shadow:0 0 0 2px rgba(10,10,12,.95),0 0 8px rgba(227,211,163,.55)}
+  .hubcnt{position:absolute;top:-6px;right:-7px;min-width:17px;height:17px;border-radius:9px;padding:0 4px;display:flex;align-items:center;justify-content:center;font:800 10px var(--font-b);font-style:normal;color:#181106;background:linear-gradient(115deg,var(--gold-deep),var(--gold-bright));box-shadow:0 0 0 2px rgba(10,10,12,.95)}
   .sharehub:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
-  @media(max-width:379px){.sharehub{width:34px;height:34px;font-size:14px;margin-right:6px;border-radius:10px}}
-  @media(max-width:349px){body.in .mark .wm{font-size:21px}} /* legacy-tiny phones: brand yields to the hub+chip, signed-in only */
+  @media(max-width:379px){.sharehub{width:34px;height:34px;font-size:14px;margin-right:6px;border-radius:10px}body.in .userchip .who b{max-width:72px}}
+  @media(max-width:349px){body.in .userchip .who b{max-width:60px}} /* legacy-tiny phones: name chip tightens so the brand keeps its room, signed-in only */
   @media(max-width:329px){.sharehub{display:none!important}} /* sub-330px relics (boot sets inline flex): banner + reveal handoff still carry discovery */
   body.tv .sharehub{display:none!important}
   .shov{position:fixed;inset:0;z-index:355;display:flex;align-items:flex-end;justify-content:center;background:rgba(5,5,7,.72);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
@@ -1675,17 +1677,17 @@
   </header>
 
   <div id="xb-sent" aria-hidden="true"></div>
-  <div class="xbanner" id="xbanner" style="display:none" role="status" aria-label="Power-ups are live · new share cards" onclick="if(!event.target.closest('a,button'))toggleBanner()" title="Tap to expand or shrink">
+  <div class="xbanner" id="xbanner" style="display:none" role="status" aria-label="Power-ups are live · new share cards" onclick="if(!event.target.closest('a,button'))toggleBanner()" title="Tap for details">
     <div class="xb-ic" aria-hidden="true">⚡</div>
     <div class="xb-tx">
-      <b class="xb-h">⚡ Power-ups are LIVE · 📤 share cards are here</b>
+      <b class="xb-h">Power-ups are LIVE · share cards are here</b>
       <span class="xb-sub">Arm your Quarter-final armband before Thursday’s locks — and every big moment now has a card to drop in the chat, one tap from the 📤 button up top:</span>
       <div class="xb-chips" aria-hidden="true"><span class="xb-chip">×2<small>CAPTAIN’S ARMBAND</small></span><span class="xb-chip">🛡<small>STREAK SHIELD</small></span><span class="xb-chip">+2<small>UPSET BONUS</small></span><span class="xb-chip">📤<small>SHARE CARDS</small></span></div>
       <span class="xb-quiet">Slips seal at kick-off · brag cards land at the final whistle.</span><br>
       <a class="xb-cta" href="javascript:void 0" onclick="openFaq('power-up');return false">How power-ups work ›</a>
-      <a class="xb-cta2" href="javascript:void 0" onclick="openShareTray();return false">Open the share tray ›</a>
+      <a class="xb-cta2" href="javascript:void 0" onclick="openShareTray();return false">Share tray ›</a>
     </div>
-    <button class="xb-min" onclick="toggleBanner()" aria-label="Shrink announcement"><span class="xb-col" aria-hidden="true">▴</span><span class="xb-exp" aria-hidden="true">▾</span></button>
+    <button class="xb-min" onclick="xbBtn(event)" aria-label="Dismiss announcement"><span class="xb-col" aria-hidden="true">▴</span><span class="xb-exp" aria-hidden="true">✕</span></button>
   </div>
   <div id="xb-spacer" aria-hidden="true"></div>
 
@@ -2825,6 +2827,7 @@ function togglePts(btn){const t=document.getElementById("ptable");const on=t.cla
    never hogs the screen. The collapse choice is remembered in BANNER_MIN_KEY. A ?banner / #banner
    URL force-shows it (ignores the joined gate) for verification on any device. */
 const BANNER_MIN_KEY="wc:banner:min";         // remembers the user's shrink choice (persists across visits)
+const BANNER_HIDE_KEY="wc:banner:hide";       // user dismissed the strip for good (the ✕ on the slim strip)
 const BANNER_UNTIL=Date.parse("2026-07-15T00:00:00+03:00");  // keep showing through the knockouts; then it retires itself
 let bannerMin=false;                          // user shrank it to the strip (independent of the scroll auto-shrink)
 function hideBanner(){const b=document.getElementById("xbanner");if(b){b.style.display="none";b.classList.remove("mini");}document.body.classList.remove("xb-on");const sp=document.getElementById("xb-spacer");if(sp)sp.style.height="0px";}
@@ -2835,9 +2838,10 @@ function setupBanner(){
   if(!force){                                   // normal gating (a ?banner / #banner link skips it)
     if(!state.player)return hideBanner();        // joined players only (not the sign-in screen)
     if(BANNER_UNTIL&&Date.now()>BANNER_UNTIL)return hideBanner();  // announcement window has ended
+    try{if(localStorage.getItem(BANNER_HIDE_KEY)==="1")return hideBanner();}catch(e){}  // user dismissed it — stays gone
   }
   try{const _m=localStorage.getItem(BANNER_MIN_KEY);bannerMin=(_m===null)?true:(_m==="1");}catch(e){bannerMin=true;}  // default = shrunk strip; respects an explicit expand/collapse
-  b.style.display="flex";                      // always show it (no dismiss); it can only be shrunk
+  b.style.display="flex";                      // shown by default; the ✕ dismisses it for good, or it collapses to the strip
   document.body.classList.add("xb-on");
   // measure the collapsed height so the sticky filter/progress bars tuck just below the pinned strip
   b.classList.add("mini");const mh=b.offsetHeight;b.classList.remove("mini");
@@ -2850,6 +2854,9 @@ function toggleBanner(){
   try{localStorage.setItem(BANNER_MIN_KEY,bannerMin?"1":"0");}catch(e){}
   if(window.__xbSync)window.__xbSync();
 }
+function dismissBanner(){try{localStorage.setItem(BANNER_HIDE_KEY,"1");}catch(e){}hideBanner();}  // ✕ — retire the strip for good
+/* corner button: on the slim strip it dismisses; when expanded to the full card it collapses back to the strip */
+function xbBtn(e){if(e){e.stopPropagation();e.preventDefault();}const b=document.getElementById("xbanner");if(!b)return;if(b.classList.contains("mini"))dismissBanner();else toggleBanner();}
 
 function go(view){
   if((view==="matches"||view==="me")&&!state.player){toast("Join the pool to make picks \u26bd");view="join";}
@@ -8006,7 +8013,7 @@ function liveTick(){
     const shown=b.style.display!=="none";
     const want=shown&&(bannerMin||stuck);          /* strip if the user shrank it OR it's pinned on scroll */
     const is=b.classList.contains("mini");
-    const btn=b.querySelector(".xb-min");if(btn)btn.setAttribute("aria-label",want?"Expand announcement":"Shrink announcement");
+    const btn=b.querySelector(".xb-min");if(btn)btn.setAttribute("aria-label",want?"Dismiss announcement":"Shrink announcement");
     if(want===is){if(!shown&&sp)sp.style.height="0px";return;}
     if(sp){
       const before=b.offsetHeight;
