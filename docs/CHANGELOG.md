@@ -5,6 +5,27 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-07-06 (Doha) — MAIN DEPLOY: STATS FOR NERDS — a 🤓 Nerds leaderboard mode
+
+**Commits:** this commit (`index.html` + new `tests/nerd-stats/run.mjs` + changelog) on `claude/stats-for-nerds-3yajyc`, **rebased onto `main` (`ff52d84`, the day-banner pip-glyph fix) then fast-forwarded to `main`** on the organizer's explicit "push to main". Main moved twice mid-session (the power-ups-banner cleanup `f1f07d8`, then the pip fix `ff52d84`); rebased fresh onto each. Clean rebases — `index.html` auto-merged every time (the banner CSS, the pip glyphs, and the Nerds code are disjoint regions); the one changelog conflict (vs the banner entry) was resolved keeping both. **Frontend only — no DB / scoring / sync change, zero new backend traffic** (reads the standings + `consensusFull()` analytics caches already in hand).
+
+**What:** a fifth Leaderboard mode pill, **🤓 Nerds** (with the standard `tnew` NEW badge, `markSeen("nerds")`), rendering `renderNerds()` — the tournament as one dataset:
+- **KPI tiles** — matches settled, calls settled, office hit rate, exact scores nailed, goals/match, players still perfect.
+- **The points curve** — office points histogram (auto-sized bins, players with ≥1 pick), your bin highlighted + a "top X%"/median gap line.
+- **The hive mind** — a follow-the-office-majority robot's hit rate vs the average colleague (meters), plus chalkiest result / biggest shock and your own hit rate vs the office.
+- **The scoreline lab** — 5×5 predicted-scoreline heatmap (settled group matches only), top-4 called scorelines + "Any draw" as predicted-vs-reality bars (gold = office calls, blue = full-time reality, legend on), predicted vs actual goals/match.
+- **The form curve** — office hit rate by matchday (≥20-call days), sharpest day highlighted.
+- **The champion market** — champion-bet spread (top 6 + "the field"), 💀 dead-ticket detection (team beaten in a settled KO tie, or outside the 32-team KO field once all slots are known) + dead-ticket share, your own ticket line.
+- **Nerd corner** — goals total, draw share, biggest scoreline, exact-score strike rate, hottest current hand, your pick-twin.
+
+**Seal/anon rules as everywhere:** aggregates over settled matches only; per-match numbers ride consText's k-anon floors (5 group / 8 knockout); the only names rendered are positive leaders and "you"; personal lines wear `.aw-you` so the `?tv` kiosk hides them (the kiosk rotation itself is untouched — nerds is not in the tv seq). Demo mode can't reach it (lbmode row hidden, dispatch gated `!state.demo`). Sections needing the analytics tier show the standard pending pulse until `consensusFull()` resolves, then re-render.
+
+**Verified on the shipped (rebased) tree:** `node tests/nerd-stats/run.mjs` **ALL GREEN** — headless Chromium over the real page with a mocked Supabase layer and a seeded QF-week world; the panel's numbers are **recomputed independently in the test from the same seed** and must match the DOM: crowd meter (94% over 47 calls, incl. the three seeded KO upsets the majority missed), draw share, goals/match, settled count, heatmap cell coordinates for the four seeded scorelines, dead-ticket share (67%), NEW-badge set/clear, People mode still renders, zero page errors. Regression on the rebased tree: `tests/perf-boot/run.mjs` ALL GREEN; `tests/share-cards/run.mjs` green except the **pre-existing** "header overlap at 340px" failure (identical count on the base tree — the organizer's known pending header issue, untouched here). `node --check` clean on both inline script blocks. 390px full-page screenshot eyeballed.
+
+**Rollback:** `git push origin +ff52d84:main` (client-only — nothing server-side changed; reverts `main` to the pip-glyph-fix tip, the parent of this commit). The app ships a service worker (prior perf pack): a stale shell may need one hard reload / app reopen to pick up the new `index.html`.
+
+---
+
 ## 2026-07-06 (Doha) — MAIN DEPLOY: power-ups banner (`#xbanner`) layout cleanup
 
 **Commits:** this commit (`index.html` + changelog) on `claude/banner-styling-e5hazp`, **fast-forwarded to `main`** on the organizer's explicit "push to main" — main was at `286d482` and had not moved, so a clean FF (no rebase). **Frontend only — CSS + one copy string; no JS / DB / scoring change.** Organizer ask: "fix this banner, it doesn't look good."
@@ -19,7 +40,6 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 **Rollback:** `git push origin +286d482:main` (client-only — nothing server-side changed). A stale shell may need one hard reload / app reopen to pick up the new `index.html` (the app ships a service worker from the prior perf pack).
 
 **Follow-up (organizer, same session):** "I don't like the mailbox — give me other options." The 📤 outbox-tray glyph is the app-wide share/brag icon (~14 rendered spots + the generated share cards); a replacement is being chosen and will ship as its own deploy.
-
 ---
 
 ## 2026-07-06 (Doha) — MAIN DEPLOY: share-entry redesign (deck FAB) + preview-before-send ship to production

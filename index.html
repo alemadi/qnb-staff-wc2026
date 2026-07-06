@@ -1666,6 +1666,54 @@
   .aw-pend .pulse{margin-right:6px}
   .aw-unclaimed{margin-top:7px;font-size:10.5px;font-weight:700;color:var(--faint)}
   .tv .aw-you{display:none} /* kiosk: races read, personal lines hide */
+
+  /* ===== STATS FOR NERDS (Leaderboard → 🤓 Nerds) =====
+     One quiet visual system: gold = office data, blue = reality/benchmark, marks stay
+     thin, values live in text tokens. Bars grow from a single baseline with a 2px gap;
+     the only loud element is the data. */
+  .nrd-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+  .nrd-tile{background:var(--glass);border:1px solid var(--line);border-radius:12px;padding:11px 6px 9px;text-align:center}
+  .nrd-tile b{display:block;font-family:var(--font-d);font-size:23px;line-height:1;color:var(--gold-bright);letter-spacing:.5px}
+  .nrd-tile b small{font-size:12px;letter-spacing:0;color:var(--muted)}
+  .nrd-tile span{display:block;margin-top:5px;font-size:8px;letter-spacing:1.2px;text-transform:uppercase;color:var(--faint);font-weight:800}
+  .nrd-plot{display:flex;align-items:flex-end;gap:2px;height:88px;padding:16px 2px 0;border-bottom:1px solid var(--line)}
+  .nrd-plot i{flex:1;min-height:2px;background:rgba(180,151,89,.34);border-radius:3px 3px 0 0;position:relative}
+  .nrd-plot i.hot{background:linear-gradient(180deg,var(--gold-bright),var(--gold))}
+  .nrd-plot i em{position:absolute;top:-14px;left:50%;transform:translateX(-50%);font-style:normal;font-size:9px;font-weight:800;color:var(--muted);white-space:nowrap}
+  .nrd-ax{display:flex;justify-content:space-between;font-size:9px;letter-spacing:.6px;color:var(--faint);font-weight:700;margin-top:4px}
+  .nrd-meter{margin:8px 0}
+  .nrd-meter .lab{display:flex;justify-content:space-between;gap:10px;font-size:11px;font-weight:700;color:var(--muted);margin-bottom:4px}
+  .nrd-meter .lab b{color:var(--cream)}
+  .nrd-track{height:9px;border-radius:99px;background:rgba(255,255,255,.05);overflow:hidden}
+  .nrd-track i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--gold-deep),var(--gold-bright));transition:width .7s cubic-bezier(.2,.8,.2,1)}
+  .nrd-track i.alt{background:linear-gradient(90deg,#1d4fa8,var(--c-blue))}
+  .nrd-heatwrap{max-width:420px;margin:8px auto 2px}
+  .nrd-heat{display:grid;grid-template-columns:16px repeat(5,1fr);gap:2px}
+  .nrd-heat u{text-decoration:none;font-size:8.5px;font-weight:800;color:var(--faint);display:grid;place-items:center}
+  .nrd-cell{aspect-ratio:1.6;border-radius:4px;background:rgba(255,255,255,.03);display:grid;place-items:center;font-size:9px;font-weight:800;color:var(--cream)}
+  .nrd-cell.ink{color:#181106}
+  .nrd-key{display:flex;gap:14px;font-size:9.5px;letter-spacing:1px;text-transform:uppercase;font-weight:800;color:var(--faint);margin:10px 0 6px}
+  .nrd-key i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+  .nrd-key .a i{background:var(--gold)}
+  .nrd-key .b i{background:var(--c-blue)}
+  .nrd-duo{margin:7px 0}
+  .nrd-duo .lab{display:flex;justify-content:space-between;gap:10px;font-size:11px;font-weight:700;color:var(--muted);margin-bottom:3px}
+  .nrd-duo .lab b{color:var(--cream)}
+  .nrd-duo .bar{height:6px;border-radius:99px;background:rgba(255,255,255,.05);margin:2px 0;overflow:hidden}
+  .nrd-duo .bar i{display:block;height:100%;border-radius:99px;min-width:2px}
+  .nrd-duo .bar.a i{background:linear-gradient(90deg,var(--gold-deep),var(--gold-bright))}
+  .nrd-duo .bar.b i{background:linear-gradient(90deg,#1d4fa8,var(--c-blue))}
+  .nrd-champ{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:11.5px;font-weight:700;color:var(--cream)}
+  .nrd-champ .fl-img{width:15px;height:11px;border-radius:2px;flex:none}
+  .nrd-champ .nm{width:104px;flex:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .nrd-champ .bar{flex:1;height:7px;border-radius:99px;background:rgba(255,255,255,.05);overflow:hidden}
+  .nrd-champ .bar i{display:block;height:100%;border-radius:99px;min-width:2px;background:linear-gradient(90deg,var(--gold-deep),var(--gold-bright))}
+  .nrd-champ .pc{width:36px;flex:none;text-align:right;font-size:11px;color:var(--muted)}
+  .nrd-champ.dead{opacity:.55}
+  .nrd-champ.dead .bar i{background:rgba(244,238,227,.25)}
+  .nrd-line{font-size:11.5px;color:var(--muted);font-weight:600;padding:6px 0;border-top:1px solid rgba(255,255,255,.05);line-height:1.5}
+  .nrd-line b{color:var(--gold-bright)}
+  .nrd-line:first-of-type{border-top:0}
   /* ===== PERF ===== */
   /* Long lists: skip layout+paint for offscreen cards (104 matches / 100+ board rows).
      contain-intrinsic-size ≈ a typical card so the scrollbar stays honest; the `auto`
@@ -1862,7 +1910,7 @@
   <!-- LEADERBOARD -->
   <section class="view" id="view-leaderboard">
     <div class="sec-title"><h2>Leaderboard</h2><span class="live tag" id="lb-live"><span class="pulse"></span> Live</span></div>
-    <div class="lbmode" id="lbmode"><button type="button" data-m="people" class="on">People</button><button type="button" data-m="dept">Departments</button><button type="button" data-m="room">🏟 The Room<i class="tnew" id="room-new" style="display:none">NEW</i></button><button type="button" data-m="awards">🏆 Awards<i class="tnew" id="aw-new" style="display:none">NEW</i></button></div>
+    <div class="lbmode" id="lbmode"><button type="button" data-m="people" class="on">People</button><button type="button" data-m="dept">Departments</button><button type="button" data-m="room">🏟 The Room<i class="tnew" id="room-new" style="display:none">NEW</i></button><button type="button" data-m="awards">🏆 Awards<i class="tnew" id="aw-new" style="display:none">NEW</i></button><button type="button" data-m="nerds">🤓 Nerds<i class="tnew" id="nrd-new" style="display:none">NEW</i></button></div>
     <div class="prize-strip">🥇 <b>Maldives trip</b> · 🥈 60,000 pts · 🥉 40,000 pts<span class="ps-note">QNB Life Rewards · prizes for the top three at the final whistle · 🏆 office titles crowned in the Trophy Room</span></div>
     <div id="demo-banner" class="demo-banner" style="display:none">🎬 Demo mode — sample players shown for presentation. Nothing here is saved.</div>
     <div id="lb-body"></div>
@@ -3749,6 +3797,7 @@ async function renderLeaderboard(){
   if(LB_MODE==="dept"&&!state.demo){await renderDept(body);return;}
   if(LB_MODE==="room"&&!state.demo){await renderRoom(body);return;}
   if(LB_MODE==="awards"&&!state.demo){await renderAwards(body);return;}
+  if(LB_MODE==="nerds"&&!state.demo){await renderNerds(body);return;}
   let rows=[];
   if(state.demo){ /* demo: client-side scoring against demo results + demo players (never cached) */
     const players=await sbulkJSON("wc:player:");
@@ -4983,7 +5032,7 @@ let LB_MODE="people";
 (function(){
   const lm=document.getElementById("lbmode");
   if(lm)lm.querySelectorAll("button").forEach(b=>b.onclick=()=>{LB_MODE=b.dataset.m;
-    lm.querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b));if(b.dataset.m==="room")markSeen("room");if(b.dataset.m==="awards")markSeen("awards");renderLeaderboard();});
+    lm.querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b));if(b.dataset.m==="room")markSeen("room");if(b.dataset.m==="awards")markSeen("awards");if(b.dataset.m==="nerds")markSeen("nerds");renderLeaderboard();});
 })();
 
 function renderPulse(){
@@ -5238,6 +5287,192 @@ async function renderAwards(body){
   html+='</div>';
   html+='<div class="dept-note" style="margin-top:12px">Crowned at the <b>final whistle</b> over all 104 matches. Ties: level numbers \u2192 higher total points \u2192 a dead heat shares the title. Definitions locked 6 Jul \u2014 no moving goalposts.</div>'+
     '<button class="faq-link" onclick="openFaq(\'titles\')">See the full definitions \u203a</button>';
+  body.innerHTML=html;
+}
+
+/* ===== STATS FOR NERDS (Leaderboard → 🤓 Nerds) — the tournament as a dataset =====
+   Every number is an AGGREGATE over settled matches (plus the sanctioned champion-bet
+   spread), recomputed live in the browser from data already in hand: the slim standings
+   + the consensusFull() analytics tier + confirmed results. No new backend, no extra
+   pulls. Seal rules as everywhere: per-match numbers only ride matches that are settled
+   AND past consText's k-anon floors (5 group / 8 knockout); the only names rendered are
+   positive leaders and "you". Personal lines wear .aw-you so the ?tv kiosk hides them. */
+function nrdPct(h,t){return t?Math.round(h/t*100):0;}
+function nrdN(n){n=Math.round(n);return n>=10000?((n/1000).toFixed(1).replace(/\.0$/,"")+"k"):String(n).replace(/\B(?=(\d{3})+(?!\d))/g,",");}
+function nrdVs(f){const v=fxView(f),r=state.results[f.id]||{};
+  return esc(v.home.n)+(r.h!=null?' <b>'+r.h+'–'+r.a+'</b> ':' v ')+esc(v.away.n);}
+async function renderNerds(body){
+  const rows=await fetchStandings();
+  if(!rows.length){body.innerHTML='<div class="empty"><div class="ic">🤓</div><b>The lab opens with the first points</b><span>Lock in your picks under “Matches” — the numbers start piling up at the first whistle.</span></div>';return;}
+  const c=(CONS.full&&CONS.map)?CONS:null;
+  if(!c&&CONFIGURED&&!state.demo)consensusFull().then(function(){if(state.view==="leaderboard"&&LB_MODE==="nerds")renderLeaderboard();}).catch(function(){});
+  const pend='<div class="aw-pend"><span class="pulse"></span>Counting every call in the office…</div>';
+  const settled=FIXTURES.filter(function(f){const r=state.results[f.id];return r&&(f.kn?r.w!=null:r.h!=null);});
+  /* one sweep over the settled scoreboard: goals, group draws, biggest scoreline */
+  let goals=0,gN=0,gGoals=0,gDone=0,draws=0,big=null;
+  settled.forEach(function(f){const r=state.results[f.id];
+    if(r.h!=null&&r.a!=null){goals+=r.h+r.a;gN++;
+      if(!big||(r.h+r.a)>(big.r.h+big.r.a))big={f:f,r:r};}
+    if(!f.kn){gDone++;gGoals+=r.h+r.a;if(r.h===r.a)draws++;}});
+  const playing=rows.filter(function(r){return (r.predicted|0)>0;});
+  const exTot=rows.reduce(function(a,r){return a+(r.exact|0);},0);
+  const ptsAll=playing.map(function(r){return r.pts|0;}).sort(function(a,b){return a-b;});
+  const ptsSum=ptsAll.reduce(function(a,b){return a+b;},0);
+  const med=ptsAll.length?(ptsAll.length%2?ptsAll[ptsAll.length>>1]:Math.round((ptsAll[(ptsAll.length>>1)-1]+ptsAll[ptsAll.length>>1])/2)):0;
+  let html='<div class="dept-note">🤓 <b>Stats for nerds</b> — the whole tournament as one dataset: every settled call in the office, sliced live in your browser. Aggregates only; nobody gets pointed at.</div>';
+  /* headline tiles */
+  const tile=function(v,l){return '<div class="nrd-tile"><b>'+v+'</b><span>'+l+'</span></div>';};
+  html+='<div class="nrd-tiles">'
+    +tile(settled.length+'<small>/'+FIXTURES.length+'</small>','matches settled')
+    +tile(c?nrdN(c.officeHit.t):'…','calls settled')
+    +tile(c?(nrdPct(c.officeHit.h,c.officeHit.t)+'<small>%</small>'):'…','office hit rate')
+    +tile(nrdN(exTot),'exact scores nailed')
+    +tile(gN?(goals/gN).toFixed(2):'—','goals per match')
+    +tile(c?String(c.perfectN):'…','still perfect')
+    +'</div>';
+  /* THE POINTS CURVE — where the office sits, and where you sit in it */
+  const sorted=rows.slice().sort(function(a,b){return cmpSt(a,b)||(a.name||"").localeCompare(b.name||"");});
+  const maxP=ptsAll.length?ptsAll[ptsAll.length-1]:0;
+  const bw=Math.max(5,Math.ceil((maxP+1)/14/5)*5);
+  const bins=[];for(let i=0;i*bw<=maxP;i++)bins.push(0);
+  playing.forEach(function(r){bins[Math.min(bins.length-1,Math.floor((r.pts|0)/bw))]++;});
+  const meRow=state.meSlug?rows.find(function(r){return r.slug===state.meSlug;}):null;
+  const meBin=(meRow&&(meRow.predicted|0)>0)?Math.min(bins.length-1,Math.floor((meRow.pts|0)/bw)):-1;
+  const bMax=Math.max.apply(null,bins.concat([1]));
+  html+='<div class="aw-card"><div class="aw-hd"><span class="aw-ic">📊</span><div class="aw-t"><b>The points curve</b><span>Everyone with ≥1 pick, in '+bw+'-point bins</span></div><span class="aw-prz">n = '+playing.length+'</span></div>';
+  html+='<div class="nrd-plot">'+bins.map(function(n,i){
+      const h=Math.max(2,Math.round(n/bMax*100));
+      const em=(i===meBin)?'<em>you</em>':(n===bMax?'<em>'+n+'</em>':'');
+      return '<i class="'+(i===meBin?'hot':'')+'" style="height:'+h+'%">'+em+'</i>';}).join('')
+    +'</div><div class="nrd-ax"><span>0 pts</span><span>'+(bins.length*bw)+' pts</span></div>';
+  html+='<div class="nrd-line">📐 Office median <b>'+med+'</b> pts · mean <b>'+(ptsAll.length?(ptsSum/ptsAll.length).toFixed(1):'0')+'</b> · top score <b>'+maxP+'</b></div>';
+  if(ptsAll.length>=30&&ptsSum>0){const top10=ptsAll.slice(-10).reduce(function(a,b){return a+b;},0);
+    html+='<div class="nrd-line">🏦 The top 10 hold <b>'+nrdPct(top10,ptsSum)+'%</b> of all '+nrdN(ptsSum)+' points minted so far</div>';}
+  if(meRow&&(meRow.predicted|0)>0){
+    const meIdx=sorted.findIndex(function(r){return r.slug===state.meSlug;});
+    if(meIdx>=0)html+='<span class="aw-you">You: <b>'+(meRow.pts|0)+'</b> pts — '+ordinal(meIdx+1)+' of '+sorted.length+' · top <b>'+Math.max(1,Math.ceil((meIdx+1)/sorted.length*100))+'%</b>'+((meRow.pts|0)>med?' · <b>'+((meRow.pts|0)-med)+'</b> clear of the median':'')+'</span>';
+  }
+  html+='</div>';
+  /* HIVE MIND — would blindly following the office majority beat the average colleague? */
+  html+='<div class="aw-card"><div class="aw-hd"><span class="aw-ic">🧠</span><div class="aw-t"><b>The hive mind</b><span>One robot that always picks with the office majority — vs the average colleague</span></div>'+(c?'<span class="aw-prz">n = '+c.n+'</span>':'')+'</div>';
+  if(!c)html+=pend;
+  else{
+    let ch=0,ct=0,shock=null,chalk=null;
+    settled.forEach(function(f){const cc=c.map[f.id];if(!cc)return;const r=state.results[f.id],v=fxView(f);
+      let hit=false,resShare=null;
+      if(f.kn){const hN=cc.w[v.home.n]||0,aN=cc.w[v.away.n]||0,tot=hN+aN;if(tot<8)return;
+        if(r.w!==v.home.n&&r.w!==v.away.n)return;
+        hit=((hN>=aN?v.home.n:v.away.n)===r.w);resShare=nrdPct(cc.w[r.w]||0,tot);}
+      else{const tot=cc.H+cc.D+cc.A;if(tot<5)return;
+        const ro=r.h>r.a?"H":(r.h<r.a?"A":"D");
+        const mo=(cc.H>=cc.D&&cc.H>=cc.A)?"H":((cc.D>=cc.A)?"D":"A");
+        hit=(mo===ro);resShare=nrdPct(cc[ro],tot);}
+      ct++;if(hit)ch++;
+      if(!shock||resShare<shock.pc)shock={pc:resShare,f:f};
+      if(!chalk||resShare>chalk.pc)chalk={pc:resShare,f:f};});
+    const cp=nrdPct(ch,ct),ap=nrdPct(c.officeHit.h,c.officeHit.t);
+    const meter=function(lab,pc,alt){return '<div class="nrd-meter"><div class="lab"><span>'+lab+'</span><b>'+pc+'%</b></div><div class="nrd-track"><i'+(alt?' class="alt"':'')+' style="width:'+pc+'%"></i></div></div>';};
+    html+=meter('Follow-the-crowd robot · '+ct+' calls',cp,false)+meter('The average colleague',ap,true);
+    html+='<div class="nrd-line">'+(cp>ap?('🐝 The crowd is beating the average colleague by <b>'+(cp-ap)+'</b> percentage points — wisdom of crowds, live'):cp<ap?('🃏 The average colleague is beating the crowd by <b>'+(ap-cp)+'</b> percentage points — chaos reigns'):'⚖️ Dead heat — the crowd and the average colleague are level')+'</div>';
+    if(chalk)html+='<div class="nrd-line">😴 Chalkiest result: '+nrdVs(chalk.f)+' — <b>'+chalk.pc+'%</b> of the office saw it coming</div>';
+    if(shock)html+='<div class="nrd-line">🧨 Biggest shock: '+nrdVs(shock.f)+' — only <b>'+shock.pc+'%</b> called it</div>';
+    if(state.player){
+      const ms=scoreFor(state.player.predictions,state.results,state.player.champ,state.player.chips);
+      if(ms.scored>=3){const mp=nrdPct(ms.correct,ms.scored);
+        html+='<span class="aw-you">You: <b>'+mp+'%</b> over '+ms.scored+' settled calls — '+(mp>ap?('<b>'+(mp-ap)+'</b> above the office'):mp<ap?((ap-mp)+' below the office — regression to the mean is undefeated'):'exactly the office average')+'</span>';}
+    }
+  }
+  html+='</div>';
+  /* THE SCORELINE LAB — what the office scripts vs what football serves (settled group only) */
+  html+='<div class="aw-card"><div class="aw-hd"><span class="aw-ic">🔬</span><div class="aw-t"><b>The scoreline lab</b><span>Predicted scorelines vs full-time reality — settled group matches</span></div></div>';
+  if(!c)html+=pend;
+  else{
+    const scAgg={};let scTot=0,gpD=0,gpTot=0,pGoals=0;
+    settled.forEach(function(f){if(f.kn)return;const cc=c.map[f.id];if(!cc)return;
+      const tot=cc.H+cc.D+cc.A;if(tot<5)return;
+      gpD+=cc.D;gpTot+=tot;
+      for(const k in cc.sc){const p=k.split("-");scAgg[k]=(scAgg[k]||0)+cc.sc[k];scTot+=cc.sc[k];pGoals+=((+p[0])+(+p[1]))*cc.sc[k];}});
+    if(scTot<50)html+='<div class="aw-pend">Too few settled scoreline calls to chart yet.</div>';
+    else{
+      const grid=[];for(let i=0;i<5;i++)grid.push([0,0,0,0,0]);
+      for(const k in scAgg){const p=k.split("-");grid[Math.min(4,(+p[0])||0)][Math.min(4,(+p[1])||0)]+=scAgg[k];}
+      let gMax=1;grid.forEach(function(row){row.forEach(function(v){if(v>gMax)gMax=v;});});
+      html+='<div class="nrd-heatwrap"><div class="nrd-heat"><u></u>'+[0,1,2,3,4].map(function(a){return '<u>'+(a===4?'4+':a)+'</u>';}).join('');
+      for(let h=0;h<5;h++){html+='<u>'+(h===4?'4+':h)+'</u>';
+        for(let a=0;a<5;a++){const v=grid[h][a],al=v?(0.06+v/gMax*0.84):0.03,pcc=Math.round(v/scTot*100);
+          html+='<div class="nrd-cell'+(al>0.5?' ink':'')+'" style="background:rgba(227,211,163,'+al.toFixed(2)+')">'+(pcc>=4?pcc+'%':'')+'</div>';}}
+      html+='</div><div class="nrd-ax"><span>home goals ↓ · away goals →</span><span>'+nrdN(scTot)+' scoreline calls</span></div></div>';
+      const actSc={};settled.forEach(function(f){if(f.kn)return;const r=state.results[f.id];const k=r.h+"-"+r.a;actSc[k]=(actSc[k]||0)+1;});
+      const topK=Object.keys(scAgg).sort(function(a,b){return scAgg[b]-scAgg[a];}).slice(0,4);
+      const duo=topK.map(function(k){return {l:k.replace("-","–"),a:scAgg[k]/scTot*100,b:(actSc[k]||0)/Math.max(1,gDone)*100};});
+      duo.push({l:'Any draw',a:gpD/Math.max(1,gpTot)*100,b:draws/Math.max(1,gDone)*100});
+      let dMax=1;duo.forEach(function(d){dMax=Math.max(dMax,d.a,d.b);});
+      html+='<div class="nrd-key"><span class="a"><i></i>office calls</span><span class="b"><i></i>full-time reality</span></div>';
+      duo.forEach(function(d){
+        html+='<div class="nrd-duo"><div class="lab"><span>'+d.l+'</span><span><b>'+Math.round(d.a)+'%</b> called · <b>'+Math.round(d.b)+'%</b> happened</span></div>'
+          +'<div class="bar a"><i style="width:'+(d.a/dMax*100).toFixed(1)+'%"></i></div>'
+          +'<div class="bar b"><i style="width:'+(d.b/dMax*100).toFixed(1)+'%"></i></div></div>';});
+      if(gDone&&scTot)html+='<div class="nrd-line">🥅 The office scripts <b>'+(pGoals/scTot).toFixed(2)+'</b> goals a match — reality is serving <b>'+(gGoals/gDone).toFixed(2)+'</b>'+((gGoals/gDone).toFixed(2)===(pGoals/scTot).toFixed(2)?' · perfectly calibrated, suspiciously':((gGoals/gDone)>(pGoals/scTot)?' · football is wilder than the spreadsheet':' · the office dreams bigger than the pitch'))+'</div>';
+    }
+  }
+  html+='</div>';
+  /* THE FORM CURVE — office hit rate, matchday by matchday */
+  html+='<div class="aw-card"><div class="aw-hd"><span class="aw-ic">📈</span><div class="aw-t"><b>The form curve</b><span>Office hit rate, matchday by matchday</span></div></div>';
+  if(!c)html+=pend;
+  else{
+    const days=Object.keys(c.dayHit||{}).sort().filter(function(k){return c.dayHit[k].tot>=20;});
+    if(!days.length)html+='<div class="aw-pend">Not enough settled calls on any single matchday yet.</div>';
+    else{
+      let bestD=days[0];days.forEach(function(k){if(nrdPct(c.dayHit[k].hit,c.dayHit[k].tot)>nrdPct(c.dayHit[bestD].hit,c.dayHit[bestD].tot))bestD=k;});
+      const dfmt=function(k){const p=k.split("-");return (+p[2])+' '+["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][(+p[1])-1];};
+      html+='<div class="nrd-plot" style="height:72px">'+days.map(function(k){
+        const pc=nrdPct(c.dayHit[k].hit,c.dayHit[k].tot);
+        return '<i class="'+(k===bestD?'hot':'')+'" style="height:'+Math.max(2,pc)+'%">'+(k===bestD?'<em>'+pc+'%</em>':'')+'</i>';}).join('')
+        +'</div><div class="nrd-ax"><span>'+dfmt(days[0])+'</span><span>'+dfmt(days[days.length-1])+'</span></div>';
+      html+='<div class="nrd-line">🗓 Sharpest matchday: <b>'+dfmt(bestD)+'</b> — the office hit <b>'+nrdPct(c.dayHit[bestD].hit,c.dayHit[bestD].tot)+'%</b> over '+nrdN(c.dayHit[bestD].tot)+' calls</div>';
+    }
+  }
+  html+='</div>';
+  /* THE CHAMPION MARKET — where the +25 tickets sit, and how many are already ash */
+  html+='<div class="aw-card"><div class="aw-hd"><span class="aw-ic">🏆</span><div class="aw-t"><b>The champion market</b><span>Every +25 ticket in the office — and the ones already burned</span></div>'+(c?'<span class="aw-prz">n = '+c.champN+'</span>':'')+'</div>';
+  if(!c)html+=pend;
+  else if((c.champN|0)<10)html+='<div class="aw-pend">Too few champion picks to chart yet.</div>';
+  else{
+    const cm=c.champMap||{};
+    /* dead ticket = the team lost a settled knockout tie, or (once all 32 KO slots are
+       known) never made the knockout field at all */
+    const koSet=new Set();let koAll=true;
+    FIXTURES.forEach(function(f){if(!f.kn||f.round!=="R32")return;
+      if(koReady(f)){const v=fxView(f);koSet.add(v.home.n);koSet.add(v.away.n);}else koAll=false;});
+    const beaten=new Set();
+    settled.forEach(function(f){if(!f.kn)return;const r=state.results[f.id],v=fxView(f);
+      const l=r.w===v.home.n?v.away.n:(r.w===v.away.n?v.home.n:null);if(l)beaten.add(l);});
+    const koKnown=koAll&&koSet.size>=32;
+    const dead=function(t){return beaten.has(t)||(koKnown&&!koSet.has(t));};
+    const ents=Object.keys(cm).map(function(t){return {t:t,n:cm[t]};}).sort(function(a,b){return b.n-a.n||a.t.localeCompare(b.t);});
+    const top=ents.slice(0,6),rest=ents.slice(6);
+    const pMax=Math.max(1,top.length?top[0].n:1);
+    const fl=function(t){return FL[t]?flagTag(FL[t]):'';};
+    top.forEach(function(e){
+      html+='<div class="nrd-champ'+(dead(e.t)?' dead':'')+'">'+fl(e.t)+'<span class="nm">'+esc(e.t)+(dead(e.t)?' 💀':'')+'</span><div class="bar"><i style="width:'+(e.n/pMax*100).toFixed(1)+'%"></i></div><span class="pc">'+nrdPct(e.n,c.champN)+'%</span></div>';});
+    if(rest.length){const rn=rest.reduce(function(a,e){return a+e.n;},0);
+      html+='<div class="nrd-champ"><span class="nm">The field · '+rest.length+' teams</span><div class="bar"><i style="width:'+Math.min(100,rn/pMax*100).toFixed(1)+'%;background:rgba(244,238,227,.25)"></i></div><span class="pc">'+nrdPct(rn,c.champN)+'%</span></div>';}
+    if(koKnown){let deadN=0;ents.forEach(function(e){if(dead(e.t))deadN+=e.n;});
+      html+='<div class="nrd-line" style="margin-top:4px">💀 <b>'+nrdPct(deadN,c.champN)+'%</b> of champion tickets are already dead — their team is out</div>';}
+    if(state.player&&state.player.champ){
+      const share=nrdPct(cm[state.player.champ]||0,c.champN);
+      html+='<span class="aw-you">Your ticket: <b>'+esc(state.player.champ)+'</b> — '+(dead(state.player.champ)?'💀 already out. It happens to the best of us':('alive, riding with <b>'+share+'%</b> of the office'))+'</span>';}
+  }
+  html+='</div>';
+  /* NERD CORNER — loose numbers with nowhere else to live */
+  html+='<div class="aw-card"><div class="aw-hd"><span class="aw-ic">🥼</span><div class="aw-t"><b>Nerd corner</b><span>Loose numbers with nowhere else to live</span></div></div>';
+  html+='<div class="nrd-line">⚽ <b>'+nrdN(goals)+'</b> goals across '+gN+' finished scorelines · '+draws+' group-stage draws in '+gDone+' ('+nrdPct(draws,gDone)+'%)</div>';
+  if(big)html+='<div class="nrd-line">🎪 Biggest scoreline so far: '+nrdVs(big.f)+' — '+(big.r.h+big.r.a)+' goals</div>';
+  if(c&&c.officeHit.t)html+='<div class="nrd-line">🎯 Exact-score strike rate: ≈<b>'+(exTot/c.officeHit.t*100).toFixed(1)+'%</b> of settled calls land the exact score</div>';
+  if(c&&c.best&&c.best.streak>=3)html+='<div class="nrd-line">🔥 Hottest hand right now: <b>'+esc((c.best.name||"").split(" ")[0])+'</b> — '+c.best.streak+' correct in a row and counting</div>';
+  if(c&&c.twin&&c.twin.n>=5&&state.player)html+='<span class="aw-you">👯 Your pick-twin: <b>'+esc(c.twin.name)+'</b> — '+c.twin.n+' identical calls</span>';
+  html+='</div>';
+  html+='<div class="dept-note" style="margin-top:12px">🧪 Methodology, for the truly committed: settled matches only, the same k-anonymity floors as everywhere (5+ calls group · 8+ knockout), recomputed live in your browser from the data the leaderboard already reads. No cookies were harmed.</div>';
   body.innerHTML=html;
 }
 
@@ -7421,6 +7656,7 @@ function updateNewDots(){
   const rn=document.getElementById("room-new");if(rn)rn.style.display=(on&&!seenKey("room"))?"":"none";
   try{refreshShareFab();}catch(e){} /* 📤 share-deck FAB — async over cached reads */
   const an=document.getElementById("aw-new");if(an)an.style.display=(on&&!seenKey("awards"))?"":"none";
+  const nn=document.getElementById("nrd-new");if(nn)nn.style.display=(on&&!seenKey("nerds"))?"":"none";
 }
 function maybeWhatsNew(){
   if(!state.player||state.demo)return false;
