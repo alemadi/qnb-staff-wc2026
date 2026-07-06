@@ -5,6 +5,16 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-07-06 (Doha) — Session handoff brief for the Wave-B launch
+
+**Commits:** this commit (`docs/HANDOFF-wave-b-launch.md` + changelog). **Docs only — no app or DB change.**
+
+Continuation brief for a fresh working session: current state (what's live on prod vs on this branch), the proofs (27/27 parity vectors · zero-drift 687/687 · rank tables identical), the four remaining launch steps with live-DB reference hashes for verification/rollback, and the ground rules (pushes to `main` and live SQL deploys happen only on the organizer's explicit go).
+
+**Rollback:** `git revert <this commit>`.
+
+---
+
 ## 2026-07-06 (Doha) — WAVE B: server-side flag gate (deploy becomes truly inert until launch)
 
 **Commits:** this commit (`sql/standings.sql` + `tests/wave-b/*` + changelog). **Repo-only SQL + tests. No live change.**
