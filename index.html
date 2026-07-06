@@ -801,6 +801,22 @@
   .sh-tile:active{transform:scale(.98)}
   .sh-tile.lk{opacity:.55;background:var(--glass);border-color:var(--line)}
   .sh-div{grid-column:1/-1;font-size:10px;font-weight:800;letter-spacing:.14em;color:rgba(244,238,227,.45);margin:6px 2px 0}
+  /* ===== 📤 card preview — see the card before you send it ===== */
+  .cpv{position:fixed;inset:0;z-index:365;display:flex;align-items:center;justify-content:center;padding:18px calc(18px + env(safe-area-inset-right,0)) calc(18px + env(safe-area-inset-bottom,0)) calc(18px + env(safe-area-inset-left,0));background:rgba(5,5,7,.82);-webkit-backdrop-filter:blur(7px);backdrop-filter:blur(7px)}
+  .cpv-card{width:100%;max-width:420px;max-height:94vh;display:flex;flex-direction:column;gap:12px}
+  .cpv-top{display:flex;align-items:baseline;gap:9px}
+  .cpv-top b{font-size:16px;font-weight:800}
+  .cpv-top span{font-size:11.5px;color:var(--muted)}
+  .cpv-top .x{margin-left:auto;background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:2px 4px;font-family:inherit;line-height:1}
+  .cpv-stage{flex:1 1 auto;min-height:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
+  .cpv-stage img{max-width:100%;max-height:100%;border-radius:14px;box-shadow:0 22px 60px -16px rgba(0,0,0,.75),0 0 0 1px rgba(180,151,89,.25);display:block;object-fit:contain}
+  .cpv-actions{display:flex;gap:9px;flex:none}
+  .cpv-btn{padding:14px 16px;border-radius:13px;font:800 13.5px var(--font-b);cursor:pointer;border:1px solid var(--line);background:var(--glass);color:var(--cream);transition:transform .1s ease}
+  .cpv-btn.ghost{flex:0 0 auto}
+  .cpv-btn.go{flex:1 1 auto;border:none;color:#181106;background:linear-gradient(115deg,var(--gold-deep),var(--gold));box-shadow:0 8px 22px -8px rgba(180,151,89,.6)}
+  .cpv-btn:active{transform:scale(.97)}
+  .cpv-btn:focus-visible{outline:2px solid var(--gold-bright);outline-offset:2px}
+  @media(max-width:360px){.cpv-btn{padding:13px 12px;font-size:12.5px}}
   .rv-of{margin-top:13px;font-size:11.5px;color:var(--muted);font-weight:700;line-height:1.85;letter-spacing:.2px}
   .champ-soc .fl-img{width:15px;height:11px;border-radius:2px;vertical-align:-1px}
   /* ===== UX wave 3: fun stats sprinkle ===== */
@@ -1934,8 +1950,19 @@
   <div id="sharetray" class="shov" style="display:none" role="dialog" aria-modal="true" aria-label="Share cards" onclick="if(event.target===this)closeShareTray()">
     <div class="sh-card">
       <div class="sh-h">📤 Share cards<button class="x" onclick="closeShareTray()" aria-label="Close">✕</button></div>
-      <div class="sh-sub">Every card you've earned right now — tap one to build it. More unlock as the tournament turns.</div>
+      <div class="sh-sub">Every card you've earned right now — tap one to preview it. More unlock as the tournament turns.</div>
       <div class="sh-grid" id="sh-grid"><div class="sh-div">Loading…</div></div>
+    </div>
+  </div>
+  <div id="cardprev" class="cpv" style="display:none" role="dialog" aria-modal="true" aria-label="Preview your card" onclick="if(event.target===this)closeCardPrev()">
+    <div class="cpv-card">
+      <div class="cpv-top"><b>Preview</b><span>Have a look before you send it</span><button class="x" onclick="closeCardPrev()" aria-label="Close">✕</button></div>
+      <div class="cpv-stage"><img id="cpv-img" alt="Your share card"></div>
+      <div class="cpv-actions">
+        <button class="cpv-btn ghost" onclick="closeCardPrev()">Not now</button>
+        <button class="cpv-btn ghost" id="cpv-save" onclick="cardPrevSave()">Save</button>
+        <button class="cpv-btn go" id="cpv-share" onclick="cardPrevShare()">Share ›</button>
+      </div>
     </div>
   </div>
   <div id="reveal" class="reveal" style="display:none" role="dialog" aria-modal="true" aria-label="Results reveal">
@@ -5568,16 +5595,7 @@ async function shareCard(){
     x.fillText("Think you can beat me? \u2192 staffchallenge26.com",W/2,1220);
     x.fillStyle="rgba(244,238,227,.35)";x.font="600 22px 'Hanken Grotesk',sans-serif";
     x.fillText("Staff World Cup 2026 \u00b7 11 June \u2013 19 July",W/2,1266);
-    c.toBlob(async b=>{
-      if(!b){toast("Couldn\u2019t build the card");return;}
-      if(!(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches)){confettiBurst();try{navigator.vibrate&&navigator.vibrate([80,60,80]);}catch(e){}} /* flex moment \u2014 celebrate the share card */
-      const f=new File([b],"matchday-card.png",{type:"image/png"});
-      if(navigator.canShare&&navigator.canShare({files:[f]})){
-        try{await navigator.share({files:[f],title:"Staff Challenge",text:"My World Cup 26 standing \u2014 come beat me: https://staffchallenge26.com"});return;}catch(e){if(e&&e.name==="AbortError")return;}
-      }
-      const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="matchday-card.png";a.click();
-      setTimeout(()=>URL.revokeObjectURL(a.href),4000);toast("Card saved \u2014 share it on the group \ud83d\udce4");
-    },"image/png");
+    presentCard(c,"matchday-card","My World Cup 26 standing \u2014 come beat me: https://staffchallenge26.com");
   }catch(e){toast("Couldn\u2019t build the card");}
 }
 function wrapText(x,text,cx,y,maxW,lh,maxLines){
@@ -5638,16 +5656,7 @@ async function shareSquad(){
     x.fillText("Back your desk → staffchallenge26.com",W/2,1178);
     x.fillStyle="rgba(244,238,227,.35)";x.font="600 22px 'Hanken Grotesk',sans-serif";
     x.fillText("Staff World Cup 2026 · 11 June – 19 July",W/2,1240);
-    c.toBlob(async b=>{
-      if(!b){toast("Couldn’t build the card");return;}
-      if(!(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches)){confettiBurst();try{navigator.vibrate&&navigator.vibrate([80,60,80]);}catch(e){}}
-      const f=new File([b],"squad-card.png",{type:"image/png"});
-      if(navigator.canShare&&navigator.canShare({files:[f]})){
-        try{await navigator.share({files:[f],title:"Staff Challenge",text:myDept+" in the Staff World Cup — back your desk: https://staffchallenge26.com"});return;}catch(e){if(e&&e.name==="AbortError")return;}
-      }
-      const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="squad-card.png";a.click();
-      setTimeout(()=>URL.revokeObjectURL(a.href),4000);toast("Squad card saved — rally the desk 📤");
-    },"image/png");
+    presentCard(c,"squad-card",myDept+" in the Staff World Cup — back your desk: https://staffchallenge26.com");
   }catch(e){toast("Couldn’t build the card");}
 }
 /* ===== Brag / callout cards — virality engine for the group chats =====
@@ -5690,16 +5699,7 @@ async function shareBrag(o){
     x.fillText(o.cta||"Think you can beat me? → staffchallenge26.com",W/2,1204);
     x.fillStyle="rgba(244,238,227,.35)";x.font="600 22px 'Hanken Grotesk',sans-serif";
     x.fillText("Staff World Cup 2026 · 11 June – 19 July",W/2,1254);
-    c.toBlob(async b=>{
-      if(!b){toast("Couldn’t build the card");return;}
-      if(!(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches)){confettiBurst();try{navigator.vibrate&&navigator.vibrate([80,60,80]);}catch(e){}}
-      const f=new File([b],(o.file||"brag")+".png",{type:"image/png"});
-      if(navigator.canShare&&navigator.canShare({files:[f]})){
-        try{await navigator.share({files:[f],title:"Staff Challenge",text:(o.shareText||"Staff Challenge 26")+" — staffchallenge26.com"});return;}catch(e){if(e&&e.name==="AbortError")return;}
-      }
-      const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=(o.file||"brag")+".png";a.click();
-      setTimeout(()=>URL.revokeObjectURL(a.href),4000);toast("Card saved — drop it in the chat 📤");
-    },"image/png");
+    presentCard(c,(o.file||"brag"),(o.shareText||"Staff Challenge 26")+" — staffchallenge26.com");
   }catch(e){toast("Couldn’t build the card");}
 }
 /* From The Room: brag the currently-selected SETTLED match. Picks Lone Wolf
@@ -5939,18 +5939,50 @@ function cardFlag(x,imgs,team,a,b,w,h){
   x.strokeStyle="rgba(244,238,227,.28)";x.lineWidth=2;roundRect(x,a,b,w,h,r);x.stroke();
 }
 /* web-share with download fallback + the flex moment — shareBrag()'s exact tail, shared */
-function cardShip(c,file,text){
-  c.toBlob(async function(b){
+/* ===== Card preview + send — every share card lands here first so you can look
+   before you decide. presentCard() renders the built canvas into the preview
+   overlay; the actual Web-Share / download only fires on an explicit choice. ===== */
+let CPV={blob:null,file:"card",text:""};
+function presentCard(canvas,file,text){
+  try{canvas.toBlob(function(b){
     if(!b){toast("Couldn’t build the card");return;}
-    if(!(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches)){confettiBurst();try{navigator.vibrate&&navigator.vibrate([80,60,80]);}catch(e){}}
-    const f=new File([b],file+".png",{type:"image/png"});
-    if(navigator.canShare&&navigator.canShare({files:[f]})){
-      try{await navigator.share({files:[f],title:"Staff Challenge",text:text+" — staffchallenge26.com"});return;}catch(e){if(e&&e.name==="AbortError")return;}
-    }
-    const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=file+".png";a.click();
-    setTimeout(function(){URL.revokeObjectURL(a.href);},4000);toast("Card saved — drop it in the chat 📤");
-  },"image/png");
+    CPV={blob:b,file:file||"staff-challenge-card",text:text||"Staff Challenge 26 — staffchallenge26.com"};
+    const img=document.getElementById("cpv-img");
+    if(img){try{if(img.getAttribute("src"))URL.revokeObjectURL(img.src);}catch(e){}img.src=URL.createObjectURL(b);}
+    /* browsers without file Web-Share: the primary button saves instead of sharing */
+    let canF=false;try{canF=!!(navigator.canShare&&navigator.canShare({files:[new File([b],"c.png",{type:"image/png"})]}));}catch(e){}
+    const go=document.getElementById("cpv-share");if(go)go.textContent=canF?"Share ›":"Save card ›";
+    const sv=document.getElementById("cpv-save");if(sv)sv.style.display=canF?"":"none"; /* no Web-Share ⇒ primary already saves; hide the duplicate */
+    const ov=document.getElementById("cardprev");if(ov){ov.style.display="flex";document.body.style.overflow="hidden";}
+  },"image/png");}catch(e){toast("Couldn’t build the card");}
 }
+function closeCardPrev(){
+  const ov=document.getElementById("cardprev");if(ov)ov.style.display="none";
+  document.body.style.overflow="";
+  const img=document.getElementById("cpv-img");
+  if(img&&img.getAttribute("src")){try{URL.revokeObjectURL(img.src);}catch(e){}img.removeAttribute("src");}
+}
+function cardCelebrate(){
+  if(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+  try{confettiBurst();}catch(e){}try{navigator.vibrate&&navigator.vibrate([80,60,80]);}catch(e){}
+}
+async function cardPrevShare(){
+  if(!CPV.blob)return;
+  const f=new File([CPV.blob],CPV.file+".png",{type:"image/png"});
+  if(navigator.canShare&&navigator.canShare({files:[f]})){
+    try{await navigator.share({files:[f],title:"Staff Challenge",text:CPV.text});cardCelebrate();closeCardPrev();return;}
+    catch(e){if(e&&e.name==="AbortError")return;} /* backed out of the OS sheet — keep the preview up */
+  }
+  cardPrevSave(); /* no file Web-Share → save instead */
+}
+function cardPrevSave(){
+  if(!CPV.blob)return;
+  const a=document.createElement("a");a.href=URL.createObjectURL(CPV.blob);a.download=CPV.file+".png";a.click();
+  setTimeout(function(){URL.revokeObjectURL(a.href);},4000);
+  cardCelebrate();toast("Card saved — drop it in the chat 📤");closeCardPrev();
+}
+/* new-pack cards route here; the URL suffix is appended once, centrally */
+function cardShip(c,file,text){presentCard(c,file,(text||"Staff Challenge 26")+" — staffchallenge26.com");}
 /* ===== 🎟️ The Lock-In Slip — tonight's calls, rendered ONLY once each match seals =====
    Row rule IS the seal rule: a pick appears only when its match is locked (lockedM —
    nobody can edit theirs either, so the image leaks nothing actionable). Unlocked
@@ -6954,16 +6986,7 @@ async function shareWrapped(){
     x.fillText("The full story → staffchallenge26.com",W/2,1228);
     x.fillStyle="rgba(244,238,227,.35)";x.font="600 22px 'Hanken Grotesk',sans-serif";
     x.fillText("Staff World Cup 2026 · Full time · 11 June – 19 July",W/2,1272);
-    c.toBlob(async function(b){
-      if(!b){toast("Couldn’t build the card");return;}
-      if(!(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches)){confettiBurst();try{navigator.vibrate&&navigator.vibrate([80,60,80]);}catch(e){}}
-      const f=new File([b],"wrapped-card.png",{type:"image/png"});
-      if(navigator.canShare&&navigator.canShare({files:[f]})){
-        try{await navigator.share({files:[f],title:"Staff Challenge",text:"My World Cup 26, wrapped — staffchallenge26.com"});return;}catch(e){if(e&&e.name==="AbortError")return;}
-      }
-      const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="wrapped-card.png";a.click();
-      setTimeout(function(){URL.revokeObjectURL(a.href);},4000);toast("Card saved — drop it in the chat 📤");
-    },"image/png");
+    presentCard(c,"wrapped-card","My World Cup 26, wrapped — staffchallenge26.com");
   }catch(e){toast("Couldn’t build the card");}
 }
 

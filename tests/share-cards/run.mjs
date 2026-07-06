@@ -235,15 +235,19 @@ async function grabCard(label, code){
         const s=document.createElement('canvas');const k=480/c.width;s.width=480;s.height=Math.round(c.height*k);
         s.getContext('2d').drawImage(c,0,0,s.width,s.height);
         let data=null,taint=null; try{ data=s.toDataURL('image/png'); }catch(e){ taint=String(e); }
-        return {ok:!!data,data,taint,err,toast:document.getElementById('toast').textContent};
+        /* the preview opens inside presentCard's async toBlob callback — poll, don't guess */
+        let previewed=false; const pw=Date.now();
+        while(Date.now()-pw<3000){ const ov=document.getElementById('cardprev'); if(ov&&ov.style.display!=='none'){previewed=true;break;} await new Promise(r=>setTimeout(r,80)); }
+        try{closeCardPrev();}catch(e){} /* reset so cards don't stack across captures */
+        return {ok:!!data,data,taint,err,previewed,toast:document.getElementById('toast').textContent};
       }
       await new Promise(r=>setTimeout(r,120));
     }
     return {ok:false,err,toast:document.getElementById('toast').textContent};
   }, code);
-  if(res.ok){ pass('card built: '+label);
+  if(res.ok && res.previewed){ pass('card built + previewed: '+label);
     fs.writeFileSync(`${SCRATCH}/live-${label}.png`, Buffer.from(res.data.split(',')[1],'base64')); }
-  else fail('card '+label+': err='+res.err+' taint='+(res.taint||'')+' toast="'+res.toast+'"');
+  else fail('card '+label+': ok='+res.ok+' previewed='+res.previewed+' err='+res.err+' taint='+(res.taint||'')+' toast="'+res.toast+'"');
   return res.ok;
 }
 
@@ -337,19 +341,41 @@ else{
   if(tray.locked.some(t=>t.includes('The podium'))) pass('tray locked rack shows podium'); else fail('tray locked rack missing podium');
 }
 await pg.screenshot({ path: `${SCRATCH}/live-tray.png` });
-/* tap a tile end-to-end: slip via the tray */
-const tapped = await pg.evaluate(async ()=>{ 
-  const filt=()=>window.__cvs.filter(c=>c.width===1080&&c.height===1350);
-  const before=filt().length;
+/* tap a tile → it must PREVIEW (not send). Stub navigator.share to prove nothing sends
+   until the user confirms, then that "Not now" cancels and "Share" actually fires. */
+const prev = await pg.evaluate(async ()=>{
+  window.__shared=0; navigator.share=async()=>{window.__shared++;};
+  try{navigator.canShare=()=>true;}catch(e){}
   const tile=Array.from(document.querySelectorAll('#sh-grid .sh-tile')).find(b=>b.textContent.includes('Tonight’s slip'));
-  if(!tile)return 'no tile';
+  if(!tile)return {err:'no tile'};
   tile.click();
-  const t0=Date.now();
-  while(Date.now()-t0<9000){ if(filt().length>before) return true; await new Promise(r=>setTimeout(r,120)); }
-  return 'no canvas';
+  const t0=Date.now(); let ov=null;
+  while(Date.now()-t0<9000){ ov=document.getElementById('cardprev'); if(ov&&ov.style.display!=='none')break; await new Promise(r=>setTimeout(r,100)); }
+  const opened=!!(ov&&ov.style.display!=='none');
+  const img=document.getElementById('cpv-img');
+  const hasImg=!!(img&&img.getAttribute('src')&&/^blob:/.test(img.src));
+  const sharedBeforeConfirm=window.__shared;              // must still be 0 — nothing sent on tap
+  // "Not now" cancels
+  document.querySelector('#cardprev .cpv-btn.ghost').click();
+  await new Promise(r=>setTimeout(r,150));
+  const closedOnCancel=document.getElementById('cardprev').style.display==='none';
+  const sharedAfterCancel=window.__shared;                // still 0
+  // reopen + confirm Share actually fires
+  const tile2=Array.from(document.querySelectorAll('#sh-grid .sh-tile')).find(b=>b.textContent.includes('Tonight’s slip'));
+  if(tile2){ tile2.click(); const t1=Date.now(); while(Date.now()-t1<9000){ const o=document.getElementById('cardprev'); if(o&&o.style.display!=='none')break; await new Promise(r=>setTimeout(r,100)); } }
+  document.getElementById('cpv-share').click();
+  await new Promise(r=>setTimeout(r,200));
+  return {opened,hasImg,sharedBeforeConfirm,closedOnCancel,sharedAfterCancel,sharedAfterConfirm:window.__shared};
 });
-if(tapped===true) pass('tray tile tap builds the card + closes'); else fail('tray tap: '+tapped);
-await pg.evaluate(()=>closeShareTray());
+if(prev.err){ fail('preview: '+prev.err); }
+else{
+  if(prev.opened) pass('tap opens the preview'); else fail('preview did not open');
+  if(prev.hasImg) pass('preview shows the rendered card image'); else fail('preview image missing');
+  if(prev.sharedBeforeConfirm===0) pass('nothing sends on tap (preview first)'); else fail('sent before confirm: '+prev.sharedBeforeConfirm);
+  if(prev.closedOnCancel && prev.sharedAfterCancel===0) pass('“Not now” cancels without sending'); else fail('cancel: closed='+prev.closedOnCancel+' shared='+prev.sharedAfterCancel);
+  if(prev.sharedAfterConfirm>=1) pass('“Share” actually sends after confirm'); else fail('confirm did not send: '+prev.sharedAfterConfirm);
+}
+await pg.evaluate(()=>{try{closeCardPrev();}catch(e){} closeShareTray();});
 
 /* reveal earn-moment handoff: un-reveal the settled QF, walk the ritual, tap through to the tray */
 const rev = await pg.evaluate(async (qf)=>{ try{

@@ -5,6 +5,20 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-07-06 (Doha) — PREVIEW-BEFORE-SEND: every share card lands in a preview overlay first (branch-only, not deployed)
+
+**Commits:** this commit (`index.html` + `tests/share-cards/run.mjs` + changelog) on `claude/social-artifacts-ideas-0ocr94`. **NOT pushed to main.** **Frontend only.** Organizer ask: "see whatever is going to be sent … before we decide if we want to send it."
+
+**What:** a single preview choke point — `presentCard(canvas,file,text)` renders the built 1080×1350 card into a new `#cardprev` overlay (`.cpv`, z-365, above the tray) as an `<img>` from the blob, with actions **Not now · Save · Share ›**. The actual Web-Share / download fires ONLY on an explicit choice; the confetti + haptic moved from build-time to send-time (`cardCelebrate`). Browsers without file Web-Share get the primary relabelled "Save card ›" and the duplicate Save hidden.
+- **All five send paths now route through it** (previously each had its own inline `toBlob`+share tail): `cardShip` (the 8 new-pack cards), `shareCard`, `shareSquad`, `shareBrag` (the ~8 brag cards), `shareWrapped`. Grep confirms `toBlob` now appears once, inside `presentCard`. Share text/filenames preserved per card; the "— staffchallenge26.com" suffix is appended centrally for `cardShip`/`shareBrag` callers exactly as before.
+- Tray sub-copy: "tap one to **preview** it" (was "build it").
+
+**Verified:** `tests/share-cards/run.mjs` ALL GREEN ×3 (was flaky once on preview-mount timing → now polls for the overlay): every one of the ten cards builds AND opens the preview; a real tray-tile tap opens the preview with a `blob:` image and **sends nothing** until confirm; "Not now" closes with zero sends (navigator.share stubbed to count); "Share" fires exactly once on confirm; FAB/header/nav checks still green; zero page errors; `node --check` clean (single `<script>` inline). 430px screenshot of the preview reviewed.
+
+**Rollback:** `git revert` this commit (branch-only; nothing deployed).
+
+---
+
 ## 2026-07-06 (Doha) — REDESIGN v2: share entry is now a thumb-zone "deck" FAB (organizer picked it from the gallery; branch-only, not deployed)
 
 **Commits:** this commit (`index.html` + `tests/share-cards/run.mjs` + changelog) on `claude/social-artifacts-ideas-0ocr94`. **NOT pushed to main** — awaiting the organizer's go. **Frontend only, CSS + small JS.** Supersedes the home-feed row from the entry below (the organizer chose the Share-Deck-FAB tile from the redesign gallery).
