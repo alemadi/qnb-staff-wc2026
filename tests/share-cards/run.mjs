@@ -276,6 +276,24 @@ const roomBtns = await pg.evaluate(async (mid)=>{ try{
 }catch(e){return {err:String(e)};} }, qfs[1].id);
 if(roomBtns.slip&&roomBtns.split) pass('Room pre-settle buttons'); else fail('Room buttons: '+JSON.stringify(roomBtns));
 
+/* header integrity: the hub must never collide with the brand or chip at any width
+   (regression: 440-699px signed-in band, caught live 2026-07-06) */
+for (const w of [340,390,460,600,700,1024]){
+  await pg.setViewportSize({width:w,height:900});
+  await pg.waitForTimeout(200);
+  const r = await pg.evaluate(()=>{
+    const bx=e=>e.getBoundingClientRect();
+    const hub=document.getElementById('sharehub'), wm=document.querySelector('.mark .wm'), chip=document.getElementById('userchip');
+    const shown=hub&&getComputedStyle(hub).display!=='none';
+    const inter=(a,b)=>!(a.right<=b.left||b.right<=a.left||a.bottom<=b.top||b.bottom<=a.top);
+    return { bad: shown&&(inter(bx(hub),bx(wm))||inter(bx(hub),bx(chip))),
+      overflow: document.documentElement.scrollWidth>document.documentElement.clientWidth };
+  });
+  if(r.bad||r.overflow) fail('header overlap at '+w+'px '+JSON.stringify(r)); else pass('header clean at '+w+'px');
+}
+await pg.setViewportSize({width:1280,height:720});
+await pg.waitForTimeout(200);
+
 /* 📤 Share tray — the always-visible discovery door */
 await pg.waitForTimeout(1600); /* boot badge kicks at +1.2s */
 const hub = await pg.evaluate(()=>{ const sh=document.getElementById('sharehub');

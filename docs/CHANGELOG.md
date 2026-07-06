@@ -5,6 +5,17 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-07-06 (Doha) — HOTFIX: header collision — the 📤 hub broke the brand row on 440–699px phones
+
+**Commits:** this commit (`index.html` + `tests/share-cards/run.mjs` + changelog), deployed to `main` immediately — **live regression, reported by the organizer with a player screenshot** (~460px viewport: the hub sat on top of "WORLD CUP 26", wordmark wrapped vertically). **CSS-only.**
+
+**Why it escaped:** the signed-in wordmark hides below **440px** (`@media(max-width:439px)`); the share-hub verification ran at 390px (inside the safe zone) and desktop. The 440–699px band — Pro-Max-class phones, small tablets, split-screens — kept the wordmark visible with 58px less row to give.
+
+**What:** the wordmark-hide breakpoint for signed-in players rises 439→**699px** (signed-out untouched — no hub there); at ≤379px the hub compacts to 34px; at ≤349px the brand yields a font step (signed-in only); at ≤329px the hub hides outright with `!important` (boot sets inline `display:flex`) — the banner and reveal handoff still carry discovery on relic devices.
+
+**Verified:** 13-width sweep (320→1024) over the seeded boot — zero hub/wordmark/chip intersections, zero horizontal overflow, brand row ≤120px tall at every width; the failing 460px case reproduced BEFORE the fix and clean after. The harness now carries a permanent 6-width header-integrity check (fails on any future collision); full suite ALL GREEN, zero page errors.
+
+**Rollback:** `git revert` this commit — though that restores the broken 440–699 band; the alternative is reverting the hub itself (`d446f12` + tray commits).
 ## 2026-07-06 (Doha) — PERF PACK: instant boot + offline shell + buttery lists (frontend & test-infra only)
 
 **Commits:** this commit (`index.html` + `watch.html` + NEW `sw.js` + NEW `tests/perf-boot/run.mjs` + wave-b harness fixes + changelog), on `claude/app-responsiveness-performance-hwsqee`, **rebased onto the awareness-pass tip (`3e7c14c`)** — one conflict in `init()` (the share-hub boot lines vs the restructured snapshot boot), resolved by folding the hub display + badge refresh into the shared `paint()` path, so the hub shows on the instant snapshot paint too. **Frontend + test infra only — no DB change, no scoring-math change, no sync-protocol change: every Supabase read and write is byte-identical to before** (same endpoints, same payloads; boot even reuses the exact `key=in.(…)` batch read, just started earlier).
