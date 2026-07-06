@@ -5,6 +5,23 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-07-06 (Doha) — MAIN DEPLOY: share-entry redesign (deck FAB) + preview-before-send ship to production
+
+**Commits:** this commit (changelog), then `main` fast-forwarded `aa45220` → this tip and pushed **on the organizer's explicit "push to main this one"**. **Clean fast-forward — main had not moved; no rebase.** Ships the three branch commits below: the header hub → home-feed row (`206c433`), row → **thumb-zone deck FAB** (`9d6f210`), and **preview-before-send** (`5dc032a`), plus the handoff note. **Frontend only — no DB / scoring / sync change.**
+
+**Player-visible net change vs the previously-deployed hub build:**
+- The floating 📤 header hub (emoji + "9+" pill) is **gone**; the header is back to the clean wordmark + userchip (439px wc-hide breakpoint restored).
+- Share discovery is now a **gold "deck" FAB** (`.deck-fab`, bottom-right above the nav, live count) that opens the share tray. Bottom nav unchanged; `.jumpnext` lifts clear of the FAB.
+- Every share card now **previews before sending**: tap a card → it renders into the `#cardprev` overlay (Not now / Save / Share); Web-Share/download + confetti fire only on confirm. All five send paths route through `presentCard()`.
+
+**Verified on the shipped tree:** `node tests/share-cards/run.mjs` ALL GREEN (ten cards build + preview, FAB count/click→tray, preview flow sends nothing until confirm, 6-width header sweep 340–1024px, zero page errors); `node --check` clean.
+
+**Verify after push:** Pages action green; prod `index.html` (cache-busted) contains `deck-fab` and `presentCard`, and no longer contains `class="sharehub"`.
+
+**Rollback:** `git push origin +aa45220:main` (client-only — nothing server-side changed). Note the app now ships a service worker (prior perf pack): a stale header may need one hard reload / app reopen to pick up the new shell.
+
+---
+
 ## 2026-07-06 (Doha) — PREVIEW-BEFORE-SEND: every share card lands in a preview overlay first (branch-only, not deployed)
 
 **Commits:** this commit (`index.html` + `tests/share-cards/run.mjs` + changelog) on `claude/social-artifacts-ideas-0ocr94`. **NOT pushed to main.** **Frontend only.** Organizer ask: "see whatever is going to be sent … before we decide if we want to send it."
