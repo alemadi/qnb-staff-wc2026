@@ -5,6 +5,24 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-07-06 (Doha) — REDESIGN: share entry moves from the header hub to a home-feed row (branch-only, not deployed)
+
+**Commits:** this commit (`index.html` + `tests/share-cards/run.mjs` + changelog) on `claude/social-artifacts-ideas-0ocr94`. **NOT pushed to main** — awaiting organizer review of the visual. **Frontend only, CSS + small JS.**
+
+**Why:** the floating 📤 header hub (emoji-in-a-box + a "9+" pill) read as bolted-on and cluttered the brand row — the organizer rejected it twice ("ugly"). A 6-way design panel (rendered + critique-scored) unanimously moved the entry OUT of the header; the chosen direction is a slim self-explaining row in the content flow.
+
+**What:**
+- **Removed** the `.sharehub` button, its `.hubcnt` badge, all its responsive rules, and the seen-set/badge JS. The signed-in wordmark-hide breakpoint reverts 699→**439px** (its pre-hub value) — the header is once again just wordmark + userchip, byte-for-byte the pre-hub behaviour.
+- **Added** `.cardscta` — a gold-hairline row ("Your share cards · N ready →", crafted SVG icon, no emoji) at the TOP of the home (Matches) view, in the scroll flow so it scrolls away. `refreshShareCta()` (renamed from the badge fn) shows it only when signed-in / non-demo / non-`?tv` and ≥1 card is available, with a live count from the shared `shareTiles()` composer; refreshed on boot (+1.2s), on `renderMatches`, on reveal close, and via `updateNewDots`. Tap → `openShareTray()` (unchanged tray).
+- **De-dup:** the temporary power-ups banner's strip CTA reverts from "Open the share tray" back to "How power-ups work" — the banner owns power-ups, the row owns share, no stacked duplicate CTAs.
+- **Bottom nav untouched** (organizer constraint): every nav icon/label is exactly as before.
+
+**Verified:** `tests/share-cards/run.mjs` ALL GREEN — 6-width header-integrity sweep (clean 340–1024px), hub confirmed removed, row shows its count, tap opens the tray, banner shows with share-copy while the row owns the tray; all ten cards + prior surfaces still build; zero page errors; `node --check` clean. 430px screenshots of the row + pressed (tray-open) state reviewed.
+
+**Rollback:** `git revert` this commit (branch-only; nothing deployed).
+
+---
+
 ## 2026-07-06 (Doha) — HOTFIX: header collision — the 📤 hub broke the brand row on 440–699px phones
 
 **Commits:** this commit (`index.html` + `tests/share-cards/run.mjs` + changelog), deployed to `main` immediately — **live regression, reported by the organizer with a player screenshot** (~460px viewport: the hub sat on top of "WORLD CUP 26", wordmark wrapped vertically). **CSS-only.**

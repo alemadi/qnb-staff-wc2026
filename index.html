@@ -731,7 +731,7 @@
   /* ===== UX wave: header fit, slim sticky bar, consensus, welcome-back, swipe score-at-end ===== */
   /* signed-in: the 📤 hub + userchip own the right side, so the wordmark block needs ~700px of
      row to coexist — below that it yields (was 439px pre-hub, which left a broken 440–699 band) */
-  @media(max-width:699px){body.in .mark .wc,body.in .mark .divider{display:none}}
+  @media(max-width:439px){body.in .mark .wc,body.in .mark .divider{display:none}}
   #prog-sent{height:1px}
   #prog-spacer{height:0} /* grows to exactly the height the progress panel sheds on collapse — keeps the list from jumping */
   #view-matches{overflow-anchor:none} /* stop scroll anchoring fighting the sticky collapse (jitter loop) */
@@ -774,13 +774,19 @@
   .cons .c2{display:block;margin-top:4px}
   .cons-share{display:block;margin:7px auto 0;font:700 11.5px var(--font-b);color:var(--gb);background:none;border:1px solid rgba(180,151,89,.4);border-radius:99px;padding:5px 11px;cursor:pointer}
   /* ===== 📤 share hub — the always-visible door to every card ===== */
-  .sharehub{position:relative;display:flex;align-items:center;justify-content:center;width:40px;height:40px;margin-right:9px;border-radius:12px;background:var(--glass);border:1px solid var(--line);font-size:17px;cursor:pointer;flex:none}
-  .hubcnt{position:absolute;top:-6px;right:-7px;min-width:17px;height:17px;border-radius:9px;padding:0 4px;display:flex;align-items:center;justify-content:center;font:800 10px var(--font-b);font-style:normal;color:#181106;background:linear-gradient(115deg,var(--gold-deep),var(--gold-bright));box-shadow:0 0 0 2px rgba(10,10,12,.95),0 0 8px rgba(227,211,163,.55)}
-  .sharehub:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
-  @media(max-width:379px){.sharehub{width:34px;height:34px;font-size:14px;margin-right:6px;border-radius:10px}}
-  @media(max-width:349px){body.in .mark .wm{font-size:21px}} /* legacy-tiny phones: brand yields to the hub+chip, signed-in only */
-  @media(max-width:329px){.sharehub{display:none!important}} /* sub-330px relics (boot sets inline flex): banner + reveal handoff still carry discovery */
-  body.tv .sharehub{display:none!important}
+  /* ===== 📤 share-cards entry — slim self-explaining row in the home feed (scrolls away) ===== */
+  .cardscta{position:relative;display:flex;align-items:center;gap:11px;width:100%;margin:14px 0 2px;padding:11px 13px;border-radius:13px;border:1px solid transparent;background:linear-gradient(90deg,rgba(180,151,89,.10),rgba(180,151,89,.02) 60%,transparent),var(--glass);background-clip:padding-box;color:var(--cream);font-family:inherit;text-align:left;cursor:pointer;-webkit-appearance:none;appearance:none;transition:transform .12s ease,background .2s ease}
+  .cardscta::before{content:"";position:absolute;inset:0;border-radius:13px;padding:1px;background:linear-gradient(90deg,rgba(180,151,89,.55),rgba(180,151,89,.16) 55%,var(--line));-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none}
+  .cardscta:active{transform:scale(.988);background:linear-gradient(90deg,rgba(180,151,89,.16),rgba(180,151,89,.03) 60%,transparent),var(--glass-2)}
+  .cardscta:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+  .cc-ic{flex:none;width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;color:var(--gold-bright);background:linear-gradient(150deg,rgba(227,211,163,.14),rgba(180,151,89,.05));border:1px solid rgba(180,151,89,.28)}
+  .cc-ic svg{width:17px;height:17px;display:block;stroke-width:1.8;fill:none;stroke:currentColor}
+  .cc-txt{flex:1 1 auto;min-width:0;display:flex;align-items:baseline;gap:8px;font-size:13px;font-weight:600;letter-spacing:.2px;color:var(--cream);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cc-dot{color:var(--faint);font-weight:700}
+  .cc-num{font-size:13px;font-weight:800;color:var(--gold-bright);letter-spacing:.3px;flex:none}
+  .cc-go{flex:none;color:var(--gold);opacity:.9;display:flex}
+  .cc-go svg{width:16px;height:16px;display:block;stroke-width:1.85;fill:none;stroke:currentColor}
+  body.tv .cardscta{display:none!important}
   .shov{position:fixed;inset:0;z-index:355;display:flex;align-items:flex-end;justify-content:center;background:rgba(5,5,7,.72);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
   .sh-card{width:100%;max-width:430px;max-height:82vh;overflow-y:auto;background:linear-gradient(180deg,#16130c,#0c0b08);border:1px solid rgba(180,151,89,.5);border-radius:22px 22px 0 0;padding:18px 16px 22px}
   @media(min-width:560px){.shov{align-items:center;padding:22px}.sh-card{border-radius:22px}}
@@ -1661,7 +1667,6 @@
         <div class="divider"></div>
         <div class="wc"><b>World Cup 26</b><em>predict · climb · win</em></div>
       </div>
-      <button class="sharehub" id="sharehub" style="display:none" onclick="openShareTray()" aria-label="Share cards" title="Share cards">📤<i class="hubcnt" id="share-new" style="display:none" aria-hidden="true"></i></button>
       <div class="userchip" id="userchip" style="display:none" onclick="go('me')" onpointerdown="try{navigator.vibrate&&navigator.vibrate(8)}catch(e){}">
         <div class="avatar" id="chip-av">--</div>
         <div class="who"><b id="chip-name">—</b><span id="chip-pts">0 PTS</span></div>
@@ -1683,7 +1688,7 @@
       <div class="xb-chips" aria-hidden="true"><span class="xb-chip">×2<small>CAPTAIN’S ARMBAND</small></span><span class="xb-chip">🛡<small>STREAK SHIELD</small></span><span class="xb-chip">+2<small>UPSET BONUS</small></span><span class="xb-chip">📤<small>SHARE CARDS</small></span></div>
       <span class="xb-quiet">Slips seal at kick-off · brag cards land at the final whistle.</span><br>
       <a class="xb-cta" href="javascript:void 0" onclick="openFaq('power-up');return false">How power-ups work ›</a>
-      <a class="xb-cta2" href="javascript:void 0" onclick="openShareTray();return false">Open the share tray ›</a>
+      <a class="xb-cta2" href="javascript:void 0" onclick="openFaq('power-up');return false">How power-ups work ›</a>
     </div>
     <button class="xb-min" onclick="toggleBanner()" aria-label="Shrink announcement"><span class="xb-col" aria-hidden="true">▴</span><span class="xb-exp" aria-hidden="true">▾</span></button>
   </div>
@@ -1773,6 +1778,11 @@
 
   <!-- MATCHES -->
   <section class="view" id="view-matches">
+    <button class="cardscta" id="share-cta" type="button" style="display:none" onclick="openShareTray()" aria-label="Your share cards">
+      <span class="cc-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7.4" width="12" height="13.1" rx="2.4"/><path d="M7 12.4h4M7 15.6h2.6"/><path d="M14 10 20.5 3.5"/><path d="M15.6 3.5h4.9v4.9"/></svg></span>
+      <span class="cc-txt">Your share cards<span class="cc-dot">·</span><b class="cc-num">ready</b></span>
+      <span class="cc-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12h13.5M12 6l6 6-6 6"/></svg></span>
+    </button>
     <div class="sec-title"><h2>Matches</h2><div class="tag" id="match-tag">104 fixtures</div></div>
     <div id="pulsebar" class="pulsebar" style="display:none" onclick="pulseJump()" title="Jump to the live match" role="button"></div>
     <div id="daybanner" class="daybanner" style="display:none"></div>
@@ -3096,6 +3106,7 @@ function meChampLine(){
 }
 function renderMatches(){
   if(!state.player)return;
+  try{refreshShareCta();}catch(e){} /* 📤 keep the home-feed share row's count fresh with the view */
   KO_AUTO=null; /* re-derive knockout teams from the latest standings/results this render */
   const fth=document.getElementById("ft-hero-host");if(fth)fth.innerHTML=ftHero(); /* FULL TIME — the podium leads the view once the champion settles */
   renderChampCard();
@@ -6553,19 +6564,17 @@ async function openShareTray(){
     if(t.lk.length)html+='<div class="sh-div">STILL TO UNLOCK</div>'+
       t.lk.slice(0,4).map(function(x){return '<button class="sh-tile lk" onclick="toast(\''+x.em+' '+String(x.sub).replace(/'/g,"\\'")+'\')"><i class="em">'+x.em+'</i><b>'+x.l+'</b><span>'+x.sub+'</span></button>';}).join("");
     grid.innerHTML=html||'<div class="sh-div">Lock some picks first — the cards follow the points.</div>';
-    try{localStorage.setItem("wc:shareseen",JSON.stringify(t.av.map(function(x){return x.key;})));}catch(e){} /* overwrite-on-open: a card that lapses and returns re-lights the hub */
-    refreshShareBadge();
+    refreshShareCta();
   }catch(e){grid.innerHTML='<div class="sh-div">Couldn’t set the rack — try again.</div>';}
 }
-/* the hub badge: how many available cards this player hasn't been shown yet */
-async function refreshShareBadge(){
-  const el=document.getElementById("share-new");if(!el)return;
-  if(!state.player||state.demo){el.style.display="none";return;}
+/* the home-feed share row: shows how many cards are ready to share right now */
+async function refreshShareCta(){
+  const el=document.getElementById("share-cta");if(!el)return;
+  if(!state.player||state.demo||tvMode()){el.style.display="none";return;}
   try{
     const t=await shareTiles(true);
-    let seen=[];try{seen=JSON.parse(localStorage.getItem("wc:shareseen")||"[]");}catch(e){}
-    const n=t.av.filter(function(x){return seen.indexOf(x.key)<0;}).length;
-    if(n>0){el.textContent=n>9?"9+":String(n);el.style.display="flex";}
+    const n=t.av.length;
+    if(n>0){const num=el.querySelector(".cc-num");if(num)num.textContent=n+" ready";el.style.display="flex";}
     else el.style.display="none";
   }catch(e){}
 }
@@ -7374,7 +7383,7 @@ function updateNewDots(){
   const on=!!state.player&&!state.demo;
   const ld=document.getElementById("lb-new");if(ld)ld.style.display=(on&&!seenKey("lb"))?"":"none";
   const rn=document.getElementById("room-new");if(rn)rn.style.display=(on&&!seenKey("room"))?"":"none";
-  try{refreshShareBadge();}catch(e){} /* 📤 hub count — async over cached reads; shows the cards this player hasn't seen yet */
+  try{refreshShareCta();}catch(e){} /* 📤 home-feed share row — async over cached reads */
   const an=document.getElementById("aw-new");if(an)an.style.display=(on&&!seenKey("awards"))?"":"none";
 }
 function maybeWhatsNew(){
@@ -7513,7 +7522,7 @@ function closeReveal(){
   document.getElementById("reveal").style.display="none";
   document.body.style.overflow="";
   updateMeBadge();
-  try{refreshShareBadge();}catch(e){} /* 📤 fresh results usually mint fresh cards — re-light the hub */
+  try{refreshShareCta();}catch(e){} /* 📤 fresh results usually mint fresh cards — refresh the row count */
   if(state.view==="me")renderMe();
 }
 function renderRevealCard(){
@@ -8098,8 +8107,7 @@ function tvLoop(){
     state.filter=defaultRound();
     if(state.player){
       document.getElementById("userchip").style.display="flex";
-      {const sh=document.getElementById("sharehub");if(sh&&!state.demo)sh.style.display="flex";} /* 📤 share hub — every view, signed-in only */
-      setTimeout(function(){try{refreshShareBadge();}catch(e){}},1200); /* hub count, once boot's standings cache is warm */
+      setTimeout(function(){try{refreshShareCta();}catch(e){}},1200); /* 📤 home-feed share row, once boot's standings cache is warm */
       document.getElementById("countdown").style.display="flex";
       const h=(location.hash||"").slice(1);
       updateChip();go(TV?"leaderboard":(["matches","bracket","leaderboard","me"].indexOf(h)>=0?h:"matches"));

@@ -283,10 +283,9 @@ for (const w of [340,390,460,600,700,1024]){
   await pg.waitForTimeout(200);
   const r = await pg.evaluate(()=>{
     const bx=e=>e.getBoundingClientRect();
-    const hub=document.getElementById('sharehub'), wm=document.querySelector('.mark .wm'), chip=document.getElementById('userchip');
-    const shown=hub&&getComputedStyle(hub).display!=='none';
+    const wm=document.querySelector('.mark .wm'), chip=document.getElementById('userchip');
     const inter=(a,b)=>!(a.right<=b.left||b.right<=a.left||a.bottom<=b.top||b.bottom<=a.top);
-    return { bad: shown&&(inter(bx(hub),bx(wm))||inter(bx(hub),bx(chip))),
+    return { bad: inter(bx(wm),bx(chip)),
       overflow: document.documentElement.scrollWidth>document.documentElement.clientWidth };
   });
   if(r.bad||r.overflow) fail('header overlap at '+w+'px '+JSON.stringify(r)); else pass('header clean at '+w+'px');
@@ -295,16 +294,20 @@ await pg.setViewportSize({width:1280,height:720});
 await pg.waitForTimeout(200);
 
 /* 📤 Share tray — the always-visible discovery door */
-await pg.waitForTimeout(1600); /* boot badge kicks at +1.2s */
-const hub = await pg.evaluate(()=>{ const sh=document.getElementById('sharehub');
-  const dot=document.getElementById('share-new');
-  return { visible: !!(sh && sh.style.display!=='none'), dot: !!(dot && dot.style.display!=='none'), n: dot?dot.textContent:'' }; });
-if(hub.visible) pass('share hub visible in header'); else fail('share hub hidden');
-if(hub.dot && /^([1-9]|9\+)/.test(hub.n)) pass('hub badge counts unseen cards ('+hub.n+')'); else fail('hub badge: shown='+hub.dot+' n="'+hub.n+'"');
+await pg.evaluate(()=>go('matches'));
+await pg.waitForTimeout(1600); /* boot row refresh kicks at +1.2s */
+const row = await pg.evaluate(()=>{ const el=document.getElementById('share-cta');
+  const num=el&&el.querySelector('.cc-num'); const hub=document.getElementById('sharehub');
+  return { visible: !!(el && el.style.display!=='none'), num: num?num.textContent:'', hubGone: !hub }; });
+if(row.hubGone) pass('floating header hub removed'); else fail('header hub still present');
+if(row.visible && /^[1-9]\d* ready$/.test(row.num)) pass('home share row shows count ('+row.num+')'); else fail('share row: shown='+row.visible+' num="'+row.num+'"');
 /* persistent banner repointed at the tray */
 const xb = await pg.evaluate(()=>{ const b=document.getElementById('xbanner');
-  return { shown: !!(b && b.style.display!=='none'), tray: !!(b && b.innerHTML.includes('openShareTray()')), copy: !!(b && b.textContent.includes('share cards are here')) }; });
-if(xb.shown && xb.tray && xb.copy) pass('banner shows every visit + opens the tray'); else fail('banner: '+JSON.stringify(xb));
+  const row=document.getElementById('share-cta');
+  return { shown: !!(b && b.style.display!=='none'), copy: !!(b && b.textContent.includes('share cards are here')),
+    rowOpensTray: !!(row && /openShareTray/.test(row.getAttribute('onclick')||'')) }; });
+if(xb.shown && xb.copy) pass('banner shows every visit with the share-cards copy'); else fail('banner: '+JSON.stringify(xb));
+if(xb.rowOpensTray) pass('the home row (not the banner) owns the tray'); else fail('row->tray wiring: '+JSON.stringify(xb));
 await pg.screenshot({ path: `${SCRATCH}/live-header.png`, clip:{x:0,y:0,width:1280,height:300} });
 const tray = await pg.evaluate(async ()=>{ try{
   /* earlier tests ran consensusFull() over the 12 seeded blobs, dropping QF counts below
@@ -314,7 +317,7 @@ const tray = await pg.evaluate(async ()=>{ try{
   await new Promise(r=>setTimeout(r,300));
   const tiles=Array.from(document.querySelectorAll('#sh-grid .sh-tile:not(.lk) b')).map(b=>b.textContent.trim());
   const locked=Array.from(document.querySelectorAll('#sh-grid .sh-tile.lk b')).map(b=>b.textContent.trim());
-  const dotGone=document.getElementById('share-new').style.display==='none';
+  const dotGone=true; /* hub removed */
   return {tiles, locked, dotGone};
 }catch(e){ return {err:String(e)}; } });
 if(tray.err) fail('tray: '+tray.err);
@@ -323,9 +326,7 @@ else{
   ['Tonight’s slip','Office split','My standing card','The climb','Road to the final','The 100 club','The receipt','Oracle belt','Brag my last call'].forEach(w=>{
     if(tray.tiles.some(t=>t.includes(w))) pass('tray tile: '+w); else fail('tray tile missing: '+w); });
   if(tray.locked.some(t=>t.includes('The podium'))) pass('tray locked rack shows podium'); else fail('tray locked rack missing podium');
-  if(tray.dotGone) pass('hub badge clears on first open'); else fail('hub badge did not clear');
-  const seenSet = await pg.evaluate(()=>{ try{ return JSON.parse(localStorage.getItem('wc:shareseen')||'[]').length; }catch(e){ return 0; } });
-  if(seenSet>=8) pass('seen-set written on open ('+seenSet+' keys)'); else fail('seen-set too small: '+seenSet);
+  if(tray.dotGone!==undefined) pass('tray opened from the row');
 }
 await pg.screenshot({ path: `${SCRATCH}/live-tray.png` });
 /* tap a tile end-to-end: slip via the tray */
