@@ -1850,6 +1850,16 @@
   .h2h .sc{font-family:var(--font-d);font-weight:700;font-size:26px;color:var(--gold-bright);letter-spacing:1px}
   .h2h .who{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;color:var(--muted);width:110px}
   .tv .nrd-personal{display:none} /* kiosk: fully-personal cards hide, same rule as .aw-you */
+  /* Wave C·1 wayfinding — five themed sections + labeled jump chips (was 41 emoji) */
+  .nrd-secwrap{scroll-margin-top:56px}
+  .nrd-sec{display:flex;align-items:baseline;gap:8px;margin:22px 2px 10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--faint);font-size:10px}
+  .nrd-jump+.nrd-secwrap .nrd-sec{margin-top:6px}
+  .nrd-sec .se{font-size:14px;letter-spacing:0}
+  .nrd-sec b{color:var(--gold);font-size:11px;letter-spacing:2px}
+  .nrd-sec .ss{font-size:9px;letter-spacing:.8px;text-transform:none;color:var(--faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .nrd-sec::after{content:"";flex:1;min-width:14px;height:1px;background:var(--line-2)}
+  .nrd-jump button{display:flex;align-items:center;gap:5px}
+  .nrd-jump button b{font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted)}
   /* ===== PERF ===== */
   /* Long lists: skip layout+paint for offscreen cards (104 matches / 100+ board rows).
      contain-intrinsic-size ≈ a typical card so the scrollbar stays honest; the `auto`
@@ -6424,17 +6434,47 @@ async function renderNerds(body){
   html+='</div>';
   html+='<div class="dept-note" style="margin-top:12px">🧪 Methodology, for the truly committed: settled matches only, the same k-anonymity floors as everywhere (5+ calls group · 8+ knockout), recomputed live in your browser from the data the leaderboard already reads. No cookies were harmed.</div>';
   body.innerHTML=html;
-  /* sticky jump chips — the panel is a long scroll now; one emoji chip per card */
+  /* WAVE C·1 wayfinding — 41 cards was soup as one scroll with 41 emoji chips.
+     Five themed sections (headers injected post-render, cards regrouped by title so
+     the card CODE keeps its historical order) + five LABELED jump chips replacing
+     the per-card row. Cards not in the map (Odds & ends, anything future) stay put
+     after the sections; the methodology note stays the footer. Kiosk unaffected. */
   (function(){
-    const cards=body.querySelectorAll('.aw-card');
+    const cards=Array.prototype.slice.call(body.querySelectorAll('.aw-card'));
     if(cards.length<8)return;
+    const SECS=[
+      {id:'race',ic:'🏆',lab:'The race',sub:'who’s winning, who’s moving',
+       t:['The points curve','Desk spread','The photo finish','Stage wins','The time machine','Your rank journey','The comeback king','The belt races']},
+      {id:'endgame',ic:'🔮',lab:'The endgame',sub:'what can still happen',
+       t:['The futures board','Title lifelines','Still alive','Swing matches','The champion market','Alternate universes','The fragility index','The armband ledger']},
+      {id:'crowd',ic:'🐑',lab:'The crowd',sub:'how the office thinks',
+       t:['The hive mind','The herd-o-meter','The payoff matrix','The overconfidence curve','Raffle or racetrack?','The prediction twin','Predictor personality','Heart vs head','The founding members']},
+      {id:'football',ic:'⚽',lab:'The football',sub:'what the tournament served',
+       t:['Goals by round','The chaos meter','Home-soil bias','The favourite tax','The predictability ladder','The graveyard shift','Golden goose & heartbreaker']},
+      {id:'calls',ic:'🎯',lab:'The calls',sub:'scorelines, form, pick craft',
+       t:['The scoreline lab','The markets lab','The scoreline stock market','The unicorn scores','The draw blind spot','The form curve','The streak spectrum','Clutch rating']}];
+    const byTitle={};
+    cards.forEach(function(cd){const tt=cd.querySelector('.aw-t b');if(tt)byTitle[tt.textContent]=cd;});
+    const mark=document.createElement('i');body.insertBefore(mark,cards[0]);
+    const wraps=[];
+    SECS.forEach(function(s){
+      const got=s.t.map(function(t){return byTitle[t];}).filter(Boolean);
+      if(!got.length)return;
+      const wrap=document.createElement('div');wrap.className='nrd-secwrap';wrap.id='nrdsec-'+s.id;
+      const hd=document.createElement('div');hd.className='nrd-sec';
+      hd.innerHTML='<span class="se" aria-hidden="true">'+s.ic+'</span><b>'+s.lab+'</b><span class="ss">'+s.sub+'</span>';
+      wrap.appendChild(hd);
+      got.forEach(function(cd){wrap.appendChild(cd);});
+      body.insertBefore(wrap,mark);wraps.push({s:s,el:wrap,n:got.length});});
+    body.removeChild(mark);
+    if(wraps.length<2)return; /* degenerate world — skip the nav row too */
     const row=document.createElement('div');row.className='nrd-jump';
-    row.setAttribute('role','navigation');row.setAttribute('aria-label','Jump to a stat card');
-    cards.forEach(function(cd){
-      const ic=cd.querySelector('.aw-ic'),tt=cd.querySelector('.aw-t b');if(!ic||!tt)return;
+    row.setAttribute('role','navigation');row.setAttribute('aria-label','Jump to a section');
+    wraps.forEach(function(w){
       const b=document.createElement('button');b.type='button';
-      b.textContent=ic.textContent;b.title=tt.textContent;b.setAttribute('aria-label',tt.textContent);
-      b.onclick=function(){cd.scrollIntoView({behavior:'smooth',block:'start'});};
+      b.innerHTML='<span aria-hidden="true">'+w.s.ic+'</span><b>'+w.s.lab.replace('The ','')+'</b>';
+      b.title=w.s.lab+' — '+w.s.sub+' · '+w.n+' cards';b.setAttribute('aria-label',w.s.lab+', '+w.n+' cards');
+      b.onclick=function(){w.el.scrollIntoView({behavior:'smooth',block:'start'});};
       row.appendChild(b);});
     const intro=body.querySelector('.dept-note');
     if(intro&&intro.nextSibling)body.insertBefore(row,intro.nextSibling);

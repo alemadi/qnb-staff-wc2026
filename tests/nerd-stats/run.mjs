@@ -816,7 +816,13 @@ const got = await pg.evaluate(()=>{
     founding: { txt: cardTxt('The founding members'), pend: cardPend('The founding members'),
                 meters: cardByTitle('The founding members')?Array.from(cardByTitle('The founding members').querySelectorAll('.nrd-meter .lab')).map(x=>text(x)):[] },
     jump: { present: !!$('.nrd-jump'), chips: $$('.nrd-jump button').length, cards: $$('.aw-card').length,
-            firstTitle: $('.nrd-jump button')?$('.nrd-jump button').title:null },
+            firstTitle: $('.nrd-jump button')?$('.nrd-jump button').title:null,
+            labels: $$('.nrd-jump button b').map(x=>x.textContent) },
+    secs: { wraps: $$('.nrd-secwrap').map(w=>({id:w.id, n:w.querySelectorAll('.aw-card').length,
+              lab: w.querySelector('.nrd-sec b')?w.querySelector('.nrd-sec b').textContent:null})),
+            orphans: $$('.aw-card').filter(cd=>!cd.closest('.nrd-secwrap'))
+              .map(cd=>{const t=cd.querySelector('.aw-t b');return t?t.textContent:'?';}),
+            inWraps: $$('.nrd-secwrap .aw-card').length },
     yous: $$('.aw-you').map(y=>text(y)),
   };
 });
@@ -1018,9 +1024,27 @@ if(!got.founding.pend && got.founding.meters.length===3 && got.founding.meters.e
   pass('founding members terciles = '+expTer.join(' / '));
 else fail('founding meters='+JSON.stringify(got.founding.meters)+' expected '+expTer.join('/'));
 if(got.yous.some(y=>/1st.*to join/.test(y))) pass('founding: "1st to join" personal line'); else fail('join-rank line missing: '+got.yous.join(' | '));
-if(got.jump.present && got.jump.chips===got.jump.cards && got.jump.firstTitle==='The points curve')
-  pass('jump chips: '+got.jump.chips+' chips = '+got.jump.cards+' cards, first → The points curve');
-else fail('jump: present='+got.jump.present+' chips='+got.jump.chips+' cards='+got.jump.cards+' first='+got.jump.firstTitle);
+// Wave C·1 wayfinding: five labeled section chips instead of one chip per card
+if(got.jump.present && got.jump.chips===5 && got.jump.labels.join(',')==='race,endgame,crowd,football,calls'
+   && /^The race — /.test(got.jump.firstTitle||''))
+  pass('jump chips: 5 labeled section chips (race…calls), first → The race');
+else fail('jump: present='+got.jump.present+' chips='+got.jump.chips+' labels='+JSON.stringify(got.jump.labels)+' first='+got.jump.firstTitle);
+{
+  const expSecs=[['nrdsec-race','The race'],['nrdsec-endgame','The endgame'],['nrdsec-crowd','The crowd'],['nrdsec-football','The football'],['nrdsec-calls','The calls']];
+  const gotSecs=got.secs.wraps.map(w=>[w.id,w.lab]);
+  if(JSON.stringify(gotSecs)===JSON.stringify(expSecs)) pass('sections: 5 wraps in order — race, endgame, crowd, football, calls');
+  else fail('sections='+JSON.stringify(gotSecs));
+  // every card lives in a section except the deliberate footer (Odds & ends)
+  if(got.secs.orphans.length===1 && got.secs.orphans[0]==='Odds & ends'
+     && got.secs.inWraps===got.jump.cards-1)
+    pass('section coverage: '+got.secs.inWraps+' of '+got.jump.cards+' cards grouped, only "Odds & ends" outside');
+  else fail('section orphans='+JSON.stringify(got.secs.orphans)+' inWraps='+got.secs.inWraps+' cards='+got.jump.cards);
+  // per-section counts are non-degenerate (signed-in seed: journey present → race has 8)
+  const cnt={};got.secs.wraps.forEach(w=>cnt[w.id]=w.n);
+  if(cnt['nrdsec-race']===8&&cnt['nrdsec-endgame']===8&&cnt['nrdsec-crowd']===9&&cnt['nrdsec-football']===7&&cnt['nrdsec-calls']===8)
+    pass('section sizes: race 8 · endgame 8 · crowd 9 · football 7 · calls 8');
+  else fail('section sizes='+JSON.stringify(cnt));
+}
 // batch 4 numeric checks
 if(!got.raffle.pend && got.raffle.n==='n = '+expQual && got.raffle.tiles[0]==='×'+expMult && got.raffle.tiles[1]===expSkill+'%')
   pass('raffle-or-racetrack: ×'+expMult+' spread, '+expSkill+'% skill, n='+expQual);

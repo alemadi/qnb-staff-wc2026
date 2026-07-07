@@ -5,6 +5,21 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-07-07 (Doha) — BRANCH · LAB WAYFINDING: five themed sections + labeled jump chips (not yet deployed)
+
+**Commits:** this commit (`index.html` + `tests/nerd-stats/run.mjs` + changelog) on `claude/interesting-stats-ideas-7kwsbk`. **Frontend only — no DB / scoring / sync change.** Organizer's read after Wave C: 41 cards in one scroll "maybe too cluttery" — this is the agreed Level-1 fix (wayfinding, not walls).
+
+**What:**
+- **Five themed sections**, injected post-render so the card CODE keeps its historical order (a title→section map regroups the DOM): 🏆 **The race** (8 — points curve, desk spread, photo finish, stage wins, time machine, rank journey, comeback king, belt races) · 🔮 **The endgame** (8 — futures board, title lifelines, still alive, swing matches, champion market, alternate universes, fragility, armband ledger) · 🐑 **The crowd** (9 — hive mind, herd-o-meter, payoff matrix, overconfidence, raffle-or-racetrack, prediction twin, personality, heart vs head, founding members) · ⚽ **The football** (7 — goals by round, chaos, home-soil, favourite tax, predictability ladder, graveyard shift, golden goose) · 🎯 **The calls** (8 — scoreline lab, markets lab, stock market, unicorns, draw blind spot, form curve, streak spectrum, clutch). "Odds & ends" + the methodology note stay as the footer; unmapped future cards land after the sections (safe default).
+- **The sticky jump row shrinks from 41 unlabeled emoji to 5 labeled chips** (🏆 RACE · 🔮 ENDGAME · 🐑 CROWD · ⚽ FOOTBALL · 🎯 CALLS) that scroll to their section; each chip's title carries the section blurb + card count. Section headers reuse the house small-caps grammar (`.nrd-sec`, gold label, hairline rule).
+- Kiosk (?tv) and seal rules untouched; sections skip cleanly in degenerate worlds (<2 sections ⇒ no nav row).
+
+**Verified:** `node --check` clean; `tests/nerd-stats/run.mjs` extended to **166 PASS / 0 FAIL** (chip row = 5 labeled chips in order; 5 section wraps in order; 40 of 41 cards grouped with only "Odds & ends" outside; per-section counts 8/8/9/7/8; all prior 163 checks green). Screenshots eyeballed at 390px: chips row, 🎯 THE CALLS header, and regrouped adjacencies (champion market→universes, graveyard→goose) confirmed.
+
+**Rollback:** `git revert <this commit>` — frontend-only; one IIFE + one CSS block + harness assertions.
+
+---
+
 ## 2026-07-07 (Doha) — MAIN DEPLOY · THE LAB WAVE C: 14 new stats cards
 
 **Commits:** the Wave C series (mockup → brief → foundation compute layer + CSS → card renderers + `tests/nerd-stats/run.mjs`) plus this changelog commit, fast-forwarded to `main` on the organizer's explicit "push to main" (branch `claude/interesting-stats-ideas-7kwsbk`, 4 commits on top of the Squad-board deploy, 0 behind). **Frontend only — no DB / scoring / sync change, zero new backend traffic.** The Lab grows from 27 cards to 41.
