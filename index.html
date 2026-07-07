@@ -1819,6 +1819,37 @@
   .nrd-jump button{flex:none;font:inherit;font-size:15px;line-height:1;padding:7px 9px;border-radius:10px;border:1px solid var(--line);background:var(--glass);cursor:pointer;transition:.15s}
   .nrd-jump button:active{background:rgba(180,151,89,.2);border-color:var(--gold-deep)}
   .nrd-jump ~ .aw-card{scroll-margin-top:64px}
+  /* ===== WAVE C — the Lab grows 14 cards ===== */
+  /* leader-reign strip (⏳ time machine) */
+  .reign{display:flex;gap:2px;height:22px;border-radius:7px;overflow:hidden;margin:6px 0 4px}
+  .reign i{display:grid;place-items:center;font-style:normal;font-size:9px;font-weight:800;color:#181106;background:rgba(180,151,89,.34);min-width:8px}
+  .reign i b{color:#181106;font-weight:800;overflow:hidden;white-space:nowrap;padding:0 4px}
+  .reign i.cur{background:linear-gradient(115deg,var(--gold-bright),var(--gold))}
+  .reign i.dim{background:rgba(180,151,89,.22);color:var(--muted)}
+  .reign i.dim b{color:var(--muted)}
+  .reign-ax{display:flex;justify-content:space-between;font-size:9px;letter-spacing:.6px;color:var(--faint);font-weight:700;margin-bottom:6px}
+  /* 🎢 rank-journey sparkline (inline SVG) */
+  .spark{display:block;width:100%;height:auto;margin:2px 0 2px}
+  /* 🪞 alternate-universe ruleset podiums */
+  .alt-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:6px}
+  .alt-slot{border:1px solid var(--line);background:var(--glass);border-radius:12px;padding:9px 10px 8px;min-width:0}
+  .alt-slot.official{border-color:rgba(180,151,89,.35);background:linear-gradient(160deg,rgba(180,151,89,.08),var(--glass) 70%)}
+  .alt-slot .lb{display:block;font-size:7.5px;letter-spacing:1.1px;text-transform:uppercase;color:var(--faint);font-weight:800;margin-bottom:6px;white-space:nowrap;overflow:hidden}
+  .alt-slot .pd{display:flex;align-items:baseline;gap:6px;font-size:11px;font-weight:700;padding:2px 0;white-space:nowrap;overflow:hidden}
+  .alt-slot .pd u{text-decoration:none;flex:none;font-size:10px}
+  .alt-slot .pd.moved{color:var(--gold-bright)}
+  .alt-slot .pd small{color:var(--faint);font-weight:700;font-size:9px}
+  @media(max-width:420px){.alt-grid{grid-template-columns:1fr}}
+  /* 🎭 predictor-personality hero */
+  .persona{display:flex;align-items:center;gap:13px;padding:4px 0 10px}
+  .persona .pe{font-size:38px;flex:none}
+  .persona .pt b{display:block;font-family:var(--font-d);font-weight:700;font-size:24px;line-height:1;letter-spacing:.6px;text-transform:uppercase;background:linear-gradient(96deg,var(--gold-deep),var(--gold-bright) 55%,var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .persona .pt span{display:block;font-size:10.5px;color:var(--muted);font-weight:600;margin-top:3px}
+  /* 👯 twin/nemesis head-to-head */
+  .h2h{display:flex;align-items:center;justify-content:center;gap:14px;padding:9px 0 5px;font-size:12px;font-weight:800}
+  .h2h .sc{font-family:var(--font-d);font-weight:700;font-size:26px;color:var(--gold-bright);letter-spacing:1px}
+  .h2h .who{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;color:var(--muted);width:110px}
+  .tv .nrd-personal{display:none} /* kiosk: fully-personal cards hide, same rule as .aw-you */
   /* ===== PERF ===== */
   /* Long lists: skip layout+paint for offscreen cards (104 matches / 100+ board rows).
      contain-intrinsic-size ≈ a typical card so the scrollbar stays honest; the `auto`
@@ -8303,6 +8334,280 @@ function consensusFull(){
   CONS.busyF=consensusCompute();
   return CONS.busyF;
 }
+/* ===== WAVE C — heavy replay/futures cache =====
+   Built by wcHeavy(players) at the END of consensusCompute (players already in memory —
+   no extra fetch). Everything here re-RUNS scoreFor(); scoreFor itself is never touched.
+   Keyed on the settled-results count like CONS.rk; renders read WCR.v.
+   Seal rules: another player's picks count only when ELIGIBLE —
+   (m.kn?koReady(m):true)&&(lockedM(m)||state.results[m.id]) — sealed picks contribute 0. */
+let WCR={rk:-1,v:null};
+function wcHeavy(players){
+  const rk=Object.keys(state.results).length;
+  if(WCR.rk===rk)return WCR.v;
+  const ps=(players||[]).filter(function(p){return !!p;});
+  /* settled fixtures, kickoff order, bucketed into Doha match-days */
+  const settled=FIXTURES.filter(function(f){const r=state.results[f.id];return r&&(f.kn?r.w!=null:r.h!=null);})
+    .sort(function(a,b){return new Date(a.ko)-new Date(b.ko);});
+  const byDay={};settled.forEach(function(f){const k=dayKey(f.ko);(byDay[k]=byDay[k]||[]).push(f);});
+  const days=Object.keys(byDay).sort();
+  const predCnt={};
+  ps.forEach(function(p){let n=0;const pr=p.predictions||{};for(const id in pr){const v=pr[id];if(v&&(v.o||v.w))n++;}predCnt[p.slug]=n;});
+  /* rank ordering mirrors cmpSt (pts → predicted → exact → correct) + name for determinism */
+  const rankCmp=function(a,b){return (b.pts|0)-(a.pts|0)||((b.predicted|0)-(a.predicted|0))||((b.exact|0)-(a.exact|0))||((b.correct|0)-(a.correct|0))||String(a.name).localeCompare(String(b.name));};
+  /* ⏳ replay: standings as of each day — scoreFor over results restricted to days ≤ D
+     (results accumulate into one object; _champ rides only on the last day) */
+  const res={};const leaders=[];const rankHist={};const fieldNs=[];let lastRows=null;
+  ps.forEach(function(p){rankHist[p.slug]=[];});
+  days.forEach(function(d,di){
+    byDay[d].forEach(function(f){res[f.id]=state.results[f.id];});
+    if(di===days.length-1&&state.results._champ)res._champ=state.results._champ;
+    const rows=ps.map(function(p){
+      const s=scoreFor(p.predictions,res,p.champ,p.chips||null);
+      return {slug:p.slug,name:p.name||p.slug||"",pts:s.pts,exact:s.exact,correct:s.correct,predicted:predCnt[p.slug]|0};
+    }).sort(rankCmp);
+    rows.forEach(function(r,i){rankHist[r.slug].push(i+1);});
+    fieldNs.push(rows.length);
+    leaders.push(rows.length?rows[0].name:"");
+    lastRows=rows;
+  });
+  /* reigns at the top (positive names — allowed) */
+  const reigns=[];let leadChanges=0;
+  leaders.forEach(function(nm,i){
+    if(i>0&&nm!==leaders[i-1])leadChanges++;
+    if(!reigns.length||reigns[reigns.length-1].name!==nm)reigns.push({name:nm,days:1,cur:false});
+    else reigns[reigns.length-1].days++;
+  });
+  if(reigns.length)reigns[reigns.length-1].cur=true;
+  const seenL={};let distinct=0;
+  leaders.forEach(function(nm){if(!seenL[nm]){seenL[nm]=1;distinct++;}});
+  let longest=null;
+  reigns.forEach(function(rg){if(!longest||rg.days>longest.days)longest={name:rg.name,days:rg.days};});
+  /* 🎢 journey — mine only (renders as .nrd-personal, hidden on ?tv) */
+  let journey=null;
+  if(state.meSlug&&rankHist[state.meSlug]&&rankHist[state.meSlug].length){
+    const rks=rankHist[state.meSlug];
+    let peak={r:rks[0],i:0},low={r:rks[0],i:0},bestClimb=0,topDays=0;
+    rks.forEach(function(r,i){
+      if(r<peak.r)peak={r:r,i:i};
+      if(r>low.r)low={r:r,i:i};
+      if(i>0&&rks[i-1]-r>bestClimb)bestClimb=rks[i-1]-r;
+      if(r<=10)topDays++;
+    });
+    journey={ranks:rks,n:fieldNs.slice(),peak:peak,low:low,best:bestClimb,topDays:topDays};
+  }
+  /* 🧗 comeback — climb from tournament-low rank to today (positive by construction) */
+  const cbAll=[];let cbMine=null;
+  ps.forEach(function(p){
+    const rks=rankHist[p.slug];if(!rks||!rks.length)return;
+    let lo=rks[0];rks.forEach(function(r){if(r>lo)lo=r;});
+    const now=rks[rks.length-1],v=lo-now;
+    if(v>=10)cbAll.push({slug:p.slug||"",name:p.name||p.slug||"",low:lo,now:now,v:v});
+    if(state.meSlug&&p.slug===state.meSlug)cbMine={low:lo,now:now,v:v};
+  });
+  cbAll.sort(function(a,b){return b.v-a.v;});
+  const comeback={rows:cbAll.slice(0,3),mine:cbMine};
+  /* 🔮 futures — enumerate every remaining winner outcome through BRACKET.
+     Winner + champion points only (no exact/upset/streak — the card says so). */
+  let futures=null;
+  (function(){
+    if(!days.length)return;
+    const rem=FIXTURES.filter(function(f){const r=state.results[f.id];return !(r&&(f.kn?r.w!=null:r.h!=null));})
+      .sort(function(a,b){return new Date(a.ko)-new Date(b.ko);});
+    if(!rem.length||rem.length>13)return;
+    for(let gi=0;gi<rem.length;gi++)if(!rem[gi].kn)return; /* group games still open → too early */
+    const PU=puLive();
+    const auto=koAutoTeams();
+    const remIdx={};rem.forEach(function(f,i){remIdx[f.id]=i;});
+    const basePair=function(id){const ov=state.kteams[id]||{},au=auto[id]||{};
+      return {h:ov.h||au.h||null,a:ov.a||au.a||null};};
+    const winnerSettled=function(id){const r=state.results[id];return (r&&r.w)?r.w:null;};
+    const N=rem.length,U=Math.pow(2,N);
+    /* eligible (locked) picks + locked armbands on the remaining matches — sealed picks = 0 */
+    const picks=ps.map(function(p){
+      const pr=p.predictions||{};const arr=new Array(N);const arm=new Array(N);
+      rem.forEach(function(f,i){
+        const ok=(f.kn?koReady(f):true)&&(lockedM(f)||state.results[f.id]);
+        const v=ok?pr[f.id]:null;
+        arr[i]=(v&&v.w)?v.w:null;
+        let a2=false;
+        if(ok&&PU&&p.chips){const knm=/^k[0-9]+$/.test(f.id)?(+f.id.slice(1)):0;const rd=puRound(knm);
+          if(rd&&p.chips[rd]===f.id)a2=true;}
+        arm[i]=a2;
+      });
+      return {arr:arr,arm:arm};
+    });
+    const basePts={},curRank={};
+    if(lastRows)lastRows.forEach(function(r,i){basePts[r.slug]=r.pts;curRank[r.slug]=i+1;});
+    const finIdx=(remIdx.k32!=null)?remIdx.k32:-1;
+    const cmap=(CONS&&CONS.map)||{};
+    const winW={},winC={},aliveSet={},condWin={};
+    let totW=0;
+    const winners=new Array(N),pairH=new Array(N),pairA=new Array(N);
+    for(let u=0;u<U;u++){
+      let w8=1;
+      for(let i=0;i<N;i++){
+        const f=rem[i];const bp=basePair(f.id);
+        let h=bp.h,a=bp.a;
+        const fd=BRACKET[f.id];
+        if(fd&&(!h||!a)){
+          const take=fd[2];
+          const side=function(fid){
+            let ww=winnerSettled(fid);
+            const ri=remIdx[fid];
+            if(ww==null&&ri!=null)ww=winners[ri];
+            if(ww==null)return null;
+            if(take==="W")return ww;
+            let fh=null,fa=null;                       /* loser: the other team of the feeder pair */
+            if(ri!=null){fh=pairH[ri];fa=pairA[ri];}
+            else{const q=basePair(fid);fh=q.h;fa=q.a;}
+            return ww===fh?fa:(ww===fa?fh:null);
+          };
+          if(!h)h=side(fd[0]);
+          if(!a)a=side(fd[1]);
+        }
+        pairH[i]=h;pairA[i]=a;
+        const win=((u>>i)&1)?(a||null):(h||null);
+        winners[i]=win;
+        let sh=0.5;                                    /* unresolved pair / below floor → coin flip */
+        if(h&&a&&win){
+          const c=cmap[f.id];
+          if(c&&c.w){const t2=(c.w[h]||0)+(c.w[a]||0);
+            if(t2>=8)sh=(c.w[win]||0)/t2;}
+        }
+        w8*=sh;
+      }
+      const finW=finIdx>=0?winners[finIdx]:null;
+      let bestPts=-1;const tied=[];
+      for(let pi=0;pi<ps.length;pi++){
+        const p=ps[pi];let pts=basePts[p.slug]|0;
+        const pk=picks[pi];
+        for(let i=0;i<N;i++){
+          if(pk.arr[i]&&pk.arr[i]===winners[i]){let kp=koPts(rem[i]);if(pk.arm[i])kp*=2;pts+=kp;}
+        }
+        if(finW&&p.champ===finW)pts+=CHAMP_PTS;
+        if(pts>bestPts){bestPts=pts;tied.length=0;tied.push(pi);}
+        else if(pts===bestPts)tied.push(pi);
+      }
+      totW+=w8;
+      for(let ti=0;ti<tied.length;ti++){
+        const sl=ps[tied[ti]].slug;
+        winW[sl]=(winW[sl]||0)+w8;winC[sl]=(winC[sl]||0)+1;
+      }
+      if(finW){
+        aliveSet[finW]=1;
+        const cw=condWin[finW]||(condWin[finW]={});
+        for(let ti=0;ti<tied.length;ti++){const sl=ps[tied[ti]].slug;cw[sl]=(cw[sl]||0)+1;}
+      }
+    }
+    const nameBy={};ps.forEach(function(p){nameBy[p.slug]=p.name||p.slug||"";});
+    const shareRows=[];for(const sl in winW)shareRows.push({slug:sl,w:winW[sl],c:winC[sl]});
+    shareRows.sort(function(a,b){return b.w-a.w||b.c-a.c;});
+    const pct1=function(w){return totW>0?Math.round(w/totW*1000)/10:0;};
+    const top5=shareRows.slice(0,5).map(function(r){return {name:nameBy[r.slug],pct:pct1(r.w)};});
+    let fw=0;shareRows.slice(5).forEach(function(r){fw+=r.w;});
+    let deepest=null;
+    shareRows.forEach(function(r){const cr=curRank[r.slug];
+      if(cr&&(!deepest||cr>deepest.rank))deepest={rank:cr,n:winC[r.slug]};});
+    const mineF=state.meSlug?{w:winC[state.meSlug]||0,uni:U}:null;
+    const slug2p={};ps.forEach(function(p){slug2p[p.slug]=p;});
+    const hopeN={};
+    (lastRows?lastRows.slice(0,10):[]).forEach(function(r){
+      const p=slug2p[r.slug];
+      if(p&&p.champ&&aliveSet[p.champ])hopeN[p.champ]=(hopeN[p.champ]||0)+1;});
+    const hopes=[];for(const t in hopeN)hopes.push({t:t,n:hopeN[t]});
+    hopes.sort(function(a,b){return b.n-a.n;});
+    const cmv=(CONS&&CONS.champMap)||{};
+    let modalChamp=null;
+    for(const t in cmv)if(!modalChamp||cmv[t]>cmv[modalChamp])modalChamp=t;
+    let cond=null,condBest=-1;
+    for(const t in hopeN){
+      if(t===modalChamp)continue;
+      const tick=cmv[t]||0;
+      if(tick>condBest){
+        const cw=condWin[t]||{};let bn=null,bc=-1;
+        for(const sl in cw)if(cw[sl]>bc){bc=cw[sl];bn=sl;}
+        if(bn){cond={team:t,winner:nameBy[bn]};condBest=tick;}
+      }
+    }
+    const alive=[];for(const t in aliveSet)alive.push(t);
+    futures={left:N,uni:U,winners:top5,fieldPct:pct1(fw),fieldN:Math.max(0,shareRows.length-top5.length),
+      distinct:shareRows.length,deepest:deepest,mine:mineF,cond:cond,hopes:hopes,alive:alive};
+  })();
+  /* 🪞 alternate rulesets — ONE local variant scorer; scoreFor stays byte-for-byte */
+  let alt=null;
+  (function(){
+    if(!ps.length||!lastRows)return;
+    const offRank={},offPts={};
+    lastRows.forEach(function(r,i){offRank[r.slug]=i+1;offPts[r.slug]=r.pts;});
+    const wcScoreVariant=function(p,mode){
+      if(mode==="official")return offPts[p.slug]|0;
+      if(mode==="nochamp"){let v=offPts[p.slug]|0;
+        if(state.results._champ&&p.champ===state.results._champ)v-=CHAMP_PTS;
+        return v;}
+      const pr=p.predictions||{};let pts=0;
+      for(const id in state.results){
+        if(id.charAt(0)==="_")continue;
+        const r=state.results[id],v=pr[id];if(!r||!v)continue;
+        const f=FIXBYID[id];if(!f)continue;
+        if(r.w!=null){
+          if(mode==="outcome"){if(v.w&&v.w===r.w)pts+=koPts(f);}
+          else if(koScoreHit(v,r))pts+=koBonus(f);
+        }else{
+          if(r.h==null)continue;
+          if(mode==="outcome"){if(v.o&&v.o===(r.h>r.a?"H":r.h<r.a?"A":"D"))pts+=3;}
+          else if(v.h!=null&&v.a!=null&&Number(v.h)===r.h&&Number(v.a)===r.a)pts+=2;
+        }
+      }
+      return pts;
+    };
+    const modes=[["Official rules","official"],["Outcome only · no exact bonus","outcome"],["Exact scores only","exact"],["No champion bonus","nochamp"]];
+    const slots=modes.map(function(md){
+      const rows=ps.map(function(p){return {slug:p.slug,name:p.name||p.slug||"",v:wcScoreVariant(p,md[1])};})
+        .sort(function(a,b){return b.v-a.v||(offRank[a.slug]||99999)-(offRank[b.slug]||99999);});
+      const podium=rows.slice(0,3).map(function(r,i){
+        return {name:r.name,mv:md[1]==="official"?0:((offRank[r.slug]||0)-(i+1))};
+      });
+      return {lab:md[0],podium:podium};
+    });
+    const leadName=lastRows[0].name;let leadCount=0;
+    slots.forEach(function(s){if(s.podium.length&&s.podium[0].name===leadName)leadCount++;});
+    alt={slots:slots,leadName:leadName,leadCount:leadCount};
+  })();
+  /* 🥚 fragility — flip each one-goal game, rescore the CURRENT top-10, watch the podium */
+  const frag={oneGoal:0,flips:0,gap:0};
+  (function(){
+    if(!lastRows||lastRows.length<3)return;
+    const slug2p={};ps.forEach(function(p){slug2p[p.slug]=p;});
+    const top10=lastRows.slice(0,10);
+    const pod=[lastRows[0].name,lastRows[1].name,lastRows[2].name];
+    frag.gap=Math.min(lastRows[0].pts-lastRows[1].pts,lastRows[1].pts-lastRows[2].pts);
+    const cands=[];
+    settled.forEach(function(f){
+      const r=state.results[f.id];
+      if(f.kn){
+        const v=fxView(f);
+        const other=r.w===v.home.n?v.away.n:(r.w===v.away.n?v.home.n:null);
+        if(other)cands.push({f:f,nr:{w:other,h:r.a,a:r.h}}); /* the other side advances, score shape swapped */
+      }else if(Math.abs(r.h-r.a)===1)cands.push({f:f,nr:{h:r.a,a:r.h}});
+    });
+    frag.oneGoal=cands.length;
+    cands.forEach(function(cd){
+      const cp={};for(const id in state.results)cp[id]=state.results[id];
+      cp[cd.f.id]=Object.assign({},state.results[cd.f.id],cd.nr);
+      if(cd.f.id==="k32"&&cp._champ)cp._champ=cd.nr.w; /* flipping the final flips the champion too */
+      const rows=top10.map(function(rr){
+        const p=slug2p[rr.slug];
+        if(!p)return {slug:rr.slug,name:rr.name,pts:rr.pts,exact:rr.exact,correct:rr.correct,predicted:rr.predicted};
+        const s=scoreFor(p.predictions,cp,p.champ,p.chips||null);
+        return {slug:p.slug,name:p.name||p.slug||"",pts:s.pts,exact:s.exact,correct:s.correct,predicted:predCnt[p.slug]|0};
+      }).sort(rankCmp);
+      for(let i=0;i<3;i++)if(rows[i]&&rows[i].name!==pod[i]){frag.flips++;return;}
+    });
+  })();
+  WCR={rk:rk,v:{days:days,reigns:reigns,leadChanges:leadChanges,distinct:distinct,longest:longest,
+    journey:journey,comeback:comeback,futures:futures,alt:alt,frag:frag}};
+  return WCR.v;
+}
 async function consensusCompute(){
     const players=await sbulkJSON("wc:player:");
     const map={};let champN=0;const cm={};
@@ -8395,7 +8700,255 @@ async function consensusCompute(){
           else{if(a.o&&a.o===bq.o)nn++;}}
         if(nn>twin.n)twin={name:p.name||p.slug||"",slug:p.slug||"",n:nn};}});
     const byV=function(a,b){return b.v-a.v;};stA.sort(byV);pfA.sort(byV);upA.sort(byV);
-    CONS={t:Date.now(),map:map,n:players.length,champN:champN,champMap:cm,best:best,bestPerfect:bestPerfect,perfectByDay:pday,bestUpset:bestUp,deptByDay:deptDay,dayTop:dayTop,dayHit:dayHit,twin:twin,perfectN:perfectN,officeHit:{h:officeHits,t:officeTot},perP:perP,chips:chipLed,joinMap:joinMap,tops:{streak:stA,perfect:pfA,upset:upA},mine:(state.meSlug?mine:null),full:true,fullT:Date.now(),rk:Object.keys(state.results).length,busy:null,busyF:null};
+    /* ===== WAVE C — third pass: cheap Lab aggregates (CONS.wc) =====
+       Same discipline as tops/mine: aggregates + positive-leader names + "mine" only.
+       Eligibility (seal rule): another player's pick counts only on matches where
+       (m.kn?koReady(m):true)&&(lockedM(m)||state.results[m.id]) — sealed picks never
+       influence anything rendered. k-anon floors: 5 group / 8 knockout per match. */
+    const wc={clutch:null,heart:null,persona:null,twin:null,unicorn:null,goose:null,chaos:null};
+    try{
+      const eligSet={};
+      FIXTURES.forEach(function(m){if((m.kn?koReady(m):true)&&(lockedM(m)||state.results[m.id]))eligSet[m.id]=true;});
+      const doneE=done.filter(function(f){return !!eligSet[f.id];});
+      const ps=players.filter(function(p){return !!p;});
+      /* 🧊 clutch — group vs KO hit-rate per player (floors ≥20 group / ≥12 KO) + office split */
+      (function(){
+        const rows=[];let ogH=0,ogT=0,okH=0,okT=0,mn=null;
+        ps.forEach(function(p){
+          const pr=p.predictions||{};let g=0,gn=0,k=0,kn=0;
+          doneE.forEach(function(f){
+            const v=pr[f.id];if(!v)return;const r=state.results[f.id];
+            if(f.kn){if(!v.w)return;kn++;if(v.w===r.w)k++;}
+            else{if(!v.o)return;gn++;if(v.o===(r.h>r.a?"H":r.h<r.a?"A":"D"))g++;}
+          });
+          ogH+=g;ogT+=gn;okH+=k;okT+=kn;
+          const gp=gn?Math.round(g/gn*100):0,kp=kn?Math.round(k/kn*100):0;
+          if(state.meSlug&&p.slug===state.meSlug)mn={g:gp,k:kp,gn:gn,kn:kn};
+          if(gn>=20&&kn>=12){const d=kp-gp;if(d>0)rows.push({slug:p.slug||"",name:p.name||p.slug||"",g:gp,k:kp,d:d});}
+        });
+        rows.sort(function(a,b){return b.d-a.d;});
+        wc.clutch={rows:rows.slice(0,3),og:ogT?Math.round(ogH/ogT*100):0,ok:okT?Math.round(okH/okT*100):0,mine:mn};
+      })();
+      /* ❤️ heart vs head — own-nation aggregate; no names, not even positive ones */
+      (function(){
+        let calls=0,back=0,hits=0,pPts=0,oCalls=0,oBack=0,oHits=0,oPts=0,shock=null;
+        ps.forEach(function(p){
+          const t=(p.country&&FL[p.country])?p.country:null;if(!t)return;
+          const pr=p.predictions||{};
+          doneE.forEach(function(f){
+            const v=pr[f.id];if(!v)return;
+            const r=state.results[f.id],c=map[f.id];if(!c)return;
+            let backing=false,hit=false,vp=0,ot=0,ob=0,oh=0,op=0;
+            if(f.kn){
+              const mv=fxView(f);
+              if(mv.home.n!==t&&mv.away.n!==t)return;
+              if(!v.w)return;
+              backing=(v.w===t);hit=(v.w===r.w);if(hit)vp=koPts(f);
+              for(const kk in c.w)ot+=c.w[kk];
+              ob=c.w[t]||0;oh=c.w[r.w]||0;op=oh*koPts(f);
+            }else{
+              if(f.home.n!==t&&f.away.n!==t)return;
+              if(!v.o)return;
+              const ro=r.h>r.a?"H":r.h<r.a?"A":"D";
+              backing=(f.home.n===t?v.o==="H":v.o==="A");hit=(v.o===ro);
+              if(hit)vp=3;
+              if(v.h!=null&&v.a!=null&&Number(v.h)===r.h&&Number(v.a)===r.a)vp+=2;
+              ot=c.H+c.D+c.A;ob=(f.home.n===t?c.H:c.A);oh=c[ro];
+              op=oh*3+(c.sc[r.h+"-"+r.a]||0)*2;
+            }
+            calls++;if(backing)back++;if(hit)hits++;pPts+=vp;
+            oCalls+=ot;oBack+=ob;oHits+=oh;oPts+=op;
+            if(backing&&hit&&resPct[f.id]!=null&&resPct[f.id]<=30&&(!shock||resPct[f.id]<shock.pct))shock={team:t,pct:resPct[f.id]};
+          });
+        });
+        if(calls>=15){
+          const bs=back/calls,os=oCalls?oBack/oCalls:0;
+          wc.heart={calls:calls,
+            backMult:os>0?Math.round(bs/os*10)/10:0,
+            pHit:Math.round(hits/calls*100),
+            oHit:oCalls?Math.round(oHits/oCalls*100):0,
+            ptsDelta:Math.round((pPts/calls-(oCalls?oPts/oCalls:0))*10)/10,
+            shock:shock};
+        }
+      })();
+      /* 🎭 persona — archetype census (players with ≥20 settled eligible calls) + mine */
+      (function(){
+        const modal=function(f){const c=map[f.id];if(!c||!eligSet[f.id])return null;
+          if(f.kn){let tot=0,bt=null,bn=0;
+            for(const kk in c.w){tot+=c.w[kk];if(c.w[kk]>bn){bn=c.w[kk];bt=kk;}}
+            return tot>=8?bt:null;}
+          const tot=c.H+c.D+c.A;if(tot<5)return null;
+          return (c.H>=c.D&&c.H>=c.A)?"H":(c.D>=c.A?"D":"A");};
+        const traits=function(pr,fxs){
+          let n=0,chN=0,chT=0,dN=0,dT=0,gS=0,gN=0;
+          fxs.forEach(function(f){const v=pr[f.id];if(!v)return;
+            if(f.kn){if(!v.w)return;n++;
+              const md=modal(f);if(md){chT++;if(v.w===md)chN++;}}
+            else{if(!v.o)return;n++;dT++;if(v.o==="D")dN++;
+              const md=modal(f);if(md){chT++;if(v.o===md)chN++;}
+              if(v.h!=null&&v.a!=null){gS+=Number(v.h)+Number(v.a);gN++;}}});
+          const chalk=chT?Math.round(chN/chT*100):0;
+          return {n:n,chalk:chalk,draw:dT?Math.round(dN/dT*100):0,
+            opt:Math.min(100,gN?Math.round(gS/gN/4*100):0),fade:100-chalk};
+        };
+        const ARCH={
+          wolf:{emoji:"🐺",label:"The Lone Wolf",blurb:"You fade the office on principle — when it lands, it lands alone."},
+          chalk:{emoji:"🐑",label:"The Chalk Merchant",blurb:"You ride with the room — solid, sensible, hard to embarrass."},
+          draw:{emoji:"🤝",label:"The Draw Truther",blurb:"You call the stalemates nobody else dares to back."},
+          maverick:{emoji:"🦊",label:"The Calculated Maverick",blurb:"You fade the crowd — but only when the numbers whisper first."},
+          balanced:{emoji:"⚖️",label:"The Balanced Head",blurb:"No tells, no tilt — you read every match on its own merits."}
+        };
+        const archKey=function(t){
+          if(t.fade>=45)return "wolf";
+          if(t.chalk>=70)return "chalk";
+          if(t.draw>=20)return "draw";
+          if(t.fade>=30)return "maverick";
+          return "balanced";};
+        const census={chalk:0,maverick:0,draw:0,wolf:0,balanced:0};
+        ps.forEach(function(p){const t=traits(p.predictions||{},doneE);
+          if(t.n>=20)census[archKey(t)]++;});
+        let mn=null;
+        if(state.player){
+          const t=traits(state.player.predictions||{},FIXTURES); /* own data — no eligibility filter (modal still floor-gated) */
+          const k=archKey(t),a=ARCH[k];
+          mn={chalk:t.chalk,draw:t.draw,opt:t.opt,fade:t.fade,key:k,emoji:a.emoji,label:a.label,blurb:a.blurb};
+        }
+        wc.persona={census:census,mine:mn};
+      })();
+      /* 👯 twin — pairwise agreement over ELIGIBLE matches only (legacy CONS.twin untouched) */
+      (function(){
+        const eligFx=FIXTURES.filter(function(m){return !!eligSet[m.id];});
+        const sigs=[];
+        ps.forEach(function(p){
+          const pr=p.predictions||{};const mp={};let n=0;
+          eligFx.forEach(function(f){const v=pr[f.id];if(!v)return;
+            if(f.kn){if(v.w){mp[f.id]=v.w;n++;}}
+            else if(v.o){mp[f.id]=v.o;n++;}});
+          sigs.push({slug:p.slug||"",name:p.name||p.slug||"",mp:mp,n:n});
+        });
+        const cmp2=function(a,b){let sh=0,ag=0;
+          const s=a.n<=b.n?a:b,o=a.n<=b.n?b:a;
+          for(const id in s.mp){if(o.mp[id]!=null){sh++;if(s.mp[id]===o.mp[id])ag++;}}
+          return {sh:sh,ag:ag};};
+        let mineT=null,nem=null,meSig=null;
+        if(state.meSlug)for(let i=0;i<sigs.length;i++)if(sigs[i].slug===state.meSlug){meSig=sigs[i];break;}
+        if(meSig){
+          let bestP=-1,bn=0,bname="",worst=null;
+          sigs.forEach(function(s){if(s===meSig)return;
+            const x=cmp2(meSig,s);
+            if(x.sh>=15){const pc=x.ag/x.sh*100;
+              if(pc>bestP){bestP=pc;bn=x.sh;bname=s.name;}}
+            const dis=x.sh-x.ag;
+            if(dis>=10&&(!worst||dis>worst.dis))worst={dis:dis,s:s};});
+          if(bestP>=0)mineT={name:bname,pct:Math.round(bestP),n:bn};
+          if(worst){
+            let meC=0,thC=0;
+            for(const id in meSig.mp){const ov=worst.s.mp[id];
+              if(ov==null||ov===meSig.mp[id])continue;
+              const f=FIXBYID[id],r=state.results[id];if(!f||!r)continue;
+              if(f.kn){if(r.w==null)continue;
+                if(meSig.mp[id]===r.w)meC++;if(ov===r.w)thC++;}
+              else{if(r.h==null)continue;
+                const ro=r.h>r.a?"H":r.h<r.a?"A":"D";
+                if(meSig.mp[id]===ro)meC++;if(ov===ro)thC++;}}
+            nem={name:worst.s.name,n:worst.dis,me:meC,them:thC};
+          }
+        }
+        const cands=sigs.filter(function(s){return s.n>=30;});
+        const totP=cands.length*(cands.length-1)/2;
+        const stride=totP>20000?Math.ceil(totP/20000):1;
+        let pi=0,sum=0,cnt=0,pair=null,pairP=-1;
+        for(let i=0;i<cands.length;i++)for(let j=i+1;j<cands.length;j++){
+          pi++;if(stride>1&&(pi%stride)!==0)continue;
+          const x=cmp2(cands[i],cands[j]);
+          if(x.sh>=15){const pc=x.ag/x.sh*100;sum+=pc;cnt++;
+            if(x.sh>=30&&pc>pairP){pairP=pc;pair={a:cands[i].name,b:cands[j].name,pct:Math.round(pc),n:x.sh};}}
+        }
+        wc.twin={mine:mineT,pair:pair,avg:cnt?Math.round(sum/cnt):0,nemesis:nem};
+      })();
+      /* 🦄 unicorn — exact-score tickets bought vs landed (settled GROUP matches only) */
+      (function(){
+        const bought={},landed={};
+        done.forEach(function(f){
+          if(f.kn)return;
+          const c=map[f.id],r=state.results[f.id];
+          if(c)for(const sc in c.sc)bought[sc]=(bought[sc]||0)+c.sc[sc];
+          landed[r.h+"-"+r.a]=(landed[r.h+"-"+r.a]||0)+1;
+        });
+        const rows=[];
+        for(const sc in bought)if(bought[sc]>=20)rows.push({sc:sc,bought:bought[sc],landed:landed[sc]||0});
+        rows.sort(function(a,b){return b.bought-a.bought;});
+        wc.unicorn=rows;
+      })();
+      /* 🦢 goose & heartbreaker — points minted/torched per team + dead champion tickets */
+      (function(){
+        const minted={},torched={};
+        done.forEach(function(f){
+          const c=map[f.id];if(!c)return;const r=state.results[f.id];
+          if(f.kn){
+            let tot=0;for(const kk in c.w)tot+=c.w[kk];
+            if(tot<8)return;
+            const mv=fxView(f),pp=koPts(f);
+            const l=r.w===mv.home.n?mv.away.n:(r.w===mv.away.n?mv.home.n:null);
+            minted[r.w]=(minted[r.w]||0)+(c.w[r.w]||0)*pp;
+            if(l)torched[l]=(torched[l]||0)+(c.w[l]||0)*pp;
+          }else{
+            const tot=c.H+c.D+c.A;if(tot<5)return;
+            if(r.h===r.a)return; /* group draws attribute to neither team */
+            const wt=r.h>r.a?f.home.n:f.away.n,lt=r.h>r.a?f.away.n:f.home.n;
+            const wn=r.h>r.a?c.H:c.A,ln=r.h>r.a?c.A:c.H;
+            minted[wt]=(minted[wt]||0)+wn*3;
+            torched[lt]=(torched[lt]||0)+ln*3;
+          }
+        });
+        /* dead champion tickets — same test as the champion market card */
+        const koSet={};let koAll=true;
+        FIXTURES.forEach(function(f){if(!f.kn||f.round!=="R32")return;
+          if(koReady(f)){const v=fxView(f);koSet[v.home.n]=1;koSet[v.away.n]=1;}else koAll=false;});
+        const beaten={};
+        done.forEach(function(f){if(!f.kn)return;
+          const r=state.results[f.id],v=fxView(f);
+          const l=r.w===v.home.n?v.away.n:(r.w===v.away.n?v.home.n:null);if(l)beaten[l]=1;});
+        const koKnown=koAll&&Object.keys(koSet).length>=32;
+        let burn=null;
+        for(const t in cm){
+          if(!(beaten[t]||(koKnown&&!koSet[t])))continue;
+          torched[t]=(torched[t]||0)+CHAMP_PTS*cm[t];
+          if(!burn||cm[t]>burn.n)burn={t:t,n:cm[t]};
+        }
+        const top3=function(o){const a=[];
+          for(const t in o)if(o[t]>0)a.push({t:t,v:o[t]});
+          a.sort(function(x,y){return y.v-x.v;});return a.slice(0,3);};
+        wc.goose={minted:top3(minted),torched:top3(torched),burn:burn};
+      })();
+      /* 🌪️ chaos — surprise = −log₂(office share of the actual result), per round */
+      (function(){
+        const order=["MD1","MD2","MD3","R32","R16","QF","SF","FIN"];
+        const sum={},cnt={};
+        done.forEach(function(f){
+          const c=map[f.id];if(!c)return;const r=state.results[f.id];
+          let sh=0,tot=0;
+          if(f.kn){for(const kk in c.w)tot+=c.w[kk];if(tot<8)return;sh=(c.w[r.w]||0)/tot;}
+          else{tot=c.H+c.D+c.A;if(tot<5)return;sh=c[r.h>r.a?"H":r.h<r.a?"A":"D"]/tot;}
+          if(sh<=0)sh=0.5/tot; /* nobody called it — clamp so the shock stays finite */
+          const u=-Math.log(sh)/Math.LN2;
+          const b=f.round==="FINAL"?"FIN":f.round;
+          sum[b]=(sum[b]||0)+u;cnt[b]=(cnt[b]||0)+1;
+        });
+        const rounds=[];let gS=0,gN=0,mx=0,mxLab="";
+        order.forEach(function(b){
+          if(!cnt[b])return;
+          const u=Math.round(sum[b]/cnt[b]*100)/100;
+          rounds.push({lab:b,u:u,n:cnt[b]});
+          if(b==="MD1"||b==="MD2"||b==="MD3"){gS+=sum[b];gN+=cnt[b];}
+          else if(u>mx){mx=u;mxLab=b;}
+        });
+        const gAvg=gN?gS/gN:0;
+        wc.chaos={rounds:rounds,mult:(gAvg>0&&mx>0)?Math.round(mx/gAvg*10)/10:0,maxLab:mxLab};
+      })();
+    }catch(e){} /* a Wave-C failure must never break the classic consensus fields */
+    CONS={t:Date.now(),map:map,n:players.length,champN:champN,champMap:cm,best:best,bestPerfect:bestPerfect,perfectByDay:pday,bestUpset:bestUp,deptByDay:deptDay,dayTop:dayTop,dayHit:dayHit,twin:twin,perfectN:perfectN,officeHit:{h:officeHits,t:officeTot},perP:perP,chips:chipLed,joinMap:joinMap,tops:{streak:stA,perfect:pfA,upset:upA},mine:(state.meSlug?mine:null),wc:wc,full:true,fullT:Date.now(),rk:Object.keys(state.results).length,busy:null,busyF:null};
+    try{wcHeavy(players);}catch(e){} /* WAVE C — heavy replay cache (WCR); same protection */
     return CONS;
 }
 function consText(m,p){
