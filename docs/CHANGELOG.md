@@ -5,6 +5,15 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-07-07 15:05 (Doha) — Fix on the emoji-free branch: reveal stamp/summary showed raw icon markup
+
+**Commit:** `6e650fc`. Found by driving the full reveal sequence in a sandboxed preview of the branch.
+`rvVerdict()` labels now contain SVG icon markup, but the reveal flip-stamp wrote them via `textContent` and the summary list passed them through `esc()` — both showed the markup as literal text. Both sinks now render the label (an app constant, never user input) as HTML.
+
+**Rollback (git):** `git revert 6e650fc`
+
+---
+
 ## 2026-07-07 14:18 (Doha) — Emoji-free UI: inline SVG icon sprite (branch `claude/emoji-alternatives-91kywd`, not yet on main)
 
 **Commit:** `4f1bc13` (index.html only, no DB changes).
