@@ -1,0 +1,394 @@
+<title>The Lab · Wave C — new cards preview</title>
+<style>
+  :root{
+    --grape:#0f0f12; --ink:#050507;
+    --c-red:#ef3340; --c-green:#2ea84f; --c-blue:#2d6fe0;
+    --tiles:linear-gradient(90deg,var(--c-red) 0 33.34%,var(--c-green) 33.34% 66.67%,var(--c-blue) 66.67% 100%);
+    --gold:#b49759; --gold-bright:#e3d3a3; --gold-deep:#8a734a;
+    --cream:#f4eee3; --muted:rgba(244,238,227,.62); --faint:rgba(244,238,227,.4);
+    --line:rgba(244,238,227,.13); --line-2:rgba(244,238,227,.07);
+    --glass:rgba(255,255,255,.06); --glass-2:rgba(255,255,255,.095);
+    --ok:#3ddc97; --bad:#ff6b6b;
+    --font-d:'Arial Narrow',Impact,'Anton',sans-serif;
+    --font-b:'Hanken Grotesk',ui-sans-serif,system-ui,-apple-system,sans-serif;
+  }
+  /* The pool app is a single dark world by design — this preview mocks its screen verbatim. */
+  html{background:#000;color-scheme:dark}
+  body{font-family:var(--font-b);color:var(--cream);line-height:1.45;min-height:100%;overflow-x:hidden;
+    background:
+      radial-gradient(1100px 760px at 8% -6%, rgba(180,151,89,.13), transparent 58%),
+      radial-gradient(1000px 720px at 102% 14%, rgba(45,111,224,.10), transparent 54%),
+      radial-gradient(900px 900px at 50% 128%, rgba(239,51,64,.07), transparent 60%),
+      linear-gradient(162deg,#121214 0%,#0a0a0c 42%,#000 100%);
+    background-attachment:fixed}
+  body::before{content:"";position:fixed;top:0;left:0;right:0;height:3px;background:var(--tiles);z-index:100;pointer-events:none}
+  ::selection{background:var(--gold);color:#181106}
+  .wrap{max-width:640px;margin:0 auto;padding:26px 16px 60px;position:relative}
+
+  /* header */
+  .mark{display:flex;align-items:baseline;gap:12px;margin-bottom:4px}
+  .mark .wm{font-family:var(--font-d);font-weight:700;font-size:clamp(26px,7vw,40px);line-height:.9;letter-spacing:.5px;text-transform:uppercase;
+    background:linear-gradient(96deg,var(--gold-deep),var(--gold-bright) 45%,var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent;
+    filter:drop-shadow(0 2px 14px rgba(180,151,89,.22))}
+  .mark .wc{display:flex;flex-direction:column;gap:2px;padding-top:2px}
+  .mark .wc b{font-weight:800;font-size:13px;letter-spacing:3px;text-transform:uppercase}
+  .mark .wc span{font-size:10.5px;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold)}
+  .demo-pill{display:inline-block;margin:8px 0 0;background:rgba(180,151,89,.16);border:1px dashed var(--gold);padding:4px 9px;border-radius:6px;font-size:10px;color:var(--gold);font-weight:800;letter-spacing:.04em}
+  .dept-note{font-size:11.5px;color:var(--muted);font-weight:600;line-height:1.55;background:var(--glass);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:14px 0 10px}
+  .dept-note b{color:var(--gold-bright)}
+
+  /* sticky jump chips (matches .nrd-jump) */
+  .nrd-jump{position:sticky;top:0;z-index:6;display:flex;gap:6px;overflow-x:auto;padding:8px 2px;margin:0 0 10px;
+    background:linear-gradient(180deg,rgba(8,8,10,.94),rgba(8,8,10,.8));backdrop-filter:blur(10px);border-bottom:1px solid var(--line-2);scrollbar-width:none}
+  .nrd-jump::-webkit-scrollbar{display:none}
+  .nrd-jump a{flex:none;font-size:15px;line-height:1;padding:7px 9px;border-radius:10px;border:1px solid var(--line);background:var(--glass);text-decoration:none;transition:.15s}
+  .nrd-jump a:hover,.nrd-jump a:focus-visible{background:rgba(180,151,89,.2);border-color:var(--gold-deep);outline:none}
+
+  .wave-h{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--faint);font-weight:800;margin:22px 2px 9px;display:flex;align-items:center;gap:10px}
+  .wave-h::after{content:"";flex:1;height:1px;background:var(--line-2)}
+  .wave-h b{color:var(--gold)}
+
+  /* cards (verbatim .aw-card system) */
+  .aw-card{background:var(--glass);border:1px solid var(--line);border-radius:14px;padding:13px 14px;margin-bottom:10px;scroll-margin-top:56px}
+  .aw-hd{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+  .aw-ic{font-size:22px;flex:none}
+  .aw-t{flex:1;min-width:0}
+  .aw-t b{display:block;font-size:14px;letter-spacing:.02em}
+  .aw-t span{display:block;font-size:10.5px;color:var(--muted);line-height:1.35;margin-top:1px;font-weight:600}
+  .aw-prz{flex:none;font-size:9.5px;font-weight:800;letter-spacing:.07em;color:var(--gold-bright);background:rgba(180,151,89,.12);border:1px solid rgba(180,151,89,.35);border-radius:99px;padding:3px 9px;white-space:nowrap}
+  .aw-you{display:block;margin-top:9px;font-size:11.5px;font-weight:700;color:var(--muted);background:rgba(180,151,89,.07);border:1px solid rgba(180,151,89,.25);border-radius:9px;padding:7px 10px;line-height:1.45}
+  .aw-you b{color:var(--gold-bright)}
+  .aw-row{display:flex;align-items:center;gap:9px;padding:6.5px 0;border-top:1px solid rgba(255,255,255,.05)}
+  .aw-hd+.aw-row,.nrd-line+.aw-row{border-top:0}
+  .aw-rk{flex:none;width:24px;text-align:center;font-size:13.5px;font-weight:800;color:var(--muted)}
+  .aw-nm{flex:1;min-width:0;font-size:12.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .aw-nm small{color:var(--faint);font-weight:700}
+  .aw-v{flex:none;font-size:12px;font-weight:800;color:var(--gold-bright)}
+  .aw-v small{font-size:9.5px;font-weight:700;color:var(--muted);margin-left:3px;letter-spacing:.04em}
+  .avatar{width:27px;height:27px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:10.5px;color:#f7eed8;background:#241c12;flex:none;box-shadow:inset 0 0 0 1px rgba(255,255,255,.18)}
+
+  /* lab primitives (verbatim .nrd-*) */
+  .nrd-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+  .nrd-tiles.two{grid-template-columns:1fr 1fr}
+  .nrd-tile{background:var(--glass);border:1px solid var(--line);border-radius:12px;padding:11px 6px 9px;text-align:center}
+  .nrd-tile b{display:block;font-family:var(--font-d);font-weight:700;font-size:23px;line-height:1;color:var(--gold-bright);letter-spacing:.5px}
+  .nrd-tile b small{font-size:12px;letter-spacing:0;color:var(--muted)}
+  .nrd-tile span{display:block;margin-top:5px;font-size:8px;letter-spacing:1.2px;text-transform:uppercase;color:var(--faint);font-weight:800}
+  .nrd-line{font-size:11.5px;color:var(--muted);font-weight:600;padding:6px 0;border-top:1px solid rgba(255,255,255,.05);line-height:1.5}
+  .nrd-line b{color:var(--gold-bright)}
+  .nrd-line:first-of-type{border-top:0}
+  .nrd-meter{margin:8px 0}
+  .nrd-meter .lab{display:flex;justify-content:space-between;gap:10px;font-size:11px;font-weight:700;color:var(--muted);margin-bottom:4px}
+  .nrd-meter .lab b{color:var(--cream)}
+  .nrd-track{height:9px;border-radius:99px;background:rgba(255,255,255,.05);overflow:hidden}
+  .nrd-track i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--gold-deep),var(--gold-bright))}
+  .nrd-track i.alt{background:linear-gradient(90deg,#1d4fa8,var(--c-blue))}
+  .nrd-key{display:flex;gap:14px;font-size:9.5px;letter-spacing:1px;text-transform:uppercase;font-weight:800;color:var(--faint);margin:10px 0 6px}
+  .nrd-key i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+  .nrd-key .a i{background:var(--gold)}
+  .nrd-key .b i{background:var(--c-blue)}
+  .nrd-duo{margin:7px 0}
+  .nrd-duo .lab{display:flex;justify-content:space-between;gap:10px;font-size:11px;font-weight:700;color:var(--muted);margin-bottom:3px}
+  .nrd-duo .lab b{color:var(--cream)}
+  .nrd-duo .bar{height:6px;border-radius:99px;background:rgba(255,255,255,.05);margin:2px 0;overflow:hidden}
+  .nrd-duo .bar i{display:block;height:100%;border-radius:99px;min-width:2px}
+  .nrd-duo .bar.a i{background:linear-gradient(90deg,var(--gold-deep),var(--gold-bright))}
+  .nrd-duo .bar.b i{background:linear-gradient(90deg,#1d4fa8,var(--c-blue))}
+  .nrd-champ{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:11.5px;font-weight:700}
+  .nrd-champ .nm{width:110px;flex:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .nrd-champ .fl{flex:none;font-size:13px}
+  .nrd-champ .bar{flex:1;height:7px;border-radius:99px;background:rgba(255,255,255,.05);overflow:hidden}
+  .nrd-champ .bar i{display:block;height:100%;border-radius:99px;min-width:2px;background:linear-gradient(90deg,var(--gold-deep),var(--gold-bright))}
+  .nrd-champ .pc{width:44px;flex:none;text-align:right;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+  .nrd-champ.me .nm{color:var(--gold-bright)}
+  .nrd-quad{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:4px 0 10px}
+  .nrd-qc{border:1px solid var(--line);border-radius:11px;padding:11px 8px;text-align:center;background:var(--glass)}
+  .nrd-qc b{display:block;font-family:var(--font-d);font-weight:700;font-size:22px;line-height:1}
+  .nrd-qc span{display:block;margin-top:5px;font-size:8.5px;letter-spacing:.7px;text-transform:uppercase;font-weight:800;color:var(--faint)}
+  .nrd-qc.good{border-color:rgba(180,151,89,.32);background:linear-gradient(150deg,rgba(180,151,89,.09),var(--glass) 70%)}
+  .nrd-qc.good b{color:var(--gold-bright)}
+  .nrd-rounds{display:flex;align-items:flex-end;gap:4px;height:100px;padding-top:18px;border-bottom:1px solid var(--line)}
+  .nrd-rounds .rc{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}
+  .nrd-rounds .rc>i{width:100%;max-width:28px;background:rgba(180,151,89,.32);border-radius:3px 3px 0 0;min-height:3px;position:relative}
+  .nrd-rounds .rc>i.hot{background:linear-gradient(180deg,var(--gold-bright),var(--gold))}
+  .nrd-rounds .rc>i em{position:absolute;top:-15px;left:50%;transform:translateX(-50%);font-style:normal;font-size:9px;font-weight:800;color:var(--muted)}
+  .nrd-rlab{display:flex;gap:4px;margin-top:5px}
+  .nrd-rlab u{flex:1;text-decoration:none;font-size:8px;letter-spacing:.3px;text-transform:uppercase;color:var(--faint);font-weight:800;text-align:center}
+
+  /* wave-c additions, built from the same grammar */
+  .reign{display:flex;gap:2px;height:22px;border-radius:7px;overflow:hidden;margin:6px 0 4px}
+  .reign i{display:grid;place-items:center;font-style:normal;font-size:9px;font-weight:800;color:#181106;background:rgba(180,151,89,.34);min-width:8px}
+  .reign i b{color:#181106;font-weight:800;overflow:hidden;white-space:nowrap;padding:0 4px}
+  .reign i.cur{background:linear-gradient(115deg,var(--gold-bright),var(--gold))}
+  .reign i.dim{background:rgba(180,151,89,.22);color:var(--muted)}
+  .reign i.dim b{color:var(--muted)}
+  .reign-ax{display:flex;justify-content:space-between;font-size:9px;letter-spacing:.6px;color:var(--faint);font-weight:700;margin-bottom:6px}
+  .spark{display:block;width:100%;height:auto;margin:2px 0 2px}
+  .alt-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:6px}
+  .alt-slot{border:1px solid var(--line);background:var(--glass);border-radius:12px;padding:9px 10px 8px;min-width:0}
+  .alt-slot.official{border-color:rgba(180,151,89,.35);background:linear-gradient(160deg,rgba(180,151,89,.08),var(--glass) 70%)}
+  .alt-slot .lb{display:block;font-size:7.5px;letter-spacing:1.1px;text-transform:uppercase;color:var(--faint);font-weight:800;margin-bottom:6px;white-space:nowrap;overflow:hidden}
+  .alt-slot .pd{display:flex;align-items:baseline;gap:6px;font-size:11px;font-weight:700;padding:2px 0;white-space:nowrap;overflow:hidden}
+  .alt-slot .pd u{text-decoration:none;flex:none;font-size:10px}
+  .alt-slot .pd.moved{color:var(--gold-bright)}
+  .alt-slot .pd small{color:var(--faint);font-weight:700;font-size:9px}
+  .persona{display:flex;align-items:center;gap:13px;padding:4px 0 10px}
+  .persona .pe{font-size:38px;flex:none}
+  .persona .pt b{display:block;font-family:var(--font-d);font-weight:700;font-size:24px;line-height:1;letter-spacing:.6px;text-transform:uppercase;
+    background:linear-gradient(96deg,var(--gold-deep),var(--gold-bright) 55%,var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .persona .pt span{display:block;font-size:10.5px;color:var(--muted);font-weight:600;margin-top:3px}
+  .h2h{display:flex;align-items:center;justify-content:center;gap:14px;padding:9px 0 5px;font-size:12px;font-weight:800}
+  .h2h .sc{font-family:var(--font-d);font-weight:700;font-size:26px;color:var(--gold-bright);letter-spacing:1px}
+  .h2h .who{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;color:var(--muted);width:110px}
+  .src{margin-top:9px;padding-top:7px;border-top:1px solid rgba(255,255,255,.05);font-size:9.5px;color:var(--faint);font-weight:700;line-height:1.5}
+  .src b{color:var(--muted);letter-spacing:.6px;text-transform:uppercase;font-size:8.5px}
+  footer{margin-top:26px;font-size:10.5px;color:var(--faint);font-weight:600;line-height:1.6;text-align:center}
+  @media(max-width:420px){.nrd-tiles{grid-template-columns:repeat(3,1fr)}.alt-grid{grid-template-columns:1fr}}
+  @media(prefers-reduced-motion:no-preference){
+    .aw-card{animation:in .35s cubic-bezier(.34,.8,.64,1) backwards}
+    @keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  }
+</style>
+
+<div class="wrap">
+  <div class="mark"><span class="wm">The Lab</span><span class="wc"><b>Wave C</b><span>new cards · preview</span></span></div>
+  <span class="demo-pill">MOCKUP · DEMO DATA — numbers are invented, layout &amp; copy are final-candidate</span>
+  <div class="dept-note">🧪 <b>Fourteen new cards</b> in the Lab's existing visual grammar — gold is office data, blue is reality. Same seal rules as the current 27: aggregates only, k-anon floors, names rendered only as positive leaders and "you". Personal lines wear the gold box and hide on the ?tv kiosk.</div>
+
+  <nav class="nrd-jump" aria-label="Jump to card">
+    <a href="#futures" title="The futures board">🔮</a><a href="#timemachine" title="The time machine">⏳</a><a href="#journey" title="Your rank journey">🎢</a><a href="#comeback" title="The comeback king">🧗</a><a href="#hopes" title="Whose hopes ride on which team">🧬</a><a href="#twin" title="The prediction twin">👯</a><a href="#heart" title="Heart vs head">❤️</a><a href="#goose" title="Golden goose">🦢</a><a href="#clutch" title="Clutch rating">🧊</a><a href="#universes" title="Alternate universes">🪞</a><a href="#chaos" title="The chaos meter">🌪️</a><a href="#fragile" title="The fragility index">🥚</a><a href="#persona" title="Predictor personality">🎭</a><a href="#unicorn" title="The unicorn scores">🦄</a>
+  </nav>
+
+  <div class="wave-h"><b>Wave C·1</b> — ship for the quarter-finals</div>
+
+  <!-- 1 · THE FUTURES BOARD -->
+  <div class="aw-card" id="futures">
+    <div class="aw-hd"><span class="aw-ic">🔮</span><div class="aw-t"><b>The futures board</b><span>Every remaining bracket outcome, enumerated — who lifts the Maldives in how many universes</span></div><span class="aw-prz">256 universes</span></div>
+    <div class="nrd-tiles">
+      <div class="nrd-tile"><b>8</b><span>matches left</span></div>
+      <div class="nrd-tile"><b>256</b><span>possible futures</span></div>
+      <div class="nrd-tile"><b>9</b><span>can still win it</span></div>
+    </div>
+    <div class="nrd-champ"><span class="nm">Fatima A.</span><span class="bar"><i style="width:61%"></i></span><span class="pc">61%</span></div>
+    <div class="nrd-champ"><span class="nm">Khalid M.</span><span class="bar"><i style="width:18%"></i></span><span class="pc">18%</span></div>
+    <div class="nrd-champ"><span class="nm">Sara J.</span><span class="bar"><i style="width:9%"></i></span><span class="pc">9%</span></div>
+    <div class="nrd-champ"><span class="nm">Omar H.</span><span class="bar"><i style="width:7%"></i></span><span class="pc">7%</span></div>
+    <div class="nrd-champ"><span class="nm">Noora K.</span><span class="bar"><i style="width:3%"></i></span><span class="pc">3%</span></div>
+    <div class="nrd-champ"><span class="nm"><small>The field · 132</small></span><span class="bar"><i style="width:2%"></i></span><span class="pc">2%</span></div>
+    <div class="nrd-line">🎟 Deepest live ticket: <b>14th place</b> still lifts it in exactly <b>1</b> universe — Morocco win it all and every favourite falls</div>
+    <div class="nrd-line">🥼 Method: all 2⁸ remaining winner outcomes scored against locked picks, each future weighted by the office consensus</div>
+    <span class="aw-you">You win in <b>4 of 256</b> futures (1.6%) — every one of them needs Brazil out on Thursday</span>
+    <div class="src"><b>Data</b> · locked picks + consensus shares already in hand — exact enumeration, no simulation, no backend</div>
+  </div>
+
+  <!-- 2 · THE TIME MACHINE -->
+  <div class="aw-card" id="timemachine">
+    <div class="aw-hd"><span class="aw-ic">⏳</span><div class="aw-t"><b>The time machine</b><span>The board replayed from matchday one — every reign at the top</span></div><span class="aw-prz">96 matches replayed</span></div>
+    <div class="nrd-tiles">
+      <div class="nrd-tile"><b>7</b><span>lead changes</span></div>
+      <div class="nrd-tile"><b>4</b><span>different leaders</span></div>
+      <div class="nrd-tile"><b>11<small>d</small></b><span>longest reign</span></div>
+    </div>
+    <div class="reign" role="img" aria-label="Timeline of leaders: Dana 3 days, Khalid 11 days, Sara 4 days, Fatima 8 days and counting">
+      <i class="dim" style="flex:3"><b>Dana</b></i><i style="flex:11"><b>Khalid · 11d</b></i><i class="dim" style="flex:4"><b>Sara</b></i><i class="cur" style="flex:8"><b>Fatima · 8d</b></i>
+    </div>
+    <div class="reign-ax"><span>JUN 11 · MD1</span><span>R16 done · TODAY</span></div>
+    <div class="nrd-line">👑 Longest reign: <b>Khalid M.</b> — 11 straight days in gold, MD2 through the round of 32</div>
+    <div class="nrd-line">🔁 The lead has changed hands <b>7 times</b> — twice on a single evening during the R16</div>
+    <div class="src"><b>Data</b> · scoreFor() re-run per matchday over results already cached — pure client-side replay</div>
+  </div>
+
+  <!-- 3 · YOUR RANK JOURNEY -->
+  <div class="aw-card" id="journey">
+    <div class="aw-hd"><span class="aw-ic">🎢</span><div class="aw-t"><b>Your rank journey</b><span>Your position after every matchday — the whole ride, one line</span></div><span class="aw-prz">personal</span></div>
+    <svg class="spark" viewBox="0 0 300 86" aria-label="Rank over time: started 44th, peaked at 9th after the round of 32, now 17th">
+      <line x1="10" y1="8" x2="290" y2="8" stroke="rgba(244,238,227,.08)" stroke-width="1"></line>
+      <line x1="10" y1="66" x2="290" y2="66" stroke="rgba(244,238,227,.08)" stroke-width="1"></line>
+      <text x="8" y="6" fill="rgba(244,238,227,.4)" font-size="7" font-weight="700">1st</text>
+      <text x="8" y="76" fill="rgba(244,238,227,.4)" font-size="7" font-weight="700">55th</text>
+      <polyline points="10,55.8 38,49.1 66,52.4 94,39.1 122,31.3 150,34.7 178,26.9 206,20.2 234,16.9 262,21.3 290,25.8"
+        fill="none" stroke="#b49759" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></polyline>
+      <circle cx="234" cy="16.9" r="3" fill="#e3d3a3"></circle>
+      <text x="234" y="10" fill="#e3d3a3" font-size="8" font-weight="800" text-anchor="middle">9th · peak</text>
+      <circle cx="290" cy="25.8" r="3.5" fill="#e3d3a3" stroke="#0f0f12" stroke-width="2"></circle>
+      <text x="288" y="40" fill="#f4eee3" font-size="8.5" font-weight="800" text-anchor="end">17th now</text>
+      <text x="10" y="66" fill="rgba(244,238,227,.55)" font-size="8" font-weight="800">44th start</text>
+    </svg>
+    <div class="reign-ax"><span>MD1</span><span>MD2</span><span>MD3</span><span>R32</span><span>R16</span></div>
+    <div class="nrd-line">🎢 Your best climb: <b>+12 places</b> in one night — the Tuesday the office's R32 chalk collapsed and your fades landed</div>
+    <span class="aw-you">Peak <b>9th</b> · low <b>51st</b> · you've spent <b>6 days</b> inside the top 10</span>
+    <div class="src"><b>Data</b> · same replay as the time machine, filtered to your row — renders for joined players only, hides on ?tv</div>
+  </div>
+
+  <!-- 4 · THE COMEBACK KING -->
+  <div class="aw-card" id="comeback">
+    <div class="aw-hd"><span class="aw-ic">🧗</span><div class="aw-t"><b>The comeback king</b><span>Biggest climb from a tournament low — the long way up, measured</span></div><span class="aw-prz">live race</span></div>
+    <div class="aw-row"><span class="aw-rk">1</span><span class="avatar">YA</span><span class="aw-nm">Yusuf A. <small>· was 82nd</small></span><span class="aw-v">+76<small>places</small></span></div>
+    <div class="aw-row"><span class="aw-rk">2</span><span class="avatar">LS</span><span class="aw-nm">Layla S. <small>· was 64th</small></span><span class="aw-v">+52<small>places</small></span></div>
+    <div class="aw-row"><span class="aw-rk">3</span><span class="avatar">HN</span><span class="aw-nm">Hamad N. <small>· was 51st</small></span><span class="aw-v">+40<small>places</small></span></div>
+    <div class="nrd-line">🧗 Yusuf was <b>82nd</b> after matchday 1 — he sits <b>6th</b> this morning. The single greatest recovery in the pool</div>
+    <span class="aw-you">Your comeback: <b>+34</b> — from 51st at your lowest to 17th today</span>
+    <div class="src"><b>Data</b> · replay again — climb = tournament-low rank minus current rank. A Trophy Room title candidate</div>
+  </div>
+
+  <!-- 5 · WHOSE HOPES RIDE ON WHICH TEAM -->
+  <div class="aw-card" id="hopes">
+    <div class="aw-hd"><span class="aw-ic">🧬</span><div class="aw-t"><b>Title lifelines</b><span>Whose Maldives hopes ride on which of the eight teams left</span></div><span class="aw-prz">top 10 audit</span></div>
+    <div class="nrd-champ"><span class="fl">🇧🇷</span><span class="nm">Brazil</span><span class="bar"><i style="width:60%"></i></span><span class="pc">6 of 10</span></div>
+    <div class="nrd-champ"><span class="fl">🇫🇷</span><span class="nm">France</span><span class="bar"><i style="width:20%"></i></span><span class="pc">2 of 10</span></div>
+    <div class="nrd-champ"><span class="fl">🇪🇸</span><span class="nm">Spain</span><span class="bar"><i style="width:10%"></i></span><span class="pc">1 of 10</span></div>
+    <div class="nrd-champ"><span class="fl">🏴󠁧󠁢󠁥󠁮󠁧󠁿</span><span class="nm">England</span><span class="bar"><i style="width:10%"></i></span><span class="pc">1 of 10</span></div>
+    <div class="nrd-line">🧬 <b>6 of the top 10</b> need Brazil to go all the way — one semi-final upset detonates most of the leaderboard's endgame</div>
+    <div class="nrd-line">🎭 If <b>France</b> lift it instead, the podium reshuffles completely: today's 4th jumps to 1st</div>
+    <div class="src"><b>Data</b> · champion picks (already public in the champion market) × live top-10 — pure cross of two cards that exist</div>
+  </div>
+
+  <!-- 6 · THE PREDICTION TWIN -->
+  <div class="aw-card" id="twin">
+    <div class="aw-hd"><span class="aw-ic">👯</span><div class="aw-t"><b>The prediction twin</b><span>The colleague who sees this World Cup exactly like you do — locked calls only</span></div><span class="aw-prz">89 shared calls</span></div>
+    <div class="nrd-meter"><div class="lab"><span>You ↔ Noora K. · your twin</span><b>87%</b></div><div class="nrd-track"><i style="width:87%"></i></div></div>
+    <div class="nrd-meter"><div class="lab"><span>Average pair in the office</span><b>58%</b></div><div class="nrd-track"><i class="alt" style="width:58%"></i></div></div>
+    <div class="nrd-line">👯 Most-alike pair in the whole pool: <b>Khalid M. &amp; Omar H.</b> — 91% identical across 96 locked calls, one desk apart</div>
+    <div class="h2h">
+      <span class="who"><span class="avatar">YO</span>You</span>
+      <span class="sc">13 – 10</span>
+      <span class="who"><span class="avatar">TR</span>Tariq R.</span>
+    </div>
+    <div class="nrd-line">⚔️ Your nemesis: <b>Tariq R.</b> — you two disagreed on 23 settled matches, and you lead the head-to-head <b>13–10</b></div>
+    <div class="src"><b>Data</b> · pairwise agreement over locked, settled picks (public post-lock) — twin framing is positive-only, nemesis renders for "you" alone</div>
+  </div>
+
+  <!-- 7 · HEART VS HEAD -->
+  <div class="aw-card" id="heart">
+    <div class="aw-hd"><span class="aw-ic">❤️</span><div class="aw-t"><b>Heart vs head</b><span>Do colleagues over-back their own nation — and does the heart pay?</span></div><span class="aw-prz">aggregate only</span></div>
+    <div class="nrd-tiles two">
+      <div class="nrd-tile"><b>×2.6</b><span>own-nation backing vs office</span></div>
+      <div class="nrd-tile"><b>−9</b><span>pts per patriot call</span></div>
+    </div>
+    <div class="nrd-key"><span class="a"><i></i>own-nation calls</span><span class="b"><i></i>everyone else's calls</span></div>
+    <div class="nrd-duo"><div class="lab"><span>Hit rate when backing your own flag</span><span><b>48%</b> vs 61%</span></div>
+      <div class="bar a"><i style="width:48%"></i></div>
+      <div class="bar b"><i style="width:61%"></i></div></div>
+    <div class="nrd-line">💸 The patriot tax is real: own-nation calls land <b>13 points</b> less often than the office's neutral calls on the same matches</div>
+    <div class="nrd-line">🇲🇦 The exception: Morocco's own fans called the R16 shock the rest of the office laughed at — and cashed it</div>
+    <div class="src"><b>Data</b> · player country field (unused today) × consensus — office-level meters only, no individual is pointed at</div>
+  </div>
+
+  <!-- 8 · GOLDEN GOOSE & HEARTBREAKER -->
+  <div class="aw-card" id="goose">
+    <div class="aw-hd"><span class="aw-ic">🦢</span><div class="aw-t"><b>Golden goose &amp; heartbreaker</b><span>Which teams minted the office's points — and which torched them</span></div><span class="aw-prz">32 teams audited</span></div>
+    <div class="nrd-key"><span class="a"><i></i>points minted for the office</span></div>
+    <div class="nrd-champ"><span class="fl">🇧🇷</span><span class="nm">Brazil</span><span class="bar"><i style="width:100%"></i></span><span class="pc">4,120</span></div>
+    <div class="nrd-champ"><span class="fl">🇫🇷</span><span class="nm">France</span><span class="bar"><i style="width:84%"></i></span><span class="pc">3,480</span></div>
+    <div class="nrd-champ"><span class="fl">🇪🇸</span><span class="nm">Spain</span><span class="bar"><i style="width:71%"></i></span><span class="pc">2,910</span></div>
+    <div class="nrd-line" style="border-top:0;padding-bottom:0"><span class="nrd-key" style="margin:4px 0 0"><span class="b"><i></i>points torched — wrong backings + dead champion tickets</span></span></div>
+    <div class="nrd-champ"><span class="fl">🇦🇷</span><span class="nm">Argentina</span><span class="bar"><i class="alt" style="width:100%;background:linear-gradient(90deg,#1d4fa8,#2d6fe0);display:block;height:100%;border-radius:99px"></i></span><span class="pc">−1,140</span></div>
+    <div class="nrd-champ"><span class="fl">🇲🇽</span><span class="nm">Mexico</span><span class="bar"><i style="width:78%;background:linear-gradient(90deg,#1d4fa8,#2d6fe0)"></i></span><span class="pc">−890</span></div>
+    <div class="nrd-champ"><span class="fl">🇧🇪</span><span class="nm">Belgium</span><span class="bar"><i style="width:67%;background:linear-gradient(90deg,#1d4fa8,#2d6fe0)"></i></span><span class="pc">−760</span></div>
+    <div class="nrd-line">🎫 <b>23 champion tickets</b> died with Argentina on Saturday night — the single biggest heartbreak of the tournament so far</div>
+    <div class="src"><b>Data</b> · every settled call re-attributed to the team backed — one sweep over consensus + results</div>
+  </div>
+
+  <div class="wave-h"><b>Wave C·2</b> — the second drop</div>
+
+  <!-- 9 · CLUTCH RATING -->
+  <div class="aw-card" id="clutch">
+    <div class="aw-hd"><span class="aw-ic">🧊</span><div class="aw-t"><b>Clutch rating</b><span>Group-stage form vs knockout form — who shows up when it counts double</span></div><span class="aw-prz">min 12 KO calls</span></div>
+    <div class="aw-row"><span class="aw-rk">1</span><span class="avatar">SJ</span><span class="aw-nm">Sara J. <small>· 61% groups → 78% KO</small></span><span class="aw-v">+17<small>pts</small></span></div>
+    <div class="aw-row"><span class="aw-rk">2</span><span class="avatar">DK</span><span class="aw-nm">Dana K. <small>· 58% groups → 71% KO</small></span><span class="aw-v">+13<small>pts</small></span></div>
+    <div class="aw-row"><span class="aw-rk">3</span><span class="avatar">MA</span><span class="aw-nm">Mohammed A. <small>· 66% groups → 75% KO</small></span><span class="aw-v">+9<small>pts</small></span></div>
+    <div class="nrd-line">🧊 The office as a whole drops <b>11 points</b> of hit rate in the knockouts — these three got <em>better</em> under the lights</div>
+    <span class="aw-you">You: <b>64%</b> in the groups → <b>58%</b> in the knockouts — the knockout cliff caught you too</span>
+    <div class="src"><b>Data</b> · per-player hit rate split by stage — already computed for the predictability ladder, never per-person until now</div>
+  </div>
+
+  <!-- 10 · ALTERNATE UNIVERSES -->
+  <div class="aw-card" id="universes">
+    <div class="aw-hd"><span class="aw-ic">🪞</span><div class="aw-t"><b>Alternate universes</b><span>The podium under three other rulebooks — is the lead real, or a scoring artifact?</span></div><span class="aw-prz">4 rulesets</span></div>
+    <div class="alt-grid">
+      <div class="alt-slot official"><span class="lb">Official rules</span>
+        <span class="pd"><u>🥇</u>Fatima A.</span><span class="pd"><u>🥈</u>Khalid M.</span><span class="pd"><u>🥉</u>Sara J.</span></div>
+      <div class="alt-slot"><span class="lb">Outcome only · no exact bonus</span>
+        <span class="pd"><u>🥇</u>Fatima A.</span><span class="pd moved"><u>🥈</u>Sara J. <small>▲1</small></span><span class="pd moved"><u>🥉</u>Khalid M. <small>▼1</small></span></div>
+      <div class="alt-slot"><span class="lb">Exact scores only</span>
+        <span class="pd moved"><u>🥇</u>Omar H. <small>▲6</small></span><span class="pd moved"><u>🥈</u>Fatima A. <small>▼1</small></span><span class="pd moved"><u>🥉</u>Dana K. <small>▲9</small></span></div>
+      <div class="alt-slot"><span class="lb">No champion bonus</span>
+        <span class="pd"><u>🥇</u>Fatima A.</span><span class="pd"><u>🥈</u>Khalid M.</span><span class="pd moved"><u>🥉</u>Omar H. <small>▲2</small></span></div>
+    </div>
+    <div class="nrd-line">🪞 <b>Fatima leads in 3 of 4 universes</b> — this lead is earned, not a quirk of the scoring sheet. Only the exact-score purists' timeline dethrones her</div>
+    <div class="src"><b>Data</b> · scoreFor() re-run with three rule variants — same inputs, three extra passes, all client-side</div>
+  </div>
+
+  <!-- 11 · THE CHAOS METER -->
+  <div class="aw-card" id="chaos">
+    <div class="aw-hd"><span class="aw-ic">🌪️</span><div class="aw-t"><b>The chaos meter</b><span>How shocking each round was — surprise measured against the office's own consensus</span></div><span class="aw-prz">shock units</span></div>
+    <div class="nrd-rounds">
+      <div class="rc"><i style="height:33%"><em>1.8</em></i></div>
+      <div class="rc"><i style="height:44%"><em>2.4</em></i></div>
+      <div class="rc"><i style="height:56%"><em>3.1</em></i></div>
+      <div class="rc"><i style="height:76%"><em>4.2</em></i></div>
+      <div class="rc"><i class="hot" style="height:100%"><em>5.5</em></i></div>
+    </div>
+    <div class="nrd-rlab"><u>MD1</u><u>MD2</u><u>MD3</u><u>R32</u><u>R16</u></div>
+    <div class="nrd-line">🧨 The round of 16 was <b>1.9×</b> as shocking as an average group matchday — the weirdest week of the office's tournament</div>
+    <div class="nrd-line">🥼 Method: each result scores −log of the share of the office that called it — rare results burn hotter, averaged per match, per round</div>
+    <div class="src"><b>Data</b> · consensus shares are the office's own bookmaker — no external odds needed</div>
+  </div>
+
+  <!-- 12 · THE FRAGILITY INDEX -->
+  <div class="aw-card" id="fragile">
+    <div class="aw-hd"><span class="aw-ic">🥚</span><div class="aw-t"><b>The fragility index</b><span>Flip any one one-goal game — does the podium survive?</span></div><span class="aw-prz">flip test</span></div>
+    <div class="nrd-tiles">
+      <div class="nrd-tile"><b>14</b><span>one-goal games</span></div>
+      <div class="nrd-tile"><b>5</b><span>flips move the podium</span></div>
+      <div class="nrd-tile"><b>1</b><span>goal between 2nd &amp; 3rd</span></div>
+    </div>
+    <div class="nrd-line">🥚 Khalid's silver and Sara's bronze trade places if <b>one late winner</b> in the R32 had bounced the other way — that's how thin the margins are</div>
+    <div class="nrd-line">🧱 The 🥇 spot survives all 14 flips — Fatima's lead is the only shatter-proof thing on the board</div>
+    <div class="src"><b>Data</b> · 14 counterfactual re-scores over settled results — milliseconds of client work, a season of office arguments</div>
+  </div>
+
+  <!-- 13 · PREDICTOR PERSONALITY -->
+  <div class="aw-card" id="persona">
+    <div class="aw-hd"><span class="aw-ic">🎭</span><div class="aw-t"><b>Predictor personality</b><span>What kind of animal are you at the prediction desk? Your own picks decide</span></div><span class="aw-prz">personal + census</span></div>
+    <div class="persona">
+      <span class="pe">🦊</span>
+      <div class="pt"><b>The Calculated Maverick</b><span>You fade the crowd — but only when the numbers whisper first.</span></div>
+    </div>
+    <div class="nrd-meter"><div class="lab"><span>Chalk appetite</span><b>38%</b></div><div class="nrd-track"><i style="width:38%"></i></div></div>
+    <div class="nrd-meter"><div class="lab"><span>Draw courage</span><b>12%</b></div><div class="nrd-track"><i style="width:12%"></i></div></div>
+    <div class="nrd-meter"><div class="lab"><span>Goal optimism</span><b>64%</b></div><div class="nrd-track"><i style="width:64%"></i></div></div>
+    <div class="nrd-meter"><div class="lab"><span>Fade rate</span><b>31%</b></div><div class="nrd-track"><i style="width:31%"></i></div></div>
+    <div class="nrd-quad">
+      <div class="nrd-qc good"><b>41</b><span>🐑 chalk merchants</span></div>
+      <div class="nrd-qc good"><b>28</b><span>🦊 mavericks</span></div>
+      <div class="nrd-qc"><b>19</b><span>🤝 draw truthers</span></div>
+      <div class="nrd-qc"><b>49</b><span>⚖️ balanced heads</span></div>
+    </div>
+    <div class="nrd-line">🎭 The office census: chalk merchants outnumber mavericks 3-to-2 — and the balanced heads quietly hold the top of the board</div>
+    <div class="src"><b>Data</b> · your own pick distribution only — fully seal-safe, and a natural new card for the 📤 share deck</div>
+  </div>
+
+  <!-- 14 · THE UNICORN SCORES -->
+  <div class="aw-card" id="unicorn">
+    <div class="aw-hd"><span class="aw-ic">🦄</span><div class="aw-t"><b>The unicorn scores</b><span>Scorelines the office keeps buying that football refuses to serve</span></div><span class="aw-prz">exact-score market</span></div>
+    <div class="nrd-key"><span class="a"><i></i>tickets bought</span><span class="b"><i></i>times it landed</span></div>
+    <div class="nrd-duo"><div class="lab"><span>2–1 · the office favourite</span><span><b>618</b> bought · landed 11×</span></div>
+      <div class="bar a"><i style="width:100%"></i></div>
+      <div class="bar b"><i style="width:13%"></i></div></div>
+    <div class="nrd-duo"><div class="lab"><span>2–2 · the romantic's pick</span><span><b>214</b> bought · landed 2×</span></div>
+      <div class="bar a"><i style="width:35%"></i></div>
+      <div class="bar b"><i style="width:2.4%"></i></div></div>
+    <div class="nrd-duo"><div class="lab"><span>3–1 · the pure unicorn</span><span><b>89</b> bought · landed 0×</span></div>
+      <div class="bar a"><i style="width:14%"></i></div>
+      <div class="bar b"><i style="width:0%"></i></div></div>
+    <div class="nrd-line">🦄 <b>3–1 has never happened</b> — 96 matches in, 89 tickets bought, zero paid. The office's most stubborn fantasy</div>
+    <div class="nrd-line">🥇 Meanwhile the humble <b>1–0</b> has landed 19 times and is the tournament's best-paying ticket per goal predicted</div>
+    <div class="src"><b>Data</b> · the scoreline stock market's inverse — same aggregates, opposite question</div>
+  </div>
+
+  <footer>
+    THE LAB · WAVE C PREVIEW — all fourteen cards run client-side from data the app already pulls<br>
+    (standings cache · consensusFull() · confirmed results · locked picks) · no new backend, no schema change · demo numbers throughout
+  </footer>
+</div>
