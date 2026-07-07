@@ -5,9 +5,9 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
-## 2026-07-07 (Doha) — BRANCH · THE LAB WAVE C: 14 new stats cards (not yet deployed)
+## 2026-07-07 (Doha) — MAIN DEPLOY · THE LAB WAVE C: 14 new stats cards
 
-**Commits:** on `claude/interesting-stats-ideas-7kwsbk` — the WIP foundation commit (compute layer + CSS) plus this commit (`index.html` card renderers + `tests/nerd-stats/run.mjs` + changelog). **NOT on `main` — awaiting the organizer's "push to main".** **Frontend only — no DB / scoring / sync change, zero new backend traffic.** The Lab grows from 27 cards to 41.
+**Commits:** the Wave C series (mockup → brief → foundation compute layer + CSS → card renderers + `tests/nerd-stats/run.mjs`) plus this changelog commit, fast-forwarded to `main` on the organizer's explicit "push to main" (branch `claude/interesting-stats-ideas-7kwsbk`, 4 commits on top of the Squad-board deploy, 0 behind). **Frontend only — no DB / scoring / sync change, zero new backend traffic.** The Lab grows from 27 cards to 41.
 
 **What:** fourteen new cards in the Lab (`renderNerds`), in the existing card grammar (gold = office data, blue = reality), appended before "Odds & ends". Every number is computed live in the browser from data the app already pulls — the `consensusCompute()` player bulk-load gains one extra pass (`CONS.wc`) and a lazy replay/enumeration cache (`wcHeavy` → `WCR`); **`scoreFor` is untouched (byte-for-byte SQL parity preserved).**
 - **Wave C·1** — 🔮 **The futures board** (every remaining bracket outcome enumerated, title-probability per player, consensus-weighted) · ⏳ **The time machine** (the board replayed matchday-by-matchday — reigns, lead changes, longest reign) · 🎢 **Your rank journey** (personal SVG sparkline, peak/low, best climb) · 🧗 **The comeback king** (biggest climb from a tournament low) · 🧬 **Title lifelines** (whose Maldives hopes ride on which surviving team) · 👯 **The prediction twin** (your closest colleague + office's most-alike pair + your nemesis h2h) · ❤️ **Heart vs head** (own-nation backing tax, aggregate only) · 🦢 **Golden goose & heartbreaker** (which teams minted vs torched the office's points).
