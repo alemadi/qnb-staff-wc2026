@@ -2942,7 +2942,7 @@ function revealFlip(){
   const v=rvVerdict(m,p,r);
   card.classList.add("flipped",v.cls+"fx");
   const st=document.getElementById("rv-stamp");
-  st.textContent=v.label;st.className="rv-stamp "+v.cls;
+  st.innerHTML=v.label;st.className="rv-stamp "+v.cls; /* label is an app constant (may carry an icon) */
   const cn=document.getElementById("rv-cons");
   if(cn){const ct=consRevealText(m,r,v);if(ct)cn.textContent=ct;}
   const from=RV.total;RV.total+=v.pts;
@@ -3035,7 +3035,7 @@ function revealSummary(){
     const p=state.player.predictions[m.id]||{},r=state.results[m.id],v=rvVerdict(m,p,r);
     total+=v.pts;markRevealed(m.id);
     const mv=fxView(m);
-    html+='<div class="rv-row '+v.cls+'"><span>'+esc(mv.home.n+" v "+mv.away.n)+'</span><b>'+esc(v.label)+'</b></div>';
+    html+='<div class="rv-row '+v.cls+'"><span>'+esc(mv.home.n+" v "+mv.away.n)+'</span><b>'+v.label+'</b></div>';
   });
   html+='</div>';
   document.getElementById("rv-stage").innerHTML=html;
