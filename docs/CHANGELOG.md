@@ -5,6 +5,25 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-07-07 14:18 (Doha) — Emoji-free UI: inline SVG icon sprite (branch `claude/emoji-alternatives-91kywd`, not yet on main)
+
+**Commit:** `4f1bc13` (index.html only, no DB changes).
+
+**What changed:**
+- Every emoji glyph in the app UI (156 occurrences, 47 distinct — both raw characters and `\uXXXX`-escaped forms in JS strings) is replaced by a stroke icon from a 42-symbol inline SVG sprite pasted right after `<body>`. Icons are referenced with `<use href="#i-*">`, sized by the local `font-size` (`.svgi{width:1em;height:1em}`) and colored by `currentColor`, so they follow the app's gold/cream palette and active/muted states instead of rendering as platform-colored emoji.
+- New `ico(name, cls)` helper builds the icon markup inside all JS-generated HTML; `toast()` gained an optional second `icon` argument and now renders the message as a text node (user-provided names never touch innerHTML).
+- Podium + prize-strip medals use one `#i-medal` symbol with three tint classes (`.m-gld/.m-sil/.m-brz`). The pick-button ✓ bubble moved from CSS `content:"✓"` to an SVG data-URI background. The 🇶🇦 badge/pulsebar emoji now reuse the existing flagcdn `flagTag("qa")` images. The share-card canvas draws two gold 4-point stars (`drawSparkle`) instead of ✨ text. Countdown/lockin/saved-state sinks that wrote emoji via `textContent` now write constant icon markup via `innerHTML`.
+- Kept as typography on purpose (they are text glyphs, not emoji): arrows `→ ← ↓ ↻ ↷`, triangles `▲ ▾`, `◎`, `⋯`.
+
+**Verified:** Playwright pass on join / matches / leaderboard / me / FAQ / toast / share-card canvas — zero emoji in the rendered DOM, all 42 sprite refs resolve, no console or page errors beyond the sandbox's blocked external fetches (flagcdn/Supabase).
+
+**Rollback (git):**
+
+    git revert 4f1bc13
+    # or simply don't merge the branch — main is untouched by this entry's commit
+
+---
+
 ## 2026-06-13 04:55 (Doha) — Fix: robot couldn't confirm m3 (ESPN name "Bosnia-Herzegovina" unaliased)
 
 **Commits:** `8d8802f` (sql/robot.sql + changelog) and a follow-up SHA-correction commit (this one).
