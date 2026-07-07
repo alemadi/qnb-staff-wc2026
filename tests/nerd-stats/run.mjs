@@ -15,6 +15,11 @@ const SCRATCH = process.env.OUT_DIR || (os.tmpdir() + '/nerd-stats-out');
 fs.mkdirSync(SCRATCH, { recursive: true });
 const results = []; const fail = (m)=>{results.push(['FAIL',m]);console.log('FAIL',m);};
 const pass = (m)=>{results.push(['PASS',m]);console.log('PASS',m);};
+// flagcdn is blocked headlessly, so instead of aborting (which leaves empty flag slots and
+// invites a false "missing flags" alarm), fulfil every flag request with a valid solid 1x1
+// PNG. The slots then render as filled colour blocks — flag imagery is verifiable at a glance.
+const FLAG_STUB_B64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGPYMj0SAAOnAaUfn5/rAAAAAElFTkSuQmCC';
+const flagStub = (r)=>r.fulfill({status:200, contentType:'image/png', body:Buffer.from(FLAG_STUB_B64,'base64')});
 
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_BIN || '/opt/pw-browsers/chromium',
   args:['--force-prefers-reduced-motion'] });
@@ -128,6 +133,12 @@ blobs[0].chips = { qf: qf0.id };          // settled armband — cashed/burned p
 blobs[1].chips = { qf: qfs[1].id };       // unsettled → pending
 blobs[2].chips = { qf: qf0.id };          // second settled armband (outcome recomputed, not assumed)
 blobs[5].chips = { fin: 'k32' };          // Final armband → pending
+/* WAVE C seed: give six players a `country` matching seeded teams (two each across three
+   nations) so ❤️ heart-vs-head clears its 15-own-nation-call floor with a mix of hits &
+   misses (each player's sharpness varies by index). Champion picks already vary; SCORES has
+   {1,0} (|h−a|=1) so ≥1 settled one-goal group game exists for the fragility card. */
+[[6,'France'],[9,'France'],[12,'Brazil'],[15,'Brazil'],[18,'Argentina'],[21,'Argentina']]
+  .forEach(([idx,ctry])=>{ if(blobs[idx]) blobs[idx].country = ctry; });
 const KV = { 'wc:results': results_, 'wc:kteams': kteams, 'wc:powerups_live': true };
 blobs.forEach(b=>{ KV['wc:player:'+b.slug]=b; });
 
@@ -325,6 +336,342 @@ const meRow = standings.find(r=>r.slug==='khalid-almannai');
 console.log('EXPECTED:', JSON.stringify({settled:settledIds.length, crowd:expCrowdPct+'% /'+expCrowdTot, payTotal, expRideS, expFadeS, expVolPct, peak:expPeak, remMax:expRemMax, aliveN:expAliveN+'/'+playingRows.length, desks:expDesks, deadPct:expDeadPct, mePts:meRow.pts, drawPct:expDrawPct, gpm:(expGoals/expGN).toFixed(2)}));
 if(payTotal<150){ fail('SEED too thin: payoff total '+payTotal+' <150'); }
 
+/* ================================================================================
+   WAVE C — independent recomputation of all 14 new Lab cards.
+   Faithful Node ports of scoreFor()/wcHeavy()/the CONS.wc third pass, driven off the
+   SAME seed (results_, kteams, blobs, world.bracket). WCR-based cards (futures, time
+   machine, journey, comeback, alt, fragility) use scoreFor semantics — including the
+   ⚡ armband doubling on the settled QF — so they legitimately diverge from the RPC
+   `standings` array (which omits chips). Players are walked in slug-sorted order (`PS`),
+   mirroring sbulkJSON, so stable-sort tie-breaks match the page byte-for-byte.
+   ================================================================================ */
+const FLh = world.fl, PU_RANKh = world.PU_RANK, CHAMP_PTS = 25;
+const PU_FROM_Kh = world.PU_FROM_K, PU_UPSETh = world.PU_UPSET, BR = world.bracket;
+const PS = blobsBySlug;                                  // slug-sorted, == sbulkJSON order
+const nrdNH = n=>{n=Math.round(n);return n>=10000?((n/1000).toFixed(1).replace(/\.0$/,'')+'k'):String(n).replace(/\B(?=(\d{3})+(?!\d))/g,',');};
+const ordinalH = n=>{n=Number(n);if(!isFinite(n))return String(n);const s=['th','st','nd','rd'],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0]);};
+const NOWms = new Date(NOW).getTime();
+const koScoreHitH = (p,r)=>!!(p&&r&&p.h!=null&&p.a!=null&&r.h!=null&&r.a!=null&&Number(p.h)===r.h&&Number(p.a)===r.a);
+/* resolve a KO tie's teams from kteams overrides + settled-winner feeders (koTeams/koAutoTeams) */
+function pairForH(id){
+  if(kteams[id]) return {h:kteams[id].h||null,a:kteams[id].a||null};
+  const fd=BR[id]; if(!fd) return {h:null,a:null};
+  const take=fd[2], winOf=fid=>{const r=results_[fid];return (r&&r.w)?r.w:null;};
+  const feed=fid=>{const w=winOf(fid);if(!w)return null;if(take==='W')return w;const q=pairForH(fid);return w===q.h?q.a:(w===q.a?q.h:null);};
+  return {h:feed(fd[0])||null,a:feed(fd[1])||null};
+}
+const koNames = id=>{const p=pairForH(id);return {h:(p.h&&FLh[p.h])?p.h:null,a:(p.a&&FLh[p.a])?p.a:null};};
+const koReadyH = id=>{const t=koNames(id);return !!(t.h&&t.a);};
+function upsetWinH(f,r){
+  if(!f||!r||!r.w||!/^k[0-9]+$/.test(f.id)||(+f.id.slice(1))<PU_FROM_Kh)return false;
+  const t=koNames(f.id),h=t.h,a=t.a,loser=(h===r.w)?a:((a===r.w)?h:null);
+  if(!loser)return false;
+  const rw=PU_RANKh[r.w],rl=PU_RANKh[loser];return !!(rw&&rl&&rw>rl);
+}
+function koStreakBonusH(preds,results,shield){
+  const ids=[];
+  for(const id in results){ if(id.charAt(0)==='_'||!/^k[0-9]+$/.test(id))continue;
+    const r=results[id]; if(!r||r.w==null)continue; const p=preds[id]; if(!p||(!p.w&&p.h==null))continue; ids.push(id); }
+  ids.sort((a,b)=>(+a.slice(1))-(+b.slice(1)));
+  let bonus=0,run=0,sh=!!shield;
+  for(const id of ids){
+    if(koScoreHitH(preds[id],results[id])){run++;bonus+=run===1?0:(run===2?5:(run===3?15:20));}
+    else if(sh&&run>0&&(+id.slice(1))>=PU_FROM_Kh)sh=false; else run=0;
+  }
+  return bonus;
+}
+const puRnd = kn=>(kn>=25&&kn<=28)?'qf':((kn===29||kn===30)?'sf':(kn===32?'fin':null));
+function scoreForH(preds,results,champ,chips){
+  const pu=(chips!==undefined), ch=(pu&&chips)?chips:{};
+  let pts=0,exact=0,correct=0,scored=0;
+  for(const id in results){
+    if(id.charAt(0)==='_')continue;
+    const r=results[id],p=preds&&preds[id];
+    if(r&&r.w!=null){
+      if(!p||(!p.w&&p.h==null))continue; scored++;
+      const f=fxById[id]; let kp=0;
+      if(p.w&&p.w===r.w){kp+=f?koPtsOf(f):4;correct++;}
+      if(koScoreHitH(p,r)){kp+=f?koBonusOf(f):0;exact++;}
+      if(pu){ const kn=/^k[0-9]+$/.test(id)?(+id.slice(1)):0,rnd=puRnd(kn);
+        if(rnd&&ch[rnd]===id)kp*=2;
+        if(p.w&&p.w===r.w&&f&&upsetWinH(f,r))kp+=PU_UPSETh; }
+      pts+=kp; continue;
+    }
+    if(!p||!p.o)continue; scored++;
+    const ro=outcomeOf(r);
+    if(p.o===ro){pts+=3;correct++;}
+    if(p.h!=null&&p.a!=null&&Number(p.h)===r.h&&Number(p.a)===r.a){pts+=2;exact++;}
+  }
+  pts+=koStreakBonusH(preds,results,pu);
+  if(results&&results._champ&&champ&&champ===results._champ)pts+=CHAMP_PTS;
+  return {pts,exact,correct,scored};
+}
+const predCntH={}; blobs.forEach(b=>{let n=0;const pr=b.predictions||{};for(const id in pr){const v=pr[id];if(v&&(v.o||v.w))n++;}predCntH[b.slug]=n;});
+const rankCmpH=(a,b)=>(b.pts-a.pts)||(b.predicted-a.predicted)||(b.exact-a.exact)||(b.correct-a.correct)||String(a.name).localeCompare(String(b.name));
+
+/* ---- office consensus map (mirrors CONS.map/champMap), walked in PS order ---- */
+const mapH={}; const cmH={}; let champN_H=0;
+PS.forEach(b=>{
+  if(b.champ){champN_H++;cmH[b.champ]=(cmH[b.champ]||0)+1;}
+  const pr=b.predictions||{};
+  for(const id in pr){ const v=pr[id]; if(!v)continue; const m=fxById[id]; if(!m)continue;
+    const c=mapH[id]||(mapH[id]={H:0,D:0,A:0,w:{},sc:{}});
+    if(m.kn){ if(v.w)c.w[v.w]=(c.w[v.w]||0)+1; }
+    else{ if(v.o)c[v.o]++; if(v.h!=null&&v.a!=null)c.sc[v.h+'-'+v.a]=(c.sc[v.h+'-'+v.a]||0)+1; } }
+});
+const doneSortedH = settledFx.slice().sort((a,b)=>new Date(a.ko)-new Date(b.ko));
+const resPctH={};
+doneSortedH.forEach(f=>{const c=mapH[f.id];if(!c)return;const r=results_[f.id];
+  if(f.kn){let tot=0;for(const k in c.w)tot+=c.w[k];if(tot>=8&&r.w!=null)resPctH[f.id]=Math.round((c.w[r.w]||0)/tot*100);}
+  else{const tot=c.H+c.D+c.A;if(tot>=8)resPctH[f.id]=Math.round(c[outcomeOf(r)]/tot*100);}});
+const eligSetH={};
+world.fixtures.forEach(m=>{const f=fxById[m.id];const kr=f.kn?koReadyH(f.id):true;const lk=new Date(f.ko).getTime()<=NOWms;if((f.kn?kr:true)&&(lk||results_[f.id]))eligSetH[f.id]=true;});
+const doneEH = doneSortedH.filter(f=>eligSetH[f.id]);
+
+/* ---- ⏳ time machine / 🎢 journey / 🧗 comeback: day-by-day replay (scoreFor) ---- */
+const byDayH={}; doneSortedH.forEach(f=>{const k=dayKeyOf(f.ko);(byDayH[k]=byDayH[k]||[]).push(f);});
+const daysH=Object.keys(byDayH).sort();
+const resAcc={}; const leadersH=[]; const rankHist={}; const fieldNsH=[]; let lastRows=null;
+blobs.forEach(b=>{rankHist[b.slug]=[];});
+daysH.forEach(d=>{
+  byDayH[d].forEach(f=>{resAcc[f.id]=results_[f.id];});
+  const rowsD=PS.map(b=>{const s=scoreForH(b.predictions,resAcc,b.champ,b.chips||null);
+    return {slug:b.slug,name:b.name||b.slug,pts:s.pts,exact:s.exact,correct:s.correct,predicted:predCntH[b.slug]|0};}).sort(rankCmpH);
+  rowsD.forEach((r,i)=>rankHist[r.slug].push(i+1));
+  fieldNsH.push(rowsD.length); leadersH.push(rowsD.length?rowsD[0].name:''); lastRows=rowsD;
+});
+const reignsH=[]; let leadChangesH=0;
+leadersH.forEach((nm,i)=>{ if(i>0&&nm!==leadersH[i-1])leadChangesH++;
+  if(!reignsH.length||reignsH[reignsH.length-1].name!==nm)reignsH.push({name:nm,days:1}); else reignsH[reignsH.length-1].days++; });
+const seenLH={}; let distinctH=0; leadersH.forEach(nm=>{if(!seenLH[nm]){seenLH[nm]=1;distinctH++;}});
+let longestH=null; reignsH.forEach(rg=>{if(!longestH||rg.days>longestH.days)longestH={name:rg.name,days:rg.days};});
+let journeyH=null;
+{ const rks=rankHist['khalid-almannai'];
+  if(rks&&rks.length){ let peak={r:rks[0],i:0},low={r:rks[0],i:0},best=0,topDays=0;
+    rks.forEach((r,i)=>{if(r<peak.r)peak={r,i};if(r>low.r)low={r,i};if(i>0&&rks[i-1]-r>best)best=rks[i-1]-r;if(r<=10)topDays++;});
+    journeyH={ranks:rks,peak,low,best,topDays}; } }
+const cbAll=[]; let cbMine=null;
+PS.forEach(b=>{const rks=rankHist[b.slug];if(!rks||!rks.length)return;let lo=rks[0];rks.forEach(r=>{if(r>lo)lo=r;});
+  const now=rks[rks.length-1],v=lo-now; if(v>=10)cbAll.push({slug:b.slug,name:b.name,low:lo,now,v}); if(b.slug==='khalid-almannai')cbMine={low:lo,now,v};});
+cbAll.sort((a,b)=>b.v-a.v);
+const comebackH={rows:cbAll.slice(0,3),mine:cbMine};
+
+/* ---- 🔮 futures board: enumerate every remaining winner outcome through BRACKET ---- */
+let futuresH=null;
+(function(){
+  if(!daysH.length)return;
+  const rem=world.fixtures.filter(f=>{const r=results_[f.id];return !(r&&(f.kn?r.w!=null:r.h!=null));}).sort((a,b)=>new Date(a.ko)-new Date(b.ko));
+  if(!rem.length||rem.length>13)return;
+  for(const f of rem)if(!f.kn)return;
+  const remIdx={}; rem.forEach((f,i)=>remIdx[f.id]=i);
+  const cmapW={}; rem.forEach(f=>{ const c=mapH[f.id]; if(c&&c.w&&Object.keys(c.w).length)cmapW[f.id]=c.w; });
+  const N=rem.length,U=Math.pow(2,N);
+  const picks=PS.map(b=>{ const pr=b.predictions||{},arr=new Array(N),arm=new Array(N);
+    rem.forEach((f,i)=>{ const ok=(f.kn?koReadyH(f.id):true)&&(new Date(f.ko).getTime()<=NOWms||results_[f.id]);
+      const v=ok?pr[f.id]:null; arr[i]=(v&&v.w)?v.w:null;
+      let a2=false; if(ok&&b.chips){const knm=/^k[0-9]+$/.test(f.id)?(+f.id.slice(1)):0,rd=puRnd(knm);if(rd&&b.chips[rd]===f.id)a2=true;} arm[i]=a2; });
+    return {slug:b.slug,champ:b.champ,arr,arm}; });
+  const basePts={},curRank={}; lastRows.forEach((r,i)=>{basePts[r.slug]=r.pts;curRank[r.slug]=i+1;});
+  const finIdx=(remIdx['k32']!=null)?remIdx['k32']:-1;
+  const winW={},winC={},aliveSet={},condWin={}; let totW=0;
+  const winners=new Array(N),pairHx=new Array(N),pairAx=new Array(N);
+  for(let u=0;u<U;u++){
+    let w8=1;
+    for(let i=0;i<N;i++){
+      const f=rem[i],bp=pairForH(f.id); let h=bp.h,a=bp.a; const fd=BR[f.id];
+      if(fd&&(!h||!a)){ const take=fd[2];
+        const side=fid=>{ let ww=(function(){const r=results_[fid];return (r&&r.w)?r.w:null;})(); const ri=remIdx[fid];
+          if(ww==null&&ri!=null)ww=winners[ri]; if(ww==null)return null; if(take==='W')return ww;
+          let fh=null,fa=null; if(ri!=null){fh=pairHx[ri];fa=pairAx[ri];}else{const q=pairForH(fid);fh=q.h;fa=q.a;}
+          return ww===fh?fa:(ww===fa?fh:null); };
+        if(!h)h=side(fd[0]); if(!a)a=side(fd[1]); }
+      pairHx[i]=h;pairAx[i]=a;
+      const win=((u>>i)&1)?(a||null):(h||null); winners[i]=win;
+      let sh=0.5; if(h&&a&&win){const c=cmapW[f.id];if(c){const t2=(c[h]||0)+(c[a]||0);if(t2>=8)sh=(c[win]||0)/t2;}}
+      w8*=sh;
+    }
+    const finW=finIdx>=0?winners[finIdx]:null;
+    let bestPts=-1; const tied=[];
+    for(let pi=0;pi<PS.length;pi++){ const p=PS[pi]; let pts=basePts[p.slug]|0; const pk=picks[pi];
+      for(let i=0;i<N;i++){ if(pk.arr[i]&&pk.arr[i]===winners[i]){let kp=koPtsOf(rem[i]);if(pk.arm[i])kp*=2;pts+=kp;} }
+      if(finW&&p.champ===finW)pts+=CHAMP_PTS;
+      if(pts>bestPts){bestPts=pts;tied.length=0;tied.push(pi);} else if(pts===bestPts)tied.push(pi); }
+    totW+=w8;
+    for(const ti of tied){const sl=PS[ti].slug;winW[sl]=(winW[sl]||0)+w8;winC[sl]=(winC[sl]||0)+1;}
+    if(finW){aliveSet[finW]=1;const cw=condWin[finW]||(condWin[finW]={});for(const ti of tied){const sl=PS[ti].slug;cw[sl]=(cw[sl]||0)+1;}}
+  }
+  const nameBy={}; PS.forEach(b=>nameBy[b.slug]=b.name);
+  const shareRows=[]; for(const sl in winW)shareRows.push({slug:sl,w:winW[sl],c:winC[sl]});
+  shareRows.sort((a,b)=>b.w-a.w||b.c-a.c);
+  const pct1=w=>totW>0?Math.round(w/totW*1000)/10:0;
+  const top5=shareRows.slice(0,5).map(r=>({name:nameBy[r.slug],pct:pct1(r.w)}));
+  let fw=0; shareRows.slice(5).forEach(r=>fw+=r.w);
+  let deepest=null; shareRows.forEach(r=>{const cr=curRank[r.slug];if(cr&&(!deepest||cr>deepest.rank))deepest={rank:cr,n:winC[r.slug]};});
+  const mineF={w:winC['khalid-almannai']||0,uni:U};
+  const slug2p={}; PS.forEach(b=>slug2p[b.slug]=b);
+  const hopeN={}; lastRows.slice(0,10).forEach(r=>{const p=slug2p[r.slug];if(p&&p.champ&&aliveSet[p.champ])hopeN[p.champ]=(hopeN[p.champ]||0)+1;});
+  const hopes=[]; for(const t in hopeN)hopes.push({t,n:hopeN[t]}); hopes.sort((a,b)=>b.n-a.n);
+  let modalChamp=null; for(const t in cmH)if(!modalChamp||cmH[t]>cmH[modalChamp])modalChamp=t;
+  let cond=null,condBest=-1;
+  for(const t in hopeN){ if(t===modalChamp)continue; const tick=cmH[t]||0;
+    if(tick>condBest){const cw=condWin[t]||{};let bn=null,bc=-1;for(const sl in cw)if(cw[sl]>bc){bc=cw[sl];bn=sl;}if(bn){cond={team:t,winner:nameBy[bn]};condBest=tick;}} }
+  const alive=[]; for(const t in aliveSet)alive.push(t);
+  futuresH={left:N,uni:U,winners:top5,fieldPct:pct1(fw),fieldN:Math.max(0,shareRows.length-top5.length),distinct:shareRows.length,deepest,mine:mineF,cond,hopes,alive};
+})();
+
+/* ---- 🪞 alternate universes + 🥚 fragility (need lastRows) ---- */
+let altH=null,fragH={oneGoal:0,flips:0,gap:0};
+if(lastRows&&lastRows.length){
+  const offRank={},offPts={}; lastRows.forEach((r,i)=>{offRank[r.slug]=i+1;offPts[r.slug]=r.pts;});
+  const variant=(b,mode)=>{
+    if(mode==='official')return offPts[b.slug]|0;
+    if(mode==='nochamp'){let v=offPts[b.slug]|0;if(results_._champ&&b.champ===results_._champ)v-=CHAMP_PTS;return v;}
+    const pr=b.predictions||{}; let pts=0;
+    for(const id in results_){ if(id.charAt(0)==='_')continue; const r=results_[id],v=pr[id]; if(!r||!v)continue; const f=fxById[id]; if(!f)continue;
+      if(r.w!=null){ if(mode==='outcome'){if(v.w&&v.w===r.w)pts+=koPtsOf(f);} else if(koScoreHitH(v,r))pts+=koBonusOf(f); }
+      else{ if(r.h==null)continue; if(mode==='outcome'){if(v.o&&v.o===outcomeOf(r))pts+=3;} else if(v.h!=null&&v.a!=null&&Number(v.h)===r.h&&Number(v.a)===r.a)pts+=2; } }
+    return pts; };
+  const modes=[['Official rules','official'],['Outcome only · no exact bonus','outcome'],['Exact scores only','exact'],['No champion bonus','nochamp']];
+  const slots=modes.map(md=>{ const rows=PS.map(b=>({slug:b.slug,name:b.name,v:variant(b,md[1])})).sort((a,b)=>b.v-a.v||(offRank[a.slug]||99999)-(offRank[b.slug]||99999));
+    return {lab:md[0],podium:rows.slice(0,3).map((r,i)=>({name:r.name,mv:md[1]==='official'?0:((offRank[r.slug]||0)-(i+1))}))}; });
+  const leadName=lastRows[0].name; let leadCount=0; slots.forEach(s=>{if(s.podium.length&&s.podium[0].name===leadName)leadCount++;});
+  altH={slots,leadName,leadCount};
+  if(lastRows.length>=3){
+    const slug2p={}; blobs.forEach(b=>slug2p[b.slug]=b);
+    const top10=lastRows.slice(0,10),pod=[lastRows[0].name,lastRows[1].name,lastRows[2].name];
+    fragH.gap=Math.min(lastRows[0].pts-lastRows[1].pts,lastRows[1].pts-lastRows[2].pts);
+    const cands=[];
+    doneSortedH.forEach(f=>{const r=results_[f.id];
+      if(f.kn){const v=koNames(f.id);const other=r.w===v.h?v.a:(r.w===v.a?v.h:null);if(other)cands.push({f,nr:{w:other,h:r.a,a:r.h}});}
+      else if(Math.abs(r.h-r.a)===1)cands.push({f,nr:{h:r.a,a:r.h}});});
+    fragH.oneGoal=cands.length;
+    cands.forEach(cd=>{ const cp={}; for(const id in results_)cp[id]=results_[id];
+      cp[cd.f.id]=Object.assign({},results_[cd.f.id],cd.nr); if(cd.f.id==='k32'&&cp._champ)cp._champ=cd.nr.w;
+      const rows=top10.map(rr=>{const p=slug2p[rr.slug];if(!p)return {name:rr.name,pts:rr.pts,exact:rr.exact,correct:rr.correct,predicted:rr.predicted};
+        const s=scoreForH(p.predictions,cp,p.champ,p.chips||null);return {slug:p.slug,name:p.name,pts:s.pts,exact:s.exact,correct:s.correct,predicted:predCntH[p.slug]|0};}).sort(rankCmpH);
+      for(let i=0;i<3;i++)if(rows[i]&&rows[i].name!==pod[i]){fragH.flips++;return;} });
+  }
+}
+
+/* ---- CONS.wc cards: 🧊 clutch · ❤️ heart · 🎭 persona · 👯 twin · 🦄 unicorn · 🦢 goose · 🌪️ chaos ---- */
+let clutchH=null,heartH=null,personaH=null,twinH=null,unicornH=null,gooseH=null,chaosH=null;
+{ // clutch
+  const rows=[]; let ogH=0,ogT=0,okH=0,okT=0,mn=null;
+  PS.forEach(b=>{const pr=b.predictions||{};let g=0,gn=0,k=0,kn=0;
+    doneEH.forEach(f=>{const v=pr[f.id];if(!v)return;const r=results_[f.id];
+      if(f.kn){if(!v.w)return;kn++;if(v.w===r.w)k++;}else{if(!v.o)return;gn++;if(v.o===outcomeOf(r))g++;}});
+    ogH+=g;ogT+=gn;okH+=k;okT+=kn; const gp=gn?Math.round(g/gn*100):0,kp=kn?Math.round(k/kn*100):0;
+    if(b.slug==='khalid-almannai')mn={g:gp,k:kp,gn,kn};
+    if(gn>=20&&kn>=12){const d=kp-gp;if(d>0)rows.push({slug:b.slug,name:b.name,g:gp,k:kp,d});}});
+  rows.sort((a,b)=>b.d-a.d);
+  clutchH={rows:rows.slice(0,3),og:ogT?Math.round(ogH/ogT*100):0,ok:okT?Math.round(okH/okT*100):0,mine:mn};
+}
+{ // heart
+  let calls=0,back=0,hits=0,pPts=0,oCalls=0,oBack=0,oHits=0,oPts=0,shock=null;
+  PS.forEach(b=>{const t=(b.country&&FLh[b.country])?b.country:null;if(!t)return;const pr=b.predictions||{};
+    doneEH.forEach(f=>{const v=pr[f.id];if(!v)return;const r=results_[f.id],c=mapH[f.id];if(!c)return;
+      let backing=false,hit=false,vp=0,ot=0,ob=0,oh=0,op=0;
+      if(f.kn){const mv=koNames(f.id);if(mv.h!==t&&mv.a!==t)return;if(!v.w)return;
+        backing=(v.w===t);hit=(v.w===r.w);if(hit)vp=koPtsOf(f);
+        for(const kk in c.w)ot+=c.w[kk];ob=c.w[t]||0;oh=c.w[r.w]||0;op=oh*koPtsOf(f);}
+      else{if(f.h!==t&&f.a!==t)return;if(!v.o)return;const ro=outcomeOf(r);
+        backing=(f.h===t?v.o==='H':v.o==='A');hit=(v.o===ro);if(hit)vp=3;
+        if(v.h!=null&&v.a!=null&&Number(v.h)===r.h&&Number(v.a)===r.a)vp+=2;
+        ot=c.H+c.D+c.A;ob=(f.h===t?c.H:c.A);oh=c[ro];op=oh*3+(c.sc[r.h+'-'+r.a]||0)*2;}
+      calls++;if(backing)back++;if(hit)hits++;pPts+=vp;oCalls+=ot;oBack+=ob;oHits+=oh;oPts+=op;
+      if(backing&&hit&&resPctH[f.id]!=null&&resPctH[f.id]<=30&&(!shock||resPctH[f.id]<shock.pct))shock={team:t,pct:resPctH[f.id]};});});
+  if(calls>=15){const bs=back/calls,os=oCalls?oBack/oCalls:0;
+    heartH={calls,backMult:os>0?Math.round(bs/os*10)/10:0,pHit:Math.round(hits/calls*100),oHit:oCalls?Math.round(oHits/oCalls*100):0,
+      ptsDelta:Math.round((pPts/calls-(oCalls?oPts/oCalls:0))*10)/10,shock};}
+}
+{ // persona
+  const modal=f=>{const c=mapH[f.id];if(!c||!eligSetH[f.id])return null;
+    if(f.kn){let tot=0,bt=null,bn=0;for(const kk in c.w){tot+=c.w[kk];if(c.w[kk]>bn){bn=c.w[kk];bt=kk;}}return tot>=8?bt:null;}
+    const tot=c.H+c.D+c.A;if(tot<5)return null;return (c.H>=c.D&&c.H>=c.A)?'H':(c.D>=c.A?'D':'A');};
+  const traits=(pr,fxs)=>{let n=0,chN=0,chT=0,dN=0,dT=0,gS=0,gN=0;
+    fxs.forEach(f=>{const v=pr[f.id];if(!v)return;
+      if(f.kn){if(!v.w)return;n++;const md=modal(f);if(md){chT++;if(v.w===md)chN++;}}
+      else{if(!v.o)return;n++;dT++;if(v.o==='D')dN++;const md=modal(f);if(md){chT++;if(v.o===md)chN++;}if(v.h!=null&&v.a!=null){gS+=Number(v.h)+Number(v.a);gN++;}}});
+    const chalk=chT?Math.round(chN/chT*100):0;
+    return {n,chalk,draw:dT?Math.round(dN/dT*100):0,opt:Math.min(100,gN?Math.round(gS/gN/4*100):0),fade:100-chalk};};
+  const archKey=t=>{if(t.fade>=45)return 'wolf';if(t.chalk>=70)return 'chalk';if(t.draw>=20)return 'draw';if(t.fade>=30)return 'maverick';return 'balanced';};
+  const census={chalk:0,maverick:0,draw:0,wolf:0,balanced:0};
+  PS.forEach(b=>{const t=traits(b.predictions||{},doneEH);if(t.n>=20)census[archKey(t)]++;});
+  const meB=blobs.find(b=>b.slug==='khalid-almannai');
+  const tMe=traits(meB.predictions||{},world.fixtures.map(f=>fxById[f.id]));
+  personaH={census,mine:{chalk:tMe.chalk,draw:tMe.draw,opt:tMe.opt,fade:tMe.fade,key:archKey(tMe)}};
+}
+{ // twin
+  const eligFx=world.fixtures.map(f=>fxById[f.id]).filter(m=>eligSetH[m.id]);
+  const sigs=[]; PS.forEach(b=>{const pr=b.predictions||{};const mp={};let n=0;
+    eligFx.forEach(f=>{const v=pr[f.id];if(!v)return;if(f.kn){if(v.w){mp[f.id]=v.w;n++;}}else if(v.o){mp[f.id]=v.o;n++;}});
+    sigs.push({slug:b.slug,name:b.name,mp,n});});
+  const cmp2=(a,b)=>{let sh=0,ag=0;const s=a.n<=b.n?a:b,o=a.n<=b.n?b:a;for(const id in s.mp){if(o.mp[id]!=null){sh++;if(s.mp[id]===o.mp[id])ag++;}}return {sh,ag};};
+  let mineT=null,nem=null,meSig=null; for(const s of sigs)if(s.slug==='khalid-almannai'){meSig=s;break;}
+  if(meSig){ let bestP=-1,bn=0,bname='',worst=null;
+    sigs.forEach(s=>{if(s===meSig)return;const x=cmp2(meSig,s);
+      if(x.sh>=15){const pc=x.ag/x.sh*100;if(pc>bestP){bestP=pc;bn=x.sh;bname=s.name;}}
+      const dis=x.sh-x.ag;if(dis>=10&&(!worst||dis>worst.dis))worst={dis,s};});
+    if(bestP>=0)mineT={name:bname,pct:Math.round(bestP),n:bn};
+    if(worst){let meC=0,thC=0;
+      for(const id in meSig.mp){const ov=worst.s.mp[id];if(ov==null||ov===meSig.mp[id])continue;const f=fxById[id],r=results_[id];if(!f||!r)continue;
+        if(f.kn){if(r.w==null)continue;if(meSig.mp[id]===r.w)meC++;if(ov===r.w)thC++;}
+        else{if(r.h==null)continue;const ro=outcomeOf(r);if(meSig.mp[id]===ro)meC++;if(ov===ro)thC++;}}
+      nem={name:worst.s.name,n:worst.dis,me:meC,them:thC};}}
+  const cands=sigs.filter(s=>s.n>=30); let sum=0,cnt=0,pair=null,pairP=-1;
+  for(let i=0;i<cands.length;i++)for(let j=i+1;j<cands.length;j++){const x=cmp2(cands[i],cands[j]);
+    if(x.sh>=15){const pc=x.ag/x.sh*100;sum+=pc;cnt++;if(x.sh>=30&&pc>pairP){pairP=pc;pair={a:cands[i].name,b:cands[j].name,pct:Math.round(pc),n:x.sh};}}}
+  twinH={mine:mineT,pair,avg:cnt?Math.round(sum/cnt):0,nemesis:nem};
+}
+{ // unicorn
+  const bought={},landed={};
+  doneSortedH.forEach(f=>{if(f.kn)return;const c=mapH[f.id],r=results_[f.id];if(c)for(const sc in c.sc)bought[sc]=(bought[sc]||0)+c.sc[sc];landed[r.h+'-'+r.a]=(landed[r.h+'-'+r.a]||0)+1;});
+  const rows=[]; for(const sc in bought)if(bought[sc]>=20)rows.push({sc,bought:bought[sc],landed:landed[sc]||0}); rows.sort((a,b)=>b.bought-a.bought);
+  unicornH=rows;
+}
+{ // goose
+  const minted={},torched={};
+  doneSortedH.forEach(f=>{const c=mapH[f.id];if(!c)return;const r=results_[f.id];
+    if(f.kn){let tot=0;for(const kk in c.w)tot+=c.w[kk];if(tot<8)return;const mv=koNames(f.id),pp=koPtsOf(f);const l=r.w===mv.h?mv.a:(r.w===mv.a?mv.h:null);
+      minted[r.w]=(minted[r.w]||0)+(c.w[r.w]||0)*pp;if(l)torched[l]=(torched[l]||0)+(c.w[l]||0)*pp;}
+    else{const tot=c.H+c.D+c.A;if(tot<5)return;if(r.h===r.a)return;const wt=r.h>r.a?f.h:f.a,lt=r.h>r.a?f.a:f.h,wn=r.h>r.a?c.H:c.A,ln=r.h>r.a?c.A:c.H;
+      minted[wt]=(minted[wt]||0)+wn*3;torched[lt]=(torched[lt]||0)+ln*3;}});
+  const koSet={};let koAll=true; world.fixtures.forEach(f=>{if(!f.kn||f.round!=='R32')return;const t=koNames(f.id);if(t.h&&t.a){koSet[t.h]=1;koSet[t.a]=1;}else koAll=false;});
+  const beaten={}; doneSortedH.forEach(f=>{if(!f.kn)return;const r=results_[f.id],v=koNames(f.id);const l=r.w===v.h?v.a:(r.w===v.a?v.h:null);if(l)beaten[l]=1;});
+  const koKnown=koAll&&Object.keys(koSet).length>=32; let burn=null;
+  for(const t in cmH){if(!(beaten[t]||(koKnown&&!koSet[t])))continue;torched[t]=(torched[t]||0)+CHAMP_PTS*cmH[t];if(!burn||cmH[t]>burn.n)burn={t,n:cmH[t]};}
+  const top3=o=>{const a=[];for(const t in o)if(o[t]>0)a.push({t,v:o[t]});a.sort((x,y)=>y.v-x.v);return a.slice(0,3);};
+  gooseH={minted:top3(minted),torched:top3(torched),burn};
+}
+{ // chaos
+  const order=['MD1','MD2','MD3','R32','R16','QF','SF','FIN']; const sum={},cnt={};
+  doneSortedH.forEach(f=>{if(f.id==='k31')return;/* third-place playoff shares round FINAL — excluded from FIN, matching the product */const c=mapH[f.id];if(!c)return;const r=results_[f.id];let sh=0,tot=0;
+    if(f.kn){for(const kk in c.w)tot+=c.w[kk];if(tot<8)return;sh=(c.w[r.w]||0)/tot;}
+    else{tot=c.H+c.D+c.A;if(tot<5)return;sh=c[outcomeOf(r)]/tot;}
+    if(sh<=0)sh=0.5/tot; const u=-Math.log(sh)/Math.LN2,b=f.round==='FINAL'?'FIN':f.round;sum[b]=(sum[b]||0)+u;cnt[b]=(cnt[b]||0)+1;});
+  const rounds=[];let gS=0,gN=0,mx=0,mxLab='';
+  order.forEach(b=>{if(!cnt[b])return;const u=Math.round(sum[b]/cnt[b]*100)/100;rounds.push({lab:b,u,n:cnt[b]});
+    if(b==='MD1'||b==='MD2'||b==='MD3'){gS+=sum[b];gN+=cnt[b];}else if(u>mx){mx=u;mxLab=b;}});
+  const gAvg=gN?gS/gN:0; chaosH={rounds,mult:(gAvg>0&&mx>0)?Math.round(mx/gAvg*10)/10:0,maxLab:mxLab};
+}
+const meNow = lastRows ? (lastRows.findIndex(r=>r.slug==='khalid-almannai')+1) : 0;
+console.log('EXPECTED wc:', JSON.stringify({
+  settledN:settledIds.length, days:daysH.length, leadChanges:leadChangesH, distinct:distinctH,
+  longest:longestH&&(longestH.name.split(' ')[0]+'/'+longestH.days), meNow,
+  futUni:futuresH&&futuresH.uni, futLeft:futuresH&&futuresH.left, futDistinct:futuresH&&futuresH.distinct,
+  futTop1:futuresH&&futuresH.winners[0]&&(futuresH.winners[0].name.split(' ')[0]+'@'+futuresH.winners[0].pct),
+  futMine:futuresH&&futuresH.mine, cbTop:comebackH.rows[0]&&(comebackH.rows[0].name.split(' ')[0]+'+'+comebackH.rows[0].v),
+  clutchTop:clutchH.rows[0]&&('+'+clutchH.rows[0].d), clOff:[clutchH.og,clutchH.ok],
+  heart:heartH&&[heartH.calls,heartH.backMult,heartH.pHit,heartH.oHit,heartH.ptsDelta,heartH.shock],
+  persona:personaH.census, personaMine:personaH.mine.key,
+  twin:twinH&&[twinH.mine&&twinH.mine.pct,twinH.avg,twinH.pair&&twinH.pair.pct],
+  unicorn:unicornH.slice(0,3).map(r=>r.sc+':'+r.bought+'/'+r.landed),
+  goose:[gooseH.minted[0]&&gooseH.minted[0].t,gooseH.torched[0]&&gooseH.torched[0].t,gooseH.burn&&gooseH.burn.n],
+  chaos:chaosH.rounds.map(r=>r.lab+':'+r.u), chaosMax:chaosH.maxLab, chaosMult:chaosH.mult,
+  alt:altH&&[altH.leadName.split(' ')[0],altH.leadCount], frag:[fragH.oneGoal,fragH.flips,fragH.gap],
+  lifelines:futuresH&&futuresH.hopes.map(h=>h.t+':'+h.n)
+}));
+
 /* ---------- PASS B: full boot, then click 🤓 Nerds ---------- */
 const ctx = await browser.newContext({ viewport:{width:390,height:844} });
 const pg = await ctx.newPage();
@@ -345,7 +692,7 @@ await pg.addInitScript(({now, meSlug, revealed, wnVer})=>{
 
 await pg.route('**://fonts.googleapis.com/**', r=>r.fulfill({status:200, contentType:'text/css', body:''}));
 await pg.route('**://fonts.gstatic.com/**', r=>r.abort());
-await pg.route('**://flagcdn.com/**', r=>r.abort());
+await pg.route('**://flagcdn.com/**', flagStub);
 await pg.route('**://site.api.espn.com/**', r=>r.fulfill({status:200, contentType:'application/json', body:'{}'}));
 await pg.route('**://*.supabase.co/**', r=>{
   const u = new URL(r.request().url());
@@ -382,6 +729,32 @@ await btn.click();
 await pg.waitForSelector('.nrd-tiles', {timeout:8000}).then(()=>pass('panel renders on click')).catch(()=>fail('panel did not render'));
 await pg.waitForSelector('.nrd-quad', {timeout:12000}).then(()=>pass('analytics tier arrived (payoff matrix grid)')).catch(()=>fail('payoff grid never rendered — analytics tier stuck'));
 await pg.waitForTimeout(500);
+
+/* DEV cross-check: read the page's own WCR.v + CONS.wc and diff against the port above.
+   These are NOT the card assertions (those grep rendered HTML below) — they just prove the
+   independent recomputation matches the compute layer. Remove/keep as belt-and-suspenders. */
+const pageWC = await pg.evaluate(()=>{
+  const w=(typeof CONS!=='undefined'&&CONS.wc)||null, r=(typeof WCR!=='undefined'&&WCR.v)||null;
+  const f=r&&r.futures;
+  return {
+    days:r&&r.days&&r.days.length, leadChanges:r&&r.leadChanges, distinct:r&&r.distinct,
+    longest:r&&r.longest&&(r.longest.name.split(' ')[0]+'/'+r.longest.days),
+    futUni:f&&f.uni, futLeft:f&&f.left, futDistinct:f&&f.distinct,
+    futTop1:f&&f.winners&&f.winners[0]&&(f.winners[0].name.split(' ')[0]+'@'+f.winners[0].pct),
+    futMine:f&&f.mine, futDeepest:f&&f.deepest, futCond:f&&f.cond, futHopes:f&&f.hopes,
+    cbTop:r&&r.comeback&&r.comeback.rows[0]&&(r.comeback.rows[0].name.split(' ')[0]+'+'+r.comeback.rows[0].v),
+    cbMine:r&&r.comeback&&r.comeback.mine,
+    journey:r&&r.journey&&{peak:r.journey.peak,low:r.journey.low,best:r.journey.best,topDays:r.journey.topDays,n:r.journey.ranks.length},
+    alt:r&&r.alt&&{lead:r.alt.leadName.split(' ')[0],count:r.alt.leadCount,slots:r.alt.slots.map(s=>s.podium.map(p=>p.name.split(' ')[0]+(p.mv?('/'+p.mv):'')))},
+    frag:r&&r.frag,
+    clutch:w&&w.clutch&&{top:w.clutch.rows[0]&&('+'+w.clutch.rows[0].d),og:w.clutch.og,ok:w.clutch.ok,mine:w.clutch.mine,rows:w.clutch.rows.map(x=>x.name.split(' ')[0]+':'+x.d)},
+    heart:w&&w.heart, persona:w&&w.persona,
+    twin:w&&w.twin&&{mine:w.twin.mine,avg:w.twin.avg,pair:w.twin.pair,nem:w.twin.nemesis},
+    unicorn:w&&w.unicorn&&w.unicorn.slice(0,4).map(x=>x.sc+':'+x.bought+'/'+x.landed),
+    goose:w&&w.goose, chaos:w&&w.chaos
+  };
+});
+console.log('PAGE wc:', JSON.stringify(pageWC));
 
 const got = await pg.evaluate(()=>{
   const $=s=>document.querySelector(s), $$=s=>Array.from(document.querySelectorAll(s));
@@ -448,6 +821,171 @@ const got = await pg.evaluate(()=>{
   };
 });
 console.log(JSON.stringify(got,null,1).slice(0,3600));
+
+/* ---- WAVE C card scrape: pull each new card's rendered numbers from body.innerHTML ---- */
+const gotWC = await pg.evaluate(()=>{
+  const $$=s=>Array.from(document.querySelectorAll(s));
+  const T=el=>el?el.textContent.replace(/\s+/g,' ').trim():null;
+  const card=t=>{const b=$$('.aw-card .aw-t b').find(x=>x.textContent.trim()===t);return b?b.closest('.aw-card'):null;};
+  const q=(c,s)=>c?Array.from(c.querySelectorAll(s)):[];
+  const prz=c=>c&&c.querySelector('.aw-prz')?T(c.querySelector('.aw-prz')):null;
+  const tiles=c=>q(c,'.nrd-tile b').map(T);
+  const lines=c=>q(c,'.nrd-line').map(T);
+  const champs=c=>q(c,'.nrd-champ').map(r=>({nm:T(r.querySelector('.nm')),pc:T(r.querySelector('.pc'))}));
+  const you=c=>{const y=c&&c.querySelector('.aw-you');return y?T(y):null;};
+  const pend=c=>!!(c&&c.querySelector('.aw-pend'));
+  const meters=c=>q(c,'.nrd-meter').map(m=>({lab:T(m.querySelector('.lab span')),b:T(m.querySelector('.lab b'))}));
+  const rows=c=>q(c,'.aw-row').map(r=>({nm:T(r.querySelector('.aw-nm')),v:T(r.querySelector('.aw-v'))}));
+  const fut=card('The futures board'), tm=card('The time machine'), jo=card('Your rank journey'),
+        cb=card('The comeback king'), lf=card('Title lifelines'), tw=card('The prediction twin'),
+        he=card('Heart vs head'), go=card('Golden goose & heartbreaker'), cl=card('Clutch rating'),
+        un=card('Alternate universes'), ch=card('The chaos meter'), fr=card('The fragility index'),
+        pe=card('Predictor personality'), uc=card('The unicorn scores');
+  return {
+    fut:{present:!!fut,pend:pend(fut),prz:prz(fut),tiles:tiles(fut),champs:champs(fut),lines:lines(fut),you:you(fut)},
+    tm:{present:!!tm,pend:pend(tm),prz:prz(tm),tiles:tiles(tm),reign:q(tm,'.reign i').length,lines:lines(tm)},
+    jo:{present:!!jo,personal:!!(jo&&jo.classList.contains('nrd-personal')),svg:!!(jo&&jo.querySelector('svg.spark')),you:you(jo),lines:lines(jo)},
+    cb:{present:!!cb,pend:pend(cb),rows:rows(cb),lines:lines(cb),you:you(cb)},
+    lf:{present:!!lf,pend:pend(lf),champs:champs(lf),lines:lines(lf),you:you(lf)},
+    tw:{present:!!tw,pend:pend(tw),prz:prz(tw),meters:meters(tw),lines:lines(tw),h2h:T(tw&&tw.querySelector('.h2h .sc'))},
+    he:{present:!!he,pend:pend(he),tiles:tiles(he),duo:T(he&&he.querySelector('.nrd-duo .lab')),lines:lines(he)},
+    go:{present:!!go,pend:pend(go),champs:champs(go),lines:lines(go)},
+    cl:{present:!!cl,pend:pend(cl),prz:prz(cl),rows:rows(cl),lines:lines(cl),you:you(cl)},
+    un:{present:!!un,pend:pend(un),slots:q(un,'.alt-slot').map(s=>({lab:T(s.querySelector('.lb')),pods:q(s,'.pd').map(T),official:s.classList.contains('official')})),lines:lines(un)},
+    ch:{present:!!ch,pend:pend(ch),bars:q(ch,'.nrd-rounds .rc i em').map(T),hot:q(ch,'.nrd-rounds .rc i').findIndex(i=>i.classList.contains('hot')),rlab:q(ch,'.nrd-rlab u').map(T),lines:lines(ch)},
+    fr:{present:!!fr,pend:pend(fr),tiles:tiles(fr),lines:lines(fr)},
+    pe:{present:!!pe,personalWrap:!!(pe&&pe.querySelector('.nrd-personal .persona')),heroE:T(pe&&pe.querySelector('.persona .pe')),heroL:T(pe&&pe.querySelector('.persona .pt b')),meters:meters(pe),quad:q(pe,'.nrd-qc').map(x=>({b:T(x.querySelector('b')),s:T(x.querySelector('span'))})),lines:lines(pe)},
+    uc:{present:!!uc,pend:pend(uc),duo:q(uc,'.nrd-duo').map(d=>T(d.querySelector('.lab'))),lines:lines(uc)}
+  };
+});
+console.log('gotWC:', JSON.stringify(gotWC).slice(0,2400));
+
+/* ================= WAVE C — card assertions (rendered HTML vs independent recompute) ================= */
+const inc=(s,sub)=>!!(s&&s.indexOf(sub)>=0);
+const first=n=>String(n||'').split(' ')[0];
+// presence: all 14 new cards render (never pend) in the full signed-in world
+['The futures board','The time machine','Your rank journey','The comeback king','Title lifelines','The prediction twin','Heart vs head','Golden goose & heartbreaker','Clutch rating','Alternate universes','The chaos meter','The fragility index','Predictor personality','The unicorn scores'].forEach(t=>{
+  if(got.titles.includes(t)) pass('wave-c card present: '+t); else fail('wave-c card MISSING: '+t);
+});
+
+// 1 · 🔮 THE FUTURES BOARD (4+)
+if(gotWC.fut.prz===nrdNH(futuresH.uni)+' universes') pass('futures prz: '+gotWC.fut.prz); else fail('futures prz='+gotWC.fut.prz+' want '+futuresH.uni+' universes');
+if(gotWC.fut.tiles.join('|')===[futuresH.left,nrdNH(futuresH.uni),futuresH.distinct].join('|')) pass('futures tiles: '+gotWC.fut.tiles.join('/')); else fail('futures tiles='+JSON.stringify(gotWC.fut.tiles)+' want '+[futuresH.left,futuresH.uni,futuresH.distinct]);
+{ const wantN=futuresH.winners.length + (futuresH.fieldN>0?1:0);
+  const okC=gotWC.fut.champs.length===wantN && futuresH.winners.every((w,i)=>inc(gotWC.fut.champs[i].nm,first(w.name))&&gotWC.fut.champs[i].pc===w.pct+'%');
+  if(okC) pass('futures winner bars: top-'+futuresH.winners.length+' by title share ('+futuresH.winners.map(w=>first(w.name)+' '+w.pct+'%').join(', ')+')'); else fail('futures champs='+JSON.stringify(gotWC.fut.champs)+' want '+JSON.stringify(futuresH.winners)); }
+{ const dl=gotWC.fut.lines.find(l=>inc(l,'Deepest'));
+  if(futuresH.deepest && dl && inc(dl,ordinalH(futuresH.deepest.rank)) && inc(dl,String(futuresH.deepest.n))) pass('futures deepest ticket: '+ordinalH(futuresH.deepest.rank)+' in '+futuresH.deepest.n+' futures'); else fail('futures deepest line "'+dl+'" want '+JSON.stringify(futuresH.deepest)); }
+{ const w=futuresH.mine.w, want=(w>0?('You win it in')+' ':'')+''; const exp=w>0?(w+' of '+nrdNH(futuresH.uni)):('0 of '+nrdNH(futuresH.uni));
+  if(inc(gotWC.fut.you,exp)) pass('futures you-line: '+exp+' futures'); else fail('futures you="'+gotWC.fut.you+'" want '+exp); }
+
+// 2 · ⏳ THE TIME MACHINE (4+)
+if(gotWC.tm.prz===settledIds.length+' matches replayed') pass('time machine prz: '+gotWC.tm.prz); else fail('tm prz='+gotWC.tm.prz+' want '+settledIds.length+' matches replayed');
+if(gotWC.tm.tiles.join('|')===[String(leadChangesH),String(distinctH),longestH.days+'d'].join('|')) pass('time machine tiles: '+gotWC.tm.tiles.join('/')); else fail('tm tiles='+JSON.stringify(gotWC.tm.tiles)+' want '+[leadChangesH,distinctH,longestH.days+'d']);
+if(gotWC.tm.reign===reignsH.length) pass('time machine reign strip: '+reignsH.length+' segments'); else fail('tm reign='+gotWC.tm.reign+' want '+reignsH.length);
+{ const ll=gotWC.tm.lines.find(l=>inc(l,'Longest reign'));
+  if(ll && inc(ll,longestH.name) && inc(ll,String(longestH.days))) pass('time machine longest reign: '+longestH.name+' · '+longestH.days+'d'); else fail('tm longest line "'+ll+'" want '+longestH.name+'/'+longestH.days); }
+{ const lc=gotWC.tm.lines.find(l=>inc(l,'changed hands')||inc(l,'first whistle'));
+  if(lc && inc(lc,leadChangesH+' time') && inc(lc,String(distinctH))) pass('time machine lead-changes line: '+leadChangesH+' changes / '+distinctH+' leaders'); else fail('tm leadchange line "'+lc+'" want '+leadChangesH+'/'+distinctH); }
+
+// 3 · 🎢 YOUR RANK JOURNEY (personal)
+if(gotWC.jo.present && gotWC.jo.personal && gotWC.jo.svg) pass('journey: personal SVG card renders (nrd-personal)'); else fail('journey present='+gotWC.jo.present+' personal='+gotWC.jo.personal+' svg='+gotWC.jo.svg);
+{ const y=gotWC.jo.you;
+  if(inc(y,ordinalH(journeyH.peak.r)) && inc(y,ordinalH(journeyH.low.r)) && inc(y,String(journeyH.topDays))) pass('journey you-line: peak '+ordinalH(journeyH.peak.r)+' · low '+ordinalH(journeyH.low.r)+' · '+journeyH.topDays+' top-10 days'); else fail('journey you="'+y+'" want peak '+journeyH.peak.r+' low '+journeyH.low.r+' topDays '+journeyH.topDays); }
+{ const bl=gotWC.jo.lines.find(l=>inc(l,'best climb'))||gotWC.jo.lines.find(l=>inc(l,'climb'));
+  if(journeyH.best>0 ? (bl&&inc(bl,'+'+journeyH.best)) : true) pass('journey best-climb line: +'+journeyH.best); else fail('journey climb line "'+bl+'" want +'+journeyH.best); }
+
+// 4 · 🧗 THE COMEBACK KING
+{ const want=Math.min(3,comebackH.rows.length);
+  if(gotWC.cb.rows.length===want) pass('comeback king: '+want+' climber rows'); else fail('comeback rows='+gotWC.cb.rows.length+' want '+want); }
+if(comebackH.rows[0] && inc(gotWC.cb.rows[0].nm,first(comebackH.rows[0].name)) && inc(gotWC.cb.rows[0].v,'+'+comebackH.rows[0].v)) pass('comeback #1: '+first(comebackH.rows[0].name)+' +'+comebackH.rows[0].v); else fail('comeback row1='+JSON.stringify(gotWC.cb.rows[0])+' want '+JSON.stringify(comebackH.rows[0]));
+if(comebackH.mine && inc(gotWC.cb.you,'+'+comebackH.mine.v) && inc(gotWC.cb.you,ordinalH(comebackH.mine.low)) && inc(gotWC.cb.you,ordinalH(comebackH.mine.now))) pass('comeback you-line: +'+comebackH.mine.v+' ('+comebackH.mine.low+'→'+comebackH.mine.now+')'); else fail('comeback you="'+gotWC.cb.you+'" want +'+comebackH.mine.v);
+
+// 5 · 🧬 TITLE LIFELINES
+{ const H=futuresH.hopes;
+  if(gotWC.lf.champs.length===H.length && H.every((h,i)=>inc(gotWC.lf.champs[i].nm,h.t)&&inc(gotWC.lf.champs[i].pc,h.n+' of 10'))) pass('lifelines: '+H.length+' alive top-10 team(s) — '+H.map(h=>h.t+' '+h.n+'/10').join(', ')); else fail('lifelines champs='+JSON.stringify(gotWC.lf.champs)+' want '+JSON.stringify(H)); }
+{ const tl=gotWC.lf.lines.find(l=>inc(l,'🧬')); const top=futuresH.hopes[0];
+  if(top && tl && inc(tl,top.t) && inc(tl,String(top.n))) pass('lifelines headline: '+top.t+' × '+top.n+' of top 10'); else fail('lifelines headline "'+tl+'" want '+JSON.stringify(top)); }
+if(inc(gotWC.lf.you,'France')) pass('lifelines you-line names your champion (France)'); else fail('lifelines you="'+gotWC.lf.you+'" want France');
+
+// 6 · 👯 THE PREDICTION TWIN
+if(gotWC.tw.prz===twinH.mine.n+' shared calls') pass('twin prz: '+gotWC.tw.prz); else fail('twin prz='+gotWC.tw.prz+' want '+twinH.mine.n+' shared calls');
+{ const m0=gotWC.tw.meters[0], m1=gotWC.tw.meters[1];
+  if(m0 && inc(m0.lab,twinH.mine.name) && m0.b===twinH.mine.pct+'%') pass('twin meter: You ↔ '+twinH.mine.name+' '+twinH.mine.pct+'%'); else fail('twin meter0='+JSON.stringify(m0)+' want '+twinH.mine.name+'/'+twinH.mine.pct);
+  if(m1 && m1.b===twinH.avg+'%') pass('twin office-average meter: '+twinH.avg+'%'); else fail('twin meter1='+JSON.stringify(m1)+' want '+twinH.avg+'%'); }
+{ const pl=gotWC.tw.lines.find(l=>inc(l,'Most-alike'));
+  if(twinH.pair && pl && inc(pl,twinH.pair.a) && inc(pl,twinH.pair.b) && inc(pl,twinH.pair.pct+'%')) pass('twin office pair: '+twinH.pair.a+' & '+twinH.pair.b+' '+twinH.pair.pct+'%'); else fail('twin pair line "'+pl+'" want '+JSON.stringify(twinH.pair)); }
+{ const nm=twinH.nemesis;
+  if(nm && gotWC.tw.h2h===nm.me+' – '+nm.them) pass('twin nemesis h2h: '+nm.me+' – '+nm.them+' ('+nm.name+')'); else fail('twin h2h="'+gotWC.tw.h2h+'" want '+(nm&&nm.me+' – '+nm.them)); }
+
+// 7 · ❤️ HEART VS HEAD (aggregate only — no names)
+{ const bm=heartH.backMult.toFixed(1), pd=(heartH.ptsDelta>0?'+':'')+heartH.ptsDelta.toFixed(1);
+  if(gotWC.he.tiles[0]==='×'+bm && gotWC.he.tiles[1]===pd) pass('heart tiles: ×'+bm+' backing · '+pd+' pts/call'); else fail('heart tiles='+JSON.stringify(gotWC.he.tiles)+' want ×'+bm+' / '+pd); }
+if(inc(gotWC.he.duo,heartH.pHit+'%') && inc(gotWC.he.duo,heartH.oHit+'%')) pass('heart hit-rate duo: '+heartH.pHit+'% patriot vs '+heartH.oHit+'% office'); else fail('heart duo="'+gotWC.he.duo+'" want '+heartH.pHit+'/'+heartH.oHit);
+{ const diff=heartH.oHit-heartH.pHit, tax=gotWC.he.lines.find(l=>inc(l,'patriot tax')||inc(l,'heart pays')||inc(l,'A wash'));
+  if(tax && (diff===0||inc(tax,Math.abs(diff)+' point'))) pass('heart verdict line: '+(diff>0?('tax +'+diff):diff<0?('heart pays '+(-diff)):'wash')); else fail('heart tax line "'+tax+'" diff='+diff);
+  const hasShock=gotWC.he.lines.some(l=>inc(l,'The exception'));
+  if(!!heartH.shock===hasShock) pass('heart shock line '+(heartH.shock?'present':'absent')+' as recomputed'); else fail('heart shock render='+hasShock+' recompute='+!!heartH.shock); }
+if(!/[A-Z][a-z]+ [A-Z]\./.test((gotWC.he.lines||[]).join(' '))) pass('heart names no individual (aggregate only)'); else fail('heart leaked a name: '+gotWC.he.lines.join(' | '));
+
+// 8 · 🦢 GOLDEN GOOSE & HEARTBREAKER
+{ const mt=gooseH.minted, tc=gooseH.torched, gc=gotWC.go.champs;
+  const okM=mt.every((e,i)=>gc[i]&&inc(gc[i].nm,e.t)&&gc[i].pc===nrdNH(e.v));
+  const okT=tc.every((e,i)=>gc[mt.length+i]&&inc(gc[mt.length+i].nm,e.t)&&gc[mt.length+i].pc==='−'+nrdNH(e.v));
+  if(okM) pass('goose minted top-3: '+mt.map(e=>e.t+' '+nrdNH(e.v)).join(', ')); else fail('goose minted='+JSON.stringify(gc.slice(0,mt.length))+' want '+JSON.stringify(mt));
+  if(okT) pass('goose torched top-3: '+tc.map(e=>e.t+' −'+nrdNH(e.v)).join(', ')); else fail('goose torched='+JSON.stringify(gc.slice(mt.length))+' want '+JSON.stringify(tc)); }
+{ const bl=gotWC.go.lines.find(l=>inc(l,'🎫'));
+  if(gooseH.burn && bl && inc(bl,nrdNH(gooseH.burn.n)) && inc(bl,gooseH.burn.t)) pass('goose champion-burn line: '+gooseH.burn.n+' tickets died with '+gooseH.burn.t); else fail('goose burn line "'+bl+'" want '+JSON.stringify(gooseH.burn)); }
+
+// 9 · 🧊 CLUTCH RATING
+if(gotWC.cl.prz==='min 12 KO calls') pass('clutch prz: min 12 KO calls'); else fail('clutch prz='+gotWC.cl.prz);
+{ const r0=clutchH.rows[0];
+  if(r0 && inc(gotWC.cl.rows[0].nm,first(r0.name)) && inc(gotWC.cl.rows[0].nm,r0.g+'% groups') && inc(gotWC.cl.rows[0].nm,r0.k+'% KO') && inc(gotWC.cl.rows[0].v,'+'+r0.d)) pass('clutch #1: '+first(r0.name)+' '+r0.g+'→'+r0.k+' (+'+r0.d+')'); else fail('clutch row1='+JSON.stringify(gotWC.cl.rows[0])+' want '+JSON.stringify(r0)); }
+if(gotWC.cl.rows.length===clutchH.rows.length) pass('clutch: '+clutchH.rows.length+' clutch rows'); else fail('clutch rows='+gotWC.cl.rows.length+' want '+clutchH.rows.length);
+if(clutchH.mine && inc(gotWC.cl.you,clutchH.mine.g+'%') && inc(gotWC.cl.you,clutchH.mine.k+'%')) pass('clutch you-line: '+clutchH.mine.g+'% groups → '+clutchH.mine.k+'% KO'); else fail('clutch you="'+gotWC.cl.you+'" want '+clutchH.mine.g+'/'+clutchH.mine.k);
+
+// 10 · 🪞 ALTERNATE UNIVERSES (4+)
+if(gotWC.un.slots.length===4) pass('universes: 4 rulebook slots'); else fail('universes slots='+gotWC.un.slots.length);
+if(gotWC.un.slots[0] && gotWC.un.slots[0].official && inc(gotWC.un.slots[0].lab,'Official')) pass('universes: official slot flagged & first'); else fail('universes official slot='+JSON.stringify(gotWC.un.slots[0]));
+{ let ok=altH.slots.every((s,si)=>{const rs=gotWC.un.slots[si];return rs && s.podium.every((p,pi)=>inc(rs.pods[pi],first(p.name)) && (p.mv===0 || inc(rs.pods[pi],(p.mv>0?'▲'+p.mv:'▼'+(-p.mv)))));});
+  if(ok) pass('universes: all 4 podiums + movers match ('+altH.slots.map(s=>s.podium.map(p=>first(p.name)+(p.mv?(p.mv>0?'▲'+p.mv:'▼'+(-p.mv)):'')).join('/')).join(' | ')+')'); else fail('universes podiums mismatch: '+JSON.stringify(gotWC.un.slots.map(s=>s.pods))+' want '+JSON.stringify(altH.slots.map(s=>s.podium))); }
+{ const ll=gotWC.un.lines.find(l=>inc(l,'🪞'));
+  if(ll && inc(ll,first(altH.leadName)) && inc(ll,String(altH.leadCount))) pass('universes verdict: '+first(altH.leadName)+' leads '+altH.leadCount+'/4'); else fail('universes verdict "'+ll+'" want '+first(altH.leadName)+'/'+altH.leadCount); }
+
+// 11 · 🌪️ THE CHAOS METER
+{ const wantBars=chaosH.rounds.map(r=>(+r.u).toFixed(1)), wantLab=chaosH.rounds.map(r=>r.lab);
+  if(gotWC.ch.bars.join('|')===wantBars.join('|')) pass('chaos bars (shock/round): '+wantBars.join(' ')); else fail('chaos bars='+JSON.stringify(gotWC.ch.bars)+' want '+JSON.stringify(wantBars));
+  if(gotWC.ch.rlab.join('|')===wantLab.join('|')) pass('chaos round labels: '+wantLab.join(' ')); else fail('chaos rlab='+JSON.stringify(gotWC.ch.rlab)+' want '+JSON.stringify(wantLab));
+  const maxIdx=chaosH.rounds.reduce((m,r,i,a)=>r.u>a[m].u?i:m,0);
+  if(gotWC.ch.hot===maxIdx) pass('chaos hottest round highlighted: '+chaosH.rounds[maxIdx].lab); else fail('chaos hot idx='+gotWC.ch.hot+' want '+maxIdx); }
+{ const longR={MD1:'matchday 1',MD2:'matchday 2',MD3:'matchday 3',R32:'round of 32',R16:'round of 16',QF:'quarter-finals',SF:'semi-finals',FIN:'final'};
+  const ml=gotWC.ch.lines.find(l=>inc(l,'🧨'));
+  if(chaosH.mult && ml && inc(ml,(+chaosH.mult).toFixed(1)+'×') && inc(ml,longR[chaosH.maxLab])) pass('chaos verdict: '+chaosH.maxLab+' '+chaosH.mult.toFixed(1)+'× group avg'); else fail('chaos verdict "'+ml+'" want '+chaosH.mult+'× '+chaosH.maxLab); }
+
+// 12 · 🥚 THE FRAGILITY INDEX
+if(gotWC.fr.tiles.join('|')===[String(fragH.oneGoal),String(fragH.flips),String(fragH.gap)].join('|')) pass('fragility tiles: '+fragH.oneGoal+' games / '+fragH.flips+' flips / gap '+fragH.gap); else fail('fragility tiles='+JSON.stringify(gotWC.fr.tiles)+' want '+[fragH.oneGoal,fragH.flips,fragH.gap]);
+{ const fl=gotWC.fr.lines.find(l=>inc(l,'🥚'));
+  if(fl && (fragH.flips>0?(inc(fl,fragH.flips+' of '+fragH.oneGoal)):inc(fl,'Not one'))) pass('fragility flip verdict: '+fragH.flips+'/'+fragH.oneGoal); else fail('fragility flip line "'+fl+'"');
+  if(gotWC.fr.lines.some(l=>inc(l,'🧱'))) pass('fragility podium-stability line present'); else fail('fragility has no 🧱 line'); }
+
+// 13 · 🎭 PREDICTOR PERSONALITY (personal hero + census)
+{ const EMO={chalk:'🐑',maverick:'🦊',draw:'🤝',wolf:'🐺',balanced:'⚖️'}, LAB={chalk:'The Chalk Merchant',maverick:'The Calculated Maverick',draw:'The Draw Truther',wolf:'The Lone Wolf',balanced:'The Balanced Head'};
+  if(gotWC.pe.personalWrap && gotWC.pe.heroE===EMO[personaH.mine.key] && gotWC.pe.heroL===LAB[personaH.mine.key]) pass('persona hero: '+EMO[personaH.mine.key]+' '+LAB[personaH.mine.key]); else fail('persona hero e='+gotWC.pe.heroE+' l='+gotWC.pe.heroL+' want '+personaH.mine.key); }
+{ const mm=gotWC.pe.meters.map(m=>m.b);
+  if(mm.join('|')===[personaH.mine.chalk+'%',personaH.mine.draw+'%',personaH.mine.opt+'%',personaH.mine.fade+'%'].join('|')) pass('persona meters: chalk '+personaH.mine.chalk+' / draw '+personaH.mine.draw+' / opt '+personaH.mine.opt+' / fade '+personaH.mine.fade); else fail('persona meters='+JSON.stringify(mm)+' want '+[personaH.mine.chalk,personaH.mine.draw,personaH.mine.opt,personaH.mine.fade]); }
+{ const order=[['chalk',0],['maverick',1],['draw',2],['wolf',3],['balanced',4]].map(([k,ord])=>({k,n:personaH.census[k]|0,ord})).sort((a,b)=>b.n-a.n||a.ord-b.ord);
+  const wantCounts=order.map(c=>String(c.n));
+  if(gotWC.pe.quad.map(x=>x.b).join('|')===wantCounts.join('|')) pass('persona census quad: '+order.map(c=>c.k+' '+c.n).join(', ')); else fail('persona quad='+JSON.stringify(gotWC.pe.quad.map(x=>x.b))+' want '+wantCounts);
+  if(gotWC.pe.lines.some(l=>inc(l,'office census'))) pass('persona census verdict line present'); else fail('persona census line missing'); }
+
+// 14 · 🦄 THE UNICORN SCORES
+{ const dash=s=>s.replace(/-/g,'–'); const fav=unicornH[0];
+  const favRow=gotWC.uc.duo.find(l=>inc(l,dash(fav.sc)));
+  if(favRow && inc(favRow,nrdNH(fav.bought)+' bought') && inc(favRow,'landed '+fav.landed+'×')) pass('unicorn favourite '+dash(fav.sc)+': '+fav.bought+' bought / landed '+fav.landed+'×'); else fail('unicorn fav row "'+favRow+'" want '+JSON.stringify(fav));
+  const pureExists=unicornH.some(r=>r.landed===0);
+  const hasUniLine=gotWC.uc.lines.some(l=>inc(l,'never happened'))||gotWC.uc.lines.some(l=>inc(l,'No pure unicorns'));
+  if(hasUniLine) pass('unicorn verdict line renders ('+(pureExists?'a pure unicorn exists':'none — grounded')+')'); else fail('unicorn has no headline line');
+  if(gotWC.uc.lines.some(l=>inc(l,'🥇')&&inc(l,'landed'))) pass('unicorn best-paying humble scoreline line present'); else fail('unicorn humble line missing'); }
 
 // ---- assertions ----
 if(got.onPill && got.onPill.includes('The Lab')) pass('mode pill switched (The Lab)'); else fail('mode pill not on: '+got.onPill);
@@ -653,6 +1191,102 @@ await pg.waitForSelector('.nrd-quad', {timeout:8000}).catch(()=>{});
 await pg.waitForTimeout(700);
 await pg.screenshot({ path: `${SCRATCH}/nerds-390.png`, fullPage: true });
 console.log('screenshot:', `${SCRATCH}/nerds-390.png`);
+
+/* ================= WAVE C — gate checks (?tv kiosk · signed-out · below-floor) ================= */
+/* Boot a fresh context into the Lab with a given identity / KV / tv-flag, returning the page +
+   its own error log. Mirrors PASS B's Supabase stub so no live traffic is needed. */
+async function openLab(cfg){
+  const ctx2 = await browser.newContext({ viewport:{width:390,height:844} });
+  const pg2 = await ctx2.newPage();
+  const e2 = [];
+  pg2.on('pageerror', e=>e2.push('PAGEERROR: '+e.message));
+  pg2.on('console', m=>{ if(m.type()==='error' && !/Failed to load resource/.test(m.text())) e2.push('CONSOLE: '+m.text()); });
+  await pg2.addInitScript(({now, meSlug, revealed, wnVer})=>{
+    const off = new Date(now).getTime() - Date.now(); const RD = Date;
+    function ND(...a){ return a.length===0 ? new RD(RD.now()+off) : new RD(...a); }
+    ND.now = ()=>RD.now()+off; ND.parse=RD.parse.bind(RD); ND.UTC=RD.UTC.bind(RD); ND.prototype=RD.prototype; window.Date=ND;
+    if(meSlug) localStorage.setItem('wc:me', JSON.stringify(meSlug)); else localStorage.removeItem('wc:me');
+    localStorage.setItem('wc:revealed', JSON.stringify(revealed)); localStorage.setItem('wc:whatsnew', wnVer);
+  }, { now: NOW, meSlug: cfg.me||null, revealed: Object.keys(results_), wnVer: world.wnVer });
+  await pg2.route('**://fonts.googleapis.com/**', r=>r.fulfill({status:200, contentType:'text/css', body:''}));
+  await pg2.route('**://fonts.gstatic.com/**', r=>r.abort());
+  await pg2.route('**://flagcdn.com/**', flagStub);
+  await pg2.route('**://site.api.espn.com/**', r=>r.fulfill({status:200, contentType:'application/json', body:'{}'}));
+  const KVx = cfg.kv||KV, standx = cfg.standings||standings;
+  await pg2.route('**://*.supabase.co/**', r=>{
+    const u = new URL(r.request().url());
+    const send = j=>r.fulfill({status:200, contentType:'application/json', body:JSON.stringify(j)});
+    if (u.pathname.endsWith('/rpc/server_time')) return send(NOW);
+    if (u.pathname.endsWith('/rpc/standings')) return send(standx);
+    if (u.pathname.endsWith('/rpc/consensus_counts')) return send({n:0,champN:0,champMap:{},map:{}});
+    if (u.pathname.endsWith('/rpc/room_board')) return send([]);
+    if (u.pathname.endsWith('/kv')) {
+      const key = u.searchParams.get('key')||'';
+      if (key.startsWith('in.')) { const names=decodeURIComponent(key.slice(3)).replace(/^\(|\)$/g,'').split(',').map(s=>s.replace(/^"|"$/g,'').replace(/\\"/g,'"')); return send(names.filter(k=>k in KVx).map(k=>({key:k, value:JSON.stringify(KVx[k])}))); }
+      if (key.startsWith('eq.')) { const k=decodeURIComponent(key.slice(3)); return send(k in KVx ? [{key:k, value:JSON.stringify(KVx[k])}] : []); }
+      if (key.startsWith('like.')) { const pre=decodeURIComponent(key.slice(5)).replace(/\*$/,''); return send(Object.keys(KVx).filter(k=>k.startsWith(pre)).sort().map(k=>({key:k, value:JSON.stringify(KVx[k])}))); }
+      return send([]);
+    }
+    return r.fulfill({status:404, body:'{}'});
+  });
+  await pg2.goto(PAGE_URL + (cfg.tv?'?tv':''));
+  await pg2.waitForFunction(()=>typeof state!=='undefined' && typeof CONS!=='undefined', null, {timeout:15000}).catch(()=>{});
+  await pg2.waitForTimeout(500);
+  await pg2.evaluate(()=>{ try{ go('leaderboard'); }catch(e){} });
+  await pg2.waitForTimeout(200);
+  await pg2.evaluate(()=>{ const b=document.querySelector('#lbmode button[data-m="nerds"]'); if(b) b.click(); });
+  await pg2.waitForFunction(()=>typeof CONS!=='undefined' && CONS.full, null, {timeout:12000}).catch(()=>{});
+  await pg2.waitForTimeout(700);
+  return { ctx2, pg2, e2 };
+}
+const WAVEC_TITLES=['The futures board','The time machine','Your rank journey','The comeback king','Title lifelines','The prediction twin','Heart vs head','Golden goose & heartbreaker','Clutch rating','Alternate universes','The chaos meter','The fragility index','Predictor personality','The unicorn scores'];
+
+// (a) ?tv kiosk — personal chrome hidden by CSS (.tv .nrd-personal / .tv .aw-you → display:none)
+{
+  const tv = await openLab({ me:'khalid-almannai', tv:true });
+  const c = await tv.pg2.evaluate(()=>{
+    const per=Array.from(document.querySelectorAll('.nrd-personal')), you=Array.from(document.querySelectorAll('.aw-you'));
+    const allNone=els=>els.every(e=>getComputedStyle(e).display==='none');
+    return { onTv:document.body.classList.contains('tv'), labShown:!!document.querySelector('.nrd-tiles'),
+      perN:per.length, youN:you.length, perHidden:per.length>0&&allNone(per), youHidden:you.length>0&&allNone(you) };
+  });
+  await tv.pg2.screenshot({ path:`${SCRATCH}/nerds-tv-390.png`, fullPage:true }).catch(()=>{});
+  if(c.onTv && c.labShown && c.perN>0 && c.perHidden) pass('?tv kiosk: '+c.perN+' .nrd-personal card(s) present but display:none'); else fail('tv .nrd-personal: '+JSON.stringify(c));
+  if(c.youN>0 && c.youHidden) pass('?tv kiosk: '+c.youN+' .aw-you line(s) present but display:none'); else fail('tv .aw-you: '+JSON.stringify(c));
+  if(tv.e2.length===0) pass('?tv kiosk: zero page errors'); else fail('tv errors: '+tv.e2.join(' || '));
+  await tv.ctx2.close();
+}
+// (b) signed-out — no personal cards, no .aw-you at all; office cards still read
+{
+  const so = await openLab({ me:null, tv:false });
+  const c = await so.pg2.evaluate(()=>{
+    const titles=Array.from(document.querySelectorAll('.aw-card .aw-t b')).map(b=>b.textContent.trim());
+    return { labShown:!!document.querySelector('.nrd-tiles'), journey:titles.includes('Your rank journey'),
+      youN:document.querySelectorAll('.aw-you').length, futures:titles.includes('The futures board'), signedOut:(typeof state!=='undefined') };
+  });
+  if(c.labShown && !c.journey && c.futures) pass('signed-out: office Lab renders, no 🎢 rank-journey card'); else fail('signed-out cards: '+JSON.stringify(c));
+  if(c.youN===0) pass('signed-out: zero .aw-you personal lines in the Lab'); else fail('signed-out .aw-you count='+c.youN);
+  if(so.e2.length===0) pass('signed-out: zero page errors'); else fail('signed-out errors: '+so.e2.join(' || '));
+  await so.ctx2.close();
+}
+// (d) below-floor world (4 players) — starved cards degrade to .aw-pend, never NaN / empty charts
+{
+  const fewBlobs = blobs.slice(0,4);
+  const KV3 = { 'wc:results':results_, 'wc:kteams':kteams, 'wc:powerups_live':true };
+  fewBlobs.forEach(b=>{ KV3['wc:player:'+b.slug]=b; });
+  const standings3 = standings.filter(s=>fewBlobs.some(b=>b.slug===s.slug));
+  const bf = await openLab({ me:'khalid-almannai', tv:false, kv:KV3, standings:standings3 });
+  const c = await bf.pg2.evaluate((titles)=>{
+    const byT=t=>{const b=Array.from(document.querySelectorAll('.aw-card .aw-t b')).find(x=>x.textContent.trim()===t);return b?b.closest('.aw-card'):null;};
+    let pend=0,nan=false,present=0,starved=[];
+    titles.forEach(t=>{const el=byT(t);if(!el)return;present++;if(el.querySelector('.aw-pend')){pend++;starved.push(t);}if(/NaN/.test(el.textContent))nan=true;});
+    return { labShown:!!document.querySelector('.nrd-tiles'), pend, nan, present, starved };
+  }, WAVEC_TITLES);
+  if(c.labShown && c.pend>0) pass('below-floor (4 players): '+c.pend+' Lab card(s) show .aw-pend — '+c.starved.join(', ')); else fail('below-floor pend='+c.pend+' '+JSON.stringify(c));
+  if(!c.nan) pass('below-floor: no "NaN" in any Wave-C card'); else fail('below-floor leaked NaN');
+  if(bf.e2.length===0) pass('below-floor: zero page errors'); else fail('below-floor errors: '+bf.e2.join(' || '));
+  await bf.ctx2.close();
+}
 
 if(errs.length){ fail('page errors: '+errs.join(' || ')); } else pass('zero page errors');
 

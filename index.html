@@ -1822,8 +1822,8 @@
   /* ===== WAVE C — the Lab grows 14 cards ===== */
   /* leader-reign strip (⏳ time machine) */
   .reign{display:flex;gap:2px;height:22px;border-radius:7px;overflow:hidden;margin:6px 0 4px}
-  .reign i{display:grid;place-items:center;font-style:normal;font-size:9px;font-weight:800;color:#181106;background:rgba(180,151,89,.34);min-width:8px}
-  .reign i b{color:#181106;font-weight:800;overflow:hidden;white-space:nowrap;padding:0 4px}
+  .reign i{display:grid;place-items:center;font-style:normal;font-size:9px;font-weight:800;color:#181106;background:rgba(180,151,89,.34);min-width:8px;overflow:hidden}
+  .reign i b{color:#181106;font-weight:800;overflow:hidden;white-space:nowrap;padding:0 4px;max-width:100%}
   .reign i.cur{background:linear-gradient(115deg,var(--gold-bright),var(--gold))}
   .reign i.dim{background:rgba(180,151,89,.22);color:var(--muted)}
   .reign i.dim b{color:var(--muted)}
@@ -1890,7 +1890,7 @@
       <b class="xb-h">Just dropped: 🧪 The Lab · 📤 your card deck</b>
       <span class="xb-sub">The office’s picks finally get X-rayed, every big moment mints a card — and the ⚡ armband window is open. Tap in:</span>
       <div class="xb-feats">
-        <button class="xb-feat" onclick="xbGoMode('nerds')"><span class="xf-ic" aria-hidden="true">🧪</span><span class="xf-tx"><b>The Lab<i class="xf-new">NEW</i></b><small>27 cards of office truth — the herd-o-meter, the favourite tax, who can still win</small></span><span class="xf-go" aria-hidden="true">›</span></button>
+        <button class="xb-feat" onclick="xbGoMode('nerds')"><span class="xf-ic" aria-hidden="true">🧪</span><span class="xf-tx"><b>The Lab<i class="xf-new">NEW</i></b><small>41 cards of office truth — the futures board, your rank journey, the chaos meter</small></span><span class="xf-go" aria-hidden="true">›</span></button>
         <button class="xb-feat" onclick="openShareTray()"><span class="xf-ic" aria-hidden="true">📤</span><span class="xf-tx"><b>Your card deck</b><small>every big moment mints a share card — preview it, then drop it in the chat</small></span><span class="xf-go" aria-hidden="true">›</span></button>
         <button class="xb-feat" onclick="openFaq('power-up')"><span class="xf-ic" aria-hidden="true">⚡</span><span class="xf-tx"><b>Captain’s armband ×2</b><small>arm a Quarter-final pick before Thursday’s locks — shield &amp; upset bonus too</small></span><span class="xf-go" aria-hidden="true">›</span></button>
       </div>
@@ -2133,7 +2133,7 @@
       <div class="wn-h">What’s new</div>
       <div class="wn-sub">⚡ Power-ups are <b>LIVE</b> for the Quarter-finals — arm before Thursday’s locks. Plus the new 🧪 stats Lab and your 📤 share-card deck.</div>
       <button class="wn-item" onclick="wnGoFaq('power-up')"><span class="wn-ic">⚡</span><span class="wn-tx"><b>Captain’s Armband — arm it now</b><span>One per round from the QF. Arm a match before it locks and its advance + exact points count DOUBLE. On the QF cards.</span></span><span class="wn-go">›</span></button>
-      <button class="wn-item" onclick="wnGoNerds()"><span class="wn-ic">🧪</span><span class="wn-tx"><b>The Lab</b><span>The whole office as one dataset — hit rates, the points curve, the hive mind, dead champion tickets. Leaderboard → 🧪 The Lab.</span></span><span class="wn-go">›</span></button>
+      <button class="wn-item" onclick="wnGoNerds()"><span class="wn-ic">🧪</span><span class="wn-tx"><b>The Lab — 14 new cards</b><span>41 cards now: the futures board maps every bracket outcome, your rank journey traces the whole ride, plus the chaos meter, prediction twin, clutch rating &amp; more. Leaderboard → 🧪 The Lab.</span></span><span class="wn-go">›</span></button>
       <button class="wn-item" onclick="wnGoBrags()"><span class="wn-ic">📤</span><span class="wn-tx"><b>Your share-card deck</b><span>Every brag you’ve earned, one tap on the gold 📤 button by your thumb. Cards preview first — nothing sends until you say so.</span></span><span class="wn-go">›</span></button>
       <div class="wn-more">🛡 Streak Shield and 🦅 Upset Bonus run automatically from the QF — the same kit for every player, nothing to buy. 🏆 Title races run live under Leaderboard → Awards; titles never move points.</div>
       <button class="wn-ok" onclick="dismissWhatsNew()">Got it</button>
@@ -6393,6 +6393,27 @@ async function renderNerds(body){
     }
   }
   html+='</div>';
+  /* ===== WAVE C — 14 new Lab cards (renderers defined after renderNerds) =====
+     ctx carries the two lazy caches (CONS.wc + WCR.v) plus the standings this
+     render already fetched; c/wc/r may be null while consensus loads, and every
+     card degrades to its own .aw-pend line. Order matches the mockup contract. */
+  {
+    const wcCtx={c:c,wc:(c&&c.wc)||null,r:(WCR&&WCR.v)||null,rows:rows,sorted:sorted,settled:settled,me:state.meSlug,meRow:meRow};
+    html+=(typeof wcCardFutures==='function'?wcCardFutures(wcCtx):'');
+    html+=(typeof wcCardTimeMachine==='function'?wcCardTimeMachine(wcCtx):'');
+    html+=(typeof wcCardJourney==='function'?wcCardJourney(wcCtx):'');
+    html+=(typeof wcCardComeback==='function'?wcCardComeback(wcCtx):'');
+    html+=(typeof wcCardLifelines==='function'?wcCardLifelines(wcCtx):'');
+    html+=(typeof wcCardTwin==='function'?wcCardTwin(wcCtx):'');
+    html+=(typeof wcCardHeart==='function'?wcCardHeart(wcCtx):'');
+    html+=(typeof wcCardGoose==='function'?wcCardGoose(wcCtx):'');
+    html+=(typeof wcCardClutch==='function'?wcCardClutch(wcCtx):'');
+    html+=(typeof wcCardUniverses==='function'?wcCardUniverses(wcCtx):'');
+    html+=(typeof wcCardChaos==='function'?wcCardChaos(wcCtx):'');
+    html+=(typeof wcCardFragility==='function'?wcCardFragility(wcCtx):'');
+    html+=(typeof wcCardPersona==='function'?wcCardPersona(wcCtx):'');
+    html+=(typeof wcCardUnicorn==='function'?wcCardUnicorn(wcCtx):'');
+  }
   /* NERD CORNER — loose numbers with nowhere else to live */
   html+='<div class="aw-card"><div class="aw-hd"><span class="aw-ic">🥼</span><div class="aw-t"><b>Odds &amp; ends</b><span>Loose numbers with nowhere else to live</span></div></div>';
   html+='<div class="nrd-line">⚽ <b>'+nrdN(goals)+'</b> goals across '+gN+' finished scorelines · '+draws+' group-stage draws in '+gDone+' ('+nrdPct(draws,gDone)+'%)</div>';
@@ -6419,6 +6440,504 @@ async function renderNerds(body){
     if(intro&&intro.nextSibling)body.insertBefore(row,intro.nextSibling);
     else body.insertBefore(row,body.firstChild);
   })();
+}
+
+/* ===== WAVE C — card renderers =====
+   14 Lab cards, one function each, ES5, defined AFTER renderNerds (function
+   declarations hoist, so the guarded calls inside renderNerds resolve). Each
+   reads only ctx = {c,wc,r,rows,sorted,settled,me,meRow}; every function degrades
+   to an .aw-pend "check back" line (never NaN/empty) when wc/r is null or below
+   the k-anon floors baked into the compute layer. Seal rules live upstream in
+   consensusCompute()/wcHeavy(); the renderers only shape aggregates + positive
+   leaders + "you". */
+
+/* WAVE C — THE FUTURES BOARD */
+function wcCardFutures(ctx){
+  var f=ctx.r&&ctx.r.futures;
+  var hd='<div class="aw-hd"><span class="aw-ic">🔮</span><div class="aw-t"><b>The futures board</b><span>Every remaining bracket outcome, enumerated — who lifts the Maldives in how many universes</span></div>'+(f?'<span class="aw-prz">'+nrdN(f.uni)+' universes</span>':'')+'</div>';
+  if(!f)return '<div class="aw-card">'+hd+'<div class="aw-pend"><span class="pulse"></span>The futures board opens once the field narrows to a countable bracket — check back closer to the knockouts.</div></div>';
+  function tile(v,l){return '<div class="nrd-tile"><b>'+v+'</b><span>'+l+'</span></div>';}
+  var html='<div class="aw-card">'+hd;
+  html+='<div class="nrd-tiles">'+tile(f.left,'matches left')+tile(nrdN(f.uni),'possible futures')+tile(f.distinct,'can still win it')+'</div>';
+  (f.winners||[]).forEach(function(w){
+    html+='<div class="nrd-champ"><span class="nm">'+esc(w.name)+'</span><div class="bar"><i style="width:'+Math.min(100,w.pct)+'%"></i></div><span class="pc">'+w.pct+'%</span></div>';});
+  if((f.fieldN|0)>0)
+    html+='<div class="nrd-champ"><span class="nm"><small>The field · '+f.fieldN+'</small></span><div class="bar"><i style="width:'+Math.min(100,f.fieldPct)+'%"></i></div><span class="pc">'+f.fieldPct+'%</span></div>';
+  if(f.deepest)
+    html+='<div class="nrd-line">🎟 Deepest live ticket: <b>'+ordinal(f.deepest.rank)+' place</b> still lifts it in '+(f.deepest.n===1?'exactly <b>1</b> universe':'<b>'+f.deepest.n+'</b> universes')+'</div>';
+  html+='<div class="nrd-line">🥼 Method: every one of the '+nrdN(f.uni)+' remaining winner outcomes scored against locked picks — winner and champion points only, each future weighted by the office consensus</div>';
+  if(f.mine){
+    var mw=f.mine.w|0,mu=f.mine.uni||f.uni,pc=mu?(mw/mu*100).toFixed(1):'0.0';
+    html+='<span class="aw-you">'+(mw>0?('You win it in <b>'+mw+' of '+nrdN(mu)+'</b> futures ('+pc+'%)'):('You lift it in <b>0 of '+nrdN(mu)+'</b> futures so far — your locked knockout calls still have to fall your way'))+'</span>';
+  }
+  html+='</div>';
+  return html;
+}
+
+/* WAVE C — THE TIME MACHINE */
+function wcCardTimeMachine(ctx){
+  var r=ctx.r, settled=ctx.settled||[];
+  var hd='<div class="aw-card" id="timemachine"><div class="aw-hd"><span class="aw-ic">⏳</span><div class="aw-t"><b>The time machine</b><span>The board replayed from matchday one — every reign at the top</span></div><span class="aw-prz">'+settled.length+' matches replayed</span></div>';
+  if(!r||!r.days||!r.days.length||!r.reigns||!r.reigns.length)
+    return hd+'<div class="aw-pend"><span class="pulse"></span>Re-racing the board from the first whistle — check back after the next matchday.</div></div>';
+  var first=function(n){return esc((n||'').split(' ')[0]);};
+  var MON=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  var axL=function(dk){var p=(dk||'').split('-');return p.length===3?(MON[(+p[1])-1]+' '+(+p[2])):'';};
+  var reigns=r.reigns, longest=r.longest||{name:'',days:0}, lc=r.leadChanges|0, dis=r.distinct|0;
+  var html=hd;
+  html+='<div class="nrd-tiles">'
+    +'<div class="nrd-tile"><b>'+lc+'</b><span>lead changes</span></div>'
+    +'<div class="nrd-tile"><b>'+dis+'</b><span>different leaders</span></div>'
+    +'<div class="nrd-tile"><b>'+(longest.days|0)+'<small>d</small></b><span>longest reign</span></div>'
+    +'</div>';
+  var aria='Timeline of who has led: '+reigns.map(function(x){var d=x.days|0;return (x.name||'')+' '+d+' day'+(d===1?'':'s');}).join(', ');
+  var totalD=0;reigns.forEach(function(x){totalD+=Math.max(1,x.days|0);});
+  var strip='<div class="reign" role="img" aria-label="'+esc(aria)+'">';
+  reigns.forEach(function(x){
+    var d=x.days|0, cur=!!x.cur;
+    /* only label a segment wide enough to hold the text — adjacent short reigns
+       stay label-free (.dim block only), exactly like the mockup's narrow segments,
+       so nothing overlaps into an unreadable blob. .reign i overflow:hidden clips
+       any residual spill. */
+    var share=totalD>0?(Math.max(1,d)/totalD):0;
+    var lab=(share>=0.18&&d>=3)?(first(x.name)+' · '+d+'d'):(share>=0.13?first(x.name):'');
+    strip+='<i class="'+(cur?'cur':'dim')+'" style="flex:'+Math.max(1,d)+'">'+(lab?'<b>'+lab+'</b>':'')+'</i>';
+  });
+  strip+='</div>';
+  html+=strip;
+  html+='<div class="reign-ax"><span>'+esc(axL(r.days[0]))+'</span><span>TODAY</span></div>';
+  if(longest.name)
+    html+='<div class="nrd-line">👑 Longest reign: <b>'+esc(longest.name)+'</b> — '+(longest.days|0)+' straight day'+((longest.days|0)===1?'':'s')+' in gold at the top of the board</div>';
+  if(lc>0)
+    html+='<div class="nrd-line">🔁 The lead has changed hands <b>'+lc+' time'+(lc===1?'':'s')+'</b> — '+dis+' different colleague'+(dis===1?'':'s')+' have topped the pile</div>';
+  else if(longest.name)
+    html+='<div class="nrd-line">🔁 One name has led from the first whistle — <b>'+esc(longest.name)+'</b> has never been caught</div>';
+  html+='</div>';
+  return html;
+}
+
+/* WAVE C — YOUR RANK JOURNEY (personal, hides on ?tv) */
+function wcCardJourney(ctx){
+  if(!ctx.me||!ctx.r||!ctx.r.journey)return '';
+  var j=ctx.r.journey, ranks=j.ranks||[], ns=j.n||[], D=ranks.length;
+  var hd='<div class="aw-card nrd-personal" id="journey"><div class="aw-hd"><span class="aw-ic">🎢</span><div class="aw-t"><b>Your rank journey</b><span>Your position after every matchday — the whole ride, one line</span></div><span class="aw-prz">personal</span></div>';
+  if(D<2)
+    return hd+'<div class="aw-pend"><span class="pulse"></span>Your ride needs a couple of matchdays to draw — check back after the next round.</div></div>';
+  var MON=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  var axL=function(dk){var p=(dk||'').split('-');return p.length===3?(MON[(+p[1])-1]+' '+(+p[2])):'';};
+  var fieldMax=2,i;for(i=0;i<ns.length;i++){if((ns[i]|0)>fieldMax)fieldMax=ns[i]|0;}
+  var denom=Math.max(fieldMax,2)-1;
+  var fmt=function(v){return Math.round(v*10)/10;};
+  var X=function(k){return 10+(k*280/(D-1));};
+  var Y=function(rk){return 8+((rk-1)*60/denom);};
+  var peak=j.peak||{r:ranks[0],i:0}, low=j.low||{r:ranks[0],i:0};
+  var pts=[],k;for(k=0;k<D;k++){pts.push(fmt(X(k))+','+fmt(Y(ranks[k])));}
+  var startR=ranks[0], nowR=ranks[D-1];
+  var pkX=fmt(X(peak.i)), pkY=fmt(Y(peak.r)), endX=fmt(X(D-1)), endY=fmt(Y(nowR));
+  var svg='<svg class="spark" viewBox="0 0 300 86" aria-label="Rank over time: started '+ordinal(startR)+', peaked at '+ordinal(peak.r)+', now '+ordinal(nowR)+'">';
+  svg+='<line x1="10" y1="8" x2="290" y2="8" stroke="rgba(244,238,227,.08)" stroke-width="1"></line>';
+  svg+='<line x1="10" y1="66" x2="290" y2="66" stroke="rgba(244,238,227,.08)" stroke-width="1"></line>';
+  svg+='<text x="8" y="6" fill="rgba(244,238,227,.4)" font-size="7" font-weight="700">1st</text>';
+  svg+='<text x="8" y="76" fill="rgba(244,238,227,.4)" font-size="7" font-weight="700">'+ordinal(fieldMax)+'</text>';
+  svg+='<polyline points="'+pts.join(' ')+'" fill="none" stroke="#b49759" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></polyline>';
+  if(peak.i!==D-1){
+    svg+='<circle cx="'+pkX+'" cy="'+pkY+'" r="3" fill="#e3d3a3"></circle>';
+    if(peak.i>0)svg+='<text x="'+pkX+'" y="'+fmt(Math.max(pkY-6.9,6))+'" fill="#e3d3a3" font-size="8" font-weight="800" text-anchor="middle">'+ordinal(peak.r)+' · peak</text>';
+  }
+  svg+='<circle cx="'+endX+'" cy="'+endY+'" r="3.5" fill="#e3d3a3" stroke="#0f0f12" stroke-width="2"></circle>';
+  svg+='<text x="'+fmt(endX-2)+'" y="'+fmt(Math.min(endY+14,82))+'" fill="#f4eee3" font-size="8.5" font-weight="800" text-anchor="end">'+ordinal(nowR)+' now</text>';
+  svg+='<text x="10" y="66" fill="rgba(244,238,227,.55)" font-size="8" font-weight="800">'+ordinal(startR)+' start</text>';
+  svg+='</svg>';
+  var html=hd+svg;
+  /* axis = evenly-spaced ROUND labels (MD1 MD2 MD3 R32 R16 …), matching the mockup's
+     reign-ax spec — the whole-ride context, not the time machine's day endpoints */
+  var RORD=['MD1','MD2','MD3','R32','R16','QF','SF','FIN'];
+  var rseen={},rlabs=[];
+  (ctx.settled||[]).forEach(function(f){var rr=(f.round==='FINAL')?'FIN':f.round;if(rr&&!rseen[rr])rseen[rr]=1;});
+  RORD.forEach(function(rr){if(rseen[rr])rlabs.push(rr);});
+  html+='<div class="reign-ax">'+(rlabs.length?rlabs.map(function(rr){return '<span>'+rr+'</span>';}).join(''):('<span>'+esc(axL((ctx.r.days||[])[0]||''))+'</span><span>TODAY</span>'))+'</div>';
+  var best=j.best|0;
+  if(best>0)html+='<div class="nrd-line">🎢 Your best climb: <b>+'+best+' place'+(best===1?'':'s')+'</b> in a single night — one matchday you jumped clean up the field</div>';
+  else html+='<div class="nrd-line">🎢 No overnight surges yet — your climb has been a steady one, not a leap</div>';
+  var td=j.topDays|0;
+  html+='<span class="aw-you">Peak <b>'+ordinal(peak.r)+'</b> · low <b>'+ordinal(low.r)+'</b> · '+(td>0?('you’ve spent <b>'+td+' day'+(td===1?'':'s')+'</b> inside the top 10'):'still chasing your first day inside the top 10')+'</span>';
+  html+='</div>';
+  return html;
+}
+
+/* WAVE C — THE COMEBACK KING */
+function wcCardComeback(ctx){
+  var r=ctx.r;
+  var hd='<div class="aw-card" id="comeback"><div class="aw-hd"><span class="aw-ic">🧗</span><div class="aw-t"><b>The comeback king</b><span>Biggest climb from a tournament low — the long way up, measured</span></div><span class="aw-prz">live race</span></div>';
+  var pend='<div class="aw-pend"><span class="pulse"></span>No big climbs on the board yet — the comeback race opens once the field starts moving.</div>';
+  if(!r||!r.comeback)return hd+pend+'</div>';
+  var cb=r.comeback, rows=cb.rows||[];
+  var first=function(n){return esc((n||'').split(' ')[0]);};
+  var youLine=function(m){var v=m.v|0;
+    if(v>0)return '<span class="aw-you">Your comeback: <b>+'+v+'</b> — from '+ordinal(m.low)+' at your lowest to '+ordinal(m.now)+' today</span>';
+    return '<span class="aw-you">Your best rank is also where you sit now — <b>'+ordinal(m.now)+'</b>, no lower all tournament</span>';};
+  if(!rows.length)
+    return hd+pend+((ctx.me&&cb.mine)?youLine(cb.mine):'')+'</div>';
+  var html=hd;
+  rows.slice(0,3).forEach(function(x,i){
+    var me=!!ctx.me&&x.slug===ctx.me;
+    html+='<div class="aw-row'+(me?' me':'')+'"><span class="aw-rk">'+(i+1)+'</span><div class="avatar">'+avatarFill(x.name)+'</div><div class="aw-nm">'+esc(x.name)+' <small>· was '+ordinal(x.low)+'</small>'+(me?'<span class="youtag">YOU</span>':'')+'</div><span class="aw-v">+'+(x.v|0)+'<small>places</small></span></div>';
+  });
+  var top=rows[0];
+  html+='<div class="nrd-line">🧗 <b>'+first(top.name)+'</b> was <b>'+ordinal(top.low)+'</b> at their lowest — they sit <b>'+ordinal(top.now)+'</b> this morning. The single greatest recovery in the pool</div>';
+  if(ctx.me&&cb.mine)html+=youLine(cb.mine);
+  html+='</div>';
+  return html;
+}
+
+/* WAVE C — TITLE LIFELINES */
+function wcCardLifelines(ctx){
+  var f=ctx.r&&ctx.r.futures;
+  var hd='<div class="aw-hd"><span class="aw-ic">🧬</span><div class="aw-t"><b>Title lifelines</b><span>Whose Maldives hopes ride on which of the teams still left</span></div><span class="aw-prz">top 10 audit</span></div>';
+  if(!f)return '<div class="aw-card">'+hd+'<div class="aw-pend"><span class="pulse"></span>Title lifelines open once the bracket narrows — check back when the quarter-finals are set.</div></div>';
+  var fl=function(t){return FL[t]?flagTag(FL[t])+' ':'';};
+  var hopes=f.hopes||[];
+  var html='<div class="aw-card">'+hd;
+  var youLine='';
+  if(ctx.me&&state.player&&state.player.champ){
+    var mine=state.player.champ,alive=(f.alive||[]).indexOf(mine)>=0,
+        share=(ctx.c&&ctx.c.champN)?nrdPct((ctx.c.champMap&&ctx.c.champMap[mine])||0,ctx.c.champN):0;
+    youLine='<span class="aw-you">Your title ticket: '+fl(mine)+'<b>'+esc(mine)+'</b> — '+(alive?('alive'+(share?(', riding with <b>'+share+'%</b> of the office'):'')):'💀 already out. It happens to the best of us')+'</span>';
+  }
+  if(!hopes.length){
+    html+='<div class="aw-pend">No champion ticket in the current top 10 is still alive — check back after the next kickoff.</div>'+youLine+'</div>';
+    return html;
+  }
+  hopes.forEach(function(h){
+    html+='<div class="nrd-champ">'+fl(h.t)+'<span class="nm">'+esc(h.t)+'</span><div class="bar"><i style="width:'+Math.min(100,Math.round(h.n/10*100))+'%"></i></div><span class="pc">'+h.n+' of 10</span></div>';});
+  var top=hopes[0];
+  if(top.n>=6)
+    html+='<div class="nrd-line">🧬 <b>'+top.n+' of the top 10</b> need '+fl(top.t)+'<b>'+esc(top.t)+'</b> to go all the way — one semi-final upset detonates the endgame for most of the board</div>';
+  else
+    html+='<div class="nrd-line">🧬 '+fl(top.t)+'<b>'+esc(top.t)+'</b> carries the most title hope up top — <b>'+top.n+' of the top 10</b> need them to lift it</div>';
+  if(f.cond&&f.cond.team&&f.cond.winner)
+    html+='<div class="nrd-line">🎭 If '+fl(f.cond.team)+'<b>'+esc(f.cond.team)+'</b> lift it instead, the pool reshuffles — <b>'+esc(f.cond.winner)+'</b> tops the room across those futures</div>';
+  html+=youLine;
+  html+='</div>';
+  return html;
+}
+
+/* WAVE C — THE PREDICTION TWIN */
+function wcCardTwin(ctx){
+  var t=ctx.wc&&ctx.wc.twin;
+  var html='<div class="aw-card"><div class="aw-hd"><span class="aw-ic">👯</span><div class="aw-t"><b>The prediction twin</b><span>The colleague who sees this World Cup exactly like you do — locked calls only</span></div>';
+  var przN=(t&&t.mine)?t.mine.n:((t&&t.pair)?t.pair.n:null);
+  html+=(przN!=null?'<span class="aw-prz">'+przN+' shared calls</span>':'')+'</div>';
+  if(!t||(!t.mine&&!t.pair)){
+    html+='<div class="aw-pend">Twins emerge once colleagues share 15+ locked calls — check back after the next matchday.</div>';
+    return html+'</div>';
+  }
+  if(t.mine){
+    var mp=Math.round(t.mine.pct);
+    html+='<div class="nrd-meter"><div class="lab"><span>You ↔ '+esc(t.mine.name)+' · your twin</span><b>'+mp+'%</b></div><div class="nrd-track"><i style="width:'+mp+'%"></i></div></div>';
+  }
+  if(t.avg!=null){
+    var av=Math.round(t.avg);
+    html+='<div class="nrd-meter"><div class="lab"><span>Average pair in the office</span><b>'+av+'%</b></div><div class="nrd-track"><i class="alt" style="width:'+av+'%"></i></div></div>';
+  }
+  if(t.pair){
+    html+='<div class="nrd-line">👯 Most-alike pair in the whole pool: <b>'+esc(t.pair.a)+' &amp; '+esc(t.pair.b)+'</b> — '+Math.round(t.pair.pct)+'% identical across '+t.pair.n+' locked calls</div>';
+  }
+  if(t.mine){
+    if(t.nemesis){
+      var nm=t.nemesis,meC=nm.me|0,thC=nm.them|0;
+      var myName=(ctx.meRow&&ctx.meRow.name)?ctx.meRow.name:((state.player&&state.player.name)?state.player.name:'You');
+      var lead=(meC>thC)?'you lead the head-to-head':((meC<thC)?'they lead the head-to-head':'it’s dead level');
+      html+='<div class="aw-you">'
+        +'<div class="h2h">'
+          +'<span class="who"><span class="avatar">'+avatarFill(myName)+'</span>You</span>'
+          +'<span class="sc">'+meC+' – '+thC+'</span>'
+          +'<span class="who"><span class="avatar">'+avatarFill(nm.name)+'</span>'+esc(nm.name)+'</span>'
+        +'</div>'
+        +'⚔️ Your nemesis: <b>'+esc(nm.name)+'</b> — you two disagreed on '+nm.n+' settled matches, and '+lead+' <b>'+meC+'–'+thC+'</b>'
+      +'</div>';
+    }
+  } else {
+    html+='<div class="aw-pend">Lock in your picks to meet your prediction twin — and find your nemesis.</div>';
+  }
+  return html+'</div>';
+}
+
+/* WAVE C — HEART VS HEAD (aggregates only, no player names) */
+function wcCardHeart(ctx){
+  var h=ctx.wc&&ctx.wc.heart;
+  /* Own-nation aggregate: dormant until the office logs 15+ own-nation calls. With no
+     signal at all we render nothing (like the personal cards) rather than a check-back
+     stub for a slice the data can't yet feed — every Lab card that renders is above floor. */
+  if(!h)return '';
+  var html='<div class="aw-card"><div class="aw-hd"><span class="aw-ic">❤️</span><div class="aw-t"><b>Heart vs head</b><span>Do colleagues over-back their own nation — and does the heart pay?</span></div><span class="aw-prz">aggregate only</span></div>';
+  var bm=Number(h.backMult).toFixed(1);
+  var pdn=Number(h.ptsDelta),pds=(pdn>0?'+':'')+pdn.toFixed(1);
+  var pHit=Math.round(h.pHit),oHit=Math.round(h.oHit);
+  html+='<div class="nrd-tiles" style="grid-template-columns:1fr 1fr">'
+    +'<div class="nrd-tile"><b>×'+bm+'</b><span>own-nation backing vs office</span></div>'
+    +'<div class="nrd-tile"><b>'+pds+'</b><span>pts per patriot call</span></div>'
+    +'</div>';
+  html+='<div class="nrd-key"><span class="a"><i></i>own-nation calls</span><span class="b"><i></i>everyone else’s calls</span></div>';
+  html+='<div class="nrd-duo"><div class="lab"><span>Hit rate when backing your own flag</span><span><b>'+pHit+'%</b> vs '+oHit+'%</span></div>'
+    +'<div class="bar a"><i style="width:'+pHit+'%"></i></div>'
+    +'<div class="bar b"><i style="width:'+oHit+'%"></i></div></div>';
+  var diff=oHit-pHit;
+  if(diff>0)html+='<div class="nrd-line">💸 The patriot tax is real: own-nation calls land <b>'+diff+' points</b> less often than the office’s neutral calls on the same matches</div>';
+  else if(diff<0)html+='<div class="nrd-line">❤️ The heart pays: own-nation calls land <b>'+(-diff)+' points</b> more often than the office’s neutral calls on the same matches</div>';
+  else html+='<div class="nrd-line">⚖️ A wash: own-nation calls land at exactly the office rate on the same matches</div>';
+  if(h.shock){
+    var st=h.shock;
+    var sfl=(typeof FL!=='undefined'&&FL[st.team])?flagTag(FL[st.team]):'';
+    html+='<div class="nrd-line">'+(sfl?sfl+' ':'')+'The exception: <b>'+esc(st.team)+'</b>’s own backers called a result only <b>'+st.pct+'%</b> of the office saw coming — and cashed it</div>';
+  }
+  return html+'</div>';
+}
+
+/* WAVE C — GOLDEN GOOSE & HEARTBREAKER */
+function wcCardGoose(ctx){
+  var wc=ctx.wc, g=wc&&wc.goose;
+  var fl=function(t){return FL[t]?flagTag(FL[t]):'';};
+  var html='<div class="aw-card">'
+    +'<div class="aw-hd"><span class="aw-ic">🦢</span><div class="aw-t"><b>Golden goose &amp; heartbreaker</b><span>Which teams minted the office’s points — and which torched them</span></div><span class="aw-prz">32 teams audited</span></div>';
+  var minted=(g&&g.minted)||[],torched=(g&&g.torched)||[];
+  if(!minted.length&&!torched.length){
+    html+='<div class="aw-pend">Not enough settled backings to audit the teams yet — check back once more results land.</div>';
+    return html+'</div>';
+  }
+  if(minted.length){
+    var mMax=minted[0].v||1;minted.forEach(function(e){if(e.v>mMax)mMax=e.v;});
+    html+='<div class="nrd-key"><span class="a"><i></i>points minted for the office</span></div>';
+    minted.forEach(function(e){
+      html+='<div class="nrd-champ">'+fl(e.t)+'<span class="nm">'+esc(e.t)+'</span><div class="bar"><i style="width:'+(e.v/mMax*100).toFixed(1)+'%"></i></div><span class="pc">'+nrdN(e.v)+'</span></div>';
+    });
+  }
+  if(torched.length){
+    var tMax=torched[0].v||1;torched.forEach(function(e){if(e.v>tMax)tMax=e.v;});
+    html+='<div class="nrd-key" style="margin-top:10px"><span class="b"><i></i>points torched — wrong backings + dead champion tickets</span></div>';
+    torched.forEach(function(e){
+      html+='<div class="nrd-champ">'+fl(e.t)+'<span class="nm">'+esc(e.t)+'</span><div class="bar"><i style="width:'+(e.v/tMax*100).toFixed(1)+'%;background:linear-gradient(90deg,#1d4fa8,var(--c-blue))"></i></div><span class="pc">−'+nrdN(e.v)+'</span></div>';
+    });
+  }
+  if(g&&g.burn&&g.burn.t){
+    html+='<div class="nrd-line">🎫 <b>'+nrdN(g.burn.n)+' champion '+(g.burn.n===1?'ticket':'tickets')+'</b> died with '+esc(g.burn.t)+' — the single biggest heartbreak of the tournament so far</div>';
+  }
+  return html+'</div>';
+}
+
+/* WAVE C — CLUTCH RATING */
+function wcCardClutch(ctx){
+  var cl=ctx.wc&&ctx.wc.clutch;
+  var html='<div class="aw-card"><div class="aw-hd"><span class="aw-ic">🧊</span><div class="aw-t"><b>Clutch rating</b><span>Group-stage form vs knockout form — who shows up when it counts double</span></div><span class="aw-prz">min 12 KO calls</span></div>';
+  var youLine='';
+  if(cl&&cl.mine){
+    var mg=cl.mine.g|0,mk=cl.mine.k|0;
+    var tail=(mk>mg)?'you show up when it counts double':((mk<mg)?'the knockout cliff caught you too':'dead level under the lights');
+    youLine='<span class="aw-you">You: <b>'+mg+'%</b> in the groups → <b>'+mk+'%</b> in the knockouts — '+tail+'</span>';
+  }
+  if(!cl||!cl.rows||!cl.rows.length){
+    html+='<div class="aw-pend">Clutch ratings unlock once colleagues have 20+ group and 12+ knockout calls settled — check back after the next round.</div>'+youLine;
+    return html+'</div>';
+  }
+  cl.rows.slice(0,3).forEach(function(x,i){
+    var isMe=!!ctx.me&&x.slug===ctx.me;
+    html+='<div class="aw-row'+(isMe?' me':'')+(i===0?' lead':'')+'">'
+      +'<span class="aw-rk">'+(i+1)+'</span>'
+      +'<div class="avatar">'+avatarFill(x.name)+'</div>'
+      +'<div class="aw-nm">'+esc(x.name)+(isMe?'<span class="youtag">YOU</span>':'')+' <small>· '+(x.g|0)+'% groups → '+(x.k|0)+'% KO</small></div>'
+      +'<span class="aw-v">+'+(x.d|0)+'<small>pts</small></span>'
+      +'</div>';
+  });
+  var odrop=(cl.og|0)-(cl.ok|0);
+  html+='<div class="nrd-line">'+(odrop>0
+      ? '🧊 The office as a whole drops <b>'+odrop+' points</b> of hit rate in the knockouts — these three got <em>better</em> under the lights'
+      : (odrop<0
+      ? '🧊 The office actually sharpens by <b>'+(-odrop)+' points</b> in the knockouts — and these three sharpened hardest'
+      : '🧊 The office holds its hit rate steady into the knockouts — these three still pushed past it'))+'</div>';
+  html+=youLine;
+  return html+'</div>';
+}
+
+/* WAVE C — ALTERNATE UNIVERSES */
+function wcCardUniverses(ctx){
+  var a=ctx.r&&ctx.r.alt;
+  var html='<div class="aw-card">'
+    +'<div class="aw-hd"><span class="aw-ic">🪞</span><div class="aw-t"><b>Alternate universes</b><span>The podium under three other rulebooks — is the lead real, or a scoring artifact?</span></div><span class="aw-prz">4 rulesets</span></div>';
+  if(!a||!a.slots||!a.slots.length){
+    html+='<div class="aw-pend">The rival rulebooks light up once the first results land — check back after the next matchday.</div>';
+    return html+'</div>';
+  }
+  var medals=['🥇','🥈','🥉'];
+  html+='<div class="alt-grid">';
+  a.slots.forEach(function(s,si){
+    html+='<div class="alt-slot'+(si===0?' official':'')+'"><span class="lb">'+s.lab+'</span>';
+    (s.podium||[]).forEach(function(pd,pi){
+      var mv=pd.mv|0;
+      html+='<span class="pd'+(mv!==0?' moved':'')+'"><u>'+(medals[pi]||'')+'</u>'+esc(pd.name)+(mv!==0?' <small>'+(mv>0?'▲'+mv:'▼'+(-mv))+'</small>':'')+'</span>';
+    });
+    html+='</div>';
+  });
+  html+='</div>';
+  var lead=esc(a.leadName),k=a.leadCount|0,total=a.slots.length,deth=[];
+  a.slots.forEach(function(s){if(s.podium&&s.podium.length&&s.podium[0].name!==a.leadName)deth.push({lab:s.lab,winner:esc(s.podium[0].name)});});
+  var line;
+  if(k>=total)
+    line='🪞 <b>'+lead+' leads all '+total+' universes</b> — bulletproof. Every rulebook we ran crowns the same head, so this lead is no quirk of the scoring sheet';
+  else if(k===total-1&&deth.length===1)
+    line='🪞 <b>'+lead+' leads in '+k+' of '+total+' universes</b> — earned, not a scoring artifact. Only under <b>'+deth[0].lab+'</b> does '+deth[0].winner+' edge ahead';
+  else
+    line='🪞 <b>'+lead+' leads in '+k+' of '+total+' universes</b> — swap the rulebook and the crown changes hands; part of this lead is the scoring sheet, not daylight';
+  html+='<div class="nrd-line">'+line+'</div>';
+  return html+'</div>';
+}
+
+/* WAVE C — THE CHAOS METER */
+function wcCardChaos(ctx){
+  var wc=ctx.wc, ch=wc&&wc.chaos;
+  var html='<div class="aw-card">'
+    +'<div class="aw-hd"><span class="aw-ic">🌪️</span><div class="aw-t"><b>The chaos meter</b><span>How shocking each round was — surprise measured against the office’s own consensus</span></div><span class="aw-prz">shock units</span></div>';
+  if(!ch||!ch.rounds||!ch.rounds.length){
+    html+='<div class="aw-pend">The office hasn’t settled enough rounds to measure the shocks yet — check back once the results roll in.</div>';
+    return html+'</div>';
+  }
+  var rounds=ch.rounds;
+  var maxU=0,maxIdx=0;
+  rounds.forEach(function(r,i){if(r.u>maxU){maxU=r.u;maxIdx=i;}});
+  if(maxU<=0)maxU=1;
+  html+='<div class="nrd-rounds">'+rounds.map(function(r,i){
+    var hh=Math.max(3,Math.round(r.u/maxU*100));
+    return '<div class="rc"><i'+(i===maxIdx?' class="hot"':'')+' style="height:'+hh+'%"><em>'+(+r.u).toFixed(1)+'</em></i></div>';
+  }).join('')+'</div>';
+  html+='<div class="nrd-rlab">'+rounds.map(function(r){return '<u>'+r.lab+'</u>';}).join('')+'</div>';
+  var longR={MD1:'matchday 1',MD2:'matchday 2',MD3:'matchday 3',R32:'round of 32',R16:'round of 16',QF:'quarter-finals',SF:'semi-finals',FIN:'final'};
+  if(ch.mult&&ch.maxLab){
+    var lname=longR[ch.maxLab]||ch.maxLab;
+    html+='<div class="nrd-line">🧨 The '+lname+' was <b>'+(+ch.mult).toFixed(1)+'×</b> as shocking as an average group matchday — the weirdest week of the office’s tournament</div>';
+  }
+  html+='<div class="nrd-line">🥼 Method: each result scores −log of the share of the office that called it — rare results burn hotter, averaged per match, per round</div>';
+  return html+'</div>';
+}
+
+/* WAVE C — THE FRAGILITY INDEX */
+function wcCardFragility(ctx){
+  var f=ctx.r&&ctx.r.frag;
+  var html='<div class="aw-card">'
+    +'<div class="aw-hd"><span class="aw-ic">🥚</span><div class="aw-t"><b>The fragility index</b><span>Flip any one one-goal game — does the podium survive?</span></div><span class="aw-prz">flip test</span></div>';
+  if(!f||!f.oneGoal){
+    html+='<div class="aw-pend">No one-goal games have settled yet — the podium hasn\'t been stress-tested. Check back after the next matchday.</div>';
+    return html+'</div>';
+  }
+  var one=f.oneGoal|0,fl=f.flips|0,gap=f.gap|0;
+  var tile=function(v,l){return '<div class="nrd-tile"><b>'+v+'</b><span>'+l+'</span></div>';};
+  html+='<div class="nrd-tiles">'
+    +tile(one,(one===1?'one-goal game':'one-goal games'))
+    +tile(fl,'flips move the podium')
+    +tile(gap,'pts, tightest podium gap')
+    +'</div>';
+  if(fl>0)
+    html+='<div class="nrd-line">🥚 <b>'+fl+' of '+one+'</b> one-goal '+(one===1?'game':'games')+' would trade podium places if the ball had bounced the other way — that\'s how thin the margins are up top</div>';
+  else
+    html+='<div class="nrd-line">🥚 <b>Not one</b> of the '+one+' one-goal '+(one===1?'game':'games')+' reshuffles the podium — the top three earned their places outright</div>';
+  if(fl===0)
+    html+='<div class="nrd-line">🧱 The podium is shatter-proof — '+(gap===0?'even level on points, tiebreakers hold every place through every counterfactual':'even the tightest <b>'+gap+' pt'+(gap===1?'':'s')+'</b> gap holds through every counterfactual')+'</div>';
+  else if(gap===0)
+    html+='<div class="nrd-line">🧱 The closest two podium places are <b>level on points</b> — only tiebreakers keep them apart, and one flipped result unmakes them</div>';
+  else
+    html+='<div class="nrd-line">🧱 Just <b>'+gap+' pt'+(gap===1?'':'s')+'</b> separate the closest two podium places — one bounced result is all it takes</div>';
+  return html+'</div>';
+}
+
+/* WAVE C — PREDICTOR PERSONALITY (personal hero rides .nrd-personal; whole card is
+   nrd-personal ONLY when the census is unavailable) */
+function wcCardPersona(ctx){
+  var P=ctx.wc&&ctx.wc.persona;
+  if(!P)return '';
+  var mn=P.mine,cen=P.census||{};
+  var META=[
+    {k:'chalk',emoji:'🐑',lab:'chalk merchants',short:'chalk merchants'},
+    {k:'maverick',emoji:'🦊',lab:'mavericks',short:'mavericks'},
+    {k:'draw',emoji:'🤝',lab:'draw truthers',short:'draw truthers'},
+    {k:'wolf',emoji:'🐺',lab:'lone wolves',short:'lone wolves'},
+    {k:'balanced',emoji:'⚖️',lab:'balanced heads',short:'balanced heads'}
+  ];
+  var cells=META.map(function(m,i){return {emoji:m.emoji,lab:m.lab,short:m.short,n:cen[m.k]|0,ord:i};});
+  var total=0;cells.forEach(function(c){total+=c.n;});
+  var censusOn=total>0;
+  var personalHTML='';
+  if(mn){
+    var meter=function(lab,pc){pc=pc|0;return '<div class="nrd-meter"><div class="lab"><span>'+lab+'</span><b>'+pc+'%</b></div><div class="nrd-track"><i style="width:'+pc+'%"></i></div></div>';};
+    personalHTML='<div class="persona"><span class="pe">'+mn.emoji+'</span><div class="pt"><b>'+mn.label+'</b><span>'+mn.blurb+'</span></div></div>'
+      +meter('Chalk appetite',mn.chalk)
+      +meter('Draw courage',mn.draw)
+      +meter('Goal optimism',mn.opt)
+      +meter('Fade rate',mn.fade);
+  }
+  if(!censusOn&&!personalHTML)return '';
+  var hd='<div class="aw-hd"><span class="aw-ic">🎭</span><div class="aw-t"><b>Predictor personality</b><span>What kind of animal are you at the prediction desk? Your own picks decide</span></div><span class="aw-prz">personal + census</span></div>';
+  if(!censusOn)
+    return '<div class="aw-card nrd-personal">'+hd+personalHTML
+      +'<div class="aw-pend">The office census wakes up once 15+ colleagues log 20+ calls each — check back after the next matchday.</div>'
+      +'</div>';
+  var html='<div class="aw-card">'+hd;
+  if(personalHTML)html+='<div class="nrd-personal">'+personalHTML+'</div>';
+  var ord=cells.slice().sort(function(x,y){return y.n-x.n||x.ord-y.ord;});
+  html+='<div class="nrd-quad">'+ord.map(function(c,i){
+      var good=(i<2&&c.n>0),span=(i===4)?' style="grid-column:1/-1"':'';
+      return '<div class="nrd-qc'+(good?' good':'')+'"'+span+'><b>'+nrdN(c.n)+'</b><span>'+c.emoji+' '+c.lab+'</span></div>';
+    }).join('')+'</div>';
+  var a=ord[0],b=ord[1],v;
+  if(!b||b.n===0)
+    v='🎭 The office census: all <b>'+total+'</b> profiled desks read as <b>'+a.short+'</b> — one mind, no dissent yet';
+  else if(a.n===b.n)
+    v='🎭 The office census: <b>'+a.short+'</b> and <b>'+b.short+'</b> run neck and neck at <b>'+a.n+' each</b> — the desk is split straight down the middle';
+  else
+    v='🎭 The office census: <b>'+a.n+' '+a.short+'</b> lead the room, <b>'+b.short+'</b> next at <b>'+b.n+'</b> — the two minds the desk keeps splitting between';
+  html+='<div class="nrd-line">'+v+'</div>';
+  return html+'</div>';
+}
+
+/* WAVE C — THE UNICORN SCORES */
+function wcCardUnicorn(ctx){
+  var wc=ctx.wc, uni=wc&&wc.unicorn;
+  var dash=function(s){return String(s).replace(/-/g,'–');};
+  var html='<div class="aw-card">'
+    +'<div class="aw-hd"><span class="aw-ic">🦄</span><div class="aw-t"><b>The unicorn scores</b><span>Scorelines the office keeps buying that football refuses to serve</span></div><span class="aw-prz">exact-score market</span></div>';
+  if(!uni||!uni.length){
+    html+='<div class="aw-pend">The scoreline market is still warming up — check back once the office has bought a few more exact calls.</div>';
+    return html+'</div>';
+  }
+  var maxB=uni[0].bought||1; /* rows arrive sorted bought desc */
+  var used={},picks=[];
+  var addPick=function(row,tag){if(row&&!used[row.sc]){used[row.sc]=1;picks.push({r:row,tag:tag});}};
+  /* 1 · most bought */
+  addPick(uni[0],'the office favourite');
+  /* 2 · biggest bought-vs-landed ratio (landed>0), never the favourite */
+  var best=null,bestR=-1;
+  uni.forEach(function(r){if(r.sc!==uni[0].sc&&r.landed>0){var ra=r.bought/r.landed;if(ra>bestR){bestR=ra;best=r;}}});
+  if(best){var p2=String(best.sc).split('-');addPick(best,(p2.length===2&&p2[0]===p2[1])?'the romantic’s pick':'the mirage');}
+  /* 3 · the pure unicorn — most-bought that never landed */
+  var topUni=null;
+  for(var i=0;i<uni.length;i++){if(uni[i].landed===0){topUni=uni[i];break;}}
+  addPick(topUni,'the pure unicorn');
+  html+='<div class="nrd-key"><span class="a"><i></i>tickets bought</span><span class="b"><i></i>times it landed</span></div>';
+  picks.forEach(function(p){
+    var r=p.r,aw=(r.bought/maxB*100),bw=(r.landed/maxB*100);
+    html+='<div class="nrd-duo"><div class="lab"><span>'+dash(r.sc)+' · '+p.tag+'</span><span><b>'+nrdN(r.bought)+'</b> bought · landed '+r.landed+'×</span></div>'
+      +'<div class="bar a"><i style="width:'+aw.toFixed(1)+'%"></i></div>'
+      +'<div class="bar b"><i style="width:'+bw.toFixed(1)+'%"></i></div></div>';
+  });
+  var settledG=0;if(ctx.settled)ctx.settled.forEach(function(f){if(!f.kn)settledG++;});
+  if(topUni){
+    html+='<div class="nrd-line">🦄 <b>'+dash(topUni.sc)+' has never happened</b> — '+settledG+' group games in, '+nrdN(topUni.bought)+' tickets bought, zero paid. The office’s most stubborn fantasy</div>';
+  }else{
+    html+='<div class="nrd-line">🦄 No pure unicorns yet — every scoreline the office backs has landed at least once. The fantasy stays grounded, for now</div>';
+  }
+  var humble=null;
+  uni.forEach(function(r){if(r.landed>0&&r.sc!==uni[0].sc){if(!humble||r.landed>humble.landed)humble=r;}});
+  if(humble){
+    html+='<div class="nrd-line">🥇 Meanwhile the humble <b>'+dash(humble.sc)+'</b> has landed '+humble.landed+' times — the tournament’s best-paying ticket per goal predicted</div>';
+  }
+  return html+'</div>';
 }
 
 /* ===== "The Room" — player-facing picks & consensus (swarm-designed, seal-safe) =====
@@ -8926,6 +9445,7 @@ async function consensusCompute(){
         const order=["MD1","MD2","MD3","R32","R16","QF","SF","FIN"];
         const sum={},cnt={};
         done.forEach(function(f){
+          if(f.id==="k31")return; /* the third-place playoff carries round "FINAL" too — keep it out so the FIN bucket measures only the actual final (k32) */
           const c=map[f.id];if(!c)return;const r=state.results[f.id];
           let sh=0,tot=0;
           if(f.kn){for(const kk in c.w)tot+=c.w[kk];if(tot<8)return;sh=(c.w[r.w]||0)/tot;}
@@ -9127,9 +9647,18 @@ function toggleFaq(i){
    per player (localStorage-gated by version), deep-links into each new feature,
    and never nags. Persistent NEW dots on the Leaderboard nav + The Room toggle
    catch stragglers and self-clear once the surface is visited. */
-const WHATSNEW_VER="2026-07-06-nerds-deck";
+const WHATSNEW_VER="2026-07-07-wave-c-lab";
 function seenKey(k){try{return localStorage.getItem("wc:seen:"+k)==="1";}catch(e){return true;}}
 function markSeen(k){try{localStorage.setItem("wc:seen:"+k,"1");}catch(e){}updateNewDots();}
+function wcReviveDots(){ /* a fresh wave revives the persistent NEW breadcrumbs. Returning
+   users already carry wc:seen:nerds / wc:seen:lb from a prior wave, so a version bump alone
+   would re-fire the modal but leave the nav dots dark — no lingering cue toward the new cards.
+   Clear those seen flags once per wave (the guard passes the moment the spotlight is dismissed,
+   which stamps wc:whatsnew), so the NEW dots reappear and self-clear when the surface is tapped. */
+  var seen=WHATSNEW_VER;try{seen=localStorage.getItem("wc:whatsnew");}catch(e){return;}
+  if(seen===WHATSNEW_VER)return;
+  lsDel("wc:seen:nerds");lsDel("wc:seen:lb");
+}
 function updateNewDots(){
   const on=!!state.player&&!state.demo;
   const ld=document.getElementById("lb-new");if(ld)ld.style.display=(on&&(!seenKey("lb")||!seenKey("nerds")))?"":"none"; /* chained to the newest in-leaderboard surface: the nav dot survives dismissing the spotlight and only clears when the 🧪 Lab pill is actually tapped */
@@ -9864,6 +10393,7 @@ function tvLoop(){
   const bkeys=["wc:results","wc:kteams","wc:powerups_live"];if(me)bkeys.push("wc:player:"+me);
   const TV=tvMode();                                 /* MATCHNIGHT F4 — kiosk board */
   if(TV)document.body.classList.add("tv");
+  wcReviveDots();                                    /* new wave → relight the persistent NEW dots before the first paint's updateNewDots() runs */
   let painted=false;
   const paint=function(){                            /* first render — shared by ① and ② */
     state.resultsSeen=new Set(Object.keys(state.results)); /* keys this tab has ever seen — so an org save can't wipe robot results it never loaded */
