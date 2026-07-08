@@ -200,6 +200,27 @@
   /* points-table streak rows: gold but normal size (the growing-font "ladder" overflowed/overlapped) */
   .ptable .pgrp.fire{color:var(--gold-bright)}
 
+  /* MATCH HIGHLIGHTS banner — LEGO-style scene minted automatically after each big match.
+     Pure renderer: headline/score/copy come from kv wc:highlight; the image arrives lazily
+     as a data URI in wc:highlight_img so boot never waits on the pixels. */
+  .hlban{position:relative;margin-top:14px;min-height:150px;border-radius:15px;overflow:hidden;
+    border:1px solid var(--gold);background:linear-gradient(96deg,rgba(180,151,89,.2),rgba(227,211,163,.06)),rgba(13,13,17,.9);
+    display:flex;flex-direction:column;justify-content:flex-end;animation:xbrise .5s both}
+  .hlban .hl-img{position:absolute;inset:0;background-size:cover;background-position:center 30%;opacity:0;transition:opacity .6s ease}
+  .hlban .hl-img.on{opacity:1}
+  .hlban .hl-shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(5,5,7,.12) 0%,rgba(5,5,7,.38) 55%,rgba(5,5,7,.88) 100%)}
+  .hlban .hl-tx{position:relative;padding:46px 38px 12px 14px}
+  .hlban .hl-top{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+  .hlban .hl-chip{font-weight:800;font-size:9px;letter-spacing:.8px;text-transform:uppercase;color:var(--gold-bright);
+    background:rgba(13,13,17,.6);border:1px solid rgba(180,151,89,.5);border-radius:6px;padding:2.5px 7px;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+  .hlban .hl-h{display:block;font-family:var(--font-d);letter-spacing:.4px;font-size:19px;line-height:1.12;color:var(--gold-bright);text-wrap:balance;text-shadow:0 1px 8px rgba(0,0,0,.6)}
+  .hlban .hl-score{font-family:var(--font-d);letter-spacing:.5px;font-size:14px;color:var(--cream);margin-top:3px;text-shadow:0 1px 6px rgba(0,0,0,.6)}
+  .hlban .hl-sub{display:block;font-size:11.5px;line-height:1.45;color:rgba(244,238,227,.8);margin-top:3px;max-width:52ch;text-shadow:0 1px 5px rgba(0,0,0,.6)}
+  .hlban .hl-x{position:absolute;top:7px;right:7px;width:26px;height:26px;display:grid;place-items:center;background:rgba(13,13,17,.55);border:1px solid rgba(180,151,89,.45);color:var(--gold-bright);font-size:11px;line-height:1;cursor:pointer;border-radius:7px}
+  .hlban .hl-x:hover{background:rgba(180,151,89,.3)}
+  @media(min-width:600px){.hlban{min-height:196px}.hlban .hl-h{font-size:23px}}
+  @media (prefers-reduced-motion: reduce){.hlban{animation:none}.hlban .hl-img{transition:none}}
+
   .view{display:none;animation:rise .45s both}
   .view.active{display:block}
   @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
@@ -1893,6 +1914,19 @@
     </div>
   </header>
 
+  <!-- MATCH HIGHLIGHTS — LEGO-style scene auto-minted after each big match (kv wc:highlight) -->
+  <div class="hlban" id="hlban" style="display:none" role="status" aria-label="Latest match highlight">
+    <div class="hl-img" id="hl-img" aria-hidden="true"></div>
+    <div class="hl-shade" aria-hidden="true"></div>
+    <div class="hl-tx">
+      <div class="hl-top"><span class="hl-chip" id="hl-round"></span><span class="hl-chip">🧱 minted at full time</span></div>
+      <b class="hl-h" id="hl-h"></b>
+      <div class="hl-score" id="hl-score"></div>
+      <span class="hl-sub" id="hl-sub"></span>
+    </div>
+    <button class="hl-x" onclick="hlDismiss()" aria-label="Dismiss highlight">✕</button>
+  </div>
+
   <div id="xb-sent" aria-hidden="true"></div>
   <div class="xbanner" id="xbanner" style="display:none" role="status" aria-label="New this week: the stats lab, your card deck, power-ups" onclick="if(!event.target.closest('a,button'))toggleBanner()" title="Tap to expand or shrink">
     <div class="xb-ic" aria-hidden="true">✨</div>
@@ -3093,6 +3127,46 @@ function toggleBanner(){
   bannerMin=!b.classList.contains("mini");      // showing full → shrink; showing strip → expand
   try{localStorage.setItem(BANNER_MIN_KEY,bannerMin?"1":"0");}catch(e){}
   if(window.__xbSync)window.__xbSync();
+}
+/* MATCH HIGHLIGHTS banner — pure renderer for kv wc:highlight (JSON: round/headline/score/sub/ts)
+   plus wc:highlight_img (webp data URI, read separately so the heavy pixels never block boot).
+   Minted server-side after each big match — see docs/HANDOFF-highlights-banner.md. Dismissing
+   remembers the highlight's ts, so the next match's card shows fresh. */
+let HL_CUR=null,HL_T=0;
+function hlDismiss(){
+  const b=document.getElementById("hlban");if(b)b.style.display="none";
+  if(HL_CUR&&HL_CUR.ts)lsSet("wc:hl_seen",HL_CUR.ts);
+}
+function renderHighlight(h){
+  const b=document.getElementById("hlban");if(!b)return;
+  if(!h||!h.headline||lsGet("wc:hl_seen")===(h.ts||"")){b.style.display="none";HL_CUR=h||null;return;}
+  HL_CUR=h;
+  document.getElementById("hl-round").textContent=h.round||"BIG MATCH";
+  document.getElementById("hl-h").textContent=h.headline;
+  document.getElementById("hl-score").textContent=h.score||"";
+  document.getElementById("hl-sub").textContent=h.sub||"";
+  b.style.display="flex";
+}
+async function refreshHighlight(force){
+  if(!CONFIGURED||state.demo)return;
+  if(!force&&Date.now()-HL_T<55000)return;           /* same cadence guard as refreshResults */
+  HL_T=Date.now();
+  const h=await getJSON("wc:highlight",true);
+  const prev=HL_CUR&&HL_CUR.ts;
+  renderHighlight(h);
+  if(!h||!h.headline||lsGet("wc:hl_seen")===(h.ts||""))return;
+  if(prev===h.ts)return;                             /* same highlight — image already placed */
+  const img=document.getElementById("hl-img");if(!img)return;
+  img.classList.remove("on");img.style.backgroundImage="";
+  /* image source: an https URL riding in the payload, else the kv data-URI fallback —
+     either way the pixels arrive lazily, after the card is already up */
+  let src=(typeof h.img==="string"&&h.img.indexOf("https://")===0)?h.img:null;
+  if(!src){const uri=await sget("wc:highlight_img",true);
+    if(uri&&typeof uri==="string"&&uri.indexOf("data:image/")===0)src=uri;}
+  if(!src)return;
+  const pre=new Image();                             /* fade in only once decoded — no half-loaded flash */
+  pre.onload=function(){if(HL_CUR&&HL_CUR.ts===h.ts){img.style.backgroundImage='url("'+src+'")';img.classList.add("on");}};
+  pre.src=src;
 }
 /* banner chip → jump straight into a leaderboard mode (🏆 Awards / 🧪 The Lab).
    Standalone from the wnGo* spotlight paths: it must NOT touch wc:whatsnew, so using a
@@ -10271,6 +10345,7 @@ async function refreshResults(){
   }
   if(!added)return;
   bustStandings();                                   /* scoring inputs changed — next standings/KO read recomputes */
+  refreshHighlight(true);                            /* a fresh final may carry a fresh highlights card */
   saveBootSnap();                                    /* keep the instant-boot snapshot as fresh as this tab */
   if(state.view==="matches"){renderFilters();renderMatches();}
   else if(state.view==="bracket")renderBracket();
@@ -10499,6 +10574,7 @@ function tvLoop(){
   if(state.player&&!TV){if(!openReveal()){if(!maybeWrapped()){if(!maybeWhatsNew())welcomeDelta();}}}  /* TV: no boot popups on the office screen · Wrapped auto-opens once at full time */
   if(TV)tvLoop();
   setupBanner();
+  refreshHighlight(true);                            /* match-highlights card — reads its own kv keys, never blocks boot */
   renderPulse();setInterval(renderPulse,30000);
   fetchLive();setInterval(liveTick,60000);
   document.addEventListener("visibilitychange",function(){if(document.hidden)return;renderPulse();if(LIVEF.on)fetchLive();refreshResults();}); /* tab-return: pulse + live scores + any results settled while pocketed */
