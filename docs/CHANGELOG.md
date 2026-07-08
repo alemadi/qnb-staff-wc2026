@@ -5,6 +5,22 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-07-08 (Doha) — MAIN DEPLOY · MATCH HIGHLIGHTS BANNER: LEGO-style card auto-minted after each big match
+
+**Commits:** the banner commit (`index.html` + `docs/HANDOFF-highlights-banner.md`) plus this changelog note, fast-forwarded to `main` on the organizer's explicit "Push to main" (branch `claude/match-highlights-banner-h2lqq5`). **Frontend + one new `kv` key — no schema, policy, scoring or sync change.**
+
+**What:**
+- **`#hlban`** — a card at the very top of the page (between the header and the what's-new billboard): round chip, headline, scoreline and a one-line story over an AI-generated **LEGO-brick diorama** of the latest big result. Pure renderer of `kv('wc:highlight')` (JSON: `id/round/headline/score/sub/ts/img`); optional `wc:highlight_img` data-URI fallback. No key ⇒ no banner.
+- **Zero boot cost:** `refreshHighlight(true)` runs after `setupBanner()` and reads its own keys; the image lazy-loads after the card paints and fades in only once decoded. `refreshResults()` re-checks when a new final folds in, so open tabs pick up a fresh card on the normal polling cadence. ✕ dismisses per-card (`wc:hl_seen` = the card's `ts`); a new card shows again.
+- **Minting is automated:** an hourly scheduled Claude routine finds newly-final knockout matches in `wc:results`, picks the most highlight-worthy (round > goals > penalty drama > upset), generates the scene with Higgsfield (winner's kit celebrating, loser's dejected, no text in image), and upserts `wc:highlight` server-side (kv stays browser-read-only). It never overwrites a hand-written card for the same match, and disables itself after the final. Runbook: `docs/HANDOFF-highlights-banner.md`.
+- **Launch card live now:** k23 Argentina 3–2 Egypt, organizer-directed "That one wasn’t fair" edition (Egypt swarming the LEGO referee).
+
+**Verified:** real-browser load against live Supabase — card renders on mobile (420px) and desktop (900px) with image, correct headline/score, zero page errors; screenshots eyeballed. Regressions: `nerd-stats` ALL GREEN, `squad-board` ALL GREEN; `share-cards` shows only the known pre-existing 340px header-overlap failure (documented in the Wave C entry, fails on prior HEAD too). Higgsfield CDN image URL HEAD-checked (200, `immutable`).
+
+**Rollback:** `git revert <banner commit>` — frontend-only insertion (one CSS block, one markup block, three JS functions, two one-line hooks). DB inverse: `delete from kv where key in ('wc:highlight','wc:highlight_img');` (banner disappears everywhere within a minute). Pause the minting: disable the "WC26 highlights banner — hourly mint check" routine.
+
+---
+
 ## 2026-07-07 (Doha) — MAIN DEPLOY · LAB WAYFINDING: five themed sections + labeled jump chips
 
 **Commits:** the wayfinding commit (`index.html` + `tests/nerd-stats/run.mjs`) plus this changelog note, fast-forwarded to `main` on the organizer's explicit "push to main" (branch `claude/interesting-stats-ideas-7kwsbk`). **Frontend only — no DB / scoring / sync change.** Organizer's read after Wave C: 41 cards in one scroll "maybe too cluttery" — this is the agreed Level-1 fix (wayfinding, not walls).
