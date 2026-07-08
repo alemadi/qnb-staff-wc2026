@@ -5,9 +5,9 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
-## 2026-07-07 (Doha) — BRANCH · LAB WAYFINDING: five themed sections + labeled jump chips (not yet deployed)
+## 2026-07-07 (Doha) — MAIN DEPLOY · LAB WAYFINDING: five themed sections + labeled jump chips
 
-**Commits:** this commit (`index.html` + `tests/nerd-stats/run.mjs` + changelog) on `claude/interesting-stats-ideas-7kwsbk`. **Frontend only — no DB / scoring / sync change.** Organizer's read after Wave C: 41 cards in one scroll "maybe too cluttery" — this is the agreed Level-1 fix (wayfinding, not walls).
+**Commits:** the wayfinding commit (`index.html` + `tests/nerd-stats/run.mjs`) plus this changelog note, fast-forwarded to `main` on the organizer's explicit "push to main" (branch `claude/interesting-stats-ideas-7kwsbk`). **Frontend only — no DB / scoring / sync change.** Organizer's read after Wave C: 41 cards in one scroll "maybe too cluttery" — this is the agreed Level-1 fix (wayfinding, not walls).
 
 **What:**
 - **Five themed sections**, injected post-render so the card CODE keeps its historical order (a title→section map regroups the DOM): 🏆 **The race** (8 — points curve, desk spread, photo finish, stage wins, time machine, rank journey, comeback king, belt races) · 🔮 **The endgame** (8 — futures board, title lifelines, still alive, swing matches, champion market, alternate universes, fragility, armband ledger) · 🐑 **The crowd** (9 — hive mind, herd-o-meter, payoff matrix, overconfidence, raffle-or-racetrack, prediction twin, personality, heart vs head, founding members) · ⚽ **The football** (7 — goals by round, chaos, home-soil, favourite tax, predictability ladder, graveyard shift, golden goose) · 🎯 **The calls** (8 — scoreline lab, markets lab, stock market, unicorns, draw blind spot, form curve, streak spectrum, clutch). "Odds & ends" + the methodology note stay as the footer; unmapped future cards land after the sections (safe default).
