@@ -216,9 +216,15 @@
   .hlban .hl-h{display:block;font-family:var(--font-d);letter-spacing:.4px;font-size:19px;line-height:1.12;color:var(--gold-bright);text-wrap:balance;text-shadow:0 1px 8px rgba(0,0,0,.6)}
   .hlban .hl-score{font-family:var(--font-d);letter-spacing:.5px;font-size:14px;color:var(--cream);margin-top:3px;text-shadow:0 1px 6px rgba(0,0,0,.6)}
   .hlban .hl-sub{display:block;font-size:11.5px;line-height:1.45;color:rgba(244,238,227,.8);margin-top:3px;max-width:52ch;text-shadow:0 1px 5px rgba(0,0,0,.6)}
+  /* MINIMAL variant — a card with no story line (empty sub) drops the sub and
+     enlarges the headline so it carries the card. Toggled by renderHighlight
+     via .min when wc:highlight has no sub; full-copy cards are unaffected. */
+  .hlban.min .hl-h{font-size:25px;line-height:1.06}
+  .hlban.min .hl-score{font-size:15px;margin-top:5px}
+  .hlban.min .hl-sub{display:none}
   .hlban .hl-x{position:absolute;top:7px;right:7px;width:26px;height:26px;display:grid;place-items:center;background:rgba(13,13,17,.55);border:1px solid rgba(180,151,89,.45);color:var(--gold-bright);font-size:11px;line-height:1;cursor:pointer;border-radius:7px}
   .hlban .hl-x:hover{background:rgba(180,151,89,.3)}
-  @media(min-width:600px){.hlban{min-height:196px}.hlban .hl-h{font-size:23px}}
+  @media(min-width:600px){.hlban{min-height:196px}.hlban .hl-h{font-size:23px}.hlban.min .hl-h{font-size:30px}}
   @media (prefers-reduced-motion: reduce){.hlban{animation:none}.hlban .hl-img{transition:none}}
 
   .view{display:none;animation:rise .45s both}
@@ -3145,6 +3151,7 @@ function renderHighlight(h){
   document.getElementById("hl-h").textContent=h.headline;
   document.getElementById("hl-score").textContent=h.score||"";
   document.getElementById("hl-sub").textContent=h.sub||"";
+  b.classList.toggle("min",!(h.sub&&h.sub.trim()));   /* no story line -> minimal (big headline, no sub) */
   b.style.display="flex";
 }
 async function refreshHighlight(force){
