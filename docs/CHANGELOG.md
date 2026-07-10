@@ -5,6 +5,14 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-07-10 (Doha) — MAIN DEPLOY · TAB-SWITCH FEEL ships to production
+
+**Commits:** the tab-switch commit (`index.html` + the changelog entry below) plus this changelog note, fast-forwarded to `main` on the organizer's explicit "go ahead and push to main" (branch `claude/tab-switching-feedback-mfv63l`). **Frontend only — no DB / scoring / sync change.** Full what/verified detail in the branch entry directly below; recap: entering view slides from the tapped tab's side, section title draws a dissolving gold hairline, active nav icon pops, 10ms Android haptic — real view changes only, in-place repaints replay nothing, reduced-motion fully respected. Organizer previewed both GIF recordings (full tour + 4x slow-mo) before approving.
+
+**Rollback:** `git push origin +af2983b:main` (client-only; reverts `main` to the highlights-banner minimal-variant tip, the parent of this pass). Stale-while-revalidate shell: the deploy reaches each device on its next open; a stubborn stale shell may need one reopen.
+
+---
+
 ## 2026-07-10 (Doha) — TAB-SWITCH FEEL: directional slide + title ink + nav pop + haptic tick (branch-only, NOT deployed)
 
 **Commits:** this commit (`index.html` + changelog) on `claude/tab-switching-feedback-mfv63l`, on the organizer's read: "when pressing on the other tabs, it doesnt feel like i changed the tab". **Frontend only — no DB / scoring / sync change.** Root cause: every view entered with the identical fade-up, the chrome above stays static, and the nav's own feedback sits under the thumb that tapped it — a switch read as a flicker, not a move.
