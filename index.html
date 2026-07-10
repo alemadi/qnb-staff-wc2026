@@ -3122,13 +3122,19 @@ function toast(msg,type){const t=document.getElementById("toast");
 function togglePts(btn){const t=document.getElementById("ptable");const on=t.classList.toggle("show");btn.textContent=on?"How do points work? ▴":"How do points work? ▾";const p=document.querySelector(".progress");if(p)p.classList.toggle("pts-open",on);if(window.__progSync)window.__progSync();}
 /* Persistent announcement banner (what's-new billboard: nerd stats · card deck · power-ups).
    It can't be dismissed — only shrunk. It shows every visit (to joined players) until BANNER_UNTIL.
-   There is no ✕: instead a chevron shrinks the full card to a slim one-line strip and back, and it
-   also auto-shrinks on scroll so it never hogs the screen. The collapse choice is remembered in
-   BANNER_MIN_KEY. A ?banner / #banner URL force-shows it (ignores the joined gate) for verification
-   on any device. */
-const BANNER_MIN_KEY="wc:banner:min2";        // remembers the user's shrink choice (v2 key: the refreshed content gets one full showing before any remembered shrink applies)
+   STRIP-FIRST (organizer's call): it opens as the slim one-line strip by default; the full card
+   auto-opens exactly once per announcement — BANNER_SEEN_KEY stores a signature of the card's own
+   copy, so editing the banner text is all it takes for the next announcement to earn its one full
+   showing on every device (no key bumps to remember). The chevron still expands/shrinks and that
+   explicit choice (BANNER_MIN_KEY) wins on later visits; scroll auto-shrinks a full card either
+   way. A ?banner / #banner URL force-shows it full (ignores the joined gate, never consumes the
+   announcement's one full showing) for verification on any device. */
+const BANNER_MIN_KEY="wc:banner:min2";        // remembers the user's chevron choice ("1" strip / "0" full)
+const BANNER_SEEN_KEY="wc:banner:seen";       // signature of the announcement already shown full once on this device
 const BANNER_UNTIL=Date.parse("2026-07-15T00:00:00+03:00");  // keep showing through the knockouts; then it retires itself
-let bannerMin=false;                          // user shrank it to the strip (independent of the scroll auto-shrink)
+let bannerMin=false;                          // this visit's strip state (independent of the scroll auto-shrink)
+let bannerDecided=false;                      // full-vs-strip is decided once per pageload — a re-call (joinNow) must not fold a freshly shown card mid-session
+function bannerSig(b){let t=(b.textContent||"").replace(/\s+/g," ").trim(),h=5381;for(let i=0;i<t.length;i++)h=(h*33^t.charCodeAt(i))>>>0;return "s"+h.toString(36);}
 function hideBanner(){const b=document.getElementById("xbanner");if(b){b.style.display="none";b.classList.remove("mini");}document.body.classList.remove("xb-on");const sp=document.getElementById("xb-spacer");if(sp)sp.style.height="0px";}
 function bannerForced(){try{return /(^|[?&#])banner\b/i.test(location.search+location.hash);}catch(e){return false;}}  // ?banner / #banner = force-show for verification (ignores the joined gate)
 function setupBanner(){
@@ -3138,7 +3144,13 @@ function setupBanner(){
     if(!state.player)return hideBanner();        // joined players only (not the sign-in screen)
     if(BANNER_UNTIL&&Date.now()>BANNER_UNTIL)return hideBanner();  // announcement window has ended
   }
-  try{const _m=localStorage.getItem(BANNER_MIN_KEY);bannerMin=(_m===null)?false:(_m==="1");}catch(e){bannerMin=true;}  // first sight of this content = the full card (scroll still auto-shrinks it); after that, respects the explicit expand/collapse
+  if(!bannerDecided){bannerDecided=true;
+    let seen=null,store=true;try{seen=localStorage.getItem(BANNER_SEEN_KEY);}catch(e){store=false;}
+    const sig=bannerSig(b);
+    if(force)bannerMin=false;                 // verification link: always the full card, consumes nothing
+    else if(store&&seen!==sig){bannerMin=false;try{localStorage.setItem(BANNER_SEEN_KEY,sig);}catch(e){}}  // genuinely new announcement → its one full showing (outranks a remembered shrink)
+    else{try{const _m=localStorage.getItem(BANNER_MIN_KEY);bannerMin=(_m===null)?true:(_m==="1");}catch(e){bannerMin=true;}}  // seen before → strip-first, unless the chevron explicitly chose full
+  }
   b.style.display="flex";                      // always show it (no dismiss); it can only be shrunk
   document.body.classList.add("xb-on");
   // measure the collapsed height so the sticky filter/progress bars tuck just below the pinned strip

@@ -5,6 +5,18 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-07-10 (Doha) — BILLBOARD GOES STRIP-FIRST: full card only for a genuinely new announcement (branch-only, NOT deployed)
+
+**Commits:** this commit (`index.html` + changelog) on `claude/tab-switching-feedback-mfv63l`, on the organizer's ask ("rather it start as the slim strip by default — with the full card only for genuinely new announcements"). **Frontend only — no DB / scoring / sync change.**
+
+**What:** the what's-new billboard (`#xbanner`) now opens as the slim one-line strip by default. The full card auto-opens **exactly once per announcement**: `wc:banner:seen` stores a signature (`bannerSig`, djb2 over the card's normalized `textContent`), so *editing the banner copy is the whole release step* for the next announcement — every device gets one full showing, then strip again. Precedence per visit: `?banner`/`#banner` force-link (full, never consumes the showing) → unseen signature (full once, outranks a remembered shrink) → the user's chevron choice (`wc:banner:min2`) → **strip**. The decision is made once per pageload (`bannerDecided`) so the `joinNow` re-call can't fold a freshly shown card mid-session; blocked-storage devices err to strip; scroll auto-shrink and the chevron behave exactly as before.
+
+**Verified:** real-browser (Playwright/Chromium, 390px, mocked-offline): 11/11 behavior checks — fresh device full + sig stored, second visit strip, chevron expand remembered across reloads, new-signature full-once over a remembered shrink then strip again, `?banner` full without consuming, scroll auto-fold + top unfold. The one probe that failed (boot-time `?banner` paint) fails **identically on the pre-change tree** — an offline-sandbox artifact, and a manual `setupBanner()` under `?banner` renders full correctly. Regressions: `nerd-stats` ALL GREEN, `squad-board` ALL GREEN; `perf-boot` times out on the pre-change tree too (its mocked "future, unlocked" QF is now date-expired — pre-existing).
+
+**Rollback:** `git revert` this commit. Optional cleanup on affected devices: `localStorage.removeItem('wc:banner:seen')`.
+
+---
+
 ## 2026-07-10 (Doha) — MAIN DEPLOY · TAB-SWITCH FEEL ships to production
 
 **Commits:** the tab-switch commit (`index.html` + the changelog entry below) plus this changelog note, fast-forwarded to `main` on the organizer's explicit "go ahead and push to main" (branch `claude/tab-switching-feedback-mfv63l`). **Frontend only — no DB / scoring / sync change.** Full what/verified detail in the branch entry directly below; recap: entering view slides from the tapped tab's side, section title draws a dissolving gold hairline, active nav icon pops, 10ms Android haptic — real view changes only, in-place repaints replay nothing, reduced-motion fully respected. Organizer previewed both GIF recordings (full tour + 4x slow-mo) before approving.
