@@ -5,6 +5,16 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-07-12 (Doha) — MAIN DEPLOY · MATCH HIGHLIGHTS phone-first clarity pass ships to production
+
+**Commits:** the clarity-pass commit `85afcfd` (rebased onto `main` `158228d` after the Arab-bubble deploy landed) and the runbook commit `520345c`, plus this changelog note, pushed to `main` on the organizer's explicit "push to main" (branch `claude/banner-change-issue-ic57w1`). **Frontend + docs only — no DB / scoring / sync change.** Full what/verified detail in the branch entry directly below; recap: text block carries its own scrim, score promoted to 16.5px white, fluid one-line headline, 38px dismiss hit area, art window recentered for the v2 clarity-first artwork. Re-verified post-rebase at 360/390/430px (one-line headline, dismiss + persistence, zero page errors) with the Arab-bubble removal confirmed intact alongside.
+
+**Context from the same morning (no code):** k27 and k28 cards minted by hand after the old hourly routine silently missed k27 twice; the routine was replaced with the fresh-session-per-run v2 trigger whose prompt bakes in the clarity-first, fill-frame artwork pattern (runbook: `docs/HANDOFF-highlights-banner.md`).
+
+**Rollback:** `git push origin +158228d:main` (client-only; reverts `main` to the Arab-bubble-removal tip, the parent of this pass). Stale-while-revalidate shell: reaches each device on its next open.
+
+---
+
 ## 2026-07-12 (Doha) — MATCH HIGHLIGHTS: phone-first clarity pass (branch-only, NOT deployed)
 
 **Commits:** this commit (`index.html` + changelog) on `claude/banner-change-issue-ic57w1`, on the organizer's ask ("fully optimize for phone" after "the image generated is usually not understood"). **Frontend only — no DB / scoring / sync change.** (The artwork-side fix shipped the same morning without code: the mint routine was replaced with the v2 clarity-first trigger — flag-anchored four-figure scenes, no crowd, frame filled edge to edge — see the runbook commit `ff3743f`.)
