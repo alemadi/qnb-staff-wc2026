@@ -206,24 +206,29 @@
   .hlban{position:relative;margin-top:14px;min-height:150px;border-radius:15px;overflow:hidden;
     border:1px solid var(--gold);background:linear-gradient(96deg,rgba(180,151,89,.2),rgba(227,211,163,.06)),rgba(13,13,17,.9);
     display:flex;flex-direction:column;justify-content:flex-end;animation:xbrise .5s both}
-  .hlban .hl-img{position:absolute;inset:0;background-size:cover;background-position:center 30%;opacity:0;transition:opacity .6s ease}
+  .hlban .hl-img{position:absolute;inset:0;background-size:cover;background-position:center 42%;opacity:0;transition:opacity .6s ease}
   .hlban .hl-img.on{opacity:1}
-  .hlban .hl-shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(5,5,7,.08) 0%,rgba(5,5,7,.28) 40%,rgba(5,5,7,.64) 66%,rgba(5,5,7,.95) 100%)}
-  .hlban .hl-tx{position:relative;padding:46px 38px 12px 14px}
+  .hlban .hl-shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(5,5,7,.14) 0%,rgba(5,5,7,.3) 40%,rgba(5,5,7,.55) 66%,rgba(5,5,7,.85) 100%)}
+  /* phone-first: the text block carries its own scrim so the copy stays readable
+     no matter how bright or busy the minted artwork is behind it */
+  .hlban .hl-tx{position:relative;padding:46px 46px 13px 14px;background:linear-gradient(180deg,rgba(5,5,7,0) 0%,rgba(5,5,7,.55) 38%,rgba(5,5,7,.92) 100%)}
   .hlban .hl-top{display:flex;align-items:center;gap:6px;margin-bottom:6px}
-  .hlban .hl-chip{font-weight:800;font-size:9px;letter-spacing:.8px;text-transform:uppercase;color:var(--gold-bright);
-    background:rgba(13,13,17,.6);border:1px solid rgba(180,151,89,.5);border-radius:6px;padding:2.5px 7px;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
-  .hlban .hl-h{display:block;font-family:var(--font-d);letter-spacing:.4px;font-size:19px;line-height:1.12;color:var(--gold-bright);text-wrap:balance;text-shadow:0 1px 8px rgba(0,0,0,.6)}
-  .hlban .hl-score{font-family:var(--font-d);letter-spacing:.5px;font-size:14px;color:var(--cream);margin-top:3px;text-shadow:0 1px 6px rgba(0,0,0,.6)}
-  .hlban .hl-sub{display:block;font-size:11.5px;line-height:1.45;color:rgba(244,238,227,.8);margin-top:3px;max-width:52ch;text-shadow:0 1px 5px rgba(0,0,0,.6)}
+  .hlban .hl-chip{font-weight:800;font-size:10px;letter-spacing:.8px;text-transform:uppercase;color:var(--gold-bright);
+    background:rgba(13,13,17,.78);border:1px solid rgba(180,151,89,.5);border-radius:6px;padding:2.5px 7px;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+  .hlban .hl-h{display:block;font-family:var(--font-d);letter-spacing:.4px;font-size:clamp(17px,5vw,20px);line-height:1.12;color:var(--gold-bright);text-wrap:balance;text-shadow:0 2px 12px rgba(0,0,0,.95),0 0 2px rgba(0,0,0,.8)}
+  .hlban .hl-score{font-family:var(--font-d);letter-spacing:.5px;font-size:16.5px;color:#fff;margin-top:3px;text-shadow:0 2px 10px rgba(0,0,0,.95)}
+  .hlban .hl-sub{display:block;font-size:12px;line-height:1.45;color:rgba(244,238,227,.95);margin-top:3px;max-width:52ch;text-shadow:0 1px 8px rgba(0,0,0,.9)}
   /* MINIMAL variant — a card with no story line (empty sub) drops the sub and
      enlarges the headline so it carries the card. Toggled by renderHighlight
      via .min when wc:highlight has no sub; full-copy cards are unaffected. */
-  .hlban.min .hl-h{font-size:25px;line-height:1.06}
-  .hlban.min .hl-score{font-size:15px;margin-top:5px}
+  .hlban.min .hl-h{font-size:clamp(23px,6.5vw,27px);line-height:1.06}
+  .hlban.min .hl-score{font-size:17px;margin-top:5px}
   .hlban.min .hl-sub{display:none}
-  .hlban .hl-x{position:absolute;top:7px;right:7px;width:26px;height:26px;display:grid;place-items:center;background:rgba(13,13,17,.55);border:1px solid rgba(180,151,89,.45);color:var(--gold-bright);font-size:11px;line-height:1;cursor:pointer;border-radius:7px}
-  .hlban .hl-x:hover{background:rgba(180,151,89,.3)}
+  /* 38px hit area (thumb-friendly) drawn as the same light 26px square */
+  .hlban .hl-x{position:absolute;top:1px;right:1px;width:38px;height:38px;display:grid;place-items:center;background:none;border:none;color:var(--gold-bright);font-size:11px;line-height:1;cursor:pointer;padding:0}
+  .hlban .hl-x::before{content:"";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:26px;height:26px;background:rgba(13,13,17,.55);border:1px solid rgba(180,151,89,.45);border-radius:7px}
+  .hlban .hl-x span{position:relative;z-index:1}
+  .hlban .hl-x:hover::before{background:rgba(180,151,89,.3)}
   @media(min-width:600px){.hlban{min-height:196px}.hlban .hl-h{font-size:23px}.hlban.min .hl-h{font-size:30px}}
   @media (prefers-reduced-motion: reduce){.hlban{animation:none}.hlban .hl-img{transition:none}}
 
@@ -1948,7 +1953,7 @@
       <div class="hl-score" id="hl-score"></div>
       <span class="hl-sub" id="hl-sub"></span>
     </div>
-    <button class="hl-x" onclick="hlDismiss()" aria-label="Dismiss highlight">✕</button>
+    <button class="hl-x" onclick="hlDismiss()" aria-label="Dismiss highlight"><span>✕</span></button>
   </div>
 
   <div id="xb-sent" aria-hidden="true"></div>

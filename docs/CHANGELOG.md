@@ -5,6 +5,22 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-07-12 (Doha) — MATCH HIGHLIGHTS: phone-first clarity pass (branch-only, NOT deployed)
+
+**Commits:** this commit (`index.html` + changelog) on `claude/banner-change-issue-ic57w1`, on the organizer's ask ("fully optimize for phone" after "the image generated is usually not understood"). **Frontend only — no DB / scoring / sync change.** (The artwork-side fix shipped the same morning without code: the mint routine was replaced with the v2 clarity-first trigger — flag-anchored four-figure scenes, no crowd, frame filled edge to edge — see the runbook commit `ff3743f`.)
+
+**What (all `.hlban`-scoped CSS + one markup span):**
+- **Text-backed scrim** — `.hl-tx` now carries its own bottom gradient (transparent → .92), so headline/score/sub sit on near-black no matter how bright the minted artwork is; the full-card `.hl-shade` relaxed slightly (.95 → .85 max) to give the art back some light.
+- **Score promoted** — 14px cream → 16.5px white with a heavier shadow; it's the one thing people scan for. Headline `clamp(17px,5vw,20px)` (one line on 360–430px, `text-wrap:balance` when a long one wraps); sub 11.5px/.8 → 12px/.95; chip 9 → 10px on a darker pill.
+- **Thumb-sized dismiss** — the ✕ hit area grows 26 → 38px (glyph wrapped in a `<span>`, square drawn by `::before`, hover moved to `::before`); visually unchanged.
+- **Art window** — `background-position` center 30% → 42% (v2 artwork centers its subjects), image fade + lazy-load untouched.
+
+**Verified:** real-browser (Playwright/Chromium vs live Supabase) at 360/390/430px — one-line headline at all three, card 176–192px tall (was up to 226px mid-pass), flag + dejected-keeper artwork visible, zero page errors; dismiss clicked at the far corner of the enlarged hit area hides the card, sets `wc:hl_seen`, and the card stays hidden after reload. Screenshots eyeballed at every width.
+
+**Rollback:** `git revert <this commit>` — one CSS block and the ✕ span in `index.html`. No DB change.
+
+---
+
 ## 2026-07-12 (Doha) — MAIN DEPLOY · MATCHES: drop the "Arab Teams" filter bubble
 
 **Commits:** the bubble-removal commit `8f44548` (`index.html`, cherry-picked onto the latest `main` from branch `claude/remove-arab-teams-bubble-rnhq6r`) plus this changelog note, pushed to `main` on the organizer's explicit "push to main". **Frontend only — no DB / scoring / sync change.**
