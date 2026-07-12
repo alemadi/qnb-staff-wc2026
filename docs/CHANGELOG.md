@@ -5,6 +5,18 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-07-12 (Doha) — MAIN DEPLOY · MATCHES: drop the "Arab Teams" filter bubble
+
+**Commits:** the bubble-removal commit `8f44548` (`index.html`, cherry-picked onto the latest `main` from branch `claude/remove-arab-teams-bubble-rnhq6r`) plus this changelog note, pushed to `main` on the organizer's explicit "push to main". **Frontend only — no DB / scoring / sync change.**
+
+**What:** removed the "Arab Teams" chip from the Matches filter bar, its `filter==="arab"` branch in `fixturesFor()`, its `lblMap` label, and the now-unused `ARAB` team set. The filter is never persisted (it resets to `defaultRound()` on load), so no device can be stranded on the removed filter. Deliberately untouched: the Arab-themed fun-fact trivia entries (⭐ category) and `watch.html`'s Arab-first team dropdown ordering — different features, not the bubble.
+
+**Verified:** real-browser load at 420px (headless Chromium, local serve — Supabase unreachable from the sandbox, so `renderFilters()`/`fixturesFor()` were exercised directly in the page): chip row renders `Today · Knockouts · SF · All 104` with no Arab Teams chip, `ARAB` is undefined, `fixturesFor('all')` = 104 and `fixturesFor('today')` = 2, zero page errors.
+
+**Rollback:** `git revert 8f44548` — restores the chip, the `fixturesFor` branch, the `lblMap` entry, and the `ARAB` set. Frontend-only; no DB change.
+
+---
+
 ## 2026-07-11 (Doha) — MAIN DEPLOY · MATCH HIGHLIGHTS: drop the "minted at full time" chip
 
 **Commits:** the chip-removal commit (`index.html`) plus this changelog note, fast-forwarded to `main` on the organizer's explicit "push to main" (branch `claude/match-highlights-banner-h2lqq5`, restarted from `main` `8df49df` so it carries the later banner work — minimal variant, deepened scrim, strip-first billboard). **Frontend only — no DB / scoring / sync change.**
