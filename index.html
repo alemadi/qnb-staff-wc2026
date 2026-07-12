@@ -2390,7 +2390,6 @@ const FIXTURES = RAW.map(r=>({id:r[0],round:r[1],home:T(r[2]),away:T(r[3]),ko:r[
 const FXID={};FIXTURES.forEach(f=>FXID[f.id]=f);
 const GROUP_TOTAL = FIXTURES.filter(f=>!f.kn).length;
 const FIXBYID={};FIXTURES.forEach(f=>FIXBYID[f.id]=f);
-const ARAB = new Set(["Qatar","Morocco","Egypt","Tunisia","Saudi Arabia","Algeria","Iraq","Jordan"]);
 const ROUNDS=[["MD1","Matchday 1"],["MD2","Matchday 2"],["MD3","Matchday 3"],["R32","Round of 32"],["R16","Round of 16"],["QF","Quarter-finals"],["SF","Semi-finals"],["FINAL","Final"]];
 const RLABEL=Object.fromEntries(ROUNDS);
 RLABEL["FINAL"]="Final"; 
@@ -3393,7 +3392,6 @@ function renderFilters(){
   const roundKeys=ROUNDS.map(r=>r[0]);
   let html="";
   html+='<button class="chip '+(state.filter==="today"?"on":"")+'" onclick="setFilter(\'today\')">Today</button>';
-  html+='<button class="chip '+(state.filter==="arab"?"on":"")+'" onclick="setFilter(\'arab\')">Arab Teams</button>';
   /* Knockouts: tapping the chip jumps straight to the current round; the \u25be picks any other round */
   const koRounds=["R32","R16","QF","SF","FINAL"].filter(k=>roundKeys.indexOf(k)>=0);
   if(koRounds.length){
@@ -3420,7 +3418,6 @@ function fixturesFor(filter){
   return FIXTURES.filter(m=>{
     const v=m.kn?fxView(m):m;
     if(filter==="qatar")return v.home.n==="Qatar"||v.away.n==="Qatar";
-    if(filter==="arab")return (ARAB.has(v.home.n)||ARAB.has(v.away.n))&&!isFinished(m);
     if(filter==="today")return dayKey(m.ko)===todayKey;
     if(filter==="completed")return isFinished(m);
     if(filter==="all")return true;
@@ -3484,7 +3481,7 @@ function renderMatches(){
   const pte=document.getElementById("pred-total");if(pte)pte.textContent=tot;
   document.getElementById("pred-bar").style.width=(c/tot*100)+"%";
   const list=fixturesFor(state.filter);
-  const lblMap={qatar:"Qatar matches",arab:"Arab Teams",today:"Today",completed:"Completed",all:"All rounds"};
+  const lblMap={qatar:"Qatar matches",today:"Today",completed:"Completed",all:"All rounds"};
   const _mtag=document.getElementById("match-tag");
   _mtag.textContent=(lblMap[state.filter]||RLABEL[state.filter])+" · "+list.length+" match"+(list.length===1?"":"es");
   _mtag.classList.toggle("live-now",FIXTURES.some(f=>isLive(f))); /* live beacon at the top of the list */
@@ -3537,7 +3534,7 @@ function gScorePts(p,res){
    players' picks, no pick buttons — tap scrolls to the real card. */
 function modHero(now,pool){
   if(!state.player||FIXTURES.some(f=>isLive(f)))return "";
-  /* pick the spotlight from the currently filtered list, so e.g. Arab Teams never heroes a non-Arab match */
+  /* pick the spotlight from the currently filtered list, so the hero always matches what's on screen */
   const fut=(pool||FIXTURES).filter(m=>{const t=new Date(m.ko).getTime();return t>now&&t-now<=72*36e5&&!isFinished(m);});
   if(!fut.length)return "";
   fut.sort((a,b)=>new Date(a.ko)-new Date(b.ko));
