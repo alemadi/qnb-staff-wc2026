@@ -5,6 +5,24 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-07-12 (Doha) — SCORES UPDATE · QF k28 final + semi-final slots (DB-only, no deploy)
+
+**Commits:** this changelog note only (branch `claude/update-scores-4xs6ay`). **No frontend / SQL-object change — two live `kv` row updates, applied server-side (kv stays browser-read-only).**
+
+**What:** on the organizer's "update the scores":
+- `wc:results` += `k28: {h:3, a:1, w:"Argentina"}` — Argentina 3–1 Switzerland after extra time (1–1 at 90'; Mac Allister 11', Ndoye 67', then Álvarez and a late Martínez volley in ET; Embolo red-carded 72' for simulation). Verified against two independent live-blog sources before writing.
+- `wc:kteams` += `k29: {h:"France", a:"Spain"}` (SF · Tue Jul 14) and `k30: {h:"England", a:"Argentina"}` (SF · Wed Jul 15) — matches the bracket map (`k29`=W k25/W k26, `k30`=W k27/W k28) and the published semi-final schedule.
+
+**Verified:** post-write readback shows both keys correct; `standings()` recomputes clean off the bumped `kv.updated_at` (cache self-invalidates — no manual refresh) and returns the full board with k28 folded in (new top 5: cemcmldr 331 · Dane 329 · Rupesh 325 · Haya 323 · Ja 321). Open tabs pick the result up on the normal polling cadence.
+
+**Rollback (inverse SQL):**
+```sql
+update kv set value=((value::jsonb) - 'k28')::text, updated_at=now() where key='wc:results';
+update kv set value=((value::jsonb) - 'k29' - 'k30')::text, updated_at=now() where key='wc:kteams';
+```
+
+---
+
 ## 2026-07-11 (Doha) — MAIN DEPLOY · MATCH HIGHLIGHTS: drop the "minted at full time" chip
 
 **Commits:** the chip-removal commit (`index.html`) plus this changelog note, fast-forwarded to `main` on the organizer's explicit "push to main" (branch `claude/match-highlights-banner-h2lqq5`, restarted from `main` `8df49df` so it carries the later banner work — minimal variant, deepened scrim, strip-first billboard). **Frontend only — no DB / scoring / sync change.**
