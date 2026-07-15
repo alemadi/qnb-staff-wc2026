@@ -1957,18 +1957,18 @@
   </div>
 
   <div id="xb-sent" aria-hidden="true"></div>
-  <div class="xbanner" id="xbanner" style="display:none" role="status" aria-label="New this week: the stats lab, your card deck, power-ups" onclick="if(!event.target.closest('a,button'))toggleBanner()" title="Tap to expand or shrink">
-    <div class="xb-ic" aria-hidden="true">✨</div>
+  <div class="xbanner" id="xbanner" style="display:none" role="status" aria-label="The Final is set: Spain vs Argentina, Sunday — lock your score before kickoff" onclick="if(!event.target.closest('a,button'))toggleBanner()" title="Tap to expand or shrink">
+    <div class="xb-ic" aria-hidden="true">🏆</div>
     <div class="xb-tx">
-      <b class="xb-h">Just dropped: 🧪 The Lab · 📤 your card deck</b>
-      <span class="xb-sub">The office’s picks finally get X-rayed, every big moment mints a card — and the ⚡ armband window is open. Tap in:</span>
+      <b class="xb-h">🏆 The Final is set — Spain 🇪🇸 vs Argentina 🇦🇷</b>
+      <span class="xb-sub">Sunday, 22:00 Doha — the biggest-scoring match of the whole pool. Lock your scoreline (and your last armband) before kickoff:</span>
       <div class="xb-feats">
-        <button class="xb-feat" onclick="xbGoMode('nerds')"><span class="xf-ic" aria-hidden="true">🧪</span><span class="xf-tx"><b>The Lab<i class="xf-new">NEW</i></b><small>41 cards of office truth — the futures board, your rank journey, the chaos meter</small></span><span class="xf-go" aria-hidden="true">›</span></button>
-        <button class="xb-feat" onclick="openShareTray()"><span class="xf-ic" aria-hidden="true">📤</span><span class="xf-tx"><b>Your card deck</b><small>every big moment mints a share card — preview it, then drop it in the chat</small></span><span class="xf-go" aria-hidden="true">›</span></button>
-        <button class="xb-feat" onclick="openFaq('power-up')"><span class="xf-ic" aria-hidden="true">⚡</span><span class="xf-tx"><b>Captain’s armband ×2</b><small>arm a Quarter-final pick before Thursday’s locks — shield &amp; upset bonus too</small></span><span class="xf-go" aria-hidden="true">›</span></button>
+        <button class="xb-feat" onclick="go('matches')"><span class="xf-ic" aria-hidden="true">⚽</span><span class="xf-tx"><b>Lock your Final score</b><small>Spain 🇪🇸 vs Argentina 🇦🇷 — the +10 match. Locks at kickoff, Sun 22:00 Doha</small></span><span class="xf-go" aria-hidden="true">›</span></button>
+        <button class="xb-feat" onclick="openFaq('power-up')"><span class="xf-ic" aria-hidden="true">⚡</span><span class="xf-tx"><b>Arm your last armband</b><small>the Final is the tournament’s last ×2 — double the biggest match. Arm it before it locks</small></span><span class="xf-go" aria-hidden="true">›</span></button>
+        <button class="xb-feat" onclick="go('leaderboard')"><span class="xf-ic" aria-hidden="true">🏆</span><span class="xf-tx"><b>The Maldives race</b><small>the podium is still one match apart — Sunday’s Final can flip it</small></span><span class="xf-go" aria-hidden="true">›</span></button>
       </div>
-      <a class="xb-cta" href="javascript:void 0" onclick="openWhatsNew();return false">Everything that’s new ›</a>
-      <a class="xb-cta2" href="javascript:void 0" onclick="openWhatsNew();return false">What’s new ›</a>
+      <a class="xb-cta" href="javascript:void 0" onclick="go('matches');return false">Set your Final pick ›</a>
+      <a class="xb-cta2" href="javascript:void 0" onclick="go('matches');return false">Set your pick ›</a>
     </div>
     <button class="xb-min" onclick="toggleBanner()" aria-label="Shrink announcement"><span class="xb-col" aria-hidden="true">▴</span><span class="xb-exp" aria-hidden="true">▾</span></button>
   </div>
@@ -3135,7 +3135,7 @@ function togglePts(btn){const t=document.getElementById("ptable");const on=t.cla
    announcement's one full showing) for verification on any device. */
 const BANNER_MIN_KEY="wc:banner:min2";        // remembers the user's chevron choice ("1" strip / "0" full)
 const BANNER_SEEN_KEY="wc:banner:seen";       // signature of the announcement already shown full once on this device
-const BANNER_UNTIL=Date.parse("2026-07-15T00:00:00+03:00");  // keep showing through the knockouts; then it retires itself
+const BANNER_UNTIL=Date.parse("2026-07-20T12:00:00+03:00");  // keep showing through the Final (Sun 19 Jul); then it retires itself
 let bannerMin=false;                          // this visit's strip state (independent of the scroll auto-shrink)
 let bannerDecided=false;                      // full-vs-strip is decided once per pageload — a re-call (joinNow) must not fold a freshly shown card mid-session
 function bannerSig(b){let t=(b.textContent||"").replace(/\s+/g," ").trim(),h=5381;for(let i=0;i<t.length;i++)h=(h*33^t.charCodeAt(i))>>>0;return "s"+h.toString(36);}

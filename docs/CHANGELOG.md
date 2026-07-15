@@ -5,6 +5,21 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-07-15 (Doha) — WHAT'S-NEW BILLBOARD: Final-hype announcement (branch-only, NOT deployed)
+
+**Commit:** this commit (`index.html` + this changelog note) on `claude/final-exam-sunday-prep-4ctat8`, on the organizer's ask ("draft the final-hype banner announcing Spain vs Argentina, nudge everyone to lock their scoreline before Sunday"). **Frontend only — no DB / scoring / sync change.** Both semis finished tonight (k29 Spain, k30 Argentina 2–1 England), so the Final is set: **Spain 🇪🇸 vs Argentina 🇦🇷, Sun 19 Jul 19:00Z / 22:00 Doha.**
+
+**What (the `#xbanner` strip-first billboard):**
+- **New copy** — headline `🏆 The Final is set — Spain 🇪🇸 vs Argentina 🇦🇷`; sub points at Sunday 22:00 Doha and "the biggest-scoring match of the whole pool." Three feature tiles, repointed to real handlers: **⚽ Lock your Final score** → `go('matches')` (the +10 match, locks at kickoff), **⚡ Arm your last armband** → `openFaq('power-up')` (the Final is the last ×2 of the tournament), **🏆 The Maldives race** → `go('leaderboard')` (podium still one match apart). Both CTAs (`xb-cta`/`xb-cta2`) → `go('matches')` "Set your Final pick ›". Outer `aria-label` + `xb-ic` (✨→🏆) updated to match.
+- **Window extended** — `BANNER_UNTIL` `2026-07-15T00:00:00+03:00` → `2026-07-20T12:00:00+03:00`. The old date retired the billboard at midnight tonight; without this the new copy would never show. Now it shows through the Final and self-retires Monday midday.
+- **Re-show mechanism** — editing the copy changes `bannerSig()` (a hash of the card's own text), so `BANNER_SEEN_KEY` no longer matches and every device earns the announcement's one full auto-open, then strip-first after. No key bumps needed (the house pattern).
+
+**Verified:** real-browser render (headless Chromium, local serve, `?banner` force-flag) at 390px — full card shows the new headline, all three tiles + descriptions, "Set your Final pick ›" CTA, `display:flex`, **zero page errors**; screenshot eyeballed. Inline script `node --check` clean. No test harness pins the banner copy.
+
+**Rollback:** `git revert <this commit>` — restores the Wave-C "Lab / card deck" copy and the 15 Jul `BANNER_UNTIL`. Frontend-only; no DB change. (Not deployed — nothing on `main` to roll back.)
+
+---
+
 ## 2026-07-12 (Doha) — MAIN DEPLOY · MATCH HIGHLIGHTS phone-first clarity pass ships to production
 
 **Commits:** the clarity-pass commit `85afcfd` (rebased onto `main` `158228d` after the Arab-bubble deploy landed) and the runbook commit `520345c`, plus this changelog note, pushed to `main` on the organizer's explicit "push to main" (branch `claude/banner-change-issue-ic57w1`). **Frontend + docs only — no DB / scoring / sync change.** Full what/verified detail in the branch entry directly below; recap: text block carries its own scrim, score promoted to 16.5px white, fluid one-line headline, 38px dismiss hit area, art window recentered for the v2 clarity-first artwork. Re-verified post-rebase at 360/390/430px (one-line headline, dismiss + persistence, zero page errors) with the Arab-bubble removal confirmed intact alongside.
