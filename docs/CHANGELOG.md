@@ -5,6 +5,40 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-07-15 (Doha) — LIVE DB: permanent Final archive so nothing gets wiped after Jul 19
+
+**Commit:** this commit (`sql/backup.sql` + changelog) on `claude/data-wipe-july-19-k746vg`. **DB-only — no app / scoring / sync change.** Applied to the live project (`fzybuasvhzhmkbhxbton`) as tracked migration `wc_backup_permanent_final_archive`; `sql/backup.sql` is the reproducible source of the whole backup system, which until now lived only in the live DB and was undocumented in the repo.
+
+**Why:** organizer asked to make sure player data can't get wiped after the Final (Jul 19). Investigation found **no** job that deletes live player data — `kv` (700 players) and `wc_auth` (701 PIN-hashes) are never auto-deleted. The only scheduled deletion is the nightly backup's rolling **14-day retention** (`wc_backup_tick`, cron `wc-backup-daily`, 08:05 UTC), which prunes *backup snapshots* — meaning the snapshots capturing the finished tournament would themselves have aged out ~Aug 2. This makes the finished-tournament state permanent.
+
+**What:**
+- Added `pinned boolean not null default false` to `wc_backup` and `wc_backup_auth`.
+- `wc_backup_tick()` now: once the Final (tie `k32`) has a recorded winner in `wc:results`, keeps exactly **one** retention-exempt archive — it drops the prior pinned archive and pins that night's snapshot, so the archive refreshes to the latest state daily (captures late organizer corrections) and stabilizes once edits stop. The detection is wrapped in an exception block so a bad parse can never block the nightly backup. Retention delete now carries `and not pinned`, so the archive is never pruned. Pre-Final behaviour is unchanged.
+- Belt-and-suspenders: because the pin only fires while `k32` has a winner, a *future* wipe of live `wc:results` leaves the last good archive untouched.
+
+**Verified (live, project `fzybuasvhzhmkbhxbton`):** temp-table dry run proved retention exempts pinned rows and the refresh keeps exactly one (latest) archive; post-deploy `pg_get_functiondef` confirms the archive logic + `and not pinned`; a real `wc_backup_tick()` run returned cleanly with `pinned_rows = 0` (correct — `k32` winner is still null on Jul 15), 12 rolling snapshots intact, nothing mis-pruned (oldest still Jul 6). The pin will auto-fire on the first nightly tick after `k32` settles.
+
+**Rollback (exact inverse SQL):**
+```sql
+create or replace function public.wc_backup_tick() returns text
+language plpgsql security definer set search_path to 'public' as $f$
+declare t timestamptz := now(); n_kv int; n_auth int;
+begin
+  insert into wc_backup(taken_at, key, value, updated_at) select t, key, value, updated_at from kv;
+  get diagnostics n_kv = row_count;
+  insert into wc_backup_auth(taken_at, slug, pin_hash) select t, slug, pin_hash from wc_auth;
+  get diagnostics n_auth = row_count;
+  delete from wc_backup      where taken_at < now() - interval '14 days';
+  delete from wc_backup_auth where taken_at < now() - interval '14 days';
+  return 'kv ' || n_kv || ' · auth ' || n_auth || ' @ ' || t;
+end $f$;
+alter table wc_backup      drop column if exists pinned;
+alter table wc_backup_auth drop column if exists pinned;
+```
+Plus `git revert <this commit>` for the repo. (Dropping `pinned` also removes any archive-exemption, so only roll back if the retention behaviour is genuinely unwanted.)
+
+---
+
 ## 2026-07-12 (Doha) — MAIN DEPLOY · MATCH HIGHLIGHTS phone-first clarity pass ships to production
 
 **Commits:** the clarity-pass commit `85afcfd` (rebased onto `main` `158228d` after the Arab-bubble deploy landed) and the runbook commit `520345c`, plus this changelog note, pushed to `main` on the organizer's explicit "push to main" (branch `claude/banner-change-issue-ic57w1`). **Frontend + docs only — no DB / scoring / sync change.** Full what/verified detail in the branch entry directly below; recap: text block carries its own scrim, score promoted to 16.5px white, fluid one-line headline, 38px dismiss hit area, art window recentered for the v2 clarity-first artwork. Re-verified post-rebase at 360/390/430px (one-line headline, dismiss + persistence, zero page errors) with the Arab-bubble removal confirmed intact alongside.
