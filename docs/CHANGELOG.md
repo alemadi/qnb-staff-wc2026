@@ -5,6 +5,31 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-07-16 (Doha) — SCORE + HIGHLIGHTS: SF2 England 1–2 Argentina; the final is set (Spain vs Argentina)
+
+**Live DB change (Supabase `kv`) — already in production.** No code / frontend touched (the app is a pure renderer); this changelog rides on branch `claude/score-banner-update-c1jgqi`, no `main` deploy. The second semi-final (`k30`, kicked off 22:00 Doha on 15 Jul / 19:00 UTC) finished **England 1–2 Argentina** — Argentina take the last final spot, so Sunday's final is **Spain vs Argentina**.
+
+**What (two `kv` writes, on the organizer's "update score and banner and push"):**
+- **Score** — folded `k30` into `wc:results`: `{"h":1,"a":2,"w":"Argentina"}` (home England 1, away Argentina 2, winner Argentina). Read off ESPN's `fifa.world` scoreboard — the same authoritative feed the group-stage auto-confirm robot uses — and written **only after** the match showed **completed / FT** with the `winner` flag set (not an in-play score). Knockouts stay human, so no robot wrote this. The write is a `jsonb ||` merge: all other 101 keys (`k1…k29`, `m1…m72`) untouched.
+- **Banner** — reminted `wc:highlight` as the `k30` card: round **Semi-final**, headline **"Argentina reach the final"**, score **"England 1–2 Argentina"**, sub *"Argentina edge England and will meet Spain in Sunday's final — 10:00 PM Doha."*, fresh `ts` `2026-07-15T21:28:00Z` (bumped past the k29 card so anyone who dismissed the previous card sees this one). Art: a clarity-first LEGO diorama (Higgsfield `nano_banana_pro`, 16:9) — three Argentina minifigures celebrating, the middle one hoisting a brick-built Argentina flag (the instant read), a dejected England keeper by a brick goalpost, dark crowd-free stadium, no text in the image; `img` → the CDN `_min.webp`. Copy is factual (score / round / who's next from the bracket) — no invented match events.
+
+**Verified:** ESPN showed `k30` **completed / FT**, `winner=Argentina` (England 1, Argentina 2) before any write. Post-write: `wc:results` = 102 keys with `k29` (Spain) and `m1…m72` intact and `k30={h:1,a:2,w:Argentina}`; `standings()` runs clean (**700 players**, top 359); bracket feeders resolve to a **Spain–Argentina** final (`k32`, take W) and a **France–England** third place (`k31`, take L). Banner re-rendered in real headless Chromium via the app's own `renderHighlight` at **360 / 390 / 430px**: headline **one line** at all three (the initial 35-char "…World Cup final" wrapped to two lines and was shortened), score one line, card **173–176px** tall (tuned range), the `_min.webp` decodes and composites (HTTP 200, `image/webp`, 49 KB), text legible over the scrim, dismiss ✕ present, zero page errors on the banner path; 390px screenshot eyeballed.
+
+**Rollback (exact, executable — the DB inverses are what revert the live state):**
+- Banner → restore the prior (k29) card:
+  ```sql
+  update kv set value = $j${"v":1,"id":"k29","round":"Semi-final","home":"France","away":"Spain","h":0,"a":2,"headline":"Spain reach the World Cup final","score":"France 0–2 Spain","sub":"La Roja shut out France and will meet England or Argentina in Sunday's final — 10:00 PM Doha.","ts":"2026-07-14T21:13:30Z","img":"https://d8j0ntlcm91z4.cloudfront.net/user_3EMHjWLrmMRIrJW5mqefxt0Djhs/hf_20260714_211137_7d554a5c-da4b-416e-8ac4-9f95eeaa5ed8_min.webp"}$j$, updated_at = now()
+  where key = 'wc:highlight';
+  ```
+  (or `delete from kv where key = 'wc:highlight';` to hide the banner entirely.)
+- Score → drop just `k30`:
+  ```sql
+  update kv set value = (value::jsonb - 'k30')::text, updated_at = now() where key = 'wc:results';
+  ```
+- Changelog (this commit): `git revert <this commit>` — docs-only.
+
+---
+
 ## 2026-07-12 (Doha) — MAIN DEPLOY · MATCH HIGHLIGHTS phone-first clarity pass ships to production
 
 **Commits:** the clarity-pass commit `85afcfd` (rebased onto `main` `158228d` after the Arab-bubble deploy landed) and the runbook commit `520345c`, plus this changelog note, pushed to `main` on the organizer's explicit "push to main" (branch `claude/banner-change-issue-ic57w1`). **Frontend + docs only — no DB / scoring / sync change.** Full what/verified detail in the branch entry directly below; recap: text block carries its own scrim, score promoted to 16.5px white, fluid one-line headline, 38px dismiss hit area, art window recentered for the v2 clarity-first artwork. Re-verified post-rebase at 360/390/430px (one-line headline, dismiss + persistence, zero page errors) with the Arab-bubble removal confirmed intact alongside.
