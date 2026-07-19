@@ -5,6 +5,25 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-07-20 (Doha) — LIVE DB · FULL TIME: champion result set to Spain — the outro is live
+
+**Commits:** this changelog note only, on `claude/tournament-outro-4ojslq` (**no code change — DB-only**). On the organizer's explicit ask ("I want you to do it") after confirming the Final (k32 Spain 1–0) was in but `_champ` was still unset, so every FULL TIME surface was gated off.
+
+**What (one guarded SQL update, 01:28 Doha):** set `_champ` to `"Spain"` inside the `wc:results` kv row and bumped `updated_at` (which busts the `standings()` cache instantly, same as any engine writer). The update was guarded on `_champ is null AND k32.w = 'Spain'` so it could not double-apply or contradict the recorded Final. This is byte-for-byte the state the organizer panel's "Champion result" dropdown would have written; the robot never touches `_champ` by design.
+
+**Effect:** the +25 champion bonus paid to every player who picked Spain, and `ftOver()` is now true everywhere — on each device's next sync/visit: the FULL TIME podium hero leads Matches, **Your Wrapped** auto-opens once per player, the podium share card unlocks in the tray, the countdown pill reads "🏆 Spain — World Champions", and TV mode shows the celebration.
+
+**Verified (live `standings()` before/after):** every Spain-picker in the pre-change top 10 gained exactly +25; every non-Spain row is unchanged to the point. The podium reshuffled as the published rules dictate (the two Spain-pickers formerly #2/#4 now lead; a 368-pt tie at #3 resolves by the standard predictions→exact→correct tiebreak). Cache row recomputed on the first post-update call.
+
+**Rollback (exact, live-safe):**
+```sql
+update kv set value = (value::jsonb - '_champ')::text, updated_at = now()
+where key = 'wc:results';
+```
+(removes the champion result, un-pays the +25 on the next standings compute, and re-gates every FULL TIME surface; Wrapped's one-time auto-open flag is per-device localStorage and harmless.)
+
+---
+
 ## 2026-07-12 (Doha) — MAIN DEPLOY · MATCH HIGHLIGHTS phone-first clarity pass ships to production
 
 **Commits:** the clarity-pass commit `85afcfd` (rebased onto `main` `158228d` after the Arab-bubble deploy landed) and the runbook commit `520345c`, plus this changelog note, pushed to `main` on the organizer's explicit "push to main" (branch `claude/banner-change-issue-ic57w1`). **Frontend + docs only — no DB / scoring / sync change.** Full what/verified detail in the branch entry directly below; recap: text block carries its own scrim, score promoted to 16.5px white, fluid one-line headline, 38px dismiss hit area, art window recentered for the v2 clarity-first artwork. Re-verified post-rebase at 360/390/430px (one-line headline, dismiss + persistence, zero page errors) with the Arab-bubble removal confirmed intact alongside.
