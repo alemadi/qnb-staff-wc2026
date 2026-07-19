@@ -77,6 +77,12 @@ does, each run:
 
 Costs ~6 Higgsfield credits per match on the organizer's account.
 
+**Status 2026-07-19: retired.** The k32 (Final) card — Spain 1–0 Argentina
+a.e.t., Spain champions — was hand-minted on the organizer's ask, and the
+hourly trigger was disabled per step 6 before its next fire. The tournament
+is over; the banner now holds the championship card until the organizer
+clears `wc:highlight`.
+
 ## Ops notes
 
 - Kill switch: `delete from kv where key = 'wc:highlight';` (or `orgDel`) —

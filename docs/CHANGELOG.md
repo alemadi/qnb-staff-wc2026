@@ -5,6 +5,20 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-07-20 (Doha) — THE FINAL: k32 result confirmed + championship banner minted; mint routine retired
+
+**Commits:** this changelog + runbook note on `claude/scores-banner-update-hz134m`, on the organizer's "update the scores and mint the new banner". **DB + banner ops — no frontend change.**
+
+**Scores:** k32 (Final, Spain vs Argentina, KO 19:00Z) entered into `kv wc:results` as `{"h":1,"a":0,"w":"Spain"}` at 22:19Z — **Spain 1–0 Argentina after extra time** (Ferran Torres 106'), cross-verified against two independent sources before the write (ESPN gameId 760517, status FINAL_AET, and the FIFA match centre page). Knockouts are human-confirmed per the robot's design; this was the last one.
+
+**Banner:** championship card minted per the v2 clarity-first routine, turned up for the occasion — Spain kit + brick Spanish flag as the anchor, golden brick trophy hoist, gold-confetti bokeh, dejected Argentina figure at the goalpost; no crowd, no text, no letterbox bars. `kv wc:highlight` = id `k32`, round Final, headline "Spain are champions of the world", score "Spain 1–0 Argentina (a.e.t.)", ts `2026-07-19T22:23:00Z`, img `hf_20260719_221938_e7bbef81-739e-4af3-ab3f-317f837b8f29_min.webp` (verified 200 `image/webp`, 65 KB; artwork eyeballed at full size before shipping).
+
+**Routine retired:** the hourly v2 mint trigger (`trig_01JkUTj5LUv3DBbGAWoBjqZV`) was disabled at 22:19Z — before its 23:07Z fire, so it could not race this hand-mint with a duplicate k32 card. This matches its own rule 8 (disable after the k32 card exists); the tournament is over.
+
+**Rollback:** score — `update kv set value=(value::jsonb - 'k32')::text where key='wc:results';`. Card — restore the k31 JSON into `wc:highlight` (id k31, France 4–6 England, ts `2026-07-19T08:53:51Z`, img `hf_20260719_085133_b8f1c008-fc8b-4c84-b814-42b1da1707d7_min.webp`). Routine — re-enable `trig_01JkUTj5LUv3DBbGAWoBjqZV` via `update_trigger`.
+
+---
+
 ## 2026-07-12 (Doha) — MAIN DEPLOY · MATCH HIGHLIGHTS phone-first clarity pass ships to production
 
 **Commits:** the clarity-pass commit `85afcfd` (rebased onto `main` `158228d` after the Arab-bubble deploy landed) and the runbook commit `520345c`, plus this changelog note, pushed to `main` on the organizer's explicit "push to main" (branch `claude/banner-change-issue-ic57w1`). **Frontend + docs only — no DB / scoring / sync change.** Full what/verified detail in the branch entry directly below; recap: text block carries its own scrim, score promoted to 16.5px white, fluid one-line headline, 38px dismiss hit area, art window recentered for the v2 clarity-first artwork. Re-verified post-rebase at 360/390/430px (one-line headline, dismiss + persistence, zero page errors) with the Arab-bubble removal confirmed intact alongside.
