@@ -1,0 +1,12 @@
+# Instagram recap video build — working directory.
+# Heavy media (footage, title frames, audio, intermediates, the static ffmpeg
+# binary, fonts, exports) is generated/downloaded at build time and NOT tracked.
+# Only the pipeline source is committed.
+scratchpad-video/*
+!scratchpad-video/build_video.py
+!scratchpad-video/build_audio.py
+!scratchpad-video/README.md
+!scratchpad-video/titles
+scratchpad-video/titles/*
+!scratchpad-video/titles/title.html
+!scratchpad-video/titles/render_titles.py
