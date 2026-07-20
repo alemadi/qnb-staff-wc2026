@@ -5,6 +5,16 @@ Rollback steps are exact and executable: git commands, plus inverse SQL for any 
 
 ---
 
+## 2026-07-20 (Doha) — FINAL banner artwork upgraded to "El Matador" (organizer's pick of 10)
+
+**Commits:** this changelog note on `claude/scores-banner-update-hz134m`. **DB-only art swap — no frontend change, no score change.**
+
+**What:** the organizer asked for a more epic final card and picked from 10 candidate renders (all house LEGO style, clarity-first rules kept: center-band subjects, frame filled, no text). Winner: **El Matador** — lone Spain captain in a matador pose, brick Spanish flag billowing off his arm as a cape, golden trophy raised, gold sparks streaming. `wc:highlight` updated in place (same k32 copy): img → `hf_20260719_222559_46683fad-45ea-405b-83a7-d269b1d54b9b_min.webp` (verified 200 `image/webp`, 65 KB), ts → `2026-07-20T01:07:00Z` (re-shows to dismissers).
+
+**Rollback:** `update kv set value = jsonb_set(jsonb_set(value::jsonb, '{img}', '"https://d8j0ntlcm91z4.cloudfront.net/user_3GBHS1FBMMdIx9mNLLM7aQoNmtt/hf_20260719_221938_e7bbef81-739e-4af3-ab3f-317f837b8f29_min.webp"'), '{ts}', '"2026-07-19T22:23:00Z"')::text where key='wc:highlight';` — restores the first championship render.
+
+---
+
 ## 2026-07-20 (Doha) — THE FINAL: k32 result confirmed + championship banner minted; mint routine retired
 
 **Commits:** this changelog + runbook note on `claude/scores-banner-update-hz134m`, on the organizer's "update the scores and mint the new banner". **DB + banner ops — no frontend change.**
