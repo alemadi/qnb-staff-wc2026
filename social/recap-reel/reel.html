@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Staff Challenge 26 — Tournament Recap Reel (1080×1920)</title>
+<style>
+  /* ============================================================
+     Staff Challenge 26 — Instagram recap reel
+     1080×1920 · deterministic timeline · window.__seek(tSeconds)
+     Brand tokens mirror index.html (FIFA-26 black/gold + Trionda
+     tricolor, Anton display / Hanken Grotesk body).
+     ============================================================ */
+  @font-face{font-family:'Anton';src:url(assets/fonts/anton-latin.woff2) format('woff2');font-weight:400;font-display:block}
+  @font-face{font-family:'Hanken Grotesk';src:url(assets/fonts/hanken-latin.woff2) format('woff2');font-weight:100 900;font-display:block}
+  :root{
+    --ink:#050507; --bg:#0a0a0c;
+    --c-red:#ef3340; --c-green:#2ea84f; --c-blue:#2d6fe0;
+    --tiles:linear-gradient(90deg,var(--c-red) 0 33.34%,var(--c-green) 33.34% 66.67%,var(--c-blue) 66.67% 100%);
+    --gold:#b49759; --gold-bright:#e3d3a3; --gold-deep:#8a734a;
+    --cream:#f4eee3; --muted:rgba(244,238,227,.62); --faint:rgba(244,238,227,.4);
+    --line:rgba(244,238,227,.13); --glass:rgba(255,255,255,.06); --glass-2:rgba(255,255,255,.095);
+    --font-d:'Anton','Arial Narrow',Impact,sans-serif;
+    --font-b:'Hanken Grotesk',ui-sans-serif,system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{width:1080px;height:1920px;overflow:hidden;background:#000}
+  body{font-family:var(--font-b);color:var(--cream)}
+  #stage{position:relative;width:1080px;height:1920px;overflow:hidden;
+    background:linear-gradient(162deg,#121214 0%,#0a0a0c 42%,#000 100%)}
+  /* ambient glows — same recipe as the app shell */
+  #glow{position:absolute;inset:0;pointer-events:none;background:
+    radial-gradient(1100px 760px at 8% -6%, rgba(180,151,89,.16), transparent 58%),
+    radial-gradient(1000px 720px at 102% 14%, rgba(45,111,224,.11), transparent 54%),
+    radial-gradient(900px 900px at 50% 128%, rgba(239,51,64,.09), transparent 60%)}
+  #strip{position:absolute;top:0;left:0;width:1080px;height:9px;background:var(--tiles);
+    transform-origin:0 50%;z-index:60}
+  #grain{position:absolute;inset:0;opacity:.05;z-index:55;pointer-events:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+  #wm{position:absolute;top:64px;left:0;width:1080px;text-align:center;z-index:50;
+    font-family:var(--font-d);font-size:38px;letter-spacing:.34em;color:rgba(244,238,227,.85)}
+  #wm b{color:var(--gold-bright);font-weight:400}
+
+  .scene{position:absolute;inset:0;display:none}
+  .chip{display:inline-block;font-family:var(--font-b);font-weight:800;letter-spacing:.22em;
+    font-size:30px;color:var(--gold-bright);border:2px solid rgba(180,151,89,.55);
+    background:rgba(180,151,89,.12);border-radius:999px;padding:16px 38px}
+  .card{background:var(--glass);border:2px solid var(--line);border-radius:36px;
+    -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+
+  /* ---------- S1 · cold open ---------- */
+  #s1 .big{position:absolute;left:0;width:1080px;text-align:center;font-family:var(--font-d);
+    font-size:236px;line-height:.94;color:var(--cream);letter-spacing:.01em}
+  #s1 #w1{top:560px} #s1 #w2{top:782px} #s1 #w3{top:1004px}
+  #s1 #w3{background:linear-gradient(180deg,var(--gold-bright),var(--gold) 70%,var(--gold-deep));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  #s1 .subs{position:absolute;top:1330px;left:0;width:1080px;display:flex;justify-content:center;gap:26px}
+
+  /* ---------- S2 · champions ---------- */
+  #s2 #heroWrap{position:absolute;inset:0;overflow:hidden}
+  #s2 #hero{position:absolute;top:0;left:50%;height:1920px;width:3442px;margin-left:-1892px;
+    background-image:url(assets/hero-final.webp);background-size:cover;background-position:50% 50%}
+  #s2 #shade{position:absolute;inset:0;background:
+    linear-gradient(180deg,rgba(5,5,7,.55) 0%,rgba(5,5,7,.12) 24%,rgba(5,5,7,.08) 40%,rgba(5,5,7,.74) 56%,rgba(5,5,7,.96) 78%);}
+  #s2 .chipRow{position:absolute;top:206px;width:1080px;text-align:center}
+  #s2 #spain{position:absolute;top:938px;width:1080px;text-align:center;font-family:var(--font-d);
+    font-size:288px;line-height:1;background:linear-gradient(180deg,var(--gold-bright) 10%,var(--gold) 62%,var(--gold-deep));
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    filter:drop-shadow(0 10px 44px rgba(0,0,0,.7))}
+  #s2 #cotw{position:absolute;top:1244px;width:1080px;text-align:center;font-family:var(--font-d);
+    font-size:74px;letter-spacing:.14em;color:var(--cream)}
+  #s2 #score{position:absolute;top:1370px;left:140px;width:800px;padding:30px 0 26px;text-align:center}
+  #s2 #score .row{display:flex;align-items:center;justify-content:center;gap:34px;
+    font-family:var(--font-d);font-size:84px;color:var(--cream)}
+  #s2 #score img{width:104px;height:78px;object-fit:cover;border-radius:10px;
+    box-shadow:0 4px 18px rgba(0,0,0,.55)}
+  #s2 #score .aet{margin-top:14px;font-weight:800;letter-spacing:.3em;font-size:27px;color:var(--muted)}
+  #s2 #torres{position:absolute;top:1576px;width:1080px;text-align:center;font-size:37px;
+    font-weight:700;color:var(--gold-bright);letter-spacing:.04em}
+
+  /* ---------- S3 · numbers ---------- */
+  #s3 .hd{position:absolute;top:236px;width:1080px;text-align:center}
+  .stat{position:absolute;left:90px;width:900px;height:252px;display:flex;align-items:center;
+    justify-content:space-between;padding:0 60px}
+  .stat .n{font-family:var(--font-d);font-size:150px;
+    background:linear-gradient(180deg,var(--gold-bright),var(--gold) 75%);
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .stat .l{text-align:right;font-weight:800;letter-spacing:.2em;font-size:33px;color:var(--muted);line-height:1.5}
+  #st1{top:420px} #st2{top:712px} #st3{top:1004px} #st4{top:1296px}
+  #s3 #foot{position:absolute;top:1620px;width:1080px;text-align:center;font-size:38px;
+    color:var(--muted);font-weight:600}
+  #s3 #foot b{color:var(--gold-bright)}
+
+  /* ---------- S4 · moments ---------- */
+  #s4 .hd{position:absolute;top:300px;width:1080px;text-align:center;padding:0 70px;
+    font-family:var(--font-d);font-size:84px;line-height:1.12;color:var(--cream)}
+  #s4 .hd i{font-style:normal;color:var(--gold-bright)}
+  .mo{position:absolute;top:700px;left:90px;width:900px;height:560px;padding:70px 40px 0;text-align:center}
+  .mo .fr{display:flex;align-items:center;justify-content:center;gap:44px;
+    font-family:var(--font-d);font-size:120px;color:var(--cream)}
+  .mo .fr img{width:130px;height:98px;object-fit:cover;border-radius:12px;
+    box-shadow:0 6px 22px rgba(0,0,0,.5)}
+  .mo .fr .sc{min-width:330px}
+  .mo .cap{margin-top:44px;font-size:40px;font-weight:700;color:var(--muted);letter-spacing:.02em}
+  .mo .rnd{margin-top:18px;font-size:27px;font-weight:800;letter-spacing:.3em;color:var(--faint)}
+  #s4 #dots{position:absolute;top:1400px;width:1080px;display:flex;justify-content:center;gap:22px}
+  #s4 #dots i{width:18px;height:18px;border-radius:50%;background:rgba(244,238,227,.18)}
+
+  /* ---------- S5 · podium ---------- */
+  #s5 .hd{position:absolute;top:250px;width:1080px;text-align:center}
+  #s5 canvas{position:absolute;inset:0}
+  .pod{position:absolute;left:110px;width:860px;display:flex;align-items:center;gap:40px;padding:0 48px}
+  .pod .rk{font-family:var(--font-d);font-size:56px;width:128px;height:128px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;flex:0 0 auto;color:#181106}
+  .pod .who{flex:1;min-width:0}
+  .pod .nm{font-family:var(--font-d);letter-spacing:.02em;color:var(--cream);white-space:nowrap}
+  .pod .dp{font-weight:700;letter-spacing:.14em;color:var(--faint);text-transform:uppercase}
+  .pod .pt{text-align:right;font-family:var(--font-d);color:var(--gold-bright)}
+  .pod .pt small{display:block;font-family:var(--font-b);font-weight:800;letter-spacing:.22em;
+    font-size:24px;color:var(--faint)}
+  #p3{top:1352px;height:230px}#p2{top:1082px;height:230px}
+  #p3 .rk{background:linear-gradient(180deg,#e8a06c,#a9683f)}
+  #p2 .rk{background:linear-gradient(180deg,#e8e6e1,#9d9a93)}
+  #p3 .nm,#p2 .nm{font-size:64px}#p3 .dp,#p2 .dp{font-size:24px;margin-top:8px}
+  #p3 .pt,#p2 .pt{font-size:76px}
+  #tease{position:absolute;top:760px;width:1080px;text-align:center;font-family:var(--font-d);
+    font-size:66px;letter-spacing:.06em;color:var(--muted)}
+  #p1{top:560px;height:420px;left:80px;width:920px;flex-direction:column;justify-content:center;gap:18px;
+    border-color:rgba(180,151,89,.65);box-shadow:0 0 120px rgba(180,151,89,.25), inset 0 0 60px rgba(180,151,89,.07)}
+  #p1 .rk{background:linear-gradient(180deg,var(--gold-bright),var(--gold) 60%,var(--gold-deep));
+    width:140px;height:140px;font-size:60px;margin-top:-70px;border:6px solid #0a0a0c}
+  #p1 .nm{font-size:104px}
+  #p1 .dp{font-size:27px;margin-top:2px;letter-spacing:.22em}
+  #p1 .big{font-family:var(--font-d);font-size:96px;margin-top:8px;
+    background:linear-gradient(180deg,var(--gold-bright),var(--gold) 70%);
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  #p1 .xs{font-weight:800;font-size:29px;letter-spacing:.2em;color:var(--muted)}
+  #p1 #mald{margin-top:22px}
+
+  /* ---------- S6 · outro ---------- */
+  #s6{text-align:center}
+  #s6 #ty{position:absolute;top:600px;width:1080px;font-family:var(--font-d);font-size:96px;color:var(--cream)}
+  #s6 #wmBig{position:absolute;top:860px;width:1080px;font-family:var(--font-d);
+    font-size:150px;line-height:1.04;color:var(--cream)}
+  #s6 #wmBig b{font-weight:400;background:linear-gradient(180deg,var(--gold-bright),var(--gold) 70%,var(--gold-deep));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  #s6 #bar{position:absolute;top:1240px;left:340px;width:400px;height:10px;background:var(--tiles);
+    border-radius:6px;transform-origin:50% 50%}
+  #s6 #site{position:absolute;top:1330px;width:1080px}
+  #s6 #bye{position:absolute;top:1480px;width:1080px;font-size:38px;font-weight:600;color:var(--muted)}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="glow"></div>
+
+  <!-- S1 · cold open -->
+  <section class="scene" id="s1">
+    <div class="big" id="w1">THAT&rsquo;S</div>
+    <div class="big" id="w2">A</div>
+    <div class="big" id="w3">WRAP.</div>
+    <div class="subs">
+      <span class="chip" id="c1">39 DAYS</span>
+      <span class="chip" id="c2">104 MATCHES</span>
+      <span class="chip" id="c3">ONE CHAMPION</span>
+    </div>
+  </section>
+
+  <!-- S2 · champions -->
+  <section class="scene" id="s2">
+    <div id="heroWrap"><div id="hero"></div><div id="shade"></div></div>
+    <div class="chipRow"><span class="chip" id="finChip">THE FINAL &middot; JULY 19</span></div>
+    <div id="spain">SPAIN</div>
+    <div id="cotw">CHAMPIONS OF THE WORLD</div>
+    <div class="card" id="score">
+      <div class="row"><img src="assets/flags/es.png" alt=""><span>ESP</span><span class="sc">1&thinsp;&ndash;&thinsp;0</span><span>ARG</span><img src="assets/flags/ar.png" alt=""></div>
+      <div class="aet">AFTER EXTRA TIME</div>
+    </div>
+    <div id="torres">Ferran Torres with the extra-time winner</div>
+  </section>
+
+  <!-- S3 · the pool in numbers -->
+  <section class="scene" id="s3">
+    <div class="hd"><span class="chip">YOUR POOL, IN NUMBERS</span></div>
+    <div class="stat card" id="st1"><span class="n" data-t="731">0</span><span class="l">PLAYERS</span></div>
+    <div class="stat card" id="st2"><span class="n" data-t="40138">0</span><span class="l">PREDICTIONS<br>LOCKED IN</span></div>
+    <div class="stat card" id="st3"><span class="n" data-t="308">0</span><span class="l">GOALS<br>SCORED</span></div>
+    <div class="stat card" id="st4"><span class="n" data-t="3182">0</span><span class="l">EXACT SCORES<br>NAILED</span></div>
+    <div id="foot">Only <b>70 of 465</b> champion picks said Spain.</div>
+  </section>
+
+  <!-- S4 · moments -->
+  <section class="scene" id="s4">
+    <div class="hd" id="s4h">THE SCORELINES THAT<br><i>BROKE THE GROUP CHAT</i></div>
+    <div class="mo card" id="mo0"><div class="fr"><img src="assets/flags/de.png"><span class="sc">7&thinsp;&ndash;&thinsp;1</span><img src="assets/flags/cw.png"></div>
+      <div class="cap">Germany put seven past Cura&ccedil;ao</div><div class="rnd">GROUP STAGE</div></div>
+    <div class="mo card" id="mo1"><div class="fr"><img src="assets/flags/au.png"><span class="sc">1&thinsp;&ndash;&thinsp;1</span><img src="assets/flags/eg.png"></div>
+      <div class="cap">Egypt through on penalties</div><div class="rnd">ROUND OF 32</div></div>
+    <div class="mo card" id="mo2"><div class="fr"><img src="assets/flags/ar.png"><span class="sc">3&thinsp;&ndash;&thinsp;2</span><img src="assets/flags/cv.png"></div>
+      <div class="cap">Cape Verde, so nearly the shock of the summer</div><div class="rnd">ROUND OF 32</div></div>
+    <div class="mo card" id="mo3"><div class="fr"><img src="assets/flags/fr.png"><span class="sc">4&thinsp;&ndash;&thinsp;6</span><img src="assets/flags/gb-eng.png"></div>
+      <div class="cap">A ten-goal bronze final</div><div class="rnd">THIRD PLACE</div></div>
+    <div id="dots"><i></i><i></i><i></i><i></i></div>
+  </section>
+
+  <!-- S5 · podium -->
+  <section class="scene" id="s5">
+    <canvas id="cf" width="1080" height="1920"></canvas>
+    <div class="hd"><span class="chip">THE FINAL PODIUM</span></div>
+    <div class="pod card" id="p3"><div class="rk">3RD</div>
+      <div class="who"><div class="nm">cemcmldr</div><div class="dp">Group Compliance</div></div>
+      <div class="pt">368<small>PTS</small></div></div>
+    <div class="pod card" id="p2"><div class="rk">2ND</div>
+      <div class="who"><div class="nm">Dane</div><div class="dp">Group Information Technology</div></div>
+      <div class="pt">384<small>PTS</small></div></div>
+    <div id="tease">AND THE MALDIVES TICKET GOES TO&hellip;</div>
+    <div class="pod card" id="p1"><div class="rk">1ST</div>
+      <div class="nm">RUSHDY FOWZER</div>
+      <div class="dp">RETAIL BANKING</div>
+      <div class="big">388 PTS</div>
+      <div class="xs">20 EXACT SCORES &middot; 73 WINNERS CALLED</div>
+      <span class="chip" id="mald">MALDIVES-BOUND</span></div>
+  </section>
+
+  <!-- S6 · outro -->
+  <section class="scene" id="s6">
+    <div id="ty">THANK YOU FOR PLAYING.</div>
+    <div id="wmBig">STAFF CHALLENGE<br><b>26</b></div>
+    <div id="bar"></div>
+    <div id="site"><span class="chip">STAFFCHALLENGE26.COM</span></div>
+    <div id="bye">Titles live on in the Trophy Room &mdash; see you in 2030.</div>
+  </section>
+
+  <div id="grain"></div>
+  <div id="strip"></div>
+  <div id="wm">STAFF CHALLENGE <b>26</b></div>
+
+  <!-- Instagram Reels UI safe-zone guide (only shown with #safe in the URL) -->
+  <div id="safez" style="display:none;position:absolute;inset:0;z-index:9000;pointer-events:none">
+    <div style="position:absolute;top:0;left:0;width:1080px;height:220px;background:rgba(239,51,64,.22);border-bottom:2px dashed rgba(255,255,255,.5)"></div>
+    <div style="position:absolute;bottom:0;left:0;width:1080px;height:420px;background:rgba(239,51,64,.22);border-top:2px dashed rgba(255,255,255,.5)"></div>
+    <div style="position:absolute;bottom:0;right:0;width:200px;height:900px;background:rgba(45,111,224,.20);border-left:2px dashed rgba(255,255,255,.5)"></div>
+  </div>
+</div>
+
+<script>
+/* ================= deterministic timeline ================= */
+const $=id=>document.getElementById(id);
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+const E={lin:x=>x,
+  out:x=>1-Math.pow(1-x,3),
+  outQ:x=>1-Math.pow(1-x,5),
+  inC:x=>x*x*x,
+  io:x=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2,
+  back:x=>{const c=1.70158*1.1;return 1+(c+1)*Math.pow(x-1,3)+c*Math.pow(x-1,2);}};
+function p(t,t0,t1,e){return (e||E.out)(clamp((t-t0)/(t1-t0),0,1));}
+function tv(t,t0,t1,a,b,e){return a+(b-a)*p(t,t0,t1,e);}
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+
+/* seeded PRNG for confetti (stable across frames) */
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);
+  t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}}
+const CF=[];{const r=mulberry32(20260719);const cols=['#e3d3a3','#b49759','#ef3340','#2ea84f','#2d6fe0','#f4eee3'];
+  for(let i=0;i<150;i++){CF.push({x:r()*1080,d:.55+r()*1.1,w:10+r()*16,h:6+r()*10,
+    c:cols[(r()*cols.length)|0],ph:r()*Math.PI*2,sp:210+r()*260,rs:(r()-.5)*9});}}
+
+const T={ s1:[0,3.4], s2:[3.4,9.0], s3:[9.0,15.2], s4:[15.2,21.4], s5:[21.4,29.2], s6:[29.2,33.5] };
+const DUR=33.5;
+
+function sceneO(t,[a,b],fi,fo){ /* container opacity with fade-in/out */
+  return Math.min(p(t,a,a+(fi??.35)),1-p(t,b-(fo??.4),b,E.inC));
+}
+function show(el,o){el.style.display=o>0?'block':'none';el.style.opacity=o;}
+function st(el,{y=0,x=0,s=1,o=1,b=0,r=0}={}){
+  el.style.opacity=o;
+  el.style.transform=`translate(${x}px,${y}px) scale(${s}) rotate(${r}deg)`;
+  el.style.filter=b>0?`blur(${b}px)`:'';
+}
+
+/* ---------- scenes ---------- */
+function s1(t){const sc=$('s1'),o=sceneO(t,T.s1);show(sc,o);if(!o)return;
+  st($('w1'),{o:p(t,.55,.85),s:tv(t,.55,.95,1.45,1,E.outQ)});
+  st($('w2'),{o:p(t,.8,1.1),s:tv(t,.8,1.2,1.45,1,E.outQ)});
+  st($('w3'),{o:p(t,1.05,1.35),s:tv(t,1.05,1.5,1.6,1,E.outQ)});
+  [['c1',1.7],['c2',1.9],['c3',2.1]].forEach(([id,t0])=>
+    st($(id),{o:p(t,t0,t0+.3),y:tv(t,t0,t0+.4,46,0)}));
+  const ex=p(t,3.0,3.4,E.inC);sc.style.transform=`translateY(${-60*ex}px)`;}
+
+function s2(t){const sc=$('s2'),o=sceneO(t,T.s2);show(sc,o);if(!o)return;
+  st($('hero'),{s:tv(t,3.4,9,1.1,1.0,E.lin),x:tv(t,3.4,9,40,-30,E.lin)});
+  st($('finChip'),{o:p(t,3.9,4.2),y:tv(t,3.9,4.3,-40,0)});
+  st($('spain'),{o:p(t,4.25,4.55),y:tv(t,4.25,4.75,150,0,E.outQ),s:tv(t,4.25,4.75,1.25,1,E.outQ)});
+  st($('cotw'),{o:p(t,4.8,5.15),y:tv(t,4.8,5.2,60,0)});
+  st($('score'),{o:p(t,5.6,5.95),y:tv(t,5.6,6.0,90,0),s:tv(t,5.6,6.0,.92,1,E.back)});
+  st($('torres'),{o:p(t,6.5,6.9)});}
+
+function s3(t){const sc=$('s3'),o=sceneO(t,T.s3);show(sc,o);if(!o)return;
+  st(sc.querySelector('.hd'),{o:p(t,9.2,9.5),y:tv(t,9.2,9.6,-36,0)});
+  [['st1',9.6],['st2',10.05],['st3',10.5],['st4',10.95]].forEach(([id,t0])=>{
+    const el=$(id);st(el,{o:p(t,t0,t0+.35),x:tv(t,t0,t0+.45,110,0,E.outQ)});
+    const n=el.querySelector('.n');
+    n.textContent=fmt(+n.dataset.t*p(t,t0+.1,t0+1.05,E.io));});
+  st($('foot'),{o:p(t,12.6,13.0),y:tv(t,12.6,13.0,36,0)});}
+
+function s4(t){const sc=$('s4'),o=sceneO(t,T.s4);show(sc,o);if(!o)return;
+  st($('s4h'),{o:p(t,15.4,15.7),y:tv(t,15.4,15.8,-40,0)});
+  const C0=16.1,L=1.32,dots=$('dots').children;let act=-1;
+  for(let i=0;i<4;i++){const a=C0+i*L,b=a+L,el=$('mo'+i);
+    const oi=Math.min(p(t,a,a+.26),1-p(t,b-.2,b,E.inC));
+    if(i===3){ /* last card holds until scene end */
+      const oh=p(t,a,a+.26);st(el,{o:oh,s:tv(t,a,a+.34,.82,1,E.outQ),x:0});
+      el.style.display=oh>0?'block':'none';if(t>=a)act=3;}
+    else{st(el,{o:oi,s:tv(t,a,a+.34,.82,1,E.outQ),x:tv(t,b-.2,b,0,-120,E.inC)});
+      el.style.display=oi>0?'block':'none';if(t>=a&&t<b)act=i;}}
+  for(let i=0;i<4;i++)dots[i].style.background=i===act?'var(--gold-bright)':'rgba(244,238,227,.18)';}
+
+function s5(t){const sc=$('s5'),o=sceneO(t,T.s5);show(sc,o);if(!o)return;
+  st(sc.querySelector('.hd'),{o:p(t,21.6,21.9),y:tv(t,21.6,22.0,-36,0)});
+  st($('p3'),{o:p(t,22.1,22.45),x:tv(t,22.1,22.55,130,0,E.outQ)});
+  st($('p2'),{o:p(t,22.9,23.25),x:tv(t,22.9,23.35,130,0,E.outQ)});
+  const teaseO=Math.min(p(t,23.9,24.25),1-p(t,25.35,25.65,E.inC));
+  st($('tease'),{o:teaseO,y:tv(t,23.9,24.3,40,0)});
+  st($('p1'),{o:p(t,25.7,26.0),y:tv(t,25.7,26.2,220,0,E.outQ),s:tv(t,25.7,26.2,.86,1,E.back)});
+  /* confetti — falls from winner reveal onward */
+  const cv=$('cf'),cx=cv.getContext('2d');cx.clearRect(0,0,1080,1920);
+  const ct=t-25.8;
+  if(ct>0){cx.save();
+    for(const f of CF){const y=-40+ct*f.sp*f.d;if(y>1960)continue;
+      const x=f.x+Math.sin(ct*2.1+f.ph)*46;
+      cx.save();cx.translate(x,y);cx.rotate(ct*f.rs+f.ph);
+      cx.globalAlpha=.92*Math.min(1,p(ct,0,.35));
+      cx.fillStyle=f.c;cx.fillRect(-f.w/2,-f.h/2,f.w,Math.max(2,f.h*Math.abs(Math.sin(ct*3+f.ph))));
+      cx.restore();}
+    cx.restore();}}
+
+function s6(t){const sc=$('s6'),o=sceneO(t,T.s6,.45,.01);show(sc,o);if(!o)return;
+  st($('ty'),{o:p(t,29.5,29.9),y:tv(t,29.5,30.0,40,0)});
+  st($('wmBig'),{o:p(t,30.2,30.6),s:tv(t,30.2,30.7,.9,1,E.outQ)});
+  $('bar').style.transform=`scaleX(${p(t,30.6,31.1,E.io)})`;
+  st($('site'),{o:p(t,31.0,31.35),y:tv(t,31.0,31.4,30,0)});
+  st($('bye'),{o:p(t,31.5,31.9)});}
+
+/* ---------- master seek ---------- */
+window.__seek=function(t){t=clamp(t,0,DUR);
+  $('strip').style.transform=`scaleX(${p(t,.05,.55,E.io)})`;
+  st($('wm'),{o:p(t,.3,.8)*.92});
+  s1(t);s2(t);s3(t);s4(t);s5(t);s6(t);return t;};
+window.__dur=DUR;
+
+/* preview mode: play in a normal browser tab */
+window.__ready=Promise.all([document.fonts.load('400 100px Anton'),
+  document.fonts.load('800 40px "Hanken Grotesk"')]).then(()=>document.fonts.ready).then(()=>{
+  if(location.hash.includes('safe'))$('safez').style.display='block';
+  __seek(0);
+  if(!location.hash.includes('render')){
+    const t0=performance.now();
+    (function loop(){const t=((performance.now()-t0)/1000)%DUR;__seek(t);requestAnimationFrame(loop);})();}
+  return true;});
+</script>
+</body>
+</html>
