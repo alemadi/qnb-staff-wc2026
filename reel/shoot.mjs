@@ -21,7 +21,7 @@ const FPS=await page.evaluate('window.FPS');
 
 if(mode==='qa'){
   await page.evaluate(()=>{document.getElementById('stage').style.background='#07070a';});
-  const times=[1.8,5.3,11.9,16.6,20.1,24.7,29.7];
+  const times=[1.8,8.3,16.6,20.1,21.95,24.7,29.7];
   let i=0;
   for(const t of times){i++;
     await page.evaluate(tt=>window.render(tt),t);

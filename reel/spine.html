@@ -21,7 +21,7 @@
   #bg{position:absolute;inset:0;background:
       radial-gradient(120% 80% at 50% 18%, #17151a 0%, var(--plum) 42%, var(--ink) 100%);}
   #scrim{position:absolute;inset:0;pointer-events:none;background:
-      linear-gradient(180deg, rgba(5,5,7,.55) 0%, rgba(5,5,7,.05) 32%, rgba(5,5,7,.10) 62%, rgba(5,5,7,.78) 100%);}
+      linear-gradient(180deg, rgba(5,5,7,.12) 0%, rgba(5,5,7,.03) 30%, rgba(5,5,7,.08) 60%, rgba(5,5,7,.60) 100%);}
   #vign{position:absolute;inset:0;pointer-events:none;
       box-shadow:inset 0 0 340px 90px rgba(0,0,0,.85), inset 0 0 120px 20px rgba(0,0,0,.5);}
 
@@ -73,10 +73,8 @@
     backdrop-filter:blur(6px);font-family:var(--font-d);letter-spacing:.6px;color:var(--cream)}
 
   /* dept chips */
-  #s1chips{position:absolute;left:540px;top:1120px;transform:translate(-50%,-50%);width:900px;
-    display:flex;flex-wrap:wrap;justify-content:center;gap:14px;opacity:0}
-  .dchip{padding:12px 20px;border-radius:999px;border:1px solid rgba(227,211,163,.32);
-    background:rgba(227,211,163,.06);font-family:var(--font-b);font-weight:800;font-size:26px;letter-spacing:.06em;color:var(--gb);opacity:0;transform:translateY(14px)}
+  #s1chips{position:absolute;left:540px;transform:translate(-50%,-50%);text-align:center;white-space:nowrap;
+    font-family:var(--font-b);font-weight:800;letter-spacing:.13em;font-size:26px;color:var(--gb);opacity:0}
 
   /* race bars */
   #s3race{position:absolute;left:540px;top:1090px;transform:translate(-50%,-50%);width:760px;height:460px;
@@ -122,7 +120,7 @@
   <div class="c disp gold" id="s1num" style="top:812px;font-size:300px"></div>
   <div class="c disp cream" id="s1label" style="top:1004px;font-size:66px"></div>
   <div class="c kick" id="s1sub" style="top:1090px;font-size:28px;color:var(--muted)"></div>
-  <div id="s1chips"></div>
+  <div id="s1chips" style="top:1092px">IT&nbsp;·&nbsp;RETAIL&nbsp;·&nbsp;RISK&nbsp;·&nbsp;COMPLIANCE&nbsp;·&nbsp;COMMS&nbsp;·&nbsp;OPS</div>
 
   <!-- S2 tournament -->
   <div class="c kick" id="s2pre" style="top:690px;font-size:32px;color:var(--gb)">And&nbsp;on&nbsp;the&nbsp;final&nbsp;night…</div>
@@ -212,9 +210,7 @@ function flap(container,start,stag,t){const ts=container.__tiles;
   });}
 
 /* ---------- dept chips ---------- */
-const DEPTS=['Group IT','Retail Banking','Group Risk','Compliance','Communications','Operations'];
-const chipsWrap=$('s1chips');DEPTS.forEach(d=>{const c=document.createElement('div');c.className='dchip';c.textContent=d;chipsWrap.appendChild(c);});
-const chipEls=[...chipsWrap.children];
+/* departments shown as one clean centered line (see #s1chips markup) */
 
 /* ---------- race bars ---------- */
 const raceWrap=$('s3race');const NB=7;const raceEls=[];
@@ -284,7 +280,7 @@ function render(t){
       {a:3.05,b:4.55,num:104,txt:'104',lab:'MATCHES',sub:'every single fixture, predicted'},
       {a:4.55,b:6.05,num:732,txt:'732',lab:'PLAYERS',sub:'colleagues who locked in a pick'},
       {a:6.05,b:7.35,num:39,txt:'39',lab:'DAYS',sub:'11 June — 19 July 2026'},
-      {a:7.35,b:8.95,num:null,txt:'ONE',lab:'OFFICE',sub:'every department in the game'}
+      {a:7.35,b:8.95,num:null,txt:'ONE',lab:'OFFICE',sub:''}
     ];
    let act=null;for(const bt of beats){if(t>=bt.a-.001)act=bt;}
    const showS1=t>=3.0&&t<8.98;
@@ -300,9 +296,8 @@ function render(t){
      setC($('s1label'),1010,`translateY(${lerp(18,0,eOutCubic(ent))}px)`,op);
      setC($('s1sub'),1096,'',op*.9);
      // dept chips on last beat
-     if(act.lab==='OFFICE'){const cy=p(t,7.55,7.75);$('s1chips').style.opacity=clamp(cy-ex);
-       chipEls.forEach((c,i)=>{const r=p(t,7.6+i*.07,7.6+i*.07+.4);c.style.opacity=clamp(r-ex);c.style.transform=`translateY(${lerp(14,0,eOutBack(r))}px)`;});
-     } else {$('s1chips').style.opacity=0;}
+     if(act.lab==='OFFICE'){const cy=p(t,7.62,8.05);setC($('s1chips'),1092,`translateY(${lerp(12,0,eOutCubic(cy))}px)`,clamp(cy-ex));}
+     else {$('s1chips').style.opacity=0;}
    } else {['s1num','s1label','s1sub'].forEach(id=>$(id).style.opacity=0);$('s1chips').style.opacity=0;}
   }
 
@@ -336,10 +331,10 @@ function render(t){
      d.el.style.opacity=clamp(p(t,a,a+.3)-podOut);
      d.el.style.transform=`translateY(${lerp(30,0,r)}px)`;});
    // hero
-   const ho=p(t,22.1,22.5),heroOut=p(t,26.4,26.9);
-   setC($('s4over'),648,'',clamp(p(t,22.2,22.7)-heroOut));
+   const ho=p(t,21.85,22.35),heroOut=p(t,26.4,26.9);
+   setC($('s4over'),648,'',clamp(p(t,21.95,22.45)-heroOut));
    $('s4flap').style.opacity=clamp(ho-heroOut);
-   flap($('s4flap'),22.35,.13,t);
+   flap($('s4flap'),22.1,.12,t);
    $('s4flap').style.transform=`translate(-50%,-50%) scale(${lerp(1.08,1,eOutExpo(ho))})`;
    const nm=p(t,23.4,23.9);setC($('s4name'),1016,`translateY(${lerp(16,0,eOutCubic(nm))}px)`,clamp(nm-heroOut));
    const tg=p(t,23.9,24.4);setC($('s4tag'),1150,`translateY(${lerp(16,0,eOutBack(tg))}px)`,clamp(tg-heroOut));

@@ -5,6 +5,8 @@ FF=./ffmpeg
 mkdir -p seg
 # brand grade: deepen blacks, warm-gold push, cool shadows, vignette, subtle grain
 GC="fps=30,scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,setsar=1,eq=contrast=1.09:brightness=-0.03:saturation=1.06:gamma=0.95,colorbalance=rs=0.03:bs=-0.04:rm=0.03:bm=-0.03,vignette=PI/4.2,noise=alls=6:allf=t"
+# brighter, warmer, more saturated grade for the Maldives PRIZE payoff (aspirational, not moody)
+MGC="fps=30,scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,setsar=1,eq=contrast=1.05:brightness=0.05:saturation=1.26:gamma=1.10,colorbalance=rs=0.01:gs=0.02:bs=0.03:rm=0.02,vignette=PI/6,noise=alls=4:allf=t"
 BLACK="color=c=0x050507:s=1080x1920:r=30"
 ENC="-r 30 -an -c:v libx264 -preset medium -crf 18 -pix_fmt yuv420p"
 
@@ -23,13 +25,13 @@ echo "[4/6] black filler (14.6->26.9, 12.3s)"
 $FF -y -f lavfi -i $BLACK -t 12.3 -vf format=yuv420p $ENC seg/s4_black.mp4 2>seg/log4.txt
 
 echo "[5/6] maldives (4.15s)"
-$FF -y -i broll/maldives.mp4 -t 4.15 -vf "$GC,fade=t=in:st=0:d=0.4,fade=t=out:st=3.75:d=0.4,format=yuv420p" $ENC seg/s5_mal.mp4 2>seg/log5.txt
+$FF -y -i broll/maldives.mp4 -t 4.15 -vf "$MGC,fade=t=in:st=0:d=0.4,fade=t=out:st=3.75:d=0.4,format=yuv420p" $ENC seg/s5_mal.mp4 2>seg/log5.txt
 
 echo "[6/6] black filler (31.05->33.0, 1.95s)"
 $FF -y -f lavfi -i $BLACK -t 1.95 -vf format=yuv420p $ENC seg/s6_black.mp4 2>seg/log6.txt
 
 echo "concat..."
-printf "file 'seg/s1_gold.mp4'\nfile 'seg/s2_black.mp4'\nfile 'seg/s3_tourn.mp4'\nfile 'seg/s4_black.mp4'\nfile 'seg/s5_mal.mp4'\nfile 'seg/s6_black.mp4'\n" > seg/list.txt
+printf "file 's1_gold.mp4'\nfile 's2_black.mp4'\nfile 's3_tourn.mp4'\nfile 's4_black.mp4'\nfile 's5_mal.mp4'\nfile 's6_black.mp4'\n" > seg/list.txt
 $FF -y -f concat -safe 0 -i seg/list.txt -c copy base.mp4 2>seg/logcat.txt || \
   $FF -y -f concat -safe 0 -i seg/list.txt $ENC base.mp4 2>seg/logcat2.txt
 echo "=== base.mp4 ==="
