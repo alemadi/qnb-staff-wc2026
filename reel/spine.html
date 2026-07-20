@@ -1,0 +1,386 @@
+<meta charset="utf-8">
+<style>
+  /* ===== Brand fonts (exact house faces) ===== */
+  @font-face{font-family:'Anton';src:url('./fonts/Anton-Regular.ttf') format('truetype');font-weight:400;font-display:block}
+  @font-face{font-family:'Hanken Grotesk';src:url('./fonts/HankenGrotesk.ttf') format('truetype');font-weight:300 900;font-display:block}
+
+  :root{
+    --ink:#050507; --plum:#0a0a0d; --grape:#0f0f12; --sapphire:#1b1b20; --sapphire-deep:#101014;
+    --gold:#b49759; --gb:#e3d3a3; --gd:#8a734a;
+    --cream:#f4eee3; --muted:rgba(244,238,227,.62); --faint:rgba(244,238,227,.40);
+    --c-red:#ef3340; --c-green:#2ea84f; --c-blue:#2d6fe0; --qatar:#8a1538; --lime:#3ddc97;
+    --font-d:'Anton','Arial Narrow',Impact,sans-serif;
+    --font-b:'Hanken Grotesk',ui-sans-serif,system-ui,sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{background:transparent}
+  #stage{position:relative;width:1080px;height:1920px;overflow:hidden;background:transparent;
+    font-family:var(--font-b);color:var(--cream);-webkit-font-smoothing:antialiased;text-rendering:geometricPrecision}
+
+  /* opaque base for graphics scenes (toggled off during B-roll windows) */
+  #bg{position:absolute;inset:0;background:
+      radial-gradient(120% 80% at 50% 18%, #17151a 0%, var(--plum) 42%, var(--ink) 100%);}
+  #scrim{position:absolute;inset:0;pointer-events:none;background:
+      linear-gradient(180deg, rgba(5,5,7,.55) 0%, rgba(5,5,7,.05) 32%, rgba(5,5,7,.10) 62%, rgba(5,5,7,.78) 100%);}
+  #vign{position:absolute;inset:0;pointer-events:none;
+      box-shadow:inset 0 0 340px 90px rgba(0,0,0,.85), inset 0 0 120px 20px rgba(0,0,0,.5);}
+
+  .c{position:absolute;left:540px;transform-origin:center center;text-align:center;will-change:transform,opacity;opacity:0}
+  .disp{font-family:var(--font-d);line-height:.92;letter-spacing:.5px}
+  .gold{background:linear-gradient(178deg,#f3e6bf 0%, var(--gb) 30%, var(--gold) 66%, var(--gd) 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    filter:drop-shadow(0 6px 22px rgba(0,0,0,.55))}
+  .cream{color:var(--cream)}
+  .kick{font-family:var(--font-b);font-weight:800;letter-spacing:.42em;text-transform:uppercase}
+
+  /* tri-color stripe (opening slash → top hairline) */
+  #stripe{position:absolute;left:0;top:0;width:1080px;height:14px;
+    background:linear-gradient(90deg,var(--c-red) 0 33.34%,var(--c-green) 33.34% 66.67%,var(--c-blue) 66.67% 100%);
+    transform-origin:center center;box-shadow:0 0 26px rgba(0,0,0,.4)}
+
+  /* soft gold glow behind heroes */
+  #glow{position:absolute;left:540px;top:820px;width:1100px;height:1100px;transform:translate(-50%,-50%);
+    background:radial-gradient(circle at 50% 50%, rgba(227,211,163,.20) 0%, rgba(180,151,89,.08) 34%, rgba(0,0,0,0) 66%);
+    opacity:0;pointer-events:none;filter:blur(6px)}
+
+  /* dust + confetti particles */
+  .dust{position:absolute;border-radius:50%;background:radial-gradient(circle,#f0e4bd,#b49759);opacity:.0}
+  .conf{position:absolute;top:-40px;left:0;will-change:transform,opacity;opacity:0;z-index:6}
+  .z20{z-index:20}
+  #s4name,#s4tag{text-shadow:0 2px 16px rgba(0,0,0,.92),0 0 4px rgba(0,0,0,.85)}
+
+  /* HUD */
+  #hudword{position:absolute;left:540px;top:1836px;transform:translate(-50%,-50%);opacity:0;
+    font-family:var(--font-d);letter-spacing:.22em;font-size:26px;color:var(--gb)}
+  #hudword small{font-family:var(--font-b);font-weight:800;letter-spacing:.3em;font-size:14px;color:var(--faint);display:block;margin-top:7px}
+  #hudprog{position:absolute;left:130px;top:1880px;width:820px;height:3px;background:rgba(244,238,227,.14);border-radius:3px;opacity:0}
+  #hudfill{position:absolute;left:0;top:0;height:100%;width:0;border-radius:3px;
+    background:linear-gradient(90deg,var(--gold),var(--gb))}
+
+  /* split-flap tiles */
+  .flaprow{position:absolute;left:540px;transform:translate(-50%,-50%);display:flex;gap:12px;opacity:1}
+  .tile{position:relative;display:grid;place-items:center;border-radius:12px;
+    background:linear-gradient(180deg,#26262c 0 49%,#101014 51% 100%);
+    border:1px solid rgba(255,255,255,.08);box-shadow:0 18px 34px -16px rgba(0,0,0,.9), inset 0 1px 0 rgba(255,255,255,.06);
+    font-family:var(--font-d);color:var(--gb);overflow:hidden;transform-origin:top center;will-change:transform,opacity}
+  .tile::after{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:rgba(0,0,0,.66);box-shadow:0 1px 0 rgba(255,255,255,.05)}
+  .tile.sm{width:112px;height:150px;font-size:104px}
+  .tile.big{width:150px;height:196px;font-size:140px}
+
+  /* score chip */
+  .chip{display:inline-flex;align-items:center;gap:14px;padding:16px 26px;border-radius:16px;
+    background:rgba(10,10,13,.62);border:1px solid rgba(227,211,163,.28);
+    backdrop-filter:blur(6px);font-family:var(--font-d);letter-spacing:.6px;color:var(--cream)}
+
+  /* dept chips */
+  #s1chips{position:absolute;left:540px;top:1120px;transform:translate(-50%,-50%);width:900px;
+    display:flex;flex-wrap:wrap;justify-content:center;gap:14px;opacity:0}
+  .dchip{padding:12px 20px;border-radius:999px;border:1px solid rgba(227,211,163,.32);
+    background:rgba(227,211,163,.06);font-family:var(--font-b);font-weight:800;font-size:26px;letter-spacing:.06em;color:var(--gb);opacity:0;transform:translateY(14px)}
+
+  /* race bars */
+  #s3race{position:absolute;left:540px;top:1090px;transform:translate(-50%,-50%);width:760px;height:460px;
+    display:flex;align-items:flex-end;justify-content:center;gap:20px;opacity:0}
+  .bar{width:78px;border-radius:10px 10px 3px 3px;background:linear-gradient(180deg,#3a3a44,#1a1a20);
+    border:1px solid rgba(255,255,255,.06);box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+  .bar.lead{background:linear-gradient(180deg,var(--gb),var(--gd));border-color:rgba(227,211,163,.5);
+    box-shadow:0 0 30px rgba(227,211,163,.35), inset 0 1px 0 rgba(255,255,255,.25)}
+
+  /* podium */
+  #s4pod{position:absolute;left:540px;top:1180px;transform:translate(-50%,-50%);width:820px;height:520px;
+    display:flex;align-items:flex-end;justify-content:center;gap:26px;opacity:0}
+  .pcol{width:220px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end}
+  .phandle{font-family:var(--font-b);font-weight:800;font-size:24px;color:var(--cream);margin-bottom:12px;letter-spacing:.02em;white-space:nowrap}
+  .pblock{width:100%;border-radius:12px 12px 4px 4px;display:grid;place-items:start center;padding-top:16px;
+    background:linear-gradient(180deg,#2a2a31,#141418);border:1px solid rgba(255,255,255,.07)}
+  .pblock b{font-family:var(--font-d);font-size:66px;color:var(--faint)}
+  .pcol.silver .pblock{background:linear-gradient(180deg,#33333b,#17171c);border-color:rgba(207,211,216,.28)}
+  .pcol.silver .pblock b{color:#d3d7dc}
+  .pcol.bronze .pblock{background:linear-gradient(180deg,#2a211a,#15110d);border-color:rgba(201,138,75,.28)}
+  .pcol.bronze .pblock b{color:#cf9256}
+  .pcol.gold .pblock{background:linear-gradient(180deg,#33301f,#17140c);border-color:rgba(227,211,163,.42);
+    box-shadow:0 0 44px -6px rgba(227,211,163,.30), inset 0 1px 0 rgba(255,255,255,.08)}
+  .pcol.gold .pblock b{background:linear-gradient(180deg,#f3e6bf,var(--gb),var(--gd));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .pcol.gold .phandle{color:var(--gb)}
+</style>
+
+<div id="stage">
+  <div id="bg"></div>
+  <div id="dust"></div>
+  <div id="scrim"></div>
+  <div id="vign"></div>
+  <div id="glow"></div>
+
+  <div id="stripe"></div>
+
+  <!-- S0 cold open -->
+  <div class="c disp gold" id="s0wm" style="top:806px;font-size:150px">STAFF&nbsp;CHALLENGE</div>
+  <div class="c kick" id="s0sub" style="top:928px;font-size:30px;color:var(--gb)">World&nbsp;Cup&nbsp;2026&nbsp;&nbsp;·&nbsp;&nbsp;The&nbsp;Recap</div>
+  <div class="c" id="s0hook" style="top:1096px;font-family:var(--font-d);font-size:52px;letter-spacing:.4px;color:var(--cream)">6&nbsp;WEEKS.&nbsp;732&nbsp;OF&nbsp;US.<br><span style="color:var(--gb)">ONE&nbsp;CHAMPION.</span></div>
+
+  <!-- S1 scale -->
+  <div class="c disp gold" id="s1num" style="top:812px;font-size:300px"></div>
+  <div class="c disp cream" id="s1label" style="top:1004px;font-size:66px"></div>
+  <div class="c kick" id="s1sub" style="top:1090px;font-size:28px;color:var(--muted)"></div>
+  <div id="s1chips"></div>
+
+  <!-- S2 tournament -->
+  <div class="c kick" id="s2pre" style="top:690px;font-size:32px;color:var(--gb)">And&nbsp;on&nbsp;the&nbsp;final&nbsp;night…</div>
+  <div class="c disp gold" id="s2spain" style="top:838px;font-size:250px">SPAIN</div>
+  <div class="c disp cream" id="s2are" style="top:1000px;font-size:60px">ARE&nbsp;CHAMPIONS&nbsp;OF&nbsp;THE&nbsp;WORLD</div>
+  <div class="c" id="s2score" style="top:1150px"><span class="chip" style="font-size:38px">SPAIN&nbsp;<span class="gold">1</span>&nbsp;–&nbsp;<span style="color:var(--muted)">0</span>&nbsp;ARGENTINA</span></div>
+  <div class="c kick" id="s2sub" style="top:1232px;font-size:24px;color:var(--muted)">a.e.t.&nbsp;&nbsp;·&nbsp;&nbsp;Ferran&nbsp;Torres,&nbsp;extra&nbsp;time</div>
+
+  <!-- S3 pivot -->
+  <div class="c disp cream" id="s3a" style="top:760px;font-size:76px">BUT&nbsp;THE&nbsp;REAL&nbsp;FINAL…</div>
+  <div class="c disp gold" id="s3b" style="top:864px;font-size:92px">WAS&nbsp;IN&nbsp;THE&nbsp;OFFICE</div>
+  <div id="s3race"></div>
+  <div class="c kick" id="s3cap" style="top:1420px;font-size:28px;color:var(--gb)">732&nbsp;played&nbsp;·&nbsp;one&nbsp;topped&nbsp;the&nbsp;table</div>
+
+  <!-- S4 podium + champion -->
+  <div id="s4pod"></div>
+  <div class="c kick z20" id="s4over" style="top:648px;font-size:30px;color:var(--gb)">Your&nbsp;Staff&nbsp;Champion&nbsp;2026</div>
+  <div class="flaprow z20" id="s4flap" style="top:864px"></div>
+  <div class="c z20" id="s4name" style="top:1016px;font-family:var(--font-b);font-weight:800;font-size:40px;color:var(--cream);letter-spacing:.03em">@dineshsiva6&nbsp;&nbsp;·&nbsp;&nbsp;<span style="color:var(--gb)">Group&nbsp;IT</span></div>
+  <div class="c z20" id="s4tag" style="top:1150px;font-family:var(--font-d);font-size:44px;letter-spacing:.4px;color:var(--cream)">CALLED&nbsp;SPAIN&nbsp;FROM&nbsp;<span style="color:var(--gb)">DAY&nbsp;ONE.</span></div>
+
+  <!-- S5 Maldives -->
+  <div class="c kick" id="s5top" style="top:648px;font-size:30px;color:var(--gb)">First&nbsp;Prize&nbsp;·&nbsp;Trip&nbsp;for&nbsp;One</div>
+  <div class="flaprow z20" id="s5flap" style="top:876px"></div>
+  <div class="c disp gold" id="s5board" style="top:1074px;font-size:78px">NOW&nbsp;BOARDING</div>
+
+  <!-- S6 end -->
+  <div class="c disp gold" id="s6wm" style="top:872px;font-size:132px">STAFF&nbsp;CHALLENGE</div>
+  <div class="c" id="s6url" style="top:996px;font-family:var(--font-b);font-weight:800;font-size:38px;letter-spacing:.05em;color:var(--cream)">staffchallenge26.com</div>
+  <div class="c kick" id="s6sub" style="top:1074px;font-size:26px;color:var(--muted)">See&nbsp;you&nbsp;at&nbsp;the&nbsp;next&nbsp;one</div>
+
+  <!-- HUD -->
+  <div id="hudword">STAFF&nbsp;CHALLENGE<small>QNB&nbsp;STAFF&nbsp;WORLD&nbsp;CUP&nbsp;2026</small></div>
+  <div id="hudprog"><div id="hudfill"></div></div>
+</div>
+
+<script>
+const W=1080,H=1920,DURATION=33.0,FPS=30;
+const stage=document.getElementById('stage');
+const $=id=>document.getElementById(id);
+
+/* ---------- math ---------- */
+const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
+const p=(t,a,b)=>clamp((t-a)/(b-a));
+const lerp=(a,b,x)=>a+(b-a)*x;
+const eOutCubic=x=>1-Math.pow(1-x,3);
+const eOutQuint=x=>1-Math.pow(1-x,5);
+const eInOut=x=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2;
+const eOutBack=x=>{const c1=1.70158,c3=c1+1;return 1+c3*Math.pow(x-1,3)+c1*Math.pow(x-1,2);};
+const eOutExpo=x=>x>=1?1:1-Math.pow(2,-10*x);
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+const rnd=mulberry32(20260719);
+
+/* set a centered element */
+function setC(el,y,tf,op){el.style.top=y+'px';el.style.transform='translate(-50%,-50%) '+(tf||'');el.style.opacity=op;}
+
+/* ---------- dust field ---------- */
+const dust=[];const dc=$('dust');
+for(let i=0;i<48;i++){const d=document.createElement('div');d.className='dust';
+  const s=1+rnd()*4.2;d.style.width=s+'px';d.style.height=s+'px';
+  dust.push({el:d,x:rnd()*W,y:rnd()*H,sp:6+rnd()*16,ph:rnd()*Math.PI*2,amp:8+rnd()*26,base:.12+rnd()*.3});dc.appendChild(d);}
+
+/* ---------- confetti ---------- */
+const CONF=[];const COL=['#e3d3a3','#b49759','#f4eee3','#ef3340','#2ea84f','#2d6fe0'];
+for(let i=0;i<170;i++){const e=document.createElement('div');e.className='conf';
+  const w=8+rnd()*14,h=10+rnd()*20;e.style.width=w+'px';e.style.height=h+'px';
+  e.style.background=COL[(rnd()*COL.length)|0];e.style.borderRadius=(rnd()<.3?'50%':'2px');
+  CONF.push({el:e,x0:120+rnd()*840,y0:300+rnd()*260,vx:(rnd()-.5)*360,vy:-260-rnd()*360,
+    g:900+rnd()*420,rot0:rnd()*360,vrot:(rnd()-.5)*900,sway:rnd()*Math.PI*2,swA:20+rnd()*46});stage.appendChild(e);}
+
+/* ---------- split-flap builder ---------- */
+function buildFlap(container,text,cls){container.innerHTML='';const tiles=[];
+  for(const ch of text){const t=document.createElement('div');t.className='tile '+cls;t.textContent=ch;container.appendChild(t);tiles.push(t);}
+  container.__tiles=tiles;return tiles;}
+buildFlap($('s4flap'),'DANE','big');
+buildFlap($('s5flap'),'MALDIVES','sm');
+
+/* flap reveal: each tile drops/settles at start+ i*stag */
+function flap(container,start,stag,t){const ts=container.__tiles;
+  ts.forEach((tile,i)=>{const a=start+i*stag,b=a+.42;const r=p(t,a,b);
+    const e=eOutBack(r);
+    tile.style.opacity=r<=0?0:1;
+    const rotX=lerp(-92,0,e);const ty=lerp(-14,0,eOutCubic(r));
+    tile.style.transform=`perspective(700px) rotateX(${rotX}deg) translateY(${ty}px)`;
+    // brief settle brightness
+    const gl=1-clamp((r-.6)/.4);tile.style.filter=`brightness(${1+gl*0.5})`;
+  });}
+
+/* ---------- dept chips ---------- */
+const DEPTS=['Group IT','Retail Banking','Group Risk','Compliance','Communications','Operations'];
+const chipsWrap=$('s1chips');DEPTS.forEach(d=>{const c=document.createElement('div');c.className='dchip';c.textContent=d;chipsWrap.appendChild(c);});
+const chipEls=[...chipsWrap.children];
+
+/* ---------- race bars ---------- */
+const raceWrap=$('s3race');const NB=7;const raceEls=[];
+const leadIdx=4;
+for(let i=0;i<NB;i++){const b=document.createElement('div');b.className='bar'+(i===leadIdx?' lead':'');raceWrap.appendChild(b);raceEls.push(b);}
+const raceTarget=[0.42,0.55,0.5,0.68,1.0,0.6,0.47]; // relative final heights, lead tallest
+
+/* ---------- podium (3rd + 2nd; 1st becomes the hero) ---------- */
+const podWrap=$('s4pod');
+const podData=[
+  {medal:'🥈',rank:'2',handle:'@cemcamldr',h:300,cls:'silver'},
+  {medal:'🥇',rank:'1',handle:'@dineshsiva6',h:390,cls:'gold',hero:true},
+  {medal:'🥉',rank:'3',handle:'@dave.mccloud.988',h:230,cls:'bronze'}
+];
+podData.forEach(d=>{const col=document.createElement('div');col.className='pcol '+d.cls;
+  col.innerHTML=`<div class="phandle">${d.handle}</div><div class="pblock" style="height:0px"><b>${d.rank}</b></div>`;
+  podWrap.appendChild(col);d.el=col;d.block=col.querySelector('.pblock');});
+
+/* =================== RENDER =================== */
+function render(t){
+  t=clamp(t,0,DURATION);
+
+  /* B-roll windows → make #bg transparent so underlying footage shows */
+  const inB0=t<3.05, inB2=(t>=8.9&&t<14.6), inB5=(t>=26.9&&t<31.05);
+  const brWin=inB0||inB2||inB5;
+  $('bg').style.opacity = brWin ? 0 : 1;
+  // scrim only meaningful over footage; keep subtle always
+  $('scrim').style.opacity = brWin ? 1 : .15;
+  $('vign').style.opacity = 1;
+
+  /* dust: only over graphics scenes */
+  const dop = brWin?0:1;
+  for(const d of dust){const y=(d.y - t*d.sp);const yy=((y%H)+H)%H;
+    const x=d.x+Math.sin(t*0.6+d.ph)*d.amp;
+    d.el.style.transform=`translate(${x}px,${yy}px)`;d.el.style.opacity=d.base*dop;}
+
+  /* stripe: 0-.5 grow at center; .8-1.5 fly to top + thin; then hairline */
+  {const grow=eOutQuint(p(t,0,.5));const fly=eInOut(p(t,.8,1.6));
+   const cy=lerp(H*0.5,7,fly);const hgt=lerp(30,14,fly);const sx=grow;
+   $('stripe').style.top=(cy-hgt/2)+'px';$('stripe').style.height=hgt+'px';
+   $('stripe').style.transform=`scaleX(${sx})`;$('stripe').style.opacity=grow>0?1:0;}
+
+  /* glow follows heroes */
+  let glowY=820,glowOp=0;
+  if(t<3)glowOp=.7*p(t,.3,1.2);
+  else if(inB2){glowY=900;glowOp=.6;}
+  else if(t>=18&&t<27){glowY=900;glowOp=.85;}
+  else if(inB5){glowY=900;glowOp=.5;}
+  else if(t>=31){glowY=880;glowOp=.6;}
+  $('glow').style.top=glowY+'px';$('glow').style.opacity=glowOp;
+
+  /* ---------- HUD ---------- */
+  const hudOn = t>3.1 && t<32.4;
+  $('hudword').style.opacity = hudOn? clamp(p(t,3.1,3.8)-p(t,32.0,32.4),0,1)*.9 : 0;
+  $('hudprog').style.opacity = hudOn? .8:0;
+  $('hudfill').style.width=(clamp(t/DURATION)*100)+'%';
+
+  /* ============ S0 COLD OPEN (0–3) ============ */
+  {const inn=p(t,.35,1.25),out=p(t,2.5,3.0);
+   setC($('s0wm'),806, `scale(${lerp(1.06,1,eOutExpo(inn))})`, clamp(inn-out));
+   const subIn=p(t,.95,1.6);$('s0sub').style.clipPath=`inset(0 ${(1-subIn)*100}% 0 0)`;
+   setC($('s0sub'),928,'',clamp(subIn-out));
+   const hk=p(t,1.65,2.15);setC($('s0hook'),1096,`translateY(${lerp(16,0,eOutCubic(hk))}px)`,clamp(hk-out*1.4));}
+
+  /* ============ S1 SCALE (3–8.9) ============ */
+  {const beats=[
+      {a:3.05,b:4.55,num:104,txt:'104',lab:'MATCHES',sub:'every single fixture, predicted'},
+      {a:4.55,b:6.05,num:732,txt:'732',lab:'PLAYERS',sub:'colleagues who locked in a pick'},
+      {a:6.05,b:7.35,num:39,txt:'39',lab:'DAYS',sub:'11 June — 19 July 2026'},
+      {a:7.35,b:8.95,num:null,txt:'ONE',lab:'OFFICE',sub:'every department in the game'}
+    ];
+   let act=null;for(const bt of beats){if(t>=bt.a-.001)act=bt;}
+   const showS1=t>=3.0&&t<8.98;
+   if(showS1&&act){
+     const ent=p(t,act.a,act.a+.34),ex=p(t,act.b-.26,act.b);
+     const op=clamp(ent-ex);
+     const val=act.num!=null?Math.round(act.num*eOutCubic(p(t,act.a,act.a+.9))):null;
+     $('s1num').textContent = val!=null? val : act.txt;
+     $('s1num').style.fontSize=(act.num!=null?300:210)+'px';
+     $('s1label').textContent=act.lab;$('s1sub').textContent=act.sub;
+     const sc=lerp(1.14,1,eOutExpo(ent));const ty=lerp(20,0,eOutBack(ent));
+     setC($('s1num'),812,`scale(${sc})`,op);
+     setC($('s1label'),1010,`translateY(${lerp(18,0,eOutCubic(ent))}px)`,op);
+     setC($('s1sub'),1096,'',op*.9);
+     // dept chips on last beat
+     if(act.lab==='OFFICE'){const cy=p(t,7.55,7.75);$('s1chips').style.opacity=clamp(cy-ex);
+       chipEls.forEach((c,i)=>{const r=p(t,7.6+i*.07,7.6+i*.07+.4);c.style.opacity=clamp(r-ex);c.style.transform=`translateY(${lerp(14,0,eOutBack(r))}px)`;});
+     } else {$('s1chips').style.opacity=0;}
+   } else {['s1num','s1label','s1sub'].forEach(id=>$(id).style.opacity=0);$('s1chips').style.opacity=0;}
+  }
+
+  /* ============ S2 TOURNAMENT (8.9–14.6) over B-roll ============ */
+  {const pre=p(t,9.0,9.6),preOut=p(t,10.1,10.5);
+   setC($('s2pre'),690,'',clamp(pre-preOut));
+   const sp=p(t,10.2,10.8),spOut=p(t,13.6,14.2);
+   setC($('s2spain'),838,`scale(${lerp(1.2,1,eOutExpo(sp))})`,clamp(sp-spOut));
+   const ar=p(t,10.7,11.2);setC($('s2are'),1000,`translateY(${lerp(16,0,eOutCubic(ar))}px)`,clamp(ar-spOut));
+   const sco=p(t,11.4,11.9);setC($('s2score'),1152,`translateY(${lerp(26,0,eOutBack(sco))}px)`,clamp(sco-spOut));
+   const su=p(t,11.9,12.4);setC($('s2sub'),1232,'',clamp(su-spOut)*.9);}
+
+  /* ============ S3 PIVOT (14.6–18.5) ============ */
+  {const inA=p(t,14.7,15.2),out=p(t,18.1,18.5);
+   setC($('s3a'),760,`translateY(${lerp(18,0,eOutCubic(inA))}px)`,clamp(inA-out));
+   const inB=p(t,15.15,15.7);setC($('s3b'),864,`translateY(${lerp(20,0,eOutBack(inB))}px)`,clamp(inB-out));
+   const rc=p(t,15.6,16.0);$('s3race').style.opacity=clamp(rc-out);
+   const grow=eOutCubic(p(t,15.8,17.4));
+   raceEls.forEach((b,i)=>{let h=raceTarget[i]*grow;
+     if(i===leadIdx){const surge=eOutBack(p(t,16.8,17.8));h=lerp(raceTarget[i]*grow,1.0,surge*0);h=Math.max(h,raceTarget[i]*grow);}
+     b.style.height=(h*430)+'px';
+     if(i===leadIdx){const on=p(t,17.0,17.5);b.style.opacity=1;b.style.filter=`brightness(${1+on*.3})`;}
+   });
+   const cap=p(t,17.2,17.7);setC($('s3cap'),1470,'',clamp(cap-out)*1);}
+
+  /* ============ S4 PODIUM + CHAMPION (18.5–26.9) ============ */
+  {const podIn=p(t,18.6,19.0),podOut=p(t,21.6,22.2);
+   $('s4pod').style.opacity=clamp(podIn-podOut);
+   podData.forEach((d,i)=>{const a=18.7+i*.22;const r=eOutBack(p(t,a,a+.7));
+     d.block.style.height=(d.h*r)+'px';
+     d.el.style.opacity=clamp(p(t,a,a+.3)-podOut);
+     d.el.style.transform=`translateY(${lerp(30,0,r)}px)`;});
+   // hero
+   const ho=p(t,22.1,22.5),heroOut=p(t,26.4,26.9);
+   setC($('s4over'),648,'',clamp(p(t,22.2,22.7)-heroOut));
+   $('s4flap').style.opacity=clamp(ho-heroOut);
+   flap($('s4flap'),22.35,.13,t);
+   $('s4flap').style.transform=`translate(-50%,-50%) scale(${lerp(1.08,1,eOutExpo(ho))})`;
+   const nm=p(t,23.4,23.9);setC($('s4name'),1016,`translateY(${lerp(16,0,eOutCubic(nm))}px)`,clamp(nm-heroOut));
+   const tg=p(t,23.9,24.4);setC($('s4tag'),1150,`translateY(${lerp(16,0,eOutBack(tg))}px)`,clamp(tg-heroOut));
+  }
+
+  /* confetti: burst at champion reveal 22.4, fade by 27 */
+  {const b0=22.4;const life=clamp((t-b0)/4.6);const vis=(t>=b0&&t<27.2);
+   for(const c of CONF){if(!vis){c.el.style.opacity=0;continue;}
+     const ts=t-b0;const x=c.x0+c.vx*ts+Math.sin(ts*2+c.sway)*c.swA;
+     const y=c.y0+c.vy*ts+.5*c.g*ts*ts;const rot=c.rot0+c.vrot*ts;
+     c.el.style.transform=`translate(${x}px,${y}px) rotate(${rot}deg)`;
+     c.el.style.opacity=clamp(1-life)* (y<H+40?1:0);}
+  }
+
+  /* ============ S5 MALDIVES (26.9–31) over B-roll ============ */
+  {const tp=p(t,27.1,27.6),out=p(t,30.5,31.0);
+   setC($('s5top'),648,'',clamp(tp-out));
+   $('s5flap').style.opacity=clamp(p(t,27.2,27.5)-out);
+   flap($('s5flap'),27.35,.12,t);
+   const bd=p(t,29.4,29.9);setC($('s5board'),1074,`scale(${lerp(1.1,1,eOutExpo(bd))})`,clamp(bd-out));}
+
+  /* ============ S6 END (31–33) ============ */
+  {const inn=p(t,31.15,31.8);
+   setC($('s6wm'),872,`scale(${lerp(1.05,1,eOutExpo(inn))})`,clamp(inn));
+   const u=p(t,31.5,32.0);setC($('s6url'),996,'',clamp(u));
+   const s=p(t,31.75,32.25);setC($('s6sub'),1074,'',clamp(s)*.9);}
+}
+
+window.render=render;window.DURATION=DURATION;window.FPS=FPS;
+window.__ready=false;window.__fontinfo='';
+Promise.all([
+  document.fonts.load('140px "Anton"').catch(()=>{}),
+  document.fonts.load('900 40px "Hanken Grotesk"').catch(()=>{}),
+  document.fonts.load('800 40px "Hanken Grotesk"').catch(()=>{})
+]).then(()=>Promise.resolve(document.fonts.ready)).then(()=>{
+  window.__fontinfo=(document.fonts.check('140px "Anton"')?'Anton:OK':'Anton:MISS')+' / '+(document.fonts.check('800 40px "Hanken Grotesk"')?'Hanken:OK':'Hanken:MISS');
+  try{render(0);}catch(e){}
+  window.__ready=true;
+});
+setTimeout(()=>{try{render(0);}catch(e){}window.__ready=true;},3000);
+
+/* live preview when opened directly */
+if(!navigator.webdriver){let s=performance.now();function loop(){const t=((performance.now()-s)/1000)%DURATION;render(t);requestAnimationFrame(loop);}requestAnimationFrame(loop);}
+</script>
