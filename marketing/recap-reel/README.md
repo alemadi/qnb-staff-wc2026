@@ -24,8 +24,8 @@ like a graded film, not a template. The brand palette and type match the app
 2. **Scale** — gold cards burst → *731 players · 40,332 predictions*
 3. **The final** — trophy + confetti → *Spain 1–0 Argentina (AET, Ferran Torres) · World champions*
 4. **The call** — one lit card among fallen ones → *Only 70 of 731 called Spain*
-5. **Standings** — podium beam → *1 Dane · 2 Cemcmldr · 3 AI*
-6. **Champion** — Maldives aerial → *Your 2026 champion: Dane → the Maldives*
+5. **Standings** — podium beam → *1 Rushdy Fowzer (388) · 2 Dane (384) · 3 cemcmldr (368)*
+6. **Champion** — Maldives aerial → *Your 2026 champion: Rushdy Fowzer → the Maldives*
 7. **End card** — Staff Challenge 26 · staffchallenge26.com
 
 ## Data provenance
@@ -35,8 +35,11 @@ All figures are pulled live from the pool's Supabase, not invented:
 - 731 players (`kv` keys `wc:player:*`); 40,332 total predictions submitted.
 - Final result + winning scorer from `wc:highlight` (k32, Final).
 - 70 of 731 picked Spain as champion (`champ = 'Spain'`).
-- Final standings from `wc:ranksnap` (2026-07-20): #1 Dane (Group IT),
-  #2 Cemcmldr (Group Compliance), #3 "AI" (Group Communications).
+- Final standings computed by the app's own authoritative `standings()` RPC
+  (the same scoring the live leaderboard uses; tiebreak pts → predicted → exact
+  → correct → name): #1 Rushdy Fowzer (Retail Banking, 388), #2 Dane (Group IT,
+  384), #3 cemcmldr (Group Compliance, 368). Winner Rushdy also picked Spain, so
+  the "70 called it" bridge points straight at him.
 - Prize (Maldives for #1) from the app's own OG copy.
 
 ## How it was built (pipeline)
