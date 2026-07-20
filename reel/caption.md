@@ -7,7 +7,7 @@
 
 But the real final? That was in the office. 😅
 
-👑 Your Staff Champion 2026: @rushdy.fowzer (Retail Banking) — 388 points, 20 exact scorelines, and he called Spain from Day One. He pipped @dineshsiva6 on the final whistle. 🥈 @dineshsiva6 · 🥉 @cemcamldr
+👑 Your Staff Champion 2026: @rushdy.fowzer (Retail Banking) — 388 points, 20 exact scorelines, and called Spain from Day One — pipping @dineshsiva6 on the final whistle. 🥈 @dineshsiva6 · 🥉 @cemcamldr
 
 Prize is now boarding… ✈️🏝️ the Maldives.
 
